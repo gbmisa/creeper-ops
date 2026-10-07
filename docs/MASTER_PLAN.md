@@ -201,6 +201,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix. First-pass Aether Towers (Stage 7 replaces them). First-pass nest raiders with tier escalation (Stages 2 and 8 rework them). 49/49 smoke tests pass.
 
 ## 6. Changelog
+- 2026-10-07: Split `command_mode.gd` (247 lines) into `command_input.gd`, `command_select.gd` and `command_hover.gd`. No behaviour change. `CommandMode` stays the entry class.
 - 2026-10-07: §0 answered. Added: castle variants (ground / raised with drawbridge and moat), wall platforming, tall indestructible spires with a creeper pump, enemy construction (§4.5), Operative deployment rework (§5.4), Ctrl + wheel ammo. New Stages 8c and 10b.
 - 2026-10-07: Stage 4 done. GPU creeper sim (creeper_gpu.gd + creeper_flow.glsl) with CPU fallback. Parity PASS (300 ticks, max cell diff < 0.00001). Perf on the RTX 5090: 80x80 0.55 → 0.027 ms/tick, 512x512 12.3 → 0.055 ms/tick. Live and fast-forward runs match the CPU build.
 - 2026-10-07: Stage 3 design doc written (docs/STRONGHOLDS_DESIGN.md). Its §0 lists 10 decisions for the user to approve.
