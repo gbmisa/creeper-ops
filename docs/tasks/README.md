@@ -2,9 +2,10 @@
 
 One file per task. Start a **fresh** agent session in the task's worktree and give it this one line:
 
-> Read CLAUDE.md, HANDOFF.md, docs/MASTER_PLAN.md and docs/tasks/<FILE>.md, then do that task.
+> Read AGENTS.md, CLAUDE.md, HANDOFF.md, docs/MASTER_PLAN.md and docs/tasks/<FILE>.md, then do that task and nothing else.
 
 ## Rules for every task
+**[AGENTS.md](../../AGENTS.md) applies first:** do only this brief, never merge, report and stop.
 - Work only in your worktree, on its branch. Commit there. Never commit to `main` (Opus reviews and merges).
 - Godot 4.7, GDScript. Match the existing style. Keep every file under ~250 lines.
 - After adding a new `class_name` file, run `godot --headless --path godot --import`.

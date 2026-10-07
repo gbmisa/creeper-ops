@@ -8,6 +8,10 @@ You are a **senior game developer** with extensive coding experience. You follow
 - **Always update `HANDOFF.md` when you finish a large task or a long session, without being asked.** Overwrite it with the current state, how to run, what's verified and what isn't, known issues, and next steps. Keep it short (under ~60 lines) so a fresh chat can resume from it.
 - **At the start of a new session, read `HANDOFF.md` first, then [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md)** (the living plan: settled design + staged build list with models). **When you finish a stage, update MASTER_PLAN.md** (status box, changelog line, any new decisions) along with HANDOFF.md.
 
+## Roles (orchestration)
+- **Claude Opus is the orchestrator:** writes task briefs in `docs/tasks/`, reviews every branch, and is the **only** agent that merges into `main`.
+- **Delegated agents (Grok Build, subagents) follow [AGENTS.md](AGENTS.md):** do only their brief or what the user explicitly says, commit only on their own worktree branch, never merge, never start the next stage, report and stop.
+
 ## The game
 A hybrid of **Creeper World 3-style fluid tower defense** (top-down command mode) and **first-person incursions**. You teleport an Operative from the Command Node to kill targets the network can't reach (underground cores, armored spires). The creeper keeps flowing while you're on foot.
 - CW3 mechanics we copy, and why: [docs/CW3_MECHANICS.md](docs/CW3_MECHANICS.md)
