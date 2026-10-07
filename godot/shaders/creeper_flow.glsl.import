@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://dwlla7j8gb6tv"
+path="res://.godot/imported/creeper_flow.glsl-af9b8fda807461b4f721b0d694cbd2d5.res"
+
+[deps]
+
+source_file="res://shaders/creeper_flow.glsl"
+dest_files=["res://.godot/imported/creeper_flow.glsl-af9b8fda807461b4f721b0d694cbd2d5.res"]
+
+[params]
+

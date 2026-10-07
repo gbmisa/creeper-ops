@@ -36,7 +36,7 @@ func setup(world_name: String, g: Grid, is_cave: bool, keep_clear := Callable())
 	add_child(terrain)
 	add_child(Props.scatter(g, cave, 11 if cave else 3, keep_clear))
 
-	creeper = CreeperSim.new(g)
+	creeper = CreeperSim.create(g)
 	creeper_mesh = CreeperMesh.new()
 	creeper_mesh.setup(creeper, height_tex)
 	add_child(creeper_mesh)

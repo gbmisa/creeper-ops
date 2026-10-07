@@ -3,6 +3,10 @@ extends RefCounted
 ## Heightfield fluid automaton (Creeper World style). Each cell holds a creeper depth.
 ## Every tick creeper flows toward neighbours whose (terrain + creeper) "head" is lower,
 ## so it pools in basins and spills over ridges.
+## This class is the CPU sim and the shared interface. CreeperGpu (creeper_gpu.gd) runs the
+## same rule as a compute shader and keeps `depth` as a CPU copy for gameplay. Always create
+## sims with CreeperSim.create(): headless (no rendering device) or --cpu-sim gets the CPU one.
+## Gameplay must change creeper only through add/remove/set_depth, never by writing `depth`.
 
 var grid: Grid
 var depth := PackedFloat32Array()
@@ -10,6 +14,12 @@ var _delta := PackedFloat32Array()
 var sources: Array[Dictionary] = []
 var _acc := 0.0
 var ticks := 0
+
+
+static func create(g: Grid) -> CreeperSim:
+	if RenderingServer.get_rendering_device() != null and not OS.get_cmdline_user_args().has("--cpu-sim"):
+		return CreeperGpu.new(g)
+	return CreeperSim.new(g)
 
 
 func _init(g: Grid) -> void:
@@ -86,6 +96,20 @@ func _flow() -> void:
 	for i in depth.size():
 		var v := depth[i] + _delta[i]
 		depth[i] = 0.0 if v < 0.0005 else minf(v, Config.MAX_DEPTH)
+
+
+func is_gpu() -> bool:
+	return false
+
+
+## Terrain heights changed under these cells (TerrainEdit). The CPU sim reads grid.height live.
+func terrain_changed(_cells: Array) -> void:
+	pass
+
+
+func set_depth(x: int, z: int, v: float) -> void:
+	if grid.in_bounds(x, z):
+		depth[z * grid.w + x] = clampf(v, 0.0, Config.MAX_DEPTH)
 
 
 func depth_at(x: int, z: int) -> float:

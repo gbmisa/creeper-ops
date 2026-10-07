@@ -13,7 +13,7 @@ static func run(g) -> void:
 
 static func _wet(g, x: int, z: int, depth: float) -> void:
 	var c: CreeperSim = g.surface.creeper
-	c.depth[g.level.grid.idx(x, z)] = depth
+	c.set_depth(x, z, depth)
 
 
 static func _creeper_contact(g) -> void:

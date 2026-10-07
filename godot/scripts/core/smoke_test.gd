@@ -140,9 +140,9 @@ static func _forge_and_operative(g) -> void:
 
 	# Square collector fields (7x7) and thin creeper is a valid target.
 	_check("square collector field", CollectorField.field_cells(grid, 40, 40).size() == 49)
-	creeper.depth[grid.idx(20, 20)] = Config.MIN_DEPTH * 1.5
+	creeper.set_depth(20, 20, Config.MIN_DEPTH * 1.5)
 	_check("weapons see thin creeper", creeper.nearest_wet(20, 20, 1.0) != null)
-	creeper.depth[grid.idx(20, 20)] = 0.0
+	creeper.set_depth(20, 20, 0.0)
 
 	# Forge: Aether buys upgrades only with a finished Forge; energy efficiency applies.
 	_check("node lands with no energy", Config.START_ENERGY == 0.0)
@@ -161,7 +161,7 @@ static func _forge_and_operative(g) -> void:
 
 	# Rocket: bursts on the creeper surface and guts a deep pool.
 	for c in grid.cells_in_radius(22, 22, 2.0):
-		creeper.depth[grid.idx(c.x, c.y)] = 5.0
+		creeper.set_depth(c.x, c.y, 5.0)
 	var rl := RocketLauncher.new()
 	var aim := grid.cell_ground(22, 22) + Vector3(0, 5.0 * Config.LEVEL_H, 0)
 	var from := aim + Vector3(0, 12, 8)
