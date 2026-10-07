@@ -10,8 +10,8 @@ const TABS := ["Structures", "Weapons", "Titans", "Orbital", "Castle"]
 
 ## Build menu contents per tab. Entries are structure types, or "@action" for orbital actions.
 const MENU := {
-	"Structures": ["collector", "relay", "outpost", "reactor", "storage", "barracks", "nullifier"],
-	"Weapons": ["cannon", "mortar", "beam", "sniper"],
+	"Structures": ["collector", "relay", "outpost", "reactor", "storage", "barracks"],
+	"Weapons": ["cannon", "mortar", "beam", "sniper", "nullifier"],
 	"Titans": ["bertha", "thor", "forge"],
 	"Orbital": ["beacon", "@drop", "@lance", "@operative"],
 	"Castle": ["@repeater", "@lobber", "@flak"],
@@ -44,7 +44,7 @@ static var DEFS := {
 	"barracks": { "tab": "Structures", "label": "Barracks", "cost": 50, "hp": 140.0, "link": 5.0, "link_y": 2.0, "footprint": 1,
 		"ammo": { "max": 30.0, "per_packet": 3.0 },
 		"desc": "Trains Soldiers and Crawlers (max %d per barracks) that can enter Blight. Units carry limited ammo and must walk back here to resupply from its packet-fed stock." % Config.UNITS_PER_BARRACKS },
-	"nullifier": { "tab": "Structures", "label": "Nullifier", "cost": 100, "hp": 70.0, "link": 4.0, "link_y": 1.2,
+	"nullifier": { "tab": "Weapons", "label": "Nullifier", "cost": 100, "hp": 70.0, "link": 4.0, "link_y": 1.2,
 		"weapon": true, "soaks_unbuilt": true, "range": Config.NULLIFY_RANGE,  # reach to the emitter; Forge Fire Range extends it
 		"desc": "Build within range (4 cells, more with Forge Fire Range) of an UNSHIELDED emitter, on ground you've cleared of creeper. Creeper eats its HP (even while it builds), but it takes none while charging. When its 100 packets arrive it charges for 8 s and destroys the emitter. Cannot be moved." },
 	"cannon": { "tab": "Weapons", "label": "Pulse Cannon", "cost": 25, "hp": 40.0, "link": 4.0, "link_y": 0.9,
