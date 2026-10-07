@@ -1,20 +1,30 @@
 class_name StructureUpkeep
 ## Per-structure upkeep each frame: creeper contact, repair, construction progress and bars.
-## Creeper rule (CW3): any grounded structure, built or not, that creeper touches is destroyed
-## on the spot. Only the Command Node has armour: it loses HP instead. Hovering structures
-## (Thor, anything in flight) are out of reach.
+## Creeper rule: unbuilt structures, and built ones that are not weapons, die on contact.
+## Built weapons (def.weapon) lose HP from depth, using the Node's formula, and die at 0.
+## A weapon with charge > 0 (the charging Nullifier) takes none. Hovering and in-flight
+## structures are out of reach.
 
 
 static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
 	s.wet = 0.0 if (s.is_flying() or s.def.get("flying", false)) else mgr.wet_depth(s)
 	if s.wet > Config.DAMAGE_DEPTH:
-		if s.type != "node":
+		if _dies_on_contact(s):
 			mgr.remove(s, "destroyed")
+			return
+		if s.def.get("weapon", false) and s.charge > 0.0:
 			return
 		var dps: float = (Config.STRUCT_BASE_DPS + s.wet * Config.STRUCT_DPS) * (1.0 - s.def.get("creeper_resist", 0.0))
 		mgr.damage(s, dps * dt)
 	elif s.connected:
 		s.hp = minf(s.def.hp, s.hp + Config.REPAIR_PER_SEC * dt)
+
+
+## The Node always soaks. Anything else soaks only once it is a built weapon.
+static func _dies_on_contact(s: Structure) -> bool:
+	if s.type == "node":
+		return false
+	return not s.is_built() or not s.def.get("weapon", false)
 
 
 static func construction(mgr, s: Structure, dt: float) -> void:

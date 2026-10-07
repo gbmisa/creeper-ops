@@ -28,19 +28,61 @@ static func _creeper_contact(g) -> void:
 	_wet(g, cx, cz, 0.0)
 	var unbuilt: Structure = sm.place("cannon", cx, cz)
 	var built: Structure = sm.place("cannon", cx + 3, cz, true)
+	var collector: Structure = sm.place("collector", cx + 6, cz, true)
 	_wet(g, cx, cz, 1.0)  # a lone wet cell drains fast, so make it deep enough to last a tick
-	_wet(g, cx + 3, cz, 1.0)
+	_wet(g, cx + 6, cz, 1.0)
 	g.update(0.05)
 	SmokeTest._check("creeper kills unbuilt instantly", unbuilt.dead)
-	SmokeTest._check("creeper kills built instantly", built.dead)
+	SmokeTest._check("creeper kills built collector instantly", collector.dead)
+	var shallow: float = built.hp
+	_hold_wet(g, built, 1.0, 0.25)  # pinned: one free cell drains away inside g.update before damage
+	SmokeTest._check("built cannon survives a short soak", not built.dead and built.hp < shallow,
+		"(%.1f -> %.1f)" % [shallow, built.hp])
+	sm.remove(built)
+	_wet(g, cx + 3, cz, 0.0)
+	var charging: Structure = sm.place("nullifier", cx + 9, cz, true)
+	charging.charge = Config.NULLIFY_TIME * 0.5
+	var charged_hp: float = charging.hp
+	_wet(g, cx + 9, cz, 4.0)
+	g.update(0.05)
+	SmokeTest._check("charging nullifier ignores deep creeper", not charging.dead and charging.hp == charged_hp)
+	sm.remove(charging)
+	_wet(g, cx + 9, cz, 0.0)
+	_cannon_soak_times(g, sm, cx, cz - 3)
 	_wet(g, n.x, n.z, 0.5)
 	var hp := n.hp
 	g.update(0.05)
 	SmokeTest._check("node only loses HP", not n.dead and n.hp < hp)
 	_wet(g, n.x, n.z, 0.0)
 	_wet(g, cx, cz, 0.0)
-	_wet(g, cx + 3, cz, 0.0)
+	_wet(g, cx + 6, cz, 0.0)
 	n.hp = n.def.hp
+
+
+## Depth is pinned, so this measures the DPS formula and not the fluid draining away.
+static func _cannon_soak_times(g, sm: StructureManager, x: int, z: int) -> void:
+	var shallow: Structure = sm.place("cannon", x, z, true)
+	_hold_wet(g, shallow, 1.0, 4.9)
+	SmokeTest._check("cannon lasts about 5 s at depth 1", not shallow.dead and shallow.hp < shallow.def.hp,
+		"(hp %.1f)" % shallow.hp)
+	_hold_wet(g, shallow, 1.0, 0.3)
+	SmokeTest._check("cannon dies soon after 5 s at depth 1", shallow.dead)
+	var deep: Structure = sm.place("cannon", x + 3, z, true)
+	_hold_wet(g, deep, 3.0, 2.0)
+	var alive_at_2: bool = not deep.dead
+	_hold_wet(g, deep, 3.0, 2.0)
+	SmokeTest._check("cannon dies in 2-4 s at depth 3", alive_at_2 and deep.dead,
+		"(alive at 2s=%s)" % alive_at_2)
+	_wet(g, x, z, 0.0)
+	_wet(g, x + 3, z, 0.0)
+
+
+static func _hold_wet(g, s: Structure, depth: float, seconds: float) -> void:
+	var t := 0.0
+	while t < seconds and not s.dead:
+		_wet(g, s.x, s.z, depth)
+		StructureUpkeep.creeper_and_repair(g.structures, s, 0.05)
+		t += 0.05
 
 
 static func _check_no_creeper_build() -> void:

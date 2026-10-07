@@ -16,8 +16,9 @@ const FLOW_RATE := 0.22        # fraction of head difference moved per neighbour
 const MIN_DEPTH := 0.02        # below this a cell counts as dry
 const MAX_DEPTH := 25.0
 const DAMAGE_DEPTH := 0.06     # structures/units take damage above this depth
-const STRUCT_DPS := 14.0       # structure damage per second per unit depth
-const STRUCT_BASE_DPS := 6.0   # flat damage per second while wet at all
+const STRUCT_DPS := 2.5        # extra structure damage per second per unit of depth
+const STRUCT_BASE_DPS := 5.5   # flat damage per second while wet. Depth 1 is 8 HP/s:
+                               # a 40 HP cannon lasts 5 s. Depth 3 is 13 HP/s, about 3 s.
 
 # ---- economy (CW3: energy IS packets; no launch cap) -----------------------------
 const START_ENERGY := 0.0     # the Node lands empty: first packets come from its own output

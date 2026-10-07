@@ -2,7 +2,7 @@
 
 The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
 
-**Status:** Phase A not started. Next up: Stages 1 and 2.
+**Status:** Stage 1 ⚠ (not human-verified). Next up: Stage 2.
 **Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
 
 ---
@@ -103,7 +103,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 
 | # | Stage | Model | Status |
 |---|---|---|---|
-| 1 | Creeper damage rules | Sonnet 5.5 (`feature-dev`) | ☐ |
+| 1 | Creeper damage rules | Sonnet 5.5 (`feature-dev`) | ⚠ |
 | 2 | Weapon roles, cliff rule, per-level schedules | Sonnet 5.5 | ☐ |
 | 3 | Design doc | **Opus 5.5** | ☐ |
 | 4 | GPU creeper sim | **Opus 5.5** | ☐ |
@@ -200,3 +200,4 @@ Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix
 
 ## 6. Changelog
 - 2026-10-07: Plan created from the design conversation. Old corrections that were never built are folded into Stages 1 and 2.
+- 2026-10-07: Stage 1 ⚠. Built `weapon` structures take creeper HP damage; a weapon with `charge > 0` takes none. `STRUCT_BASE_DPS` 6→5.5 and `STRUCT_DPS` 14→2.5 so a 40 HP cannon lasts 5 s at depth 1 and about 3 s at depth 3.
