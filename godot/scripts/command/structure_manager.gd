@@ -181,9 +181,10 @@ func update(dt: float, time: float) -> void:
 		network.rebuild(list)
 		dirty = false
 	var producing := node != null and not node.is_flying()
-	packets.update(dt, list, producing)
+	packets.update(dt, list, _sender_ready())
 	var reactor := 0.0
 	var storage := 0.0
+	var outpost_storage := 0.0
 	var collectors := []
 	for s in list.duplicate():
 		StructureUpkeep.creeper_and_repair(self, s, dt)
@@ -191,6 +192,8 @@ func update(dt: float, time: float) -> void:
 			continue
 		StructureUpkeep.construction(self, s, dt)
 		StructureUpkeep.bars(s, time)
+		if s.type == "outpost" and s.is_built():
+			outpost_storage += Config.OUTPOST_STORAGE
 		if not s.is_built() or not s.connected or s.is_flying():
 			continue
 		if s.type == "collector":
@@ -200,4 +203,12 @@ func update(dt: float, time: float) -> void:
 		WeaponLogic.update(s, dt, self)
 		StructureBehaviors.update(s, dt, self, time)
 	field.update(dt, collectors)
-	economy.tick(dt, producing, field.income, field.cells, reactor, storage)
+	economy.tick(dt, producing, field.income, field.cells, reactor, storage, outpost_storage)
+
+
+## Packets launch while any sender is built, connected and on the ground.
+func _sender_ready() -> bool:
+	for s in list:
+		if s.def.get("sender", false) and s.is_built() and s.connected and not s.is_flying():
+			return true
+	return false

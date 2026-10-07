@@ -84,6 +84,14 @@ static func make(type: String) -> Node3D:
 			var spin := _part(root, "Spin", 2.5)
 			box(spin, Vector3(1.2, 0.1, 0.1), metal)
 			ball(spin, 0.3, glow, Vector3(0, 0.35, 0))
+		"outpost":
+			cyl(root, 1.55, 1.75, 0.4, dark)
+			cyl(root, 0.45, 0.65, 1.1, metal, 0.4)
+			var ring := TorusMesh.new()
+			ring.inner_radius = 0.85
+			ring.outer_radius = 1.15
+			_add(root, ring, glow, Vector3(0, 1.5, 0)).rotation.x = PI / 2.0
+			ball(root, 0.2, glow, Vector3(0, 1.65, 0))
 		"reactor":
 			cyl(root, 0.9, 1.0, 0.6, dark)
 			var spin := _part(root, "Spin", 1.1)

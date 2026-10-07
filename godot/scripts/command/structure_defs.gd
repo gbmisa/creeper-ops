@@ -10,7 +10,7 @@ const TABS := ["Structures", "Weapons", "Titans", "Orbital"]
 
 ## Build menu contents per tab. Entries are structure types, or "@action" for orbital actions.
 const MENU := {
-	"Structures": ["collector", "relay", "reactor", "storage", "barracks", "nullifier"],
+	"Structures": ["collector", "relay", "outpost", "reactor", "storage", "barracks", "nullifier"],
 	"Weapons": ["cannon", "mortar", "beam", "sniper"],
 	"Titans": ["bertha", "thor", "forge"],
 	"Orbital": ["beacon", "@lance", "@operative"],
@@ -24,13 +24,16 @@ static var ACTIONS := {
 }
 
 static var DEFS := {
-	"node": { "label": "Command Node", "hp": 500.0, "link": 10.0, "relays": true, "link_y": 3.2, "footprint": 1,
+	"node": { "label": "Command Node", "hp": 500.0, "link": 10.0, "relays": true, "sender": true, "link_y": 3.2, "footprint": 1,
 		"movable": true, "move_speed": 2.5, "creeper_resist": 0.6, "buildable": false,
-		"desc": "Your base and the network root. Turns energy into packets and launches one whenever a structure asks. It can lift off and relocate (no packets while flying). If it falls, you lose." },
+		"desc": "Your base and a packet sender. Turns energy into packets; a request launches from the nearest sender. It can lift off and relocate (this Node sends nothing while flying). If it falls, you lose." },
 	"collector": { "tab": "Structures", "label": "Collector", "cost": 5, "hp": 30.0, "link": 6.0, "relays": true, "link_y": 0.9,
 		"desc": "Claims the dry land in a 7x7 square around it (green tiles) for energy, ~0.25/s when the field is full. Overlapping fields share tiles, so space them out. Relays packets (link 6)." },
 	"relay": { "tab": "Structures", "label": "Relay", "cost": 10, "hp": 25.0, "link": 13.0, "relays": true, "link_y": 2.9,
 		"desc": "Long-range network node (link 13). Packets hop relay to relay along the shortest path." },
+	"outpost": { "tab": "Structures", "label": "Outpost", "cost": 40, "hp": 200.0, "link": 6.0, "relays": true, "sender": true,
+		"link_y": 1.7, "footprint": 1, "movable": false,
+		"desc": "A packet sender away from the Command Node (link 6). Structures take packets from whichever sender is nearest, so a front stays supplied while the Node is flying. Adds %d to the shared energy bank and produces none. Cannot be moved." % int(Config.OUTPOST_STORAGE) },
 	"reactor": { "tab": "Structures", "label": "Reactor", "cost": 50, "hp": 60.0, "link": 4.0, "link_y": 1.2, "income": 0.4,
 		"desc": "Generates a flat +0.4 energy/s (two full collector fields). Expensive, but needs no land." },
 	"storage": { "tab": "Structures", "label": "Storage", "cost": 15, "hp": 50.0, "link": 4.0, "link_y": 1.0, "storage": 30.0,
