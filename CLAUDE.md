@@ -28,7 +28,7 @@ godot -e --path godot                    # editor
 |---|---|
 | `core/` | `game.gd` (construction + loop, wiring only), `game_flow.gd` (briefing, Node landing, mode switches, teleport/recall, global hotkeys, end screen), `config.gd` (**all tuning numbers**), `bus.gd` (autoload `Bus`: signals + `Bus.say()` log), `audio_synth.gd` (autoload `Sfx`, procedural), `input_state.gd` (`act()`/`held()` for actions), `keybinds.gd` (**rebindable keys**), `debug.gd` (CLI test hooks), `smoke_test.gd` + `smoke_rules.gd` |
 | `world/` | `grid.gd` (heightfield, zones, `smooth_y`, `raycast`), `world.gd` (a playable space: terrain, creeper, env, effects, targets/interactables/updaters/markers), `terrain_mesh.gd`, `world_look.gd` (env, lights, cave ceiling), `props.gd`, `bar.gd` (billboard bars), `effects.gd`, `noise2d.gd` |
-| `sim/` | `creeper_sim.gd` (fluid automaton), `creeper_mesh.gd` (GPU-displaced surface) |
+| `sim/` | `creeper_sim.gd` (CPU fluid automaton + shared interface, `CreeperSim.create()`), `creeper_gpu.gd` (same rule as a compute shader, `shaders/creeper_flow.glsl`; CPU copy of `depth` for gameplay), `creeper_mesh.gd` (GPU-displaced surface) |
 | `command/` | `structure_defs.gd` (**data + tooltips + the 4 build tabs**), `structure.gd`, `structure_meshes.gd`, `structure_manager.gd` (lifecycle, damage, tick), `structure_upkeep.gd` (creeper contact, construction, bars), `placement.gd` (place/move/land rules), `network.gd` (Dijkstra relay graph), `packets.gd` (**CW3 dispatcher**), `economy.gd`, `collector_field.gd`, `mover.gd` (lift/fly/land), `weapon_logic.gd`, `structure_behaviors.gd`, `orbital.gd` (Lance), `upgrades.gd` (**Forge/Aether**, static, multipliers read by economy/packets/weapons/mover), `command_mode.gd`, `command_overlay.gd`, `command_camera.gd` |
 | `units/` | `unit_defs.gd`, `unit.gd`, `unit_manager.gd` (spawn, orders, movement), `unit_supply.gd` (combat + go-home-to-resupply), `pathfind.gd`, `unit_meshes.gd` |
 | `fps/` | `fps_mode.gd`, `player_controller.gd`, `operative_weapons.gd`, `rocket_launcher.gd`, `cave_hazards.gd`, `cave_mites.gd` |
@@ -49,6 +49,7 @@ godot -e --path godot                    # editor
 - **Blight zones** (`Grid.Zone.BLIGHT`): nothing can be built or parked there. Units and the Operative can enter. Objective actions are **Operative-only**.
 - **Units are not self-sufficient:** each shot or spray costs 1 ammo; when dry or hurt they walk to a barracks and draw from its packet-fed stock. Cap is `Config.UNITS_PER_BARRACKS`.
 - Agent dictionaries: shootable targets `{ node, oy, radius, alive(), on_hit(dmg, point) }`; prey/enemies `{ node, oy?, radius, alive(), hit(dmg) }`; interactables `{ pos, radius, prompt(), use() }`; markers `{ pos, label (String or Callable), color, visible(), minor? }`.
+- **Creeper sim:** create with `CreeperSim.create(grid)` (GPU when a rendering device exists, CPU when headless or `--cpu-sim`). Change creeper only through `add` / `remove` / `set_depth`, never by writing `depth[...]`: on the GPU sim, `depth` is a CPU copy refreshed every few ticks. Keep `_flow()`, `CreeperMesh._build_surface()` and `creeper_flow.glsl` in step.
 - Grid: 1 terrain level = 1 creeper depth unit = `Config.LEVEL_H` m. Cell = `Config.CELL` m. `grid.idx(x,z) = z*w + x`. Use `grid.smooth_y()` / `cell_ground()` for anything standing on the ground.
 
 ## Conventions
@@ -63,7 +64,8 @@ godot -e --path godot                    # editor
 1. Parse: `godot --headless --path . --import 2>&1 | grep -A1 "SCRIPT ERROR"` (should print nothing). `tools/check.sh` checks per file.
 2. Mechanics: `godot --headless --path . -- --smoke --quit=0.1 | grep smoke` (all PASS).
 3. Sim report: `godot --headless --path . -- --demo --units --sim=900 --quit=0.1 | grep "\[sim\]"`. Also `--demo=slow` (real packet builds), `--autostart` (undefended).
-4. Screenshots (needs GL, so use Xvfb):
+4. GPU sim (needs the real display, not headless or Xvfb): `godot --path . --rendering-driver vulkan -- --gpu-parity` (must print `parity PASS`) and `-- --perf-sim=512` (ms per tick, CPU vs GPU).
+5. Screenshots (needs GL, so use Xvfb; Xvfb runs the CPU sim):
    `xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --rendering-driver opengl3 --resolution 1600x900 -- --demo --sim=120 --select=cannon --shot=/abs/out.png`
    Other hooks: `--landing --hover=x,z --tool=T --surface --spire --cave --killcore --look=x,z --fast --nocapture`. See `debug.gd`.
 
