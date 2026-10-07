@@ -15,6 +15,8 @@ Merged to `main` this session:
 
 **Batch 3 (also uncommitted):** round-robin packets, box-select weapons, solid structures for units, nearest-barracks restock + select-units buttons (U), first-person building (B, `--fpsbuild=T` hook), Nullifier range/soak, emitters 3.0, raider detour (Bastion gate). Smoke **159 PASS**, demo 900 s Node 500/500. **Not verified:** whether a Nullifier can now be finished next to an emitter in real play (the slow demo places it at t=0 into creeper, so it says nothing); feel of FPS building.
 
+**Turrets (session 9, committed):** castle turrets with Salvage (Castle tab F5, or E at a socket). Remaining 7b work: reprisal raid, recurring sieges, aggression stacking, hostile-castle nest buff.
+
 ## Run / test
 `godot --path godot`. Tests: CLAUDE.md Testing. New hook: `--castle=I[,climb|pad|top|gate]` drops the Operative at castle I (0 Ashmoat, 1 Bastion). From 10b: `--salvage=N`, `--tool=@drop`.
 
@@ -35,6 +37,6 @@ Merged to `main` this session:
 - Merged worktrees (`stage5/6/7/10b`, `grok-command-mode`) are clean and can be removed.
 
 ## Next steps
-1. Commit the session 9 fixes, then create worktree `stage7c` (branch `stage/7c-traversal`) for Grok: brief [docs/tasks/STAGE7c_traversal.md](docs/tasks/STAGE7c_traversal.md).
-2. Opus builds **7b castle stakes** (spec in MASTER_PLAN Stage details): reprisal raid, sieges, aggression stacking, hostile-castle nest buff. Open question: pull a castle turret forward from 9a?
+1. Grok: start Stage 7c in worktree `../creeper fps td-worktrees/stage7c` (branch `stage/7c-traversal`), brief [docs/tasks/STAGE7c_traversal.md](docs/tasks/STAGE7c_traversal.md). Review + merge when it reports.
+2. Opus finishes **7b** (spec in MASTER_PLAN): reprisal raid, sieges, aggression stacking, hostile-castle nest buff. Turrets are done.
 3. Then briefs for 8a, 8b, 9a. Stage 12 places castles properly.
