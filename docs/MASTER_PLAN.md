@@ -105,7 +105,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 |---|---|---|---|
 | 1 | Creeper damage rules | Sonnet 5.5 (`feature-dev`) | ☐ |
 | 2 | Weapon roles, cliff rule, per-level schedules | Sonnet 5.5 | ☐ |
-| 3 | Design doc | **Opus 5.5** | ☐ |
+| 3 | Design doc ([STRONGHOLDS_DESIGN.md](STRONGHOLDS_DESIGN.md)) | **Opus 5.5** | ⚠ awaiting approval of §0 |
 | 4 | GPU creeper sim | **Opus 5.5** | ☐ |
 | 5 | Terrain-editing tool | Sonnet 5.5, Opus review | ☐ |
 | 6 | Multiple packet senders and Outposts | Sonnet 5.5, Opus review | ☐ |
@@ -199,4 +199,5 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix. First-pass Aether Towers (Stage 7 replaces them). First-pass nest raiders with tier escalation (Stages 2 and 8 rework them). 49/49 smoke tests pass.
 
 ## 6. Changelog
+- 2026-10-07: Stage 3 design doc written (docs/STRONGHOLDS_DESIGN.md). Its §0 lists 10 decisions for the user to approve.
 - 2026-10-07: Plan created from the design conversation. Old corrections that were never built are folded into Stages 1 and 2.
