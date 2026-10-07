@@ -2,7 +2,7 @@
 
 The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
 
-**Status:** Stages 1, 3, 4 merged to `main` (⚠ = not human-verified). Stage 2 in progress (Grok). Design approved; Stage 5 starts once Stage 2 is merged (they share raider files).
+**Status:** Stages 1–4 merged to `main` (⚠ = not human-verified). Next: Stage 5 (Opus) and Stages 6 / 10b (Grok) in parallel.
 **Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
 
 ---
@@ -79,7 +79,7 @@ Mixed groups (Brutes up front, Spitters behind, a Warden in the middle) start on
 |---|---|
 | Sniper | **Main anti-raider weapon** |
 | Mortar | Creeper. Splash does about 30% damage to raiders. Never the main defence. |
-| Beam | **Air only** (spores, flyers) |
+| Beam | **Surface-to-air.** Burns flying enemies (spore volleys now, flyers later) |
 | Cannon | Creeper only |
 | Castle turrets, Operative, Lance, units | Raiders |
 
@@ -104,7 +104,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | # | Stage | Model | Status |
 |---|---|---|---|
 | 1 | Creeper damage rules | Sonnet 5.5 (`feature-dev`) | ⚠ |
-| 2 | Weapon roles, cliff rule, per-level schedules | Sonnet 5.5 | ☐ |
+| 2 | Weapon roles, cliff rule, per-level schedules | Sonnet 5.5 (Grok) | ⚠ |
 | 3 | Design doc ([STRONGHOLDS_DESIGN.md](STRONGHOLDS_DESIGN.md)) | **Opus 5.5** | ☑ §0 answered 2026-10-07 |
 | 4 | GPU creeper sim | **Opus 5.5** | ⚠ built + parity verified; needs a human play check |
 | 5 | Terrain-editing tool | Sonnet 5.5, Opus review | ☐ |
@@ -127,7 +127,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 **1. Creeper damage rules.** `command/structure_upkeep.gd`, `smoke_rules.gd`. Built weapons take HP damage from creeper depth, and unbuilt structures still die instantly. The Nullifier is immune while charging. Check: new smoke tests (a weapon survives a short soak, an unbuilt one dies, a charging Nullifier survives).
 
 **2. Weapon roles, cliff rule, per-level schedules.** `weapon_logic.gd`, `raider_field.gd`, `raiders.gd`, `spore_nests.gd`, `level01.gd`, `cave01.gd`, `config.gd`.
-- Beams target air only. Mortar splash does `MORTAR_RAIDER_MULT` damage to raiders.
+- Beams are surface-to-air and burn flying enemies. Mortar splash does `MORTAR_RAIDER_DMG` to raiders.
 - Remove cliff climbing; raiders with no route attack the nearest structure they can reach.
 - `NEST_RAID_DELAY` and the tier times move into the level data.
 - Check: smoke tests (a Beam ignores raiders, a raider stops at a cliff, schedules are read from the level). `--sim=1200` report.
@@ -206,3 +206,4 @@ Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix
 - 2026-10-07: Stage 3 design doc written (docs/STRONGHOLDS_DESIGN.md). Its §0 lists 10 decisions for the user to approve.
 - 2026-10-07: Plan created from the design conversation. Old corrections that were never built are folded into Stages 1 and 2.
 - 2026-10-07: Stage 1 ⚠. Built `weapon` structures take creeper HP damage; a weapon with `charge > 0` takes none. New `WEAPON_CREEPER_BASE_DPS` 5.5 / `WEAPON_CREEPER_DPS` 2.5: a 40 HP cannon lasts 5 s at depth 1, about 3 s at depth 3. (Opus review: the Node keeps `STRUCT_*` 6/14; Grok's first version had changed those too.)
+- 2026-10-07: Stage 2 done headless (⚠, no human playtest). Beams are surface-to-air and burn flying enemies, mortar splash deals `MORTAR_RAIDER_DMG`, raiders step one terrace, and raid timing comes from each level's `RAID_SCHEDULE`.

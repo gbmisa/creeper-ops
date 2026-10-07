@@ -105,18 +105,21 @@ const NEST_CAP_START := 3      # live raiders per nest at minute 0
 const NEST_CAP_PER_MIN := 0.35
 const NEST_CAP_MAX := 10
 const NEST_GUARDS := 2         # raiders per nest that stay home once raids start
-const NEST_RAID_DELAY := 300.0 # grace period before raiders march on the base
+const NEST_RAID_DELAY := 300.0 # fallback grace period when a level has no RAID_SCHEDULE
 const RAIDER_MAX_TOTAL := 60
 const RAIDER_AGGRO := 9.0      # metres: a marching raider attacks anything this close
-const RAIDER_CLIMB := 1.1      # terrain levels up / down per cell on the walking route
-const RAIDER_DROP := 4.0
+const RAIDER_CLIMB := 1.1      # max terrain levels a raider may step up between cells
+const RAIDER_DROP := RAIDER_CLIMB # one terrace down as well; steeper ground is a wall
 const RAIDER_FIELD_INTERVAL := 2.0
-## Raider tiers unlock at `from` seconds of mission time.
+const MORTAR_RAIDER_DMG := 1.2 # mortar/Bertha splash vs one raider; 30% of a Sniper shot (power 4)
+## Fallback tier unlock times (seconds) when a level has no RAID_SCHEDULE.
+const RAIDER_TIER_TIMES := [0.0, 480.0, 900.0, 1320.0]
+## Raider tier stats. When each tier unlocks lives on the level (RAID_SCHEDULE.tier_times).
 const RAIDER_TIERS := [
-	{ "name": "Skitter", "hp": 4.0, "dps": 3.0, "speed": 4.2, "size": 0.45, "color": Color("a8ff5a"), "from": 0.0 },
-	{ "name": "Brute", "hp": 16.0, "dps": 8.0, "speed": 3.4, "size": 0.75, "color": Color("ffd24a"), "from": 480.0 },
-	{ "name": "Ravager", "hp": 40.0, "dps": 16.0, "speed": 4.0, "size": 0.9, "color": Color("ff7a3a"), "from": 900.0 },
-	{ "name": "Behemoth", "hp": 120.0, "dps": 35.0, "speed": 2.6, "size": 1.4, "color": Color("ff3355"), "from": 1320.0 },
+	{ "name": "Skitter", "hp": 4.0, "dps": 3.0, "speed": 4.2, "size": 0.45, "color": Color("a8ff5a") },
+	{ "name": "Brute", "hp": 16.0, "dps": 8.0, "speed": 3.4, "size": 0.75, "color": Color("ffd24a") },
+	{ "name": "Ravager", "hp": 40.0, "dps": 16.0, "speed": 4.0, "size": 0.9, "color": Color("ff7a3a") },
+	{ "name": "Behemoth", "hp": 120.0, "dps": 35.0, "speed": 2.6, "size": 1.4, "color": Color("ff3355") },
 ]
 
 # ---- units (barracks) --------------------------------------------------------------

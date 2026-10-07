@@ -1,7 +1,8 @@
 class_name WeaponLogic
 ## Active behaviour for built, connected, landed weapons. Every shot spends ammo, and ammo
-## only arrives as packets. Targets by def.targets: "creeper", "air" (spores + raiders),
-## "raiders". Hold-fire (CW3 toggle) skips firing entirely.
+## only arrives as packets. Targets by def.targets: "creeper", "air" (Beam: surface-to-air,
+## burns flying enemies), "raiders" (Snipers). Hold-fire (CW3 toggle) skips firing entirely.
+## Mortar splash also nicks raiders for MORTAR_RAIDER_DMG. Snipers are the anti-raider weapon.
 
 
 static func update(s: Structure, dt: float, mgr) -> void:
@@ -78,13 +79,15 @@ static func _lob(s: Structure, mgr) -> bool:
 	w.effects.lob(a, b, { "color": Color("ffb347"), "time": 2.2 if big else 1.0, "arc": 30.0 if big else 10.0,
 		"size": 0.8 if big else 0.45, "on_arrive": func():
 			w.creeper.remove_radius(t.x, t.y, splash, power)
+			WeaponLogic._splash_raiders(mgr, b, splash)
 			w.effects.burst(b, Color("ffaa33"), splash * Config.CELL * 0.7, 0.45)
 			Sfx.play("boom", b) })
 	Sfx.play("mortar", s.pos)
 	return true
 
 
-## Beam: shoot down spore volleys first, then nest raiders.
+## Beam: surface-to-air. Burns flying enemies. Spore volleys are the flying threat today;
+## flyers join this shot when they exist. Ground raiders are left to Snipers.
 static func _beam(s: Structure, mgr) -> bool:
 	var w: World = mgr.world
 	var a := _muzzle(s)
@@ -100,7 +103,20 @@ static func _beam(s: Structure, mgr) -> bool:
 				Sfx.play("pop", it.pos)
 			Sfx.play("beam", s.pos)
 			return true
-	return _snipe(s, mgr)
+	return false
+
+
+## Flat nick so a mortar stays a weak secondary against raiders. Uses their hit/kill path.
+static func _splash_raiders(mgr, at: Vector3, splash: float) -> void:
+	if mgr.hazards == null:
+		return
+	var reach := splash * Config.CELL
+	for m in mgr.hazards.nests.raiders.list.duplicate():
+		if not m.alive:
+			continue
+		var p: Vector3 = m.node.position
+		if Vector2(p.x - at.x, p.z - at.z).length() <= reach:
+			m.enemy.hit.call(Config.MORTAR_RAIDER_DMG)
 
 
 static func _snipe(s: Structure, mgr) -> bool:
@@ -120,7 +136,7 @@ static func _snipe(s: Structure, mgr) -> bool:
 		return false
 	var p: Vector3 = best.node.position
 	_aim(s, p)
-	w.effects.beam(a, p, Color("ff5050") if s.type == "beam" else Color("e0f0ff"), 0.08, 0.05)
+	w.effects.beam(a, p, Color("e0f0ff"), 0.08, 0.05)
 	best.enemy.hit.call(s.def.power)
-	Sfx.play("rifle" if s.type == "sniper" else "beam", s.pos)
+	Sfx.play("rifle", s.pos)
 	return true
