@@ -1,0 +1,202 @@
+# Master Plan: Strongholds, Salvage and Scale
+
+The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
+
+**Status:** Phase A not started. Next up: Stages 1 and 2.
+**Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
+
+---
+
+## 1. Settled design
+
+### Pillars
+- **Race the pressure.** Enemy pressure rises over the level and has a **cap**, past which a win is no longer realistic. You win by finishing objectives before then, not by turtling or hoarding.
+- **CW3 core, FPS edge.** The network and creeper play like Creeper World. The Operative goes where the network can't.
+- **RTS scale later.** Maps will get large enough that a level spans several sittings. Multiple bases (Outposts) and, later, armies matter.
+
+### Resources (four, each with one job)
+| Resource | Source | Spent on | Carries to the next level? |
+|---|---|---|---|
+| **Energy** | Collectors | Packets: builds, ammo, Earth terraforming | No |
+| **Ore** | **Miners** on ore deposits (finite, often contested) | **Metal** terraforming, castle wall plating, heavy structures, **Outposts** | No |
+| **Salvage** | Extractors on deposits in enemy bases (main source), loot pickups (Operative only), slow trickle from held castles | Operative upgrades, castle turrets and repair, advanced weapons (burn Salvage per shot), improved ammo | No |
+| **Aether** | Held castles, objectives | Forge (network upgrades) | No |
+
+Nothing carries over except a separate **meta skill tree** (Phase B), which has a story reason for why everything else is left behind.
+
+### Creeper rules
+- **Unbuilt** structures die instantly on creeper contact. **Built weapons take HP damage** instead. Other built structures (collectors, relays, miners, extractors) die instantly.
+- The **Nullifier** counts as a weapon and is **immune while charging**.
+- Nothing can be placed on creeper deeper than `MIN_DEPTH`. The Command Node only loses HP.
+- Full weapons never request packets. *(Already built.)*
+- Creeper hurting the Operative is fine, since the rocket launcher clears it.
+
+### Strongholds (one shared system, owned by the enemy or the player)
+**Nest base (enemy):** a walled compound with a **Hive Core**, spawner pits, defences (spitter turrets, spore launcher, **enemy mortars**), guards and **Salvage deposits**. It grows with mission time.
+- Destroying the Core lets you build an **Outpost** there (costs Ore). Outposts **launch packets** from the shared energy bank. Each request is served by the closest sender along the relays.
+- Raiders can retake an Outpost. The site turns back into a nest and its extractors are destroyed.
+
+**Castle (contested):** walls, gates, walkways along the tops of the walls, and a **spire** in the courtyard with a nest on top.
+- Capture: break in, climb the spire, destroy the crown nest, hold the zone against a counterattack.
+- Held: makes Aether and a Salvage trickle. **Turrets** go on wall and gate sockets (3 or more), with levels I to III, bought **from command mode or in first-person**. Walls are **destructible** and repaired with Salvage.
+- Retaken: raiders breach the walls, and if they hold the courtyard with no turrets alive, the castle flips back and the nest regrows.
+
+### Salvage loop
+1. The Node builds **Extractors** from packets. The network delivers them to supply points (Node, held castle, Outpost, **Supply Depot**).
+2. The Operative carries **2** (an upgrade raises this to 3, then 4) and plants them on deposits by holding E. It takes multiple trips.
+3. Extractors ship Salvage home as **return packets** only while inside network range. Outside range they store a small amount.
+4. A retake destroys the extractors and whatever Salvage they hold.
+
+**Improved ammo** (armour-piercing, incendiary, cluster) works for the Operative, Snipers, turrets and units. Network weapons receive it as special packets. Recipes unlock **late** (by level progress) and are costly. They're for the final push. Tuning target: little Salvage left over at the win.
+
+### Operative upgrades (last for one level)
+Firepower, survival (HP, armour, shield), mobility (jump jet, sprint) and carry capacity. Bought with Salvage at the Node armoury or at any held castle. **Advanced weapons** (railgun, plasma thrower, demolition charge) are unlocked with Salvage, then burn Salvage per shot.
+
+### Enemies
+**Rules:** raiders **cannot climb steep cliffs**; they only move between cells that differ by one terrace level. With no route, they attack the nearest structure they can reach. Per-level schedules set when raids start and when each tier unlocks.
+
+| Enemy | Role | Range | L1 unlock (example) | Counter |
+|---|---|---|---|---|
+| Skitter | Melee swarm | Melee | Start | Mortar splash, units |
+| Spitter | Acid lobber | Medium (< Sniper range) | ~6:00 | Snipers |
+| Brute | Armoured, hits walls hard | Melee | ~9:00 | Snipers, AP ammo |
+| Lancer | Charged beam | Long (> Sniper range) | ~12:00 | Operative, Lance, turrets |
+| Warden | Shields allies | Support | ~15:00 | Focus fire |
+| Spotter | Lets enemy mortars target the Operative | Sight | With mortars | Kill it |
+| Ravager / Behemoth | Heavy melee | Melee | ~18:00 / ~24:00 | Everything |
+| Flyers | Ignore terrain | Varies | Later levels | **Beams** |
+
+Mixed groups (Brutes up front, Spitters behind, a Warden in the middle) start once Lancers unlock.
+
+**Enemy mortars** are strong enough to blast Earth down. They are built by nest bases, especially when the Node is sealed off. **Fairness rules toward the Operative:**
+1. Every shell is telegraphed: a launch sound, then a whistle and a red ground marker for about 2.5 s.
+2. A minimum range: close in is safe.
+3. They can only target the Operative while a Spotter sees them. The HUD shows "Spotted".
+4. The Operative can sabotage one by holding E, or with a demolition charge from range.
+
+### Who kills what
+| Weapon | Targets |
+|---|---|
+| Sniper | **Main anti-raider weapon** |
+| Mortar | Creeper. Splash does about 30% damage to raiders. Never the main defence. |
+| Beam | **Air only** (spores, flyers) |
+| Cannon | Creeper only |
+| Castle turrets, Operative, Lance, units | Raiders |
+
+### Terraforming (Terp)
+- You paint target heights and the Terp raises or lowers cells one level at a time. It unlocks in later levels.
+- **Earth** costs lots of packets. Creeper has to pile up to get over it. Enemy mortars can lower it.
+- **Metal** costs Ore. Creeper can't wear it down, it barely takes mortar damage, and raiders have to break through it.
+- **Sealing the last route to the Node is allowed.** The enemy responds with mortars, and later flyers.
+
+### Tech
+- **The creeper sim moves to the GPU** (compute). Minimum spec is an RTX 3060, and graphics stay simple. The CPU sim stays as the headless fallback and the parity reference, since `--headless` has no graphics device.
+- Gameplay reads a CPU copy of creeper depth that the GPU sends back a few times per second. Weapon hits and emitters send batched changes to the GPU.
+- **One terrain-editing tool** serves the Terp, breakable walls and growing nests. It updates the creeper sim, the terrain mesh chunks, the raider flow field, unit pathfinding and first-person collision.
+- **Every new system keeps its state as plain, saveable data** (save and load arrive in Phase B).
+
+---
+
+## 2. Phase A: build the designed systems
+
+Each stage lists the model, the files involved, and the acceptance check. Every stage ends with: the parse check, smoke tests all passing, HANDOFF.md updated, and this file updated.
+
+| # | Stage | Model | Status |
+|---|---|---|---|
+| 1 | Creeper damage rules | Sonnet 5.5 (`feature-dev`) | ☐ |
+| 2 | Weapon roles, cliff rule, per-level schedules | Sonnet 5.5 | ☐ |
+| 3 | Design doc | **Opus 5.5** | ☐ |
+| 4 | GPU creeper sim | **Opus 5.5** | ☐ |
+| 5 | Terrain-editing tool | Sonnet 5.5, Opus review | ☐ |
+| 6 | Multiple packet senders and Outposts | Sonnet 5.5, Opus review | ☐ |
+| 7 | Strongholds, castles, spire climb | Sonnet 5.5 | ☐ |
+| 8a | Nest bases and enemy mortars | Sonnet 5.5 | ☐ |
+| 8b | Enemy roster | Sonnet 5.5 | ☐ |
+| 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ☐ |
+| 9b | Extractors and supply points | Sonnet 5.5 | ☐ |
+| 10 | Armoury | Sonnet 5.5 | ☐ |
+| 11 | Terp | Sonnet 5.5 | ☐ |
+| 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ☐ |
+| 13 | Tuning | Haiku 4.5 (`balance-tester`) | ☐ |
+| 14 | Review and screenshots | **Opus 5.5** | ☐ |
+
+### Stage details
+
+**1. Creeper damage rules.** `command/structure_upkeep.gd`, `smoke_rules.gd`. Built weapons take HP damage from creeper depth, and unbuilt structures still die instantly. The Nullifier is immune while charging. Check: new smoke tests (a weapon survives a short soak, an unbuilt one dies, a charging Nullifier survives).
+
+**2. Weapon roles, cliff rule, per-level schedules.** `weapon_logic.gd`, `raider_field.gd`, `raiders.gd`, `spore_nests.gd`, `level01.gd`, `cave01.gd`, `config.gd`.
+- Beams target air only. Mortar splash does `MORTAR_RAIDER_MULT` damage to raiders.
+- Remove cliff climbing; raiders with no route attack the nearest structure they can reach.
+- `NEST_RAID_DELAY` and the tier times move into the level data.
+- Check: smoke tests (a Beam ignores raiders, a raider stops at a cliff, schedules are read from the level). `--sim=1200` report.
+
+**3. Design doc** (`docs/STRONGHOLDS_DESIGN.md`). Turns Section 1 into a buildable spec, covering:
+- The four Stronghold states and the numbers.
+- How walls are built (terrain or props) and how the climb works (collision, landing spots).
+- How the GPU sim reads and writes data.
+- The terrain-editing interface.
+- How packets pick a sender when there are several.
+- The return-packet path and how improved ammo arrives as packets.
+- The enemy roster's stats and the mortar fairness numbers.
+- The pressure cap.
+- Rules for keeping state saveable.
+- A list of files to split, so every file stays under 250 lines.
+
+**The user reads and approves this before Stage 4.**
+
+**4. GPU creeper sim.** `sim/creeper_sim.gd` is split into an interface plus `creeper_cpu.gd` and `creeper_gpu.gd` and a compute shader. `creeper_mesh.gd` samples the sim's data directly on the GPU. Check: the headless suite still passes on the CPU version; a parity test on a real display (GPU vs CPU totals after N ticks, within tolerance); a frame-time comparison on a large test grid.
+
+**5. Terrain-editing tool.** A new file, `world/terrain_edit.gd`. Check: a smoke test raises and lowers a cell and confirms the creeper sim, mesh chunk, flow field, pathfinding and collision all update.
+
+**6. Multiple packet senders and Outposts.** `network.gd` (shortest path from several senders), `packets.gd`, `economy.gd` (shared bank), plus a new `outpost` structure entry. Check: a smoke test shows a far structure fed from the nearer sender; demo sim.
+
+**7. Strongholds, castles, spire climb.** New files `level/stronghold.gd`, `stronghold_meshes.gd` and `castle_shape.gd`, replacing `aether_towers.gd`. Check: smoke tests (capture, retake, wall breach); a first-person screenshot of the climb.
+
+**8a. Nest bases and enemy mortars.** Hive Core, pits, defences and growth over time. Raiders rebuild nests. Destroying the Core lets you build an Outpost. Enemy mortars appear when the Node is sealed off, with all four fairness rules. The pressure cap. Check: smoke tests; screenshot of a telegraphed shell.
+
+**8b. Enemy roster.** Ranged attacks and projectiles; Spitter, Lancer, Warden, Spotter; mixed groups; unlocks per level. Check: smoke test of each enemy's attack; a sim report showing all tiers.
+
+**9a. Return packets, Salvage, Ore, Miner, turrets.**
+- The return-packet path back along the relays.
+- Ore deposits and the Miner. Loot pickups and the castle trickle.
+- Turrets and wall repair from command mode.
+- Top bar shows Ore and Salvage.
+- Check: smoke tests (income flows, cutting the relays stops it).
+
+**9b. Extractors and supply points.** Built at the Node, delivered, carried (limit), planted, range check, destroyed on retake. The Supply Depot. Check: a smoke test running the full loop.
+
+**10. Armoury.** A new static class, `fps/operative_upgrades.gd` (same pattern as `upgrades.gd`). Advanced weapons, ammo crafting, and late-unlocking improved-ammo packets for network weapons. Check: smoke tests (multipliers apply, Salvage burns, ammo is locked until the level milestone).
+
+**11. Terp.** Terraforming with Earth (packets) and Metal (Ore), on top of the Stage 5 tool. Mortar damage differs by material. Sealing routes is allowed. Check: smoke tests; screenshot.
+
+**12. Level placement.** Castles, nest bases, ore and Salvage deposits, ramp choke points, for Level 1 and the cave. Check: screenshots, and an undefended run shows pressure.
+
+**13. Tuning.** Targets:
+- Every ranged enemy has a counter you can afford when it unlocks.
+- Little Salvage left over at the win.
+- The pressure cap lands after a reasonable winning time.
+- The sim report gains new fields: Salvage left, Ore mined, pressure at the win.
+
+**14. Review and screenshots.** Code review of the core stages, then screenshots of a base assault, a castle defence, and the upgrade flow. Then a human playtest.
+
+---
+
+## 3. Phase B: scale and RTS (only when asked)
+| Item | Model |
+|---|---|
+| Save and load in the middle of a level (terrain edits, creeper, structures, units, Strongholds, clock) | Opus format design, Sonnet build |
+| Meta skill tree and its story framing, plus a campaign profile | Opus design, Sonnet build |
+| Large-map performance: terrain level of detail, chunked flow fields, profiling | Opus |
+| RTS army control: control groups, squads, rally points, unit production at Outposts | Opus design, Sonnet build |
+| Phase 3 difficulty: director, reinforcements, time gates (see DEV_PLAN) | Opus design, Sonnet build |
+| Flying enemies (Beam targets) | Sonnet |
+
+## 4. Open questions
+- None blocking. The Stage 3 doc will raise the detailed numbers for approval.
+- Set aside: the CW3 behaviour spec (`CREEPER_SPEC.md`, prose only). Ask before doing it.
+
+## 5. Already built (session 6, 2026-10-07)
+Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix. First-pass Aether Towers (Stage 7 replaces them). First-pass nest raiders with tier escalation (Stages 2 and 8 rework them). 49/49 smoke tests pass.
+
+## 6. Changelog
+- 2026-10-07: Plan created from the design conversation. Old corrections that were never built are folded into Stages 1 and 2.

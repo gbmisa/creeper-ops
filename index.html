@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Creeper Ops — Hollow Ridge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  </script>
+</head>
+<body>
+  <canvas id="view"></canvas>
+
+  <div id="hud">
+    <div id="markers"></div>
+    <div id="selbox" class="hidden"></div>
+
+    <div id="topbar">
+      <span id="hud-mode">COMMAND</span>
+      <span class="stat energy">Energy <b id="hud-energy">0</b> <small id="hud-income"></small>
+        <i class="mini"><i id="hud-energy-fill"></i></i></span>
+      <span class="stat" title="Packets in flight across the network">Packets <b id="hud-packets">0</b></span>
+      <span class="stat" title="Dry land claimed by collectors">Field <b id="hud-field">0</b></span>
+      <span class="stat" title="Soldiers and Crawlers">Units <b id="hud-units">0</b></span>
+      <span class="stat">Creeper <b id="hud-coverage">0%</b></span>
+      <span class="stat">Ship <b id="hud-ship">100%</b></span>
+      <span class="stat"><b id="hud-time">00:00</b> <b id="hud-speed">1×</b></span>
+    </div>
+
+    <div id="objectives" class="panel"><h3>Objectives</h3><ul id="obj-list"></ul></div>
+    <div id="log" class="panel"></div>
+    <div id="alert"></div>
+
+    <div id="info" class="panel hidden"><div id="info-body"></div><div id="info-actions"></div></div>
+    <div id="buildbar"></div>
+    <div id="tooltip" class="panel hidden"></div>
+    <div id="place-reason"></div>
+
+    <div id="fps-hud" class="hidden">
+      <div id="creeper-tint"></div>
+      <div id="damage-flash"></div>
+      <div id="crosshair"><i></i><i></i><i></i><i></i></div>
+      <div id="creeper-warn" class="hidden">IN CREEPER</div>
+      <div id="prompt"></div>
+      <div id="recall"><div id="recall-fill"></div></div>
+      <div id="fps-stats" class="panel">
+        <label>Suit integrity</label><div class="bar"><div id="suit-fill"></div></div>
+        <label>Null tank</label><div class="bar"><div id="tank-fill"></div></div>
+        <div id="weapon-name">[1] Pulse Rifle</div>
+      </div>
+    </div>
+
+    <div id="overlay" class="hidden"><div id="overlay-box"></div></div>
+  </div>
+
+  <div id="help" class="panel">
+    <span id="help-command"><kbd>WASD</kbd> pan <kbd>Q</kbd><kbd>E</kbd> rotate <kbd>wheel</kbd> zoom · <kbd>1-9</kbd> build (shift = keep) · drag to select units · <kbd>RMB</kbd> move / rally · <kbd>F</kbd><kbd>G</kbd> train · <kbd>X</kbd> recycle · <kbd>T</kbd> teleport · <kbd>Space</kbd> pause · <kbd>+</kbd><kbd>-</kbd> speed · <kbd>H</kbd> ship · <kbd>M</kbd> mute</span>
+    <span id="help-fps" class="hidden"><kbd>WASD</kbd> move <kbd>Space</kbd> jump <kbd>Shift</kbd> sprint · <kbd>LMB</kbd> fire · <kbd>1</kbd> rifle <kbd>2</kbd> null sprayer · <kbd>E</kbd> interact · hold <kbd>R</kbd> recall · <kbd>Esc</kbd> pause</span>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

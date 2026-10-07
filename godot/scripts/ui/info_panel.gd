@@ -1,0 +1,132 @@
+class_name InfoPanel
+extends PanelContainer
+## Right-side panel for the current selection: stats, supply state, and the CW3 action
+## buttons (Move, Supply on/off, Hold fire, Recycle) plus barracks training and Forge upgrades.
+
+var command: CommandMode
+var units: UnitManager
+var _title: Label
+var _body: RichTextLabel
+var _actions: HFlowContainer
+
+
+func setup(cm: CommandMode, um: UnitManager) -> void:
+	command = cm
+	units = um
+	add_theme_stylebox_override("panel", UiKit.style())
+	anchor_left = 1.0
+	anchor_right = 1.0
+	anchor_top = 0.0
+	offset_left = -330
+	offset_right = -10
+	offset_top = 64
+	var v := UiKit.vbox(6)
+	add_child(v)
+	_title = UiKit.label("", 18)
+	v.add_child(_title)
+	_body = UiKit.rich(13)
+	_body.custom_minimum_size.x = 300
+	v.add_child(_body)
+	_actions = HFlowContainer.new()
+	_actions.add_theme_constant_override("h_separation", 4)
+	_actions.add_theme_constant_override("v_separation", 4)
+	v.add_child(_actions)
+	Bus.selection_changed.connect(_rebuild_actions)
+	visible = false
+
+
+func _btn(text: String, cb: Callable) -> void:
+	_actions.add_child(UiKit.button(text, cb, 13))
+
+
+func _rebuild_actions() -> void:
+	for c in _actions.get_children():
+		c.queue_free()
+	var s := command.selected
+	if s == null:
+		return
+	if s.def.get("movable", false):
+		_btn("Move [%s]" % Keybinds.short("move"), command.begin_move)
+	if s.has_ammo_store():
+		_btn("Supply %s [%s]" % ["ON" if s.supply_on else "OFF", Keybinds.short("supply")], command.toggle_supply)
+	if s.def.has("fire_rate"):
+		_btn("Hold fire %s [%s]" % ["ON" if s.hold_fire else "OFF", Keybinds.short("hold_fire")], command.toggle_hold)
+	if s.type == "barracks":
+		for t in UnitDefs.ORDER:
+			var d: Dictionary = UnitDefs.DEFS[t]
+			_btn("Train %s (%d) [%s]" % [d.label, d.cost, Keybinds.short(UnitDefs.KEYS[t])], func(): command.train(t))
+	if s.type == "forge":
+		for id in Upgrades.ORDER:
+			var d: Dictionary = Upgrades.DEFS[id]
+			var txt := "%s %d/%d: MAX" % [d.label, Upgrades.level(id), d.max] if Upgrades.maxed(id) \
+				else "%s %d→%d (%d Æ)" % [d.label, Upgrades.level(id), Upgrades.level(id) + 1, Upgrades.cost(id)]
+			_btn(txt, func(): _buy(id))
+	if s.type != "node":
+		_btn("Recycle [%s]" % Keybinds.short("recycle"), command.recycle_selected)
+
+
+func _buy(id: String) -> void:
+	var f := command.selected
+	var why := Upgrades.buy(id, f != null and f.type == "forge" and f.is_built() and f.connected)
+	if why == "":
+		Sfx.play("good")
+		Bus.say("Forge: %s is now level %d." % [Upgrades.DEFS[id].label, Upgrades.level(id)], "good")
+	else:
+		Bus.say(why, "warn")
+		Sfx.play("deny")
+	_rebuild_actions()
+
+
+func refresh() -> void:
+	var s := command.selected
+	if s:
+		visible = true
+		_title.text = s.def.label
+		_body.text = _structure_text(s)
+		return
+	if not units.selected.is_empty():
+		visible = true
+		_title.text = "%d unit%s selected" % [units.selected.size(), "" if units.selected.size() == 1 else "s"]
+		_body.text = _units_text()
+		for c in _actions.get_children():
+			c.queue_free()
+		return
+	visible = false
+
+
+func _structure_text(s: Structure) -> String:
+	var lines := []
+	if not s.is_built():
+		lines.append("[color=#5fd4ff]Building: %d / %d packets[/color]" % [s.delivered, s.def.cost])
+	lines.append("HP %d / %d" % [ceili(s.hp), s.def.hp])
+	if s.is_flying():
+		lines.append("[color=#ffc857]In flight: no packets, no firing[/color]")
+	elif not s.connected:
+		lines.append("[color=#ff5a4a]NOT CONNECTED: no packets reach it[/color]")
+	if s.has_ammo_store():
+		var what := "Supply stock" if s.type == "barracks" else "Ammo"
+		lines.append("%s %d / %d%s" % [what, floori(s.ammo), s.ammo_max(), "" if s.supply_on else "  [color=#ffc857](supply OFF)[/color]"])
+	if s.hold_fire:
+		lines.append("[color=#ffc857]Holding fire[/color]")
+	if s.type == "forge":
+		lines.append("[color=#d38cff]Aether: %d[/color]" % Upgrades.aether)
+	if s.type == "barracks":
+		lines.append("Units %d / %d" % [units.living_for(s), Config.UNITS_PER_BARRACKS])
+		for q in s.queue:
+			lines.append("  queued %s: %d/%d packets" % [UnitDefs.DEFS[q.type].label, q.delivered, q.cost])
+		lines.append("Right-click ground: rally point")
+	elif s.def.get("movable", false):
+		lines.append("Right-click ground: fly there")
+	if s.wet > Config.DAMAGE_DEPTH:
+		lines.append("[color=#ff5a4a]Under creeper: taking damage[/color]")
+	lines.append("[color=#8899aa]%s[/color]" % s.def.desc)
+	return "\n".join(lines)
+
+
+func _units_text() -> String:
+	var lines := []
+	for u in units.selected.slice(0, 8):
+		var st := { "idle": "holding", "move": "moving", "resupply": "returning to resupply", "return": "returning to post" }
+		lines.append("%s  HP %d  Ammo %d/%d  %s" % [u.def.label, ceili(u.hp), floori(u.ammo), u.def.ammo, st.get(u.state, u.state)])
+	lines.append("[color=#8899aa]Right-click to move. Units run dry and walk home to restock.[/color]")
+	return "\n".join(lines)

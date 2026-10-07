@@ -1,0 +1,83 @@
+class_name FpsHud
+extends Control
+## Operative HUD: crosshair, suit and sprayer-tank bars, weapon name, interaction prompt,
+## creeper warning, recall progress, damage flash and in-creeper tint.
+
+var _cross: Label
+var _suit: ProgressBar
+var _tank: ProgressBar
+var _weapon: Label
+var _prompt: Label
+var _warn: Label
+var _recall: ProgressBar
+var _flash: ColorRect
+var _tint: ColorRect
+
+
+func _init() -> void:
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tint = _rect(Color(0.1, 0.3, 1.0, 0.0))
+	_flash = _rect(Color(1.0, 0.1, 0.05, 0.0))
+	_cross = UiKit.label("+", 26)
+	_cross.set_anchors_preset(Control.PRESET_CENTER)
+	_cross.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cross.position -= Vector2(8, 18)
+	add_child(_cross)
+	var box := UiKit.vbox(4)
+	box.anchor_left = 0.5
+	box.anchor_right = 0.5
+	box.anchor_top = 1.0
+	box.anchor_bottom = 1.0
+	box.position = Vector2(-130, -110)  # bottom centre: the event log owns bottom-left
+	add_child(box)
+	box.add_child(UiKit.label("SUIT", 11, UiKit.DIM))
+	_suit = UiKit.bar(260, 14, UiKit.GOOD)
+	box.add_child(_suit)
+	box.add_child(UiKit.label("SPRAYER TANK", 11, UiKit.DIM))
+	_tank = UiKit.bar(260, 10, Color("9ff6ff"))
+	box.add_child(_tank)
+	_weapon = UiKit.label("", 16)
+	box.add_child(_weapon)
+	_prompt = _centered(UiKit.label("", 20, UiKit.WARN), 60)
+	_warn = _centered(UiKit.label("", 22, UiKit.BAD), -140)
+	_recall = UiKit.bar(260, 10, UiKit.ENERGY)
+	_recall.set_anchors_preset(Control.PRESET_CENTER)
+	_recall.position = Vector2(-130, 100)
+	add_child(_recall)
+
+
+func _rect(c: Color) -> ColorRect:
+	var r := ColorRect.new()
+	r.color = c
+	r.set_anchors_preset(Control.PRESET_FULL_RECT)
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(r)
+	return r
+
+
+func _centered(l: Label, y: float) -> Label:
+	l.set_anchors_preset(Control.PRESET_CENTER_TOP if y < 0 else Control.PRESET_CENTER)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	l.position.y = (-y if y < 0 else y)
+	l.add_theme_color_override("font_outline_color", Color.BLACK)
+	l.add_theme_constant_override("outline_size", 5)
+	add_child(l)
+	return l
+
+
+func refresh(fps: FpsMode) -> void:
+	var suit := maxf(0.0, fps.suit) / Config.SUIT_MAX
+	_suit.value = suit
+	UiKit.set_bar_color(_suit, UiKit.BAD if suit < 0.35 else UiKit.GOOD)
+	_tank.value = fps.weapons.tank / Config.TANK_MAX
+	_weapon.text = fps.weapons.label()
+	_prompt.text = fps.prompt
+	_warn.text = ("IN CREEPER: SUIT BURNING%s" % (" FAST" if fps.creeper_depth > 1.0 else "")) if fps.in_creeper else ""
+	_cross.add_theme_color_override("font_color", UiKit.BAD if fps.weapons.hit_marker > 0.0 else UiKit.TEXT)
+	var r := fps.recall_hold / Config.RECALL_HOLD
+	_recall.visible = r > 0.0
+	_recall.value = r
+	_flash.color.a = 0.3 if fps.hurt_flash > 0.0 else (0.12 if fps.in_creeper else 0.0)
+	_tint.color.a = minf(0.45, 0.15 + fps.creeper_depth * 0.15) if fps.in_creeper else 0.0
