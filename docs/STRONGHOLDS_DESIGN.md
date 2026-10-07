@@ -198,7 +198,8 @@ Sniper: range 26 cells, 4 damage per shot. Operative rifle and rockets as in con
 | Skitter | 4 | 4.2 | Melee 3 dps | 0.5 | 0 | 10% chance of 1 |
 | Spitter | 10 | 3.0 | Acid lob, 6 per 2 s, small splash | **20** | 0.10 | 1 |
 | Brute | 16 | 3.4 | Melee 8 dps, ×3 against walls | 0.6 | 0.20 | 2 |
-| Lancer | 14 | 2.6 | Beam: 1.5 s charge, then 25 damage | **32** | 0.35 | 3 |
+| Lancer | 14 | 2.6 | Beam: 1.5 s charge, then 25 damage. **Targets Snipers first**, then other weapons | **32** | 0.35 | 3 |
+| Burrower | 20 | 3.0 underground | Tunnels under walls, cliffs and Metal (ignores terrain), surfaces next to the nearest **weapon** and bursts for 60 damage in a 1.5-cell radius. A dust trail shows it underground; it can only be hit while surfacing (1.5 s) | 0.5 | 0.40 | 2 |
 | Spotter | 8 | 4.5 | None; lets mortars target the Operative | Sight 25 m | With the first mortar | 2 |
 | Warden | 30 | 2.8 | Shield: allies within 5 cells take −50% damage | — | 0.50 | 3 |
 | Ravager | 40 | 4.0 | Melee 16 dps | 0.7 | 0.60 | 4 |
@@ -206,6 +207,7 @@ Sniper: range 26 cells, 4 damage per shot. Operative rifle and rockets as in con
 
 - Ranged enemies **stop when their target is in range and keep their distance.** Their shots are visible projectiles that take time to arrive, so they can be dodged.
 - Lancers aim from beyond Sniper range, so Snipers can't answer them.
+- **No fortress is automatic.** Lancers (outrange and hunt Snipers), Burrowers (ignore walls, hit weapons) and enemy mortars (outrange everything) mean a Sniper wall always needs maintenance: rebuilding, castle turrets, the Operative or the Lance. Every static defence has an enemy that beats it on its own.
 - **Mixed groups** from pressure 0.35: each raid of N rolls roles as 50% front line (Brute/Ravager/Behemoth/Skitter), 35% ranged (Spitter/Lancer) and 15% support (Warden). The group moves together at the speed of its slowest member, with a 10 s gather at the hive first.
 
 **Prey for ranged enemies:** structures, units, the Operative, castle turrets, wall segments.
