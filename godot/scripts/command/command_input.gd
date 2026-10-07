@@ -50,6 +50,9 @@ static func click(cm: CommandMode, shift: bool) -> void:
 			"@lance":
 				cm.orbital.fire(cm.hover.point)
 				if not shift: cm.set_tool("")
+			"@drop":
+				cm.deploy.start_drop(c)
+				if not shift: cm.set_tool("")
 			"@move":
 				cm.structures.move(cm.selected, c.x, c.y)
 				cm.set_tool("")

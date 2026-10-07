@@ -19,8 +19,9 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 	var res := check(cm, c)
 	cm.reason = res.reason if not res.ok else res.get("warn", "")
 	match cm.tool:
-		"@lance":
-			cm.overlay.show_ghost("", p, res.ok, Config.LANCE_RADIUS * Config.CELL, Config.LANCE_RADIUS * Config.CELL, [])
+		"@lance", "@drop":
+			var rad := (Config.LANCE_RADIUS if cm.tool == "@lance" else 1.0) * Config.CELL
+			cm.overlay.show_ghost("", p, res.ok, rad, rad, [])
 		"@move":
 			cm.overlay.show_ghost(cm.selected.type, at, res.ok, StructureDefs.radius_m(cm.selected.type), cm.selected.def.get("range", 0.0) * Config.CELL, [])
 		"@land":
@@ -35,6 +36,7 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 static func check(cm: CommandMode, c: Vector2i) -> Dictionary:
 	match cm.tool:
 		"@lance": return cm.orbital.can_fire()
+		"@drop": return cm.deploy.can_drop(c)
 		"@move": return Placement.can_move(cm.structures, cm.selected, c.x, c.y) if cm.selected else { "ok": false, "reason": "" }
 		"@land": return Placement.can_land(cm.structures, cm.level, c.x, c.y)
 		_: return Placement.can_place(cm.structures, cm.tool, c.x, c.y)

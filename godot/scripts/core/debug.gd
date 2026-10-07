@@ -13,6 +13,7 @@ class_name Debug
 ##   --sim=N       fast-forward N seconds, print a [sim] report
 ##   --smoke       run scripted mechanics checks (smoke_test.gd)
 ##   --tool=T      hold a build tool (screenshots of the ghost/overlays)
+##   --salvage=N   set the Salvage stockpile
 ##   --landing     dismiss the briefing and stop at the landing-site choice
 ##   --hover=x,z   put the (fake) cursor over a cell
 ##   --select=T    select the first structure of type T
@@ -87,6 +88,8 @@ static func apply(g) -> void:
 		var p: PackedStringArray = args.raise.split(",")
 		var cells: Array[Vector2i] = g.surface.grid.cells_in_radius(int(p[0]), int(p[1]), float(p[2]))
 		TerrainEdit.raise(g.surface, cells, float(p[3]), Grid.Mat.EARTH)
+	if args.has("salvage"):
+		g.stockpile.salvage = float(args.salvage)
 	if args.has("smoke"):
 		SmokeTest.run(g)
 	if args.has("sim"):
@@ -96,6 +99,9 @@ static func apply(g) -> void:
 		g.command.select_structure(s)
 	if args.has("tool"):
 		g.command.set_tool(args.tool)
+		for i in StructureDefs.TABS.size():
+			if (StructureDefs.MENU[StructureDefs.TABS[i]] as Array).has(args.tool):
+				g.hud.build.show_tab(i)
 	if args.has("hover"):  # fake the cursor over a cell (ghost/overlay screenshots)
 		var hz: PackedStringArray = args.hover.split(",")
 		g.get_tree().create_timer(0.3).timeout.connect(func():
@@ -120,7 +126,7 @@ static func apply(g) -> void:
 static func _drop(g, x: int, z: int, yaw: float) -> void:
 	var b: Structure = g.structures.place("beacon", x, z, true)
 	g.structures.selected_beacon = b
-	g.flow.try_teleport()
+	g.deploy.deploy_totem()
 	g.fps.controller.yaw = yaw
 
 

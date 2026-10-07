@@ -2,7 +2,7 @@ class_name CommandMode
 extends Node3D
 ## Top-down commander. Tools: a structure type (build; stays armed until right-click/Esc,
 ## like CW3), "@move" (relocate the selected
-## structure), "@lance" (orbital strike), "@land" (Command Node landing at mission start).
+## structure), "@lance" (orbital strike), "@drop" (Operative drop pod), "@land" (Command Node landing at mission start).
 ## Selection: click / drag-box units, click structures. Orders: right-click moves units,
 ## relocates a selected movable structure, or sets a barracks rally point.
 ## Pointer and hotkeys: CommandInput. Selection orders: CommandSelect. Ghost preview: CommandHover.
@@ -12,6 +12,7 @@ var world: World
 var structures: StructureManager
 var units: UnitManager
 var orbital: Orbital
+var deploy: OperativeDeploy
 var level: Dictionary
 var cam := CommandCamera.new()
 var overlay: CommandOverlay

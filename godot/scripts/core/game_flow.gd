@@ -1,8 +1,7 @@
 class_name GameFlow
 extends RefCounted
 ## Mode flow: briefing -> Command Node landing -> command <-> Operative (surface / cave),
-## teleports, recalls, global hotkeys, alerts and the end screen. Split from game.gd so that
-## file stays wiring only.
+## global hotkeys, alerts and the end screen. Deployment lives in OperativeDeploy.
 
 var g  # Game
 var node_alert_cd := 0.0
@@ -10,15 +9,6 @@ var node_alert_cd := 0.0
 
 func _init(game) -> void:
 	g = game
-	Bus.recall.connect(func(cost):
-		if cost > 0.0:
-			g.economy.drain(cost)
-		to_command("Emergency recall (-%d energy)." % cost if cost > 0.0 else "Operative back aboard."))
-	Bus.operative_down.connect(func():
-		g.economy.drain(Config.KO_PENALTY)
-		g.teleport_cooldown = Config.TELEPORT_COOLDOWN
-		g.hud.alert("SUIT FAILURE: OPERATIVE RECALLED")
-		to_command("Suit failure! Auto-recalled (-%d energy, teleporter offline %ds)." % [Config.KO_PENALTY, Config.TELEPORT_COOLDOWN], "bad"))
 	Bus.enter_cave.connect(func():
 		g.fps.enter(g.cave, g.cave_data.pad, -PI / 2.0, g.cave_hazards.mites)
 		set_mode("cave")
@@ -67,7 +57,7 @@ func on_key(k: int) -> void:
 	elif Keybinds.matches("speed_down", k):
 		g.cycle_speed(-1)
 	elif Keybinds.matches("teleport", k):
-		try_teleport()
+		g.deploy.deploy_totem()
 	elif not g.landing:
 		g.hud.build.handle_key(k)
 
@@ -77,7 +67,7 @@ func pick(item: String) -> void:
 	if g.landing:
 		Bus.say("Land the Command Node first.", "warn")
 	elif item == "@operative":
-		try_teleport()
+		g.deploy.deploy_totem()
 	else:
 		g.command.set_tool("" if g.command.tool == item else item)
 
@@ -96,33 +86,14 @@ func land(cell: Vector2i) -> void:
 		g.get_tree().create_timer(i * 3.0).timeout.connect(func(): Bus.say(lines[i][0], lines[i][1]))
 
 
-func try_teleport() -> void:
-	if g.landing or g.paused or g.over:
-		return
-	if g.teleport_cooldown > 0.0:
-		Bus.say("Teleporter recharging: %ds" % ceili(g.teleport_cooldown), "warn")
-		Sfx.play("deny")
-		return
-	var beacons: Array[Structure] = g.structures.beacons()
-	var sb: Structure = g.structures.selected_beacon
-	var b: Structure = sb if beacons.has(sb) else (beacons.back() if not beacons.is_empty() else null)
-	if b == null:
-		Bus.say("No finished Beacon. Drop one (Orbital tab, F4) outside Blight, then press T.", "warn")
-		Sfx.play("deny")
-		return
-	g.fps.reset_suit()
-	g.fps.enter(g.surface, Vector2i(b.x, b.z - 1), 0.0)
-	g.command.set_tool("")
-	set_mode("surface")
-	Bus.say("Operative deployed. The creeper won't wait for you.", "radio")
-
-
 func pause_operative() -> void:
 	g.fps_paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	var cd: float = g.deploy.preview_recall()
+	var recall := "Recall to Node" if cd <= 0.0 else "Recall to Node (teleporter %ds)" % ceili(cd)
 	g.hud.show_overlay("[b]Operative paused[/b]\nThe battle is frozen.", [
 		{ "label": "Resume", "on_click": resume_operative },
-		{ "label": "Recall to Node (-%d)" % Config.RECALL_COST, "on_click": func(): Bus.recall.emit(Config.RECALL_COST) },
+		{ "label": recall, "on_click": func(): g.deploy.commit_recall() },
 		{ "label": "Controls", "on_click": g.hud.keys.open },
 	])
 
@@ -170,7 +141,7 @@ Hold the line Creeper World 3 style, and drop an [b]Operative[/b] to finish what
 • [b]Energy is packets.[/b] The Node fires a packet whenever a structure asks and the bank has energy. Watch the green (production) and red (demand) numbers.
 • [b]Four build screens[/b] (F1-F4): Structures, Weapons, Titans, Orbital. Weapons and titans can fly to new spots: select, then right-click.
 • [b]Creeper destroys anything it touches,[/b] built or not. Only the Node has armour. Purple [b]Blight[/b] can't be built on.
-• [b]Spore Nests grow.[/b] They raid your base and breed tougher raiders the longer the mission runs. [b]Aether Towers[/b] feed the Forge: the Operative captures them, creeper takes them back. Barracks units can enter it, but they run dry and must walk home to restock.
+• [b]Spore Nests grow.[/b] They raid your base and breed tougher raiders the longer the mission runs. [b]Castles[/b] feed the Forge: the Operative climbs the spire, kills the crown nest and holds the top; raiders come to take them back. Barracks units can enter it, but they run dry and must walk home to restock.
 • Only the [b]Operative[/b] can plant charges or enter the Rift.""" % g.level.name,
 		[{ "label": "Begin: choose landing site", "on_click": begin }, { "label": "Controls", "on_click": g.hud.keys.open }])
 

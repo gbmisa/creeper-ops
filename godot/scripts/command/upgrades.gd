@@ -65,7 +65,7 @@ static func gain(n: int, why: String) -> void:
 	Bus.say("+%d Aether (%s). Spend it at a Forge." % [n, why], "good")
 
 
-## Silent income from held Aether Towers.
+## Silent income from held castles.
 static func trickle(amount: float) -> void:
 	_frac += amount
 	var whole := floori(_frac)

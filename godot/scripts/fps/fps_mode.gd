@@ -10,6 +10,9 @@ var weapons: OperativeWeapons
 var body := Node3D.new()
 var suit := Config.SUIT_MAX
 var recall_hold := 0.0
+var recall_cd := 0.0
+var commit_recall: Callable = func() -> void: pass
+var preview_recall: Callable = func() -> float: return 0.0
 var world: World = null
 var prompt := ""
 var in_creeper := false
@@ -100,8 +103,8 @@ func _interact(input: InputState) -> void:
 	var bd := INF
 	var candidates: Array = world.interactables.duplicate()
 	for b in beacons.call(world):
-		candidates.append({ "pos": b.pos, "radius": 1.8, "prompt": func(): return "[E] Teleport back to the Command Node (free)",
-			"use": func(): Bus.recall.emit(0.0) })
+		candidates.append({ "pos": b.pos, "radius": 1.8, "prompt": func(): return "[E] Recall to the Command Node (free)",
+			"use": func(): commit_recall.call() })
 	for it in candidates:
 		var d := Vector2(it.pos.x - feet.x, it.pos.z - feet.z).length()
 		if d <= it.radius and d < bd and it.prompt.call() != "":
@@ -113,10 +116,12 @@ func _interact(input: InputState) -> void:
 
 
 func _recall(dt: float, input: InputState) -> void:
-	if input.held("recall"):
+	if input.held("recall") and world != null:
 		recall_hold += dt
+		recall_cd = preview_recall.call()
 		if recall_hold >= Config.RECALL_HOLD:
 			recall_hold = 0.0
-			Bus.recall.emit(Config.RECALL_COST)
+			commit_recall.call()
 	else:
 		recall_hold = 0.0
+		recall_cd = 0.0

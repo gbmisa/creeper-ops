@@ -2,7 +2,7 @@
 
 The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
 
-**Status:** Stages 1–5 and 7 merged to `main` (⚠ = not human-verified). Next: review Grok's 6 / 10b / command-mode branches, then 8a/8b/9a.
+**Status:** Stages 1–7 and 10b merged to `main` (⚠ = not human-verified), plus the command-mode split. Next: briefs for 8a, 8b, 9a.
 **Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
 
 ---
@@ -116,7 +116,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ☐ |
 | 9b | Extractors and supply points | Sonnet 5.5 | ☐ |
 | 10 | Armoury (incl. Ctrl + wheel ammo switching) | Sonnet 5.5 | ☐ |
-| 10b | **Operative deployment:** Totems, drop anywhere, recall cooldown, Shield Domes block drops, expensive respawn (design §5.4) | Sonnet 5.5 | ☐ |
+| 10b | **Operative deployment:** Totems, drop anywhere, recall cooldown, Shield Domes block drops, expensive respawn (design §5.4) | Sonnet 5.5 (Grok), Opus review | ⚠ merged, verified headless |
 | 11 | Terp | Sonnet 5.5 | ☐ |
 | 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ☐ |
 | 13 | Tuning | Haiku 4.5 (`balance-tester`) | ☐ |
@@ -205,6 +205,7 @@ Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix
 - 2026-10-07: Stage 5 done (Opus). `TerrainEdit` + `World.terrain_changed`, chunked terrain (`TerrainChunks`, 2 rebuilds/frame), `Grid.step_ok` with faction gates shared by raiders, units and the Operative, `base_height`, materials. 18 new smoke checks (`smoke_terrain.gd`). GPU parity now includes a mid-run ring wall and fails if the height upload is skipped. `--raise=x,z,r,by` debug hook.
 - 2026-10-07: Split `command_mode.gd` (247 lines) into `command_input.gd`, `command_select.gd` and `command_hover.gd`. No behaviour change. `CommandMode` stays the entry class.
 - 2026-10-07: Stage 6 ⚠. Packets launch from the nearest sender (Command Node or Outpost). Outposts cost 40, add `OUTPOST_STORAGE` 50 to the shared bank, and produce nothing. A flying Node no longer stops packets while an Outpost is up.
+- 2026-10-07: Stage 10b ⚠. Totems (beacon id), `@drop` pods, recall cooldown from the walk path, and paid respawn. Smoke in `smoke_deploy.gd`. Opus review on merge: `@drop` ported into the split command files; the recall path now uses `Grid.step_ok` (gates, decks); recalling from the cave measures from the Rift.
 - 2026-10-07: §0 answered. Added: castle variants (ground / raised with drawbridge and moat), wall platforming, tall indestructible spires with a creeper pump, enemy construction (§4.5), Operative deployment rework (§5.4), Ctrl + wheel ammo. New Stages 8c and 10b.
 - 2026-10-07: Stage 4 done. GPU creeper sim (creeper_gpu.gd + creeper_flow.glsl) with CPU fallback. Parity PASS (300 ticks, max cell diff < 0.00001). Perf on the RTX 5090: 80x80 0.55 → 0.027 ms/tick, 512x512 12.3 → 0.055 ms/tick. Live and fast-forward runs match the CPU build.
 - 2026-10-07: Stage 3 design doc written (docs/STRONGHOLDS_DESIGN.md). Its §0 lists 10 decisions for the user to approve.
