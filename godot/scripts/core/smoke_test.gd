@@ -131,6 +131,7 @@ static func run(g) -> void:
 	_forge_and_operative(g)
 	SmokeRules.run(g)
 	SmokeRaiders.run(g)
+	SmokeSenders.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

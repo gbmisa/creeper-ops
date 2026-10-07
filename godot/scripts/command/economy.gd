@@ -1,6 +1,7 @@
 class_name Economy
 extends RefCounted
-## Energy bank. Income comes from the Command Node, collector land and reactors. Spending
+## One shared energy bank for every sender. Income comes from the Command Node (while it
+## is grounded), collector land and reactors. Outposts add storage and no income. Spending
 ## happens one packet at a time in packets.gd; spend() is only for lump costs (drop pods,
 ## orbital strikes, penalties).
 
@@ -31,8 +32,8 @@ func add(n: float) -> void:
 	energy = minf(max_energy, energy + n)
 
 
-func tick(dt: float, node_producing: bool, field_income: float, cells: int, reactor_income: float, storage: float) -> void:
-	max_energy = Config.NODE_STORAGE + storage + Upgrades.bonus("storage")
+func tick(dt: float, node_producing: bool, field_income: float, cells: int, reactor_income: float, storage: float, outpost_storage: float) -> void:
+	max_energy = Config.NODE_STORAGE + storage + outpost_storage + Upgrades.bonus("storage")
 	field_cells = cells
 	income = ((Config.NODE_INCOME if node_producing else 0.0) + field_income + reactor_income) * Upgrades.mult("energy")
 	var before := energy

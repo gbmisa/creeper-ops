@@ -1,11 +1,12 @@
 class_name Network
 extends MeshInstance3D
 ## Energy network (CW3 style). Every pair of finished relaying nodes within link range is
-## connected; packets take the SHORTEST path from the Command Node (Dijkstra). Non-relaying
-## structures hang off their nearest finished relaying node. Cut a relay and everything
-## that only routed through it goes dark.
+## connected. Packets take the SHORTEST path from the nearest sender: Dijkstra starts at
+## every built sender that is not flying, all at distance 0. Non-relaying structures hang
+## off their nearest finished relaying node. Cut a relay and everything that only routed
+## through it goes dark.
 
-var _prev := {}          # Structure -> upstream Structure (null for the node)
+var _prev := {}          # Structure -> upstream Structure (null for a sender)
 var _len := {}           # Structure -> route length in metres (packet transit distance)
 var _imesh := ImmediateMesh.new()
 
@@ -33,21 +34,28 @@ static func _relaying(s: Structure) -> bool:
 	return s.def.get("relays", false) and s.is_built() and not s.is_flying()
 
 
+static func _sender(s: Structure) -> bool:
+	return s.def.get("sender", false) and s.is_built() and not s.is_flying()
+
+
 func rebuild(list: Array) -> void:
 	_prev.clear()
 	_len.clear()
 	for s in list:
 		s.connected = false
-	var root: Structure = null
+	var roots := []
 	for s in list:
-		if s.type == "node" and not s.is_flying():
-			root = s
+		if _sender(s):
+			roots.append(s)
 	var edges := []  # [a, b] pairs to draw
-	if root:
-		var dist := { root: 0.0 }
-		_prev[root] = null
-		var open := [root]
-		var relays := list.filter(func(s): return _relaying(s) and s != root)
+	if not roots.is_empty():
+		var dist := {}
+		var open := []
+		for root in roots:
+			dist[root] = 0.0
+			_prev[root] = null
+			open.append(root)
+		var relays := list.filter(func(s): return _relaying(s) and not _sender(s))
 		while not open.is_empty():
 			open.sort_custom(func(a, b): return dist[a] < dist[b])
 			var a: Structure = open.pop_front()
@@ -103,7 +111,7 @@ func _draw(edges: Array) -> void:
 	_imesh.surface_end()
 
 
-## Points a packet visits from the node to `s` (inclusive), or empty if unreachable.
+## Points a packet visits from the nearest sender to `s` (inclusive), or empty if unreachable.
 func route(s: Structure) -> PackedVector3Array:
 	var out := PackedVector3Array()
 	if not _prev.has(s):
@@ -118,7 +126,7 @@ func route(s: Structure) -> PackedVector3Array:
 	return out
 
 
-## Metres a packet travels from the node to `s` (0 if unreachable).
+## Metres a packet travels from the nearest sender to `s` (0 if unreachable).
 func route_length(s: Structure) -> float:
 	return _len.get(s, 0.0)
 

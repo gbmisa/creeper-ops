@@ -1,8 +1,9 @@
 class_name Packets
 extends MultiMeshInstance3D
-## Packet dispatcher, CW3 rules: energy IS packets. The Command Node launches a packet the
+## Packet dispatcher, CW3 rules: energy IS packets. The nearest sender launches a packet the
 ## moment a structure requests one AND the bank holds >= 1 energy. There is no global launch
-## cap. Throughput is limited only by income, the bank, and each structure's request rate
+## cap. One flying Node does not stop launches while another sender is ready. Throughput is
+## limited only by income, the bank, and each structure's request rate
 ## (Config.REQ_BUILD / REQ_AMMO / REQ_UNIT). Requests the bank can't pay are counted as unmet
 ## demand so the HUD can show the red number the way CW3 does. Ammo is served before builds.
 
@@ -43,55 +44,27 @@ func setup(net: Network, eco: Economy) -> void:
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
-## What a structure still needs: "build" | "ammo" | "unit" | "".
-## Counts packets already in flight so we never over-send.
-## Ammo a firing weapon burns while its next packet is still travelling. Requests include it,
-## so long supply lines keep the magazine topped up instead of counting in-flight packets
-## against a nearly empty gun.
-## Only weapons that are actually firing get it: an idle gun burns nothing in transit.
 func transit_headroom(s: Structure) -> float:
-	if not s.def.has("fire_rate") or s.firing <= 0.0:
-		return 0.0
-	var transit := network.route_length(s) / speed() + 0.5
-	return s.per_shot() / WeaponLogic.fire_interval(s) * transit
+	return PacketRequests.transit_headroom(network, s)
 
 
 func need(s: Structure) -> String:
-	if not s.connected or s.dead or s.def.get("drop_pod", false):
-		return ""
-	if not s.is_built():
-		return "build" if s.delivered + s.in_flight < s.def.cost else ""
-	if s.is_flying():
-		return ""
-	if s.has_ammo_store() and s.supply_on:
-		var a: Dictionary = s.def.ammo
-		# A full magazine never asks: the packet would arrive with nowhere to go.
-		if s.ammo <= a.max - a.per_packet + 0.001 \
-				and s.ammo + s.in_flight * a.per_packet <= a.max - a.per_packet + transit_headroom(s) + 0.001:
-			return "ammo"
-	if not s.queue.is_empty():
-		var q: Dictionary = s.queue[0]
-		if q.delivered + s.in_flight < q.cost:
-			return "unit"
-	return ""
+	return PacketRequests.need(network, s)
 
 
 static func speed() -> float:
-	return Config.PACKET_SPEED * Upgrades.mult("packet")
+	return PacketRequests.speed()
 
 
 static func rate(kind: String) -> float:
-	match kind:
-		"build": return Config.REQ_BUILD * Upgrades.mult("build")
-		"ammo": return Config.REQ_AMMO
-		_: return Config.REQ_UNIT
+	return PacketRequests.rate(kind)
 
 
-func update(dt: float, list: Array, node_ready: bool) -> void:
+func update(dt: float, list: Array, sender_ready: bool) -> void:
 	var sent := 0
 	var wanted := 0.0
 	var unmet := 0.0
-	if node_ready and not list.is_empty():
+	if sender_ready and not list.is_empty():
 		var n := list.size()
 		_cursor = (_cursor + 1) % n  # rotate start so no structure always goes first
 		# Two passes: ammo first (a starving economy must not leave the guns dry), then

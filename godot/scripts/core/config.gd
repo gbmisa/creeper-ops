@@ -25,6 +25,7 @@ const WEAPON_CREEPER_BASE_DPS := 5.5  # built weapons: flat per second while wet
 # ---- economy (CW3: energy IS packets; no launch cap) -----------------------------
 const START_ENERGY := 0.0     # the Node lands empty: first packets come from its own output
 const NODE_STORAGE := 60.0     # the Command Node's own bank
+const OUTPOST_STORAGE := 50.0  # each built Outpost adds this to the shared bank; no income
 const NODE_INCOME := 0.8       # packets/s the Command Node generates by itself
 const REQ_BUILD := 2.5         # packets/s one structure may request while under construction
 const REQ_AMMO := 4.0          # packets/s one weapon may request for ammo
