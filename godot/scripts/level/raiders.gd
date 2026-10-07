@@ -12,17 +12,25 @@ extends RefCounted
 var world: World
 var list: Array[Dictionary] = []
 var field: RaiderField
+## Raiders with mission "castle" follow this field to held castles (Strongholds sets goals).
+var castle_field: RaiderField
+var castle_goals := func() -> Array: return []
+var on_march := func(_r: Dictionary) -> void: pass  # injected: may give a marcher a mission
 var time := 0.0
 
 
 func _init(w: World) -> void:
 	world = w
 	field = RaiderField.new(w.grid)
-	Bus.terrain_changed.connect(func(cw, _cells): if cw == world: field.invalidate())
+	castle_field = RaiderField.new(w.grid)
+	Bus.terrain_changed.connect(func(cw, _cells):
+		if cw == world:
+			field.invalidate()
+			castle_field.invalidate())
 
 
 func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
-	var node := mesh(tier)
+	var node := HazardMeshes.raider(tier)
 	var a := randf() * TAU
 	node.position = nest.pos + Vector3(cos(a) * 1.8, 0, sin(a) * 1.8)
 	world.add_child(node)
@@ -37,6 +45,8 @@ func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
 	world.add_target(r.target)
 	list.append(r)
 	nest.count += 1
+	if not guard:
+		on_march.call(r)
 
 
 func kill(r: Dictionary) -> void:
@@ -55,6 +65,7 @@ func kill(r: Dictionary) -> void:
 func update(dt: float, prey: Array, goal_cells: Array) -> void:
 	time += dt
 	field.update(dt, goal_cells)
+	castle_field.update(dt, castle_goals.call())
 	var reachable := prey.filter(func(q): return q.alive.call() and _grounded(q))
 	for r in list.duplicate():
 		_think(r, dt, reachable)
@@ -92,24 +103,34 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 	else:
 		target = _nearest(p, prey, Config.RAIDER_AGGRO)
 		if target.is_empty():
-			goal = field.next_step(p.x, p.z)
+			goal = _route(r, p)
 			if goal == null:
-				target = _nearest_on_foot(p, prey)
+				target = field.nearest_on_foot(p, prey)
 				if target.is_empty():
 					r.guard = true
 					goal = _patrol(home, r)
 	if not target.is_empty():
 		var tp: Vector3 = target.node.position
 		var reach: float = target.radius + r.size + 0.5
-		if Vector2(tp.x - p.x, tp.z - p.z).length() <= reach:
+		if Vector2(tp.x - p.x, tp.z - p.z).length() <= reach and absf(tp.y - p.y) <= reach + 2.5:
 			target.hit.call(r.tier.dps * dt)
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
-			r.node.position.y = world.grid.smooth_y(p.x, p.z) + absf(sin(time * 12.0 + r.phase)) * 0.2
+			r.node.position.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY) + absf(sin(time * 12.0 + r.phase)) * 0.2
 			return
 		goal = Vector2(tp.x, tp.z)
 	if goal == null:
 		return
 	_walk(r, goal, dt)
+
+
+## Castle raiders follow the castle field while it has a route for them; everyone else
+## (and castle raiders with no route) follows the field to your structures.
+func _route(r: Dictionary, p: Vector3) -> Variant:
+	if r.get("mission", "") == "castle" and castle_field.has_goals:
+		var s = castle_field.next_step(p.x, p.z)
+		if s != null:
+			return s
+	return field.next_step(p.x, p.z)
 
 
 func _walk(r: Dictionary, goal: Vector2, dt: float) -> void:
@@ -136,7 +157,7 @@ func _walk(r: Dictionary, goal: Vector2, dt: float) -> void:
 		p.x = nx
 	if _step_into(p.x, p.z, p.x, nz):
 		p.z = nz
-	p.y = world.grid.smooth_y(p.x, p.z)
+	p.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY)
 	r.node.position = p
 	_face(r, v)
 
@@ -160,75 +181,6 @@ func _patrol(home: Vector3, r: Dictionary) -> Vector2:
 	return Vector2(home.x + cos(a) * 4.0, home.z + sin(a) * 4.0)
 
 
-## Nearest prey that shares a one-terrace walking route, or {}.
-func _nearest_on_foot(from: Vector3, prey: Array) -> Dictionary:
-	var g := world.grid
-	var start := g.world_to_cell(from.x, from.z)
-	if not g.in_bounds(start.x, start.y):
-		return {}
-	var at := {}
-	for q in prey:
-		if not q.alive.call():
-			continue
-		var qp: Vector3 = q.node.position
-		var c := g.world_to_cell(qp.x, qp.z)
-		if not g.in_bounds(c.x, c.y):
-			continue
-		var i := g.idx(c.x, c.y)
-		if not at.has(i):
-			at[i] = []
-		(at[i] as Array).append(q)
-	var seen := PackedByteArray()
-	seen.resize(g.w * g.h)
-	var open := PackedInt32Array()
-	open.append(g.idx(start.x, start.y))
-	seen[g.idx(start.x, start.y)] = 1
-	var best: Dictionary = {}
-	var bd := INF
-	var head := 0
-	while head < open.size():
-		var b := open[head]
-		head += 1
-		var bx := b % g.w
-		var bz := int(b / g.w)
-		if at.has(b):
-			for q in at[b]:
-				var qp: Vector3 = q.node.position
-				var d := Vector2(qp.x - from.x, qp.z - from.z).length()
-				if d < bd:
-					bd = d
-					best = q
-		for dir in RaiderField.DIRS:
-			var nx: int = bx + dir.x
-			var nz: int = bz + dir.y
-			if not g.in_bounds(nx, nz) or not field.step_ok(bx, bz, nx, nz):
-				continue
-			var ni := g.idx(nx, nz)
-			if seen[ni] != 0:
-				continue
-			seen[ni] = 1
-			open.append(ni)
-	return best
-
-
 func _face(r: Dictionary, d: Vector2) -> void:
 	if d.length() > 0.001:
 		r.node.rotation.y = atan2(-d.y, d.x)
-
-
-## Six-legged bug facing +X, scaled by tier size, glowing in the tier colour.
-static func mesh(tier: Dictionary) -> Node3D:
-	var root := Node3D.new()
-	var s: float = tier.size
-	var shell := StructureMeshes.mat(Color("1e2414"), 0.2, 0.6)
-	var glow := StructureMeshes.mat(tier.color, 0.0, 0.3, tier.color, 2.0)
-	var body := StructureMeshes.ball(root, s * 0.55, shell, Vector3(0, s * 0.6, 0))
-	body.scale = Vector3(1.5, 0.8, 1.0)
-	StructureMeshes.ball(root, s * 0.32, glow, Vector3(s * 0.75, s * 0.65, 0))
-	StructureMeshes.ball(root, s * 0.3, glow, Vector3(-s * 0.55, s * 0.85, 0))
-	for i in 3:
-		for side in [-1.0, 1.0]:
-			var leg := StructureMeshes.box(root, Vector3(s * 0.12, s * 0.12, s * 0.9), shell,
-				Vector3((i - 1) * s * 0.45, s * 0.35, side * s * 0.55))
-			leg.rotation.x = side * 0.7
-	return root

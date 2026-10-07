@@ -88,7 +88,7 @@ func _hit_nest(nest: Dictionary, dmg: float) -> void:
 
 
 ## Newest unlocked tier half the time, otherwise any lower one.
-func _pick_tier() -> Dictionary:
+func pick_tier() -> Dictionary:
 	var i := tier if randf() < 0.5 else randi_range(0, tier)
 	return Config.RAIDER_TIERS[i]
 
@@ -126,7 +126,7 @@ func update(dt: float) -> void:
 		if n.timer >= interval and n.count < cap and raiders.list.size() < Config.RAIDER_MAX_TOTAL:
 			n.timer = 0.0
 			var guard: bool = not raiding or _guards(n) < Config.NEST_GUARDS
-			raiders.spawn(n, _pick_tier(), guard)
+			raiders.spawn(n, pick_tier(), guard)
 	raiders.update(dt, prey.call(), goal_cells.call())
 
 

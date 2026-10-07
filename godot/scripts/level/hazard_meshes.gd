@@ -137,3 +137,21 @@ static func mite(color := Color("a8ff5a")) -> MeshInstance3D:
 	mi.mesh = s
 	mi.material_override = _glow(color, 1.4)
 	return mi
+
+
+## Six-legged bug facing +X, scaled by tier size, glowing in the tier colour.
+static func raider(tier: Dictionary) -> Node3D:
+	var root := Node3D.new()
+	var s: float = tier.size
+	var shell := StructureMeshes.mat(Color("1e2414"), 0.2, 0.6)
+	var glow := StructureMeshes.mat(tier.color, 0.0, 0.3, tier.color, 2.0)
+	var body := StructureMeshes.ball(root, s * 0.55, shell, Vector3(0, s * 0.6, 0))
+	body.scale = Vector3(1.5, 0.8, 1.0)
+	StructureMeshes.ball(root, s * 0.32, glow, Vector3(s * 0.75, s * 0.65, 0))
+	StructureMeshes.ball(root, s * 0.3, glow, Vector3(-s * 0.55, s * 0.85, 0))
+	for i in 3:
+		for side in [-1.0, 1.0]:
+			var leg := StructureMeshes.box(root, Vector3(s * 0.12, s * 0.12, s * 0.9), shell,
+				Vector3((i - 1) * s * 0.45, s * 0.35, side * s * 0.55))
+			leg.rotation.x = side * 0.7
+	return root

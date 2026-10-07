@@ -52,7 +52,7 @@ func spawn(type: String, x: float, z: float) -> Unit:
 	u.node.add_child(u.hp_bar)
 	u.node.add_child(u.ammo_bar)
 	add_child(u.node)
-	u.pos = Vector3(x, world.grid.smooth_y(x, z), z)
+	u.pos = Vector3(x, world.grid.stand_y(x, z, Grid.Faction.PLAYER), z)
 	u.prey = { "node": u.node, "radius": u.def.radius, "alive": func(): return u.alive, "hit": func(d): damage(u, d) }
 	list.append(u)
 	return u
@@ -147,7 +147,7 @@ func _move(u: Unit, dt: float) -> void:
 	if g.in_bounds(b.x, b.y) and rise <= u.def.climb and -rise <= u.def.drop:
 		p.x = nx
 		p.z = nz
-	p.y = g.smooth_y(p.x, p.z)
+	p.y = g.stand_y(p.x, p.z, Grid.Faction.PLAYER)
 	u.pos = p
 
 

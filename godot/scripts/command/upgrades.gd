@@ -1,6 +1,6 @@
 class_name Upgrades
 ## CW3 Forge: Aether buys permanent, mission-wide upgrades. Aether comes from objectives,
-## Spore Nests and Aether Towers the Operative captures and holds (aether_towers.gd). Spending
+## Spore Nests and castles the Operative captures and holds (stronghold.gd). Spending
 ## needs a finished, connected Forge. Static state: one mission per run; reset() on start.
 ## Effects are multipliers that systems read through mult()/bonus().
 

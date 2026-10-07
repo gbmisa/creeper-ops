@@ -6,7 +6,7 @@ extends RefCounted
 ## smooth_y() matches what you see (and the creeper shader uses the same weights).
 
 enum Zone { NONE = 0, BLIGHT = 1 }  # BLIGHT = agent-only: nothing can be built there
-enum Faction { NONE = 0, PLAYER = 1, ENEMY = 2 }
+enum Faction { NONE = 0, PLAYER = 1, ENEMY = 2, ALL = 3 }  # ALL: a drawbridge open to everyone
 enum Mat { NATURAL = 0, EARTH = 1, METAL = 2, STONE = 3, PLATED = 4, SPIRE = 5 }
 
 ## A gate cell is open ground for its owner and this many levels of wall for everyone else.
@@ -20,6 +20,8 @@ var zone := PackedByteArray()       # Zone per cell
 var base_height := PackedFloat32Array()  # heights as the level was built (snapshot_base)
 var material := PackedByteArray()        # Mat per cell
 var gate := PackedByteArray()            # Faction owning a gate on this cell (NONE = no gate)
+var deck := PackedFloat32Array()         # drawbridge deck level over this cell (castle_shape)
+var deck_owner := PackedByteArray()      # Faction that may walk the deck (NONE = no deck, ALL)
 
 
 func _init(width: int, depth: int) -> void:
@@ -30,6 +32,8 @@ func _init(width: int, depth: int) -> void:
 	zone.resize(w * h)
 	material.resize(w * h)
 	gate.resize(w * h)
+	deck.resize(w * h)
+	deck_owner.resize(w * h)
 
 
 func idx(x: int, z: int) -> int:
@@ -56,13 +60,51 @@ func snapshot_base() -> void:
 	base_height = height.duplicate()
 
 
-## Height as a walker of `faction` feels it: someone else's gate is a wall.
+## Height as a walker of `faction` feels it: someone else's gate is a wall, and a
+## drawbridge deck it may cross is solid ground over the gap.
 func walk_height(x: int, z: int, faction: int) -> float:
 	if not in_bounds(x, z):
 		return 99.0
 	var i := z * w + x
 	var g := gate[i]
-	return height[i] + (GATE_H if g != Faction.NONE and g != faction else 0.0)
+	var hh := deck[i] if on_deck(i, faction) else height[i]
+	return hh + (GATE_H if g != Faction.NONE and g != faction else 0.0)
+
+
+func on_deck(i: int, faction: int) -> bool:
+	var o := deck_owner[i]
+	return o != Faction.NONE and (o == faction or o == Faction.ALL) and deck[i] > height[i]
+
+
+## Where a walker of `faction` stands: the smooth ground, or a drawbridge deck it may
+## cross (decks count as ground in the bilinear blend, so walking on and off is seamless).
+func stand_y(wx: float, wz: float, faction: int) -> float:
+	var fx := wx / Config.CELL - 0.5
+	var fz := wz / Config.CELL - 0.5
+	var x0 := floori(fx)
+	var z0 := floori(fz)
+	var any := false
+	for c in [Vector2i(x0, z0), Vector2i(x0 + 1, z0), Vector2i(x0, z0 + 1), Vector2i(x0 + 1, z0 + 1)]:
+		if in_bounds(c.x, c.y) and on_deck(c.y * w + c.x, faction):
+			any = true
+	if not any:
+		return smooth_y(wx, wz)
+	var tx := terrace(fx - x0)
+	var tz := terrace(fz - z0)
+	var a := _hf(x0, z0, faction)
+	var b := _hf(x0 + 1, z0, faction)
+	var c := _hf(x0, z0 + 1, faction)
+	var d := _hf(x0 + 1, z0 + 1, faction)
+	var y := lerpf(lerpf(a, b, tx), lerpf(c, d, tx), tz) * Config.LEVEL_H
+	var me := world_to_cell(wx, wz)  # off the deck's edge you fall: the gap is real ground
+	if in_bounds(me.x, me.y) and not on_deck(me.y * w + me.x, faction):
+		y = minf(y, maxf(smooth_y(wx, wz), height_at(me.x, me.y) * Config.LEVEL_H))
+	return y
+
+
+func _hf(x: int, z: int, faction: int) -> float:
+	var i := clampi(z, 0, h - 1) * w + clampi(x, 0, w - 1)
+	return deck[i] if on_deck(i, faction) else height[i]
 
 
 ## Can a walker step from cell a onto neighbour b? `climb` / `drop` are in levels. Raiders,

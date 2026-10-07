@@ -20,6 +20,8 @@ class_name Debug
 ##   --gpu-parity / --perf-sim=N   GPU creeper sim checks (SimBench; need a display)
 ##   --cpu-sim     force the CPU creeper sim
 ##   --raise=x,z,r,by   raise (negative: lower) a disc of terrain through TerrainEdit
+##   --castle=I[,spot]  drop the Operative at castle I: climb (pillar route, default), pad
+##                 (spire jump pad), top (spire top), gate (outside the gate)
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -42,7 +44,7 @@ static func apply(g) -> void:
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
 	if args.has("nocapture") or args.has("shot"):
 		g.ignore_capture = true
-	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "sim", "shot", "smoke"].any(func(k): return args.has(k))
+	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "sim", "shot", "smoke"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
 	elif auto:
@@ -68,6 +70,8 @@ static func apply(g) -> void:
 		_drop(g, g.level.rift.x + 9, g.level.rift.z, PI / 2.0)
 	if args.has("spire"):
 		_drop(g, 61, 37, 0.0)
+	if args.has("castle"):
+		_castle(g, args.castle.split(","))
 	if args.has("cave"):
 		Bus.enter_cave.emit()
 	if args.has("killcore"):
@@ -120,6 +124,20 @@ static func _drop(g, x: int, z: int, yaw: float) -> void:
 	g.fps.controller.yaw = yaw
 
 
+static func _castle(g, p: PackedStringArray) -> void:
+	var c: Dictionary = g.castles.list[int(p[0])]
+	var lay: Dictionary = g.castles.lays[c.id]
+	var spot: String = p[1] if p.size() > 1 else "climb"
+	var centre: Vector2i = lay.spire.centre
+	var at: Vector2i = { "pad": lay.spire.pad[0] if not lay.spire.pad.is_empty() else lay.spire.entry,
+		"top": centre + Vector2i(1, 1), "gate": lay.gates[0].outer.back() + (lay.gates[0].outer.back() - centre).sign() * 4,
+		"climb": lay.climbs[0][0] + (lay.climbs[0][0] - centre).sign() * Vector2i(1, 0) if not lay.climbs.is_empty() else centre }[spot]
+	_drop(g, 40, 62, 0.0)
+	var target: Vector2i = lay.climbs[0].back() if spot == "climb" and not lay.climbs.is_empty() else centre
+	g.fps.controller.spawn(g.level.grid, at.x, at.y, atan2(-(target.x - at.x), -(target.y - at.y)))
+	g.fps.controller.pitch = 0.25 if spot == "climb" else -0.1
+
+
 static func _fast_forward(g, seconds: float) -> void:
 	var step := 0.05
 	var t := 0.0
@@ -144,7 +162,7 @@ static func _fast_forward(g, seconds: float) -> void:
 		"nests_alive": g.hazards.nests.alive_count(),
 		"raiders": g.hazards.nests.raiders.list.map(func(r): return r.tier.name.left(2) + ("g" if r.guard else "")),
 		"raider_tier": Config.RAIDER_TIERS[g.hazards.nests.tier].name,
-		"aether": Upgrades.aether, "towers_held": g.towers.map(func(t): return t.held()),
+		"aether": Upgrades.aether, "castles": g.castles.list.map(func(c): return "%s:%s" % [c.id, c.state]),
 		"coverage": snappedf(g.surface.creeper.coverage(), 0.01),
 		"objectives": g.hud.objectives.items.filter(func(o): return o.done).map(func(o): return o.id),
 		"cave_coverage": snappedf(g.cave.creeper.coverage(), 0.01), "over": g.over,

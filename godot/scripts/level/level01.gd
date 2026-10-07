@@ -12,6 +12,15 @@ const RAID_SCHEDULE := {
 	"raid_delay": 300.0,
 	"tier_times": [0.0, 480.0, 900.0, 1320.0],
 }
+## Castles (CastleShape rows). The Operative takes them; raiders take them back.
+## Ashmoat: a ground keep whose moat the core-fed SW vent fills. High Bastion: a raised keep
+## on a plateau, reached by a drawbridge from the south or the climbing pillars on its east.
+const CASTLES := [
+	{ "id": "ashmoat", "name": "Ashmoat Keep", "x": 1, "z": 60, "size": 15, "floor": 2,
+		"variant": "ground", "moat": true, "gates": ["n"], "climbs": ["e"], "spire_h": 20 },
+	{ "id": "bastion", "name": "High Bastion", "x": 25, "z": 2, "size": 15, "floor": 4,
+		"variant": "raised", "bridge": true, "gates": ["s"], "climbs": ["e"], "spire_h": 20 },
+]
 
 
 static func _smoothstep(a: float, b: float, t: float) -> float:
@@ -101,6 +110,10 @@ static func build() -> Dictionary:
 	# CW3 terrain is whole levels 0..10.
 	for i in g.height.size():
 		g.height[i] = clampf(roundf(g.height[i]), 0.0, Config.MAX_LEVEL)
+	# Castles are shaped last, in whole levels (spires rise past MAX_LEVEL; CastleShape).
+	var castles := CASTLES.duplicate(true)
+	for c in castles:
+		c["layout"] = CastleShape.build(g, c)
 
 	var level := {
 		"name": "Hollow Ridge",
@@ -123,10 +136,7 @@ static func build() -> Dictionary:
 		],
 		"raid_schedule": RAID_SCHEDULE,
 		"spire": { "x": 66, "z": 9 },
-		# Aether Towers the Operative captures (and the creeper retakes): Blight, high ground,
-		# the floodable Rift hollow.
-		"aether_towers": [Vector2i(9, 45), Vector2i(17, 38), Vector2i(57, 6), Vector2i(71, 16), Vector2i(41, 21),
-			Vector2i(20, 52), Vector2i(74, 74)],
+		"castles": castles,
 		"rift": { "x": 14, "z": 42 },
 		"intro": [
 			["Ops: Choose where the Command Node lands. High, dry ground far from emitters buys you time.", "radio"],

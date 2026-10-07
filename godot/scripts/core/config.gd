@@ -6,6 +6,7 @@ class_name Config
 const CELL := 2.0          # world metres per grid cell
 const LEVEL_H := 1.25      # metres per terrain level (1 level == 1 unit of creeper depth)
 const MAX_LEVEL := 10      # CW3 terrain runs 0..10
+const SPIRE_MAX_LEVEL := 34  # castle spires (indestructible) and raised castle walls may go higher
 const DETAIL := 3          # terrain/creeper mesh vertices per cell edge (visual only)
 const TERRACE_BAND := 2.0 / 3.0  # share of the centre-to-centre gap a level change ramps over.
                                  # 2/3 with DETAIL 3 puts every ramp knee on a mesh vertex.
@@ -73,12 +74,26 @@ const ROCKET := { "name": "Rocket Launcher", "speed": 30.0, "range": 90.0, "blas
 	"damage": 5.0, "mag": 4, "reload": 6.0 }  # blast in cells; power = creeper removed at the centre
 const SPRAYER := { "name": "Null Sprayer", "range": 10.0, "half_angle": 0.45, "remove_per_sec": 5.0, "tank_per_sec": 20.0 }
 
-# ---- Aether Towers (captured by the Operative, retaken by creeper) ------------------
-const AETHER_TOWER_RATE := 0.08    # Aether/s per held tower (~5/min)
-const AETHER_CAPTURE_TIME := 4.0   # seconds the Operative must hold the tower
-const AETHER_CAPTURE_RANGE := 3.0  # metres: interact radius (+1.5 m slack while capturing)
-const AETHER_RETAKE_DEPTH := 0.3   # creeper this deep on the tower counts as contested
-const AETHER_RETAKE_TIME := 3.0    # seconds of contact before the creeper takes it back
+# ---- strongholds: castles (level/stronghold.gd, design §3.1 and §3.4) -------------
+const CASTLE_WALL_HP := 300.0     # per stone wall segment; at 0 it is breached (TerrainEdit)
+const CASTLE_GATE_HP := 200.0
+const CASTLE_WINCH_HP := 150.0    # holds a raised castle's drawbridge to its owner
+const CROWN_HP := 60.0            # crown nest on the spire top (grows like nests)
+const CROWN_REGROW := 0.25        # share of HP the crown regrows with after a retake
+const CASTLE_GARRISON := 4        # raiders a hostile castle keeps in its courtyard
+const CAPTURE_TIME := 20.0        # seconds the Operative holds the spire top
+const CAPTURE_DECAY := 0.02       # progress lost per second while nobody holds it
+const CAPTURE_ABANDON := 30.0     # seconds at 0 progress before the crown regrows
+const RETAKE_TIME := 15.0         # seconds of raiders in the courtyard to retake it
+const CASTLE_AETHER_RATE := 5.0 / 60.0
+const CASTLE_COUNTER_BASE := 2    # counterattack size: base + per tier (Stage 8a: pressure)
+const CASTLE_COUNTER_PER_TIER := 2
+const CASTLE_RAID_SHARE := 0.4    # share of marching raiders sent at castles you hold
+const SPIRE_PUMP_RATE := 0.6      # creeper/s drawn per level of average moat depth
+const PUMP_DEPTH_CAP := 3.0
+const PUMP_JAM_TIME := 60
+const PUMP_JAM_RANGE := 3.0
+const JUMP_PAD_MARGIN := 1.5      # levels above the column top the pad throws you
 
 # ---- threats -------------------------------------------------------------------
 const SPIRE_INTERVAL := 60.0

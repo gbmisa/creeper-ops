@@ -20,7 +20,7 @@ static func apply(world: World, edits: Array) -> Array[Vector2i]:
 		var i := g.idx(x, z)
 		if g.material[i] == Grid.Mat.SPIRE:
 			continue
-		var h := clampf(float(e.height), 0.0, float(Config.MAX_LEVEL))
+		var h := clampf(float(e.height), 0.0, float(Config.SPIRE_MAX_LEVEL))
 		var mat: int = e.get("material", g.material[i])
 		if absf(h - g.height[i]) < 0.001 and mat == g.material[i]:
 			continue

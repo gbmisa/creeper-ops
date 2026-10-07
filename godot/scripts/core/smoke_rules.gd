@@ -1,12 +1,11 @@
 class_name SmokeRules
-## Smoke checks for creeper contact, ammo requests, Aether Towers, nest raiders and keybinds.
+## Smoke checks for creeper contact, ammo requests, nest raiders and keybinds.
 ## Called from SmokeTest.run (shares its _check/_sim helpers).
 
 
 static func run(g) -> void:
 	_creeper_contact(g)
 	_ammo_requests(g)
-	_aether_towers(g)
 	_raiders(g)
 	_keybinds()
 
@@ -101,28 +100,6 @@ static func _ammo_requests(g) -> void:
 	c.firing = 0.0
 	SmokeTest._check("low weapon asks for ammo", sm.packets.need(c) == "ammo")
 	sm.remove(c)
-
-
-static func _aether_towers(g) -> void:
-	var towers: AetherTowers = g.towers[0]
-	var t: Dictionary = towers.towers[towers.towers.size() - 1]
-	_wet(g, t.x, t.z, 0.0)
-	var old: Callable = towers.op_pos
-	towers.op_pos = func(): return t.pos
-	(towers.world.interactables.filter(func(i): return i.pos == t.pos)[0].use as Callable).call()
-	SmokeTest._sim(g, Config.AETHER_CAPTURE_TIME + 0.3)
-	SmokeTest._check("operative captures tower", t.ours)
-	towers.op_pos = old
-	var a0 := Upgrades.aether
-	SmokeTest._sim(g, 30.0)
-	SmokeTest._check("held tower pays Aether", Upgrades.aether - a0 >= floori(Config.AETHER_TOWER_RATE * 30.0) - 1,
-		"(+%d in 30 s)" % (Upgrades.aether - a0))
-	for i in int((Config.AETHER_RETAKE_TIME + 0.5) / 0.05):
-		_wet(g, t.x, t.z, 1.0)
-		g.update(0.05)
-	SmokeTest._check("creeper retakes tower", not t.ours)
-	_wet(g, t.x, t.z, 0.0)
-	Upgrades.reset()
 
 
 static func _raiders(g) -> void:

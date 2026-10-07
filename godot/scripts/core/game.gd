@@ -15,7 +15,7 @@ var units: UnitManager
 var cave_data: Dictionary
 var cave: World
 var cave_hazards: CaveHazards
-var towers: Array[AetherTowers] = []
+var castles: Strongholds
 var orbital: Orbital
 var command: CommandMode
 var fps: FpsMode
@@ -55,7 +55,7 @@ func _ready() -> void:
 	cave.setup("Cave", cave_data.grid, true)
 	add_child(cave)
 	cave_hazards = CaveHazards.new(cave, cave_data)
-	towers = [AetherTowers.new(surface, level.aether_towers), AetherTowers.new(cave, cave_data.aether_towers)]
+	castles = Strongholds.new(surface, level.castles, hazards.nests)
 
 	orbital = Orbital.new(surface, economy)
 	orbital.hazards = hazards
@@ -69,8 +69,7 @@ func _ready() -> void:
 	fps.beacons = func(w): return structures.beacons() if w == surface else []
 	hazards.nests.prey = surface_prey
 	hazards.nests.goal_cells = raider_goals
-	for t in towers:
-		t.op_pos = func(): return fps.controller.pos if fps.world == t.world else null
+	castles.op = func(): return fps.controller if fps.world == surface else null
 
 	hud = Hud.new()
 	add_child(hud)
@@ -100,6 +99,7 @@ func surface_prey() -> Array:
 		prey.append(u.prey)
 	for s in structures.list:
 		prey.append(s.prey)
+	prey.append_array(castles.prey())
 	if mode == "surface":
 		prey.append(fps.prey)
 	return prey
@@ -127,7 +127,7 @@ func update(dt: float) -> void:
 	surface.update(dt)
 	cave.update(dt)
 	structures.update(dt, time)
-	units.update(dt, hazards.nests.enemies())
+	units.update(dt, hazards.nests.enemies() + castles.enemies())
 	orbital.update(dt)
 
 
