@@ -1,7 +1,7 @@
 class_name StructureUpkeep
 ## Per-structure upkeep each frame: creeper contact, repair, construction progress and bars.
 ## Creeper rule: unbuilt structures, and built ones that are not weapons, die on contact.
-## Built weapons (def.weapon) lose HP from depth, using the Node's formula, and die at 0.
+## Built weapons (def.weapon) lose HP from depth (Config.WEAPON_CREEPER_*) and die at 0.
 ## A weapon with charge > 0 (the charging Nullifier) takes none. Hovering and in-flight
 ## structures are out of reach.
 
@@ -14,7 +14,9 @@ static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
 			return
 		if s.def.get("weapon", false) and s.charge > 0.0:
 			return
-		var dps: float = (Config.STRUCT_BASE_DPS + s.wet * Config.STRUCT_DPS) * (1.0 - s.def.get("creeper_resist", 0.0))
+		var base := Config.STRUCT_BASE_DPS if s.type == "node" else Config.WEAPON_CREEPER_BASE_DPS
+		var per := Config.STRUCT_DPS if s.type == "node" else Config.WEAPON_CREEPER_DPS
+		var dps: float = (base + s.wet * per) * (1.0 - s.def.get("creeper_resist", 0.0))
 		mgr.damage(s, dps * dt)
 	elif s.connected:
 		s.hp = minf(s.def.hp, s.hp + Config.REPAIR_PER_SEC * dt)
