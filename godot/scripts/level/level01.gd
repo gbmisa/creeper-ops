@@ -21,6 +21,8 @@ const CASTLES := [
 	{ "id": "bastion", "name": "High Bastion", "x": 25, "z": 2, "size": 15, "floor": 4,
 		"variant": "raised", "bridge": true, "gates": ["s"], "climbs": ["e"], "spire_h": 20 },
 ]
+## Castle stakes (CastleRaids; keys default to Config.CASTLE_RULES). Level 1 is gentle.
+const CASTLE_RULES := { "aggression": 0.5, "reprisal_warn": 90.0, "nest_buff": 0.15 }
 
 
 static func _smoothstep(a: float, b: float, t: float) -> float:
@@ -137,6 +139,7 @@ static func build() -> Dictionary:
 		"raid_schedule": RAID_SCHEDULE,
 		"spire": { "x": 66, "z": 9 },
 		"castles": castles,
+		"castle_rules": CASTLE_RULES,
 		"rift": { "x": 14, "z": 42 },
 		"intro": [
 			["Ops: Choose where the Command Node lands. High, dry ground far from emitters buys you time.", "radio"],

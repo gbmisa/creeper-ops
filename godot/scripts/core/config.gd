@@ -106,6 +106,14 @@ const PUMP_DEPTH_CAP := 3.0
 const PUMP_JAM_TIME := 60
 const PUMP_JAM_RANGE := 3.0
 const JUMP_PAD_MARGIN := 1.5      # levels above the column top the pad throws you
+## Castle stakes (castle_raids.gd). Levels override any key with their CASTLE_RULES.
+const CASTLE_RULES := {
+	"aggression": 1.0, "held_stack": 0.5,     # raid size and siege rate x aggression x stack
+	"reprisal_warn": 60.0, "siege_interval": 240.0, "siege_warn": 45.0,
+	"reprisal_base": 8, "reprisal_per_tier": 3, "siege_base": 4, "siege_per_tier": 2,
+	"nest_buff": 0.25, "nest_buff_range": 30.0,  # +spawn rate per enemy castle within range (cells)
+}
+const CASTLE_SIEGE_MIN := 90.0    # sieges never come faster than this (seconds)
 
 # ---- threats -------------------------------------------------------------------
 const SPIRE_INTERVAL := 60.0

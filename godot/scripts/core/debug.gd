@@ -23,6 +23,7 @@ class_name Debug
 ##   --raise=x,z,r,by   raise (negative: lower) a disc of terrain through TerrainEdit
 ##   --fpsbuild=T  Operative near the base in first-person build mode holding structure T
 ##   --turrets=I   castle I held with a Repeater, Lobber and Flak on its first sockets
+##   --raid=I[,S]  castle I held; its reprisal raid marches in S seconds (default 20)
 ##   --castle=I[,spot]  drop the Operative at castle I: climb (pillar route, default), pad
 ##                 (spire jump pad), top (spire top), gate (outside the gate)
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
@@ -47,7 +48,7 @@ static func apply(g) -> void:
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
 	if args.has("nocapture") or args.has("shot"):
 		g.ignore_capture = true
-	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "sim", "shot", "smoke"].any(func(k): return args.has(k))
+	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "raid", "sim", "shot", "smoke"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
 	elif auto:
@@ -87,6 +88,13 @@ static func apply(g) -> void:
 		for i in CastleTurrets.ORDER.size():
 			CastleTurrets.buy(c, i, CastleTurrets.ORDER[i], g.stockpile)
 		StrongholdMeshes.refresh(g.castles.views[c.id], c)
+	if args.has("raid"):  # --raid=I[,S]: castle I held, reprisal in S seconds
+		var p: PackedStringArray = args.raid.split(",")
+		var rc: Dictionary = g.castles.list[int(p[0])]
+		StrongholdRules.to_held(g.surface, rc, g.castles.lays[rc.id])
+		StrongholdMeshes.refresh(g.castles.views[rc.id], rc)
+		g.castle_raids.update(0.0)
+		rc.raid.warn = float(p[1]) if p.size() > 1 else 20.0
 	if args.has("cave"):
 		Bus.enter_cave.emit()
 	if args.has("killcore"):
@@ -188,6 +196,7 @@ static func _fast_forward(g, seconds: float) -> void:
 		"raiders": g.hazards.nests.raiders.list.map(func(r): return r.tier.name.left(2) + ("g" if r.guard else "")),
 		"raider_tier": Config.RAIDER_TIERS[g.hazards.nests.tier].name,
 		"aether": Upgrades.aether, "castles": g.castles.list.map(func(c): return "%s:%s" % [c.id, c.state]),
+		"castle_raids": g.castle_raids.launched,
 		"coverage": snappedf(g.surface.creeper.coverage(), 0.01),
 		"objectives": g.hud.objectives.items.filter(func(o): return o.done).map(func(o): return o.id),
 		"cave_coverage": snappedf(g.cave.creeper.coverage(), 0.01), "over": g.over,

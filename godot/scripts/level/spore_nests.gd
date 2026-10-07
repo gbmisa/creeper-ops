@@ -16,6 +16,7 @@ var time := 0.0
 var tier := 0       # highest unlocked tier index
 var raiding := false
 var schedule: Dictionary = {}  # level RAID_SCHEDULE; empty falls back to Config
+## nest.rate (default 1) speeds a nest's spawns; CastleRaids raises it near enemy castles.
 
 
 func _init(w: World, defs: Array, sched: Dictionary = {}) -> void:
@@ -123,7 +124,7 @@ func update(dt: float) -> void:
 		var sac := n.node.get_node("Sac") as Node3D
 		sac.scale = sac.scale.lerp(Vector3.ONE * growth * (1.0 + 0.08 * sin(time * 3.0 + n.x)), 0.2)
 		n.timer += dt
-		if n.timer >= interval and n.count < cap and raiders.list.size() < Config.RAIDER_MAX_TOTAL:
+		if n.timer >= interval / n.get("rate", 1.0) and n.count < cap and raiders.list.size() < Config.RAIDER_MAX_TOTAL:
 			n.timer = 0.0
 			var guard: bool = not raiding or _guards(n) < Config.NEST_GUARDS
 			raiders.spawn(n, pick_tier(), guard)

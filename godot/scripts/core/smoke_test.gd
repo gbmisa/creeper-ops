@@ -133,6 +133,7 @@ static func run(g) -> void:
 	SmokeRaiders.run(g)
 	SmokeTerrain.run(g)
 	SmokeStrongholds.run(g)
+	SmokeCastleRaids.run(g)
 	SmokeSenders.run(g)
 	SmokeDeploy.run(g)
 	SmokeTraps.run(g)

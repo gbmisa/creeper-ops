@@ -18,6 +18,7 @@ var cave_data: Dictionary
 var cave: World
 var cave_hazards: CaveHazards
 var castles: Strongholds
+var castle_raids: CastleRaids
 var orbital: Orbital
 var command: CommandMode
 var fps: FpsMode
@@ -59,6 +60,7 @@ func _ready() -> void:
 	add_child(cave)
 	cave_hazards = CaveHazards.new(cave, cave_data)
 	castles = Strongholds.new(surface, level.castles, hazards.nests)
+	castle_raids = CastleRaids.new(castles, level.get("castle_rules", {}))
 
 	orbital = Orbital.new(surface, economy)
 	orbital.hazards = hazards
