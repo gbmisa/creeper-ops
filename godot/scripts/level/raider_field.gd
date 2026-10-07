@@ -86,3 +86,54 @@ func next_step(x: float, z: float) -> Variant:
 			bd = v
 			best = n
 	return Vector2((best.x + 0.5) * Config.CELL, (best.y + 0.5) * Config.CELL)
+
+
+## Nearest prey that shares a one-terrace walking route, or {}.
+func nearest_on_foot(from: Vector3, prey: Array) -> Dictionary:
+	var g := grid
+	var start := g.world_to_cell(from.x, from.z)
+	if not g.in_bounds(start.x, start.y):
+		return {}
+	var at := {}
+	for q in prey:
+		if not q.alive.call():
+			continue
+		var qp: Vector3 = q.node.position
+		var c := g.world_to_cell(qp.x, qp.z)
+		if not g.in_bounds(c.x, c.y):
+			continue
+		var i := g.idx(c.x, c.y)
+		if not at.has(i):
+			at[i] = []
+		(at[i] as Array).append(q)
+	var seen := PackedByteArray()
+	seen.resize(g.w * g.h)
+	var open := PackedInt32Array()
+	open.append(g.idx(start.x, start.y))
+	seen[g.idx(start.x, start.y)] = 1
+	var best: Dictionary = {}
+	var bd := INF
+	var head := 0
+	while head < open.size():
+		var b := open[head]
+		head += 1
+		var bx := b % g.w
+		var bz := int(b / g.w)
+		if at.has(b):
+			for q in at[b]:
+				var qp: Vector3 = q.node.position
+				var d := Vector2(qp.x - from.x, qp.z - from.z).length()
+				if d < bd:
+					bd = d
+					best = q
+		for dir in DIRS:
+			var nx: int = bx + dir.x
+			var nz: int = bz + dir.y
+			if not g.in_bounds(nx, nz) or not step_ok(bx, bz, nx, nz):
+				continue
+			var ni := g.idx(nx, nz)
+			if seen[ni] != 0:
+				continue
+			seen[ni] = 1
+			open.append(ni)
+	return best

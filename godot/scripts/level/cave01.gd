@@ -44,8 +44,7 @@ static func build() -> Dictionary:
 		w = maxi(w, r.length())
 	var g := Grid.new(w, rows.size())
 	var cave := { "grid": g, "pad": Vector2i.ZERO, "core": Vector2i.ZERO, "pylons": [], "ceiling": 8.0,
-		"raid_schedule": RAID_SCHEDULE,
-		"aether_towers": [Vector2i(6, 6), Vector2i(31, 7), Vector2i(19, 16), Vector2i(12, 20)] }
+		"raid_schedule": RAID_SCHEDULE }
 	for z in rows.size():
 		var row: String = rows[z]
 		for x in w:

@@ -43,7 +43,7 @@ func setup(creeper: CreeperSim, height_tex: Texture2D) -> void:
 	var m := ArrayMesh.new()
 	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	# The shader moves vertices up to MAX_DEPTH levels; keep culling honest.
-	m.custom_aabb = AABB(Vector3(0, -4, 0), Vector3(g.w * Config.CELL, (Config.MAX_LEVEL + Config.MAX_DEPTH) * Config.LEVEL_H, g.h * Config.CELL))
+	m.custom_aabb = AABB(Vector3(0, -4, 0), Vector3(g.w * Config.CELL, (Config.SPIRE_MAX_LEVEL + Config.MAX_DEPTH) * Config.LEVEL_H, g.h * Config.CELL))
 	mesh = m
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	name = "Creeper"

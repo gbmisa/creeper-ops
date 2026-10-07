@@ -41,7 +41,7 @@ New from the same review: **Operative deployment is reworked** (Totems, drop any
 
 Wall HP is stored per **segment** in the stronghold, not per cell (see §3).
 
-*As built (Stage 5):* a gate cell keeps its floor height in `grid.height`; `walk_height()` adds `GATE_H` for every faction except the owner, so the archway is open ground for the owner and a wall for everyone else. Creeper ignores gates for now; Stage 7 decides whether closed gates hold creeper back.
+*As built (Stage 5):* a gate cell keeps its floor height in `grid.height`; `walk_height()` adds `GATE_H` for every faction except the owner, so the archway is open ground for the owner and a wall for everyone else. **Stage 7 decided: creeper ignores gates and drawbridge decks** (they're hard-light fields; a ground castle keeps creeper out with walls and its moat only).
 
 `Grid.passable_for(faction, ax, az, bx, bz) -> bool` replaces the separate climb checks.
 - It applies a climb limit: `RAIDER_CLIMB` for raiders, `CLIMB` for the Operative, and the units' own value.
@@ -132,6 +132,8 @@ One class for both kinds, holding a list of state dictionaries:
   deposits:[{ id, cell, kind: "salvage" | "ore", left }],
   capture: { progress: 0.0, retake: 0.0 }, stage: 0, timers: {} }
 ```
+*As built (Stage 7):* walls are 2 cells thick with a 2-wide walkable top and corner stairs (+1, +2) instead of a 1-cell walkway at +2: 1-cell paths are too narrow on CW3 terraces. The spire is 7x7 with a 2-wide ramp (16 steps) and a jump pad up to the 3x3 column top (`SpireShape`). Pillar routes stand on the ring two cells out. Drawbridges are `Grid.deck` cells: the deck is the owner's road over a real gap; when the winch (on the approach head) dies the deck opens to **everyone** until the castle changes hands. Wall segments are raider prey only where raiders can stand next to them (no moat, not raised); a raised castle's gate only once its winch is down. Turrets, wall repair and the Salvage trickle wait for 9a; counterattack size uses nest tier until 8a adds `pressure`. Files as built: `stronghold.gd`, `stronghold_rules.gd`, `stronghold_hooks.gd`, `stronghold_meshes.gd`, `castle_shape.gd`, `spire_shape.gd`, `spire_pump.gd`.
+
 Files: `stronghold.gd` (state + update, under 250 lines), `stronghold_rules.gd` (state changes, static), `castle_shape.gd` and `hive_shape.gd` (level-data shaping helpers that write terrain via `grid.set_height` during the level build, so walls are part of `base_height`), `stronghold_meshes.gd` (decoration). `aether_towers.gd` is deleted.
 
 ### 3.1 Castle

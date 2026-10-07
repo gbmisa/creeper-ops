@@ -2,7 +2,7 @@
 
 The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
 
-**Status:** Stages 1–4 merged to `main` (⚠ = not human-verified). Next: Stage 5 (Opus) and Stages 6 / 10b (Grok) in parallel.
+**Status:** Stages 1–5 and 7 merged to `main` (⚠ = not human-verified). Next: review Grok's 6 / 10b / command-mode branches, then 8a/8b/9a.
 **Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
 
 ---
@@ -109,7 +109,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 4 | GPU creeper sim | **Opus 5.5** | ⚠ built + parity verified; needs a human play check |
 | 5 | Terrain-editing tool | **Opus 5.5** (built) | ⚠ verified headless + GPU parity |
 | 6 | Multiple packet senders and Outposts | Sonnet 5.5, Opus review | ☐ |
-| 7 | Strongholds, castles, spire climb | Sonnet 5.5 | ☐ |
+| 7 | Strongholds, castles, spire climb | **Opus 5.5** (built) | ⚠ verified headless + screenshots |
 | 8a | Nest bases and enemy mortars | Sonnet 5.5 | ☐ |
 | 8b | Enemy roster (incl. Burrower, Weaver) | Sonnet 5.5 | ☐ |
 | 8c | **Enemy construction:** hubs in enemy castles, Weavers, Leeches, build planner, enemy structures (design §4.5) | Sonnet 5.5, Opus review | ☐ |
@@ -201,6 +201,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix. First-pass Aether Towers (Stage 7 replaces them). First-pass nest raiders with tier escalation (Stages 2 and 8 rework them). 49/49 smoke tests pass.
 
 ## 6. Changelog
+- 2026-10-07: Stage 7 done (Opus, ⚠ no human playtest). Castles replace Aether Towers: `CastleShape`/`SpireShape` cut ground and raised (plateau + drawbridge) variants with moats, 2-wide stone walls with corner stairs, faction gates, pillar climb routes and a 7x7 obsidian spire (16-step ramp + jump pad, top 20 levels up). `Strongholds` runs hostile → capturing → held → siege with garrisons, counterattacks, Aether income, breaches through `TerrainEdit`, gate/winch damage and the spire pump (moat creeper → `pump.material` for 8c). `Grid.deck`/`stand_y` for drawbridges. Level 1 gets Ashmoat Keep (ground, moat, SW) and High Bastion (raised, N); cave towers removed. 40 new smoke checks incl. a scripted first-person pillar climb and jump pad (118/118). Decisions: creeper ignores gates/decks; a dead winch opens the bridge to everyone; walls are raider prey only where raiders can stand (no moat, not raised); counterattack size uses nest tier until 8a's pressure; Salvage trickle, turrets and wall repair wait for 9a.
 - 2026-10-07: Stage 5 done (Opus). `TerrainEdit` + `World.terrain_changed`, chunked terrain (`TerrainChunks`, 2 rebuilds/frame), `Grid.step_ok` with faction gates shared by raiders, units and the Operative, `base_height`, materials. 18 new smoke checks (`smoke_terrain.gd`). GPU parity now includes a mid-run ring wall and fails if the height upload is skipped. `--raise=x,z,r,by` debug hook.
 - 2026-10-07: §0 answered. Added: castle variants (ground / raised with drawbridge and moat), wall platforming, tall indestructible spires with a creeper pump, enemy construction (§4.5), Operative deployment rework (§5.4), Ctrl + wheel ammo. New Stages 8c and 10b.
 - 2026-10-07: Stage 4 done. GPU creeper sim (creeper_gpu.gd + creeper_flow.glsl) with CPU fallback. Parity PASS (300 ticks, max cell diff < 0.00001). Perf on the RTX 5090: 80x80 0.55 → 0.027 ms/tick, 512x512 12.3 → 0.055 ms/tick. Live and fast-forward runs match the CPU build.

@@ -74,10 +74,10 @@ func refresh(g) -> void:
 		status_lbl.add_theme_color_override("font_color", UiKit.WARN)
 	else:
 		status_lbl.text = ""
-	var held: int = g.towers.reduce(func(a, t): return a + t.held(), 0)
+	var held: int = g.castles.held()
 	var nests: SporeNests = g.hazards.nests
 	var threat := "Nests: %s" % Config.RAIDER_TIERS[nests.tier].name if nests.alive_count() > 0 else "Nests: none"
-	stats_lbl.text = "Æther %d (%d towers)   Packets %d   Field %d   Units %d   Creeper %d%%   %s" % [Upgrades.aether, held,
+	stats_lbl.text = "Æther %d (%d castles)   Packets %d   Field %d   Units %d   Creeper %d%%   %s" % [Upgrades.aether, held,
 		pk.count(), eco.field_cells, g.units.list.size(), roundi(g.surface.creeper.coverage() * 100.0), threat]
 	var node: Structure = g.structures.command_node()
 	var hp: float = node.hp / node.def.hp if node else 0.0
