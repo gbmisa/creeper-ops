@@ -18,6 +18,7 @@ var time := 0.0
 func _init(w: World) -> void:
 	world = w
 	field = RaiderField.new(w.grid)
+	Bus.terrain_changed.connect(func(cw, _cells): if cw == world: field.invalidate())
 
 
 func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:

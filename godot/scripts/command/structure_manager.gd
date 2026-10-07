@@ -22,6 +22,7 @@ func setup(w: World, eco: Economy) -> void:
 	name = "Structures"
 	world = w
 	economy = eco
+	w.occupied = func(x: int, z: int) -> bool: return occupied.has(w.grid.idx(x, z))
 	network = Network.new()
 	add_child(network)
 	packets = Packets.new()

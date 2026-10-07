@@ -15,6 +15,11 @@ func setup(w: World, sm: StructureManager) -> void:
 	world = w
 	structures = sm
 	Bus.unit_trained.connect(_on_trained)
+	Bus.terrain_changed.connect(func(cw, _cells):  # re-path anyone walking a stale route
+		if cw == world:
+			for u in list:
+				if not u.path.is_empty():
+					walk_to(u, u.path.back()))
 	Bus.structure_removed.connect(func(s):
 		for u in list:
 			if u.home == s:

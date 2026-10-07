@@ -3,6 +3,8 @@ class_name TerrainMesh
 ## decorative roughness), on the same vertex lattice and triangle split as the creeper mesh,
 ## so creeper can never dip under the ground. Beyond the map edge a decorative rim rises.
 ## Overlays (collector field, ghost footprint, range rings) are drawn by terrain.gdshader.
+## Static helpers only; TerrainChunks (terrain_chunks.gd) owns the meshes and rebuilds the
+## chunks a TerrainEdit touches.
 
 const MARGIN := 14  # decorative cells beyond each edge
 
@@ -42,36 +44,35 @@ static func lattice_indices(nx: int, nz: int) -> PackedInt32Array:
 	return idx
 
 
-static func build(grid: Grid, cave: bool, material: Material) -> MeshInstance3D:
-	var noise := Noise2D.new(41 if cave else 17)
+## Mesh for the extended-cell range [c0, c1) on both axes (extended cell = grid cell +
+## MARGIN, so the decorative rim is chunked too). Normals come from sample_height, not from
+## neighbouring vertices, so neighbouring chunks meet without seams. TerrainChunks calls this.
+static func build_region(grid: Grid, cave: bool, noise: Noise2D, c0: Vector2i, c1: Vector2i) -> ArrayMesh:
 	var pal: Dictionary = PALETTES["cave" if cave else "surface"]
 	var step := Config.CELL / Config.DETAIL
-	var nx := (grid.w + MARGIN * 2) * Config.DETAIL + 1
-	var nz := (grid.h + MARGIN * 2) * Config.DETAIL + 1
-	var x0 := -MARGIN * Config.CELL
-	var z0 := -MARGIN * Config.CELL
+	var nx := (c1.x - c0.x) * Config.DETAIL + 1
+	var nz := (c1.y - c0.y) * Config.DETAIL + 1
+	var x0 := (c0.x - MARGIN) * Config.CELL
+	var z0 := (c0.y - MARGIN) * Config.CELL
 	var n := nx * nz
 	var verts := PackedVector3Array()
 	verts.resize(n)
-	for j in nz:
-		for i in nx:
-			var wx := x0 + i * step
-			var wz := z0 + j * step
-			verts[j * nx + i] = Vector3(wx, sample_height(grid, wx, wz, noise, cave), wz)
 	var normals := PackedVector3Array()
 	normals.resize(n)
 	var colors := PackedColorArray()
 	colors.resize(n)
 	for j in nz:
 		for i in nx:
+			var wx := x0 + i * step
+			var wz := z0 + j * step
 			var k := j * nx + i
-			var l := verts[j * nx + maxi(i - 1, 0)].y
-			var r := verts[j * nx + mini(i + 1, nx - 1)].y
-			var d := verts[maxi(j - 1, 0) * nx + i].y
-			var u := verts[mini(j + 1, nz - 1) * nx + i].y
-			var nrm := Vector3(l - r, 2.0 * step, d - u).normalized()
-			normals[k] = nrm
-			colors[k] = _colour(grid, verts[k], nrm, pal, noise)
+			verts[k] = Vector3(wx, sample_height(grid, wx, wz, noise, cave), wz)
+			var l := sample_height(grid, wx - step, wz, noise, cave)
+			var r := sample_height(grid, wx + step, wz, noise, cave)
+			var d := sample_height(grid, wx, wz - step, noise, cave)
+			var u := sample_height(grid, wx, wz + step, noise, cave)
+			normals[k] = Vector3(l - r, 2.0 * step, d - u).normalized()
+			colors[k] = _colour(grid, verts[k], normals[k], pal, noise)
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = verts
@@ -80,11 +81,7 @@ static func build(grid: Grid, cave: bool, material: Material) -> MeshInstance3D:
 	arrays[Mesh.ARRAY_INDEX] = lattice_indices(nx, nz)
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	var mi := MeshInstance3D.new()
-	mi.name = "Terrain"
-	mi.mesh = mesh
-	mi.material_override = material
-	return mi
+	return mesh
 
 
 static func _colour(grid: Grid, p: Vector3, nrm: Vector3, pal: Dictionary, noise: Noise2D) -> Color:

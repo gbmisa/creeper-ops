@@ -8,8 +8,12 @@ var grid: Grid
 var cave := false
 var creeper: CreeperSim
 var creeper_mesh: CreeperMesh
-var terrain: MeshInstance3D
+var terrain: TerrainChunks
 var terrain_mat: ShaderMaterial
+var height_tex: ImageTexture  # one texel per cell; terrain + creeper shaders read it
+var props: Node3D
+## Injected by the game: is a structure standing on this cell? TerrainEdit skips those.
+var occupied := func(_x: int, _z: int) -> bool: return false
 var effects: Effects
 var env: WorldEnvironment
 
@@ -27,14 +31,17 @@ func setup(world_name: String, g: Grid, is_cave: bool, keep_clear := Callable())
 	name = world_name
 	grid = g
 	cave = is_cave
-	var height_tex := TerrainMesh.height_texture(g)
+	g.snapshot_base()
+	height_tex = TerrainMesh.height_texture(g)
 	terrain_mat = ShaderMaterial.new()
 	terrain_mat.shader = load("res://shaders/terrain.gdshader")
 	terrain_mat.set_shader_parameter("grain", TerrainMesh.grain_texture())
 	terrain_mat.set_shader_parameter("map_size", g.world_size())
-	terrain = TerrainMesh.build(g, cave, terrain_mat)
+	terrain = TerrainChunks.new()
+	terrain.setup(g, cave, terrain_mat)
 	add_child(terrain)
-	add_child(Props.scatter(g, cave, 11 if cave else 3, keep_clear))
+	props = Props.scatter(g, cave, 11 if cave else 3, keep_clear)
+	add_child(props)
 
 	creeper = CreeperSim.create(g)
 	creeper_mesh = CreeperMesh.new()
@@ -66,9 +73,29 @@ func place_at(node: Node3D, x: int, z: int) -> Vector3:
 
 func update(dt: float) -> void:
 	creeper.update(dt)
+	terrain.update()
 	for fn in updaters:
 		fn.call(dt)
 	effects.update(dt)
+
+
+## Heights changed under `cells` (TerrainEdit.apply). Pushes the change to everything that
+## caches heights, then tells the rest through Bus.terrain_changed.
+func terrain_changed(cells: Array[Vector2i]) -> void:
+	var img := height_tex.get_image()
+	for c in cells:
+		img.set_pixel(c.x, c.y, Color(grid.height_at(c.x, c.y), 0, 0))
+	height_tex.update(img)
+	terrain.mark(cells)
+	creeper.terrain_changed(cells)
+	var touched := {}
+	for c in cells:
+		touched[c] = true
+	for p in props.get_children():
+		var pc := grid.world_to_cell(p.position.x, p.position.z)
+		if touched.has(pc):
+			p.position.y = grid.smooth_y(p.position.x, p.position.z) + p.scale.y * 0.2
+	Bus.terrain_changed.emit(self, cells)
 
 
 func refresh_visuals() -> void:

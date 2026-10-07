@@ -6,12 +6,20 @@ extends RefCounted
 ## smooth_y() matches what you see (and the creeper shader uses the same weights).
 
 enum Zone { NONE = 0, BLIGHT = 1 }  # BLIGHT = agent-only: nothing can be built there
+enum Faction { NONE = 0, PLAYER = 1, ENEMY = 2 }
+enum Mat { NATURAL = 0, EARTH = 1, METAL = 2, STONE = 3, PLATED = 4, SPIRE = 5 }
+
+## A gate cell is open ground for its owner and this many levels of wall for everyone else.
+const GATE_H := 3.0
 
 var w: int
 var h: int
 var height := PackedFloat32Array()  # terrain level per cell (fractional is fine)
 var blocked := PackedByteArray()    # 1 = no building here (hazard footprint)
 var zone := PackedByteArray()       # Zone per cell
+var base_height := PackedFloat32Array()  # heights as the level was built (snapshot_base)
+var material := PackedByteArray()        # Mat per cell
+var gate := PackedByteArray()            # Faction owning a gate on this cell (NONE = no gate)
 
 
 func _init(width: int, depth: int) -> void:
@@ -20,6 +28,8 @@ func _init(width: int, depth: int) -> void:
 	height.resize(w * h)
 	blocked.resize(w * h)
 	zone.resize(w * h)
+	material.resize(w * h)
+	gate.resize(w * h)
 
 
 func idx(x: int, z: int) -> int:
@@ -39,6 +49,29 @@ func height_at(x: int, z: int) -> float:
 func set_height(x: int, z: int, v: float) -> void:
 	if in_bounds(x, z):
 		height[z * w + x] = v
+
+
+## Called once the level is built. Enemy mortars never dig below these heights.
+func snapshot_base() -> void:
+	base_height = height.duplicate()
+
+
+## Height as a walker of `faction` feels it: someone else's gate is a wall.
+func walk_height(x: int, z: int, faction: int) -> float:
+	if not in_bounds(x, z):
+		return 99.0
+	var i := z * w + x
+	var g := gate[i]
+	return height[i] + (GATE_H if g != Faction.NONE and g != faction else 0.0)
+
+
+## Can a walker step from cell a onto neighbour b? `climb` / `drop` are in levels. Raiders,
+## units (Pathfind) and the Operative (PlayerController) all go through here.
+func step_ok(ax: int, az: int, bx: int, bz: int, climb: float, drop: float, faction: int) -> bool:
+	if not in_bounds(bx, bz):
+		return false
+	var d := walk_height(bx, bz, faction) - walk_height(ax, az, faction)
+	return d <= climb and -d <= drop
 
 
 func zone_at(x: int, z: int) -> int:

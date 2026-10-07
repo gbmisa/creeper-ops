@@ -8,10 +8,7 @@ const DIRS := [[1, 0, 1.0], [-1, 0, 1.0], [0, 1, 1.0], [0, -1, 1.0],
 
 
 static func step_ok(g: Grid, ax: int, az: int, bx: int, bz: int, def: Dictionary) -> bool:
-	if not g.in_bounds(bx, bz):
-		return false
-	var d := g.height_at(bx, bz) - g.height_at(ax, az)
-	return d <= def.climb and -d <= def.drop
+	return g.step_ok(ax, az, bx, bz, def.climb, def.drop, Grid.Faction.PLAYER)
 
 
 static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, def: Dictionary, max_nodes := 6000) -> Array[Vector2]:

@@ -29,6 +29,11 @@ func update(dt: float, goal_cells: Array) -> void:
 	rebuild(goal_cells)
 
 
+## Terrain changed: rebuild on the next update instead of waiting out the interval.
+func invalidate() -> void:
+	timer = 0.0
+
+
 func rebuild(goal_cells: Array) -> void:
 	dist.fill(-1)
 	var open := PackedInt32Array()
@@ -59,8 +64,7 @@ func rebuild(goal_cells: Array) -> void:
 
 ## Can a raider walk from cell a onto cell b? One terrace either way.
 func step_ok(ax: int, az: int, bx: int, bz: int) -> bool:
-	var rise := grid.height_at(bx, bz) - grid.height_at(ax, az)
-	return rise <= Config.RAIDER_CLIMB and -rise <= Config.RAIDER_DROP
+	return grid.step_ok(ax, az, bx, bz, Config.RAIDER_CLIMB, Config.RAIDER_DROP, Grid.Faction.ENEMY)
 
 
 ## Next cell centre (world XZ) to walk toward, or null when there is no route from here.

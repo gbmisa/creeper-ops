@@ -34,7 +34,7 @@ func can_occupy(g: Grid, x: float, z: float) -> bool:
 	var reach := maxf(pos.y, g.ground_y(pos.x, pos.z)) / Config.LEVEL_H + Config.CLIMB  # in levels
 	for o in [Vector2(-r, -r), Vector2(r, -r), Vector2(-r, r), Vector2(r, r)]:
 		var c := g.world_to_cell(x + o.x, z + o.y)
-		if not g.in_bounds(c.x, c.y) or g.height_at(c.x, c.y) > reach:
+		if not g.in_bounds(c.x, c.y) or g.walk_height(c.x, c.y, Grid.Faction.PLAYER) > reach:
 			return false
 	return true
 

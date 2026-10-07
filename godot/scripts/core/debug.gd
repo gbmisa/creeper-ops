@@ -19,6 +19,7 @@ class_name Debug
 ##   --keys        open the Controls (keybind) menu
 ##   --gpu-parity / --perf-sim=N   GPU creeper sim checks (SimBench; need a display)
 ##   --cpu-sim     force the CPU creeper sim
+##   --raise=x,z,r,by   raise (negative: lower) a disc of terrain through TerrainEdit
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -78,6 +79,10 @@ static func apply(g) -> void:
 	if args.has("gpu-parity") or args.has("perf-sim"):
 		SimBench.run(g, args)
 		return
+	if args.has("raise"):  # --raise=x,z,r,by: TerrainEdit a disc (terrain edit screenshots)
+		var p: PackedStringArray = args.raise.split(",")
+		var cells: Array[Vector2i] = g.surface.grid.cells_in_radius(int(p[0]), int(p[1]), float(p[2]))
+		TerrainEdit.raise(g.surface, cells, float(p[3]), Grid.Mat.EARTH)
 	if args.has("smoke"):
 		SmokeTest.run(g)
 	if args.has("sim"):

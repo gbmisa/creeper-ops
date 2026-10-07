@@ -36,10 +36,12 @@ New from the same review: **Operative deployment is reworked** (Totems, drop any
 | `base_height` | PackedFloat32 | Height after level build. Enemy mortars never lower a cell below it |
 | `material` | PackedByte | `0` natural, `1` Earth, `2` Metal, `3` Stone, `4` Plated stone, `5` Spire (indestructible) |
 | `gate` | PackedByte | `0` none, `1` player gate, `2` enemy gate |
-| `terp_target` | PackedFloat32 | `-1` = none, else the target level the Terp works toward |
+| `terp_target` | PackedFloat32 | `-1` = none, else the target level the Terp works toward *(deferred to Stage 11)* |
 | `terp_mat` | PackedByte | Material to lay at the target |
 
 Wall HP is stored per **segment** in the stronghold, not per cell (see §3).
+
+*As built (Stage 5):* a gate cell keeps its floor height in `grid.height`; `walk_height()` adds `GATE_H` for every faction except the owner, so the archway is open ground for the owner and a wall for everyone else. Creeper ignores gates for now; Stage 7 decides whether closed gates hold creeper back.
 
 `Grid.passable_for(faction, ax, az, bx, bz) -> bool` replaces the separate climb checks.
 - It applies a climb limit: `RAIDER_CLIMB` for raiders, `CLIMB` for the Operative, and the units' own value.
