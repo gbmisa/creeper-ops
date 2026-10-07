@@ -1,8 +1,9 @@
 class_name Level01
 ## Level 01 "Hollow Ridge": surface layout. Pure data + shaping helpers so new levels can
 ## copy this file. See docs/LEVEL01_DESIGN.md. Blight zones (no building) are reachable only
-## by the Operative and barracks units. Heights are whole CW3 levels (0..10): flat terraces
-## with sheer walls, so ramps and stairs are explicit. The Command Node lands wherever the player chooses
+## by the Operative and barracks units. Heights are whole CW3 levels (0..10): flat tops.
+## Named shelves stay sheer and are climbed by explicit stairs; everywhere else, neighbours
+## differ by at most one level. The Command Node lands wherever the player chooses
 ## (landing rules: Landing.can_land); `landing_hint` is just the suggested site.
 
 const W := 80
@@ -59,6 +60,39 @@ static func _set_rect(g: Grid, x0: int, z0: int, x1: int, z1: int, v: float) -> 
 	_rect(g, x0, z0, x1, z1, func(x, z): g.set_height(x, z, v))
 
 
+## Shelves keep their cliffs. The lowland steps one level at a time, and each named
+## shelf gets a stair a raider can climb. The southern mesa keeps only its north stair
+## and the west-ridge gap; castle footprints are left for CastleShape.
+static func _routes(g: Grid) -> void:
+	var keep := LevelRamps.mask(g)
+	LevelRamps.cover_disc(keep, g, 40, 64, 10.5)
+	LevelRamps.cover_rect(keep, g, 30, 70, 50, 79)
+	LevelRamps.cover_rect(keep, g, 38, 44, 42, 55)
+	LevelRamps.cover_disc(keep, g, 24, 66, 7.0)
+	LevelRamps.cover_disc(keep, g, 57, 64, 7.0)
+	LevelRamps.cover_rect(keep, g, 10, 51, 34, 53)
+	LevelRamps.uncover_rect(keep, g, 27, 51, 29, 53)
+	LevelRamps.cover_disc(keep, g, 14, 12, 7.0)
+	LevelRamps.cover_rect(keep, g, 54, 3, 73, 19)
+	LevelRamps.cover_disc(keep, g, 40, 24, 6.0)
+	LevelRamps.cover_disc(keep, g, 68, 50, 6.0)
+	LevelRamps.cover_disc(keep, g, 26, 26, 4.0)
+	LevelRamps.cover_disc(keep, g, 52, 38, 4.0)
+	for c in CASTLES:
+		LevelRamps.cover_rect(keep, g, int(c.x) - 4, int(c.z) - 4, int(c.x) + int(c.size) + 3, int(c.z) + int(c.size) + 3)
+	LevelRamps.smooth_lowland(g, keep)
+	LevelRamps.stairs(g, Vector2i(14, 15), Vector2i(14, 29), 5, 2)
+	LevelRamps.stairs(g, Vector2i(68, 50), Vector2i(56, 50), 5, 2)
+	LevelRamps.stairs(g, Vector2i(24, 66), Vector2i(24, 74), 5, 2)
+	LevelRamps.stairs(g, Vector2i(57, 64), Vector2i(57, 76), 5, 2)
+	LevelRamps.stairs(g, Vector2i(40, 24), Vector2i(40, 30), 5, 1)
+	LevelRamps.stairs(g, Vector2i(61, 14), Vector2i(61, 34), 5, 2)
+	LevelRamps.stairs(g, Vector2i(18, 52), Vector2i(18, 36), 5, 2)
+	LevelRamps.stairs(g, Vector2i(32, 52), Vector2i(32, 36), 3, 2)
+	LevelRamps.stairs(g, Vector2i(26, 26), Vector2i(26, 32), 3, 1)
+	LevelRamps.stairs(g, Vector2i(52, 38), Vector2i(52, 46), 3, 1)
+
+
 static func build() -> Dictionary:
 	var g := Grid.new(W, H)
 	var noise := Noise2D.new(7)
@@ -107,6 +141,7 @@ static func build() -> Dictionary:
 	_mesa(g, 26, 26, 2, 4, 4.0)
 	_mesa(g, 52, 38, 2, 4, 4.0)
 	_mesa(g, 70, 70, 3, 5, 3.0)
+	_routes(g)
 	# CW3 terrain is whole levels 0..10.
 	for i in g.height.size():
 		g.height[i] = clampf(roundf(g.height[i]), 0.0, Config.MAX_LEVEL)

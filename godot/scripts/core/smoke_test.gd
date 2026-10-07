@@ -138,6 +138,7 @@ static func run(g) -> void:
 	SmokeTraps.run(g)
 	SmokeGroupSelect.run(g)
 	SmokeSupplyRules.run(g)
+	SmokeTraversal.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 
