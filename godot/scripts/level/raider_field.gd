@@ -62,8 +62,18 @@ func rebuild(goal_cells: Array) -> void:
 			open.append(a)
 
 
-## Can a raider walk from cell a onto cell b? One terrace either way.
+## Can a raider walk from cell a onto cell b? One terrace either way. No corner cutting:
+## a diagonal needs both side cells walkable, or the raider (which slides per axis) would
+## press into the cliff corner and stop for good.
 func step_ok(ax: int, az: int, bx: int, bz: int) -> bool:
+	if not _one(ax, az, bx, bz):
+		return false
+	if ax == bx or az == bz:
+		return true
+	return _one(ax, az, bx, az) and _one(bx, az, bx, bz) and _one(ax, az, ax, bz) and _one(ax, bz, bx, bz)
+
+
+func _one(ax: int, az: int, bx: int, bz: int) -> bool:
 	return grid.step_ok(ax, az, bx, bz, Config.RAIDER_CLIMB, Config.RAIDER_DROP, Grid.Faction.ENEMY)
 
 

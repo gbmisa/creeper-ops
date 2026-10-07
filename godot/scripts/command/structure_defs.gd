@@ -44,8 +44,8 @@ static var DEFS := {
 		"ammo": { "max": 30.0, "per_packet": 3.0 },
 		"desc": "Trains Soldiers and Crawlers (max %d per barracks) that can enter Blight. Units carry limited ammo and must walk back here to resupply from its packet-fed stock." % Config.UNITS_PER_BARRACKS },
 	"nullifier": { "tab": "Structures", "label": "Nullifier", "cost": 100, "hp": 70.0, "link": 4.0, "link_y": 1.2,
-		"weapon": true,
-		"desc": "Build within 4 cells of an UNSHIELDED emitter, on ground you've cleared of creeper. Once built, creeper eats its HP, but it takes none while charging. When its 100 packets arrive it charges for 8 s and destroys the emitter. Cannot be moved." },
+		"weapon": true, "soaks_unbuilt": true, "range": Config.NULLIFY_RANGE,  # reach to the emitter; Forge Fire Range extends it
+		"desc": "Build within range (4 cells, more with Forge Fire Range) of an UNSHIELDED emitter, on ground you've cleared of creeper. Creeper eats its HP (even while it builds), but it takes none while charging. When its 100 packets arrive it charges for 8 s and destroys the emitter. Cannot be moved." },
 	"cannon": { "tab": "Weapons", "label": "Pulse Cannon", "cost": 25, "hp": 40.0, "link": 4.0, "link_y": 0.9,
 		"movable": true, "move_speed": 7.0, "range": 8.0, "fire_rate": 0.27, "power": 1.3, "weapon": true,
 		"ammo": { "max": 40.0, "per_packet": 4.0 }, "targets": "creeper",

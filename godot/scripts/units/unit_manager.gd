@@ -76,7 +76,7 @@ func order(units: Array, dest: Vector2, player := false) -> void:
 func walk_to(u: Unit, goal: Vector2) -> void:
 	var g := world.grid
 	var from := g.world_to_cell(u.pos.x, u.pos.z)
-	u.path = Pathfind.find(g, world.creeper, from, g.world_to_cell(goal.x, goal.y), u.def)
+	u.path = Pathfind.find(g, world.creeper, from, g.world_to_cell(goal.x, goal.y), u.def, 6000, world.occupied)
 	if not u.path.is_empty():
 		u.path[u.path.size() - 1] = goal
 
@@ -144,7 +144,8 @@ func _move(u: Unit, dt: float) -> void:
 	var b := g.world_to_cell(nx, nz)
 	var rise := g.height_at(b.x, b.y) - g.height_at(a.x, a.y)
 	var p := u.pos
-	if g.in_bounds(b.x, b.y) and rise <= u.def.climb and -rise <= u.def.drop:
+	var into_tower: bool = b != a and world.occupied.call(b.x, b.y) and not world.occupied.call(a.x, a.y)
+	if g.in_bounds(b.x, b.y) and rise <= u.def.climb and -rise <= u.def.drop and not into_tower:
 		p.x = nx
 		p.z = nz
 	p.y = g.stand_y(p.x, p.z, Grid.Faction.PLAYER)

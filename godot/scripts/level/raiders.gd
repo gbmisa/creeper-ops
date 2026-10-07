@@ -117,7 +117,14 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
 			r.node.position.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY) + absf(sin(time * 12.0 + r.phase)) * 0.2
 			return
-		goal = Vector2(tp.x, tp.z)
+		# Straight at the target; if a wall is in the way (a garrison inside its castle,
+		# a cliff), follow the flow field round it instead of pressing into the wall.
+		r["detour"] = r.get("detour", 0.0) - dt
+		if r.detour <= 0.0:
+			if _walk(r, Vector2(tp.x, tp.z), dt):
+				return
+			r.detour = Config.RAIDER_DETOUR_TIME
+		goal = _route(r, p)
 	if goal == null:
 		return
 	_walk(r, goal, dt)
@@ -133,7 +140,8 @@ func _route(r: Dictionary, p: Vector3) -> Variant:
 	return field.next_step(p.x, p.z)
 
 
-func _walk(r: Dictionary, goal: Vector2, dt: float) -> void:
+## Returns false when the raider couldn't move at all (blocked on both axes).
+func _walk(r: Dictionary, goal: Vector2, dt: float) -> bool:
 	var p: Vector3 = r.node.position
 	var v: Vector2 = goal - Vector2(p.x, p.z)
 	if v.length() > 0.001:
@@ -153,13 +161,17 @@ func _walk(r: Dictionary, goal: Vector2, dt: float) -> void:
 	nx = clampf(nx, 0.5, ws.x - 0.5)
 	nz = clampf(nz, 0.5, ws.y - 0.5)
 	# Per axis, so a cliff blocks that axis and the raider slides along it.
+	var moved := false
 	if _step_into(p.x, p.z, nx, p.z):
+		moved = moved or absf(nx - p.x) > 0.001
 		p.x = nx
 	if _step_into(p.x, p.z, p.x, nz):
+		moved = moved or absf(nz - p.z) > 0.001
 		p.z = nz
 	p.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY)
 	r.node.position = p
 	_face(r, v)
+	return moved
 
 
 ## True when the move stays in this cell or enters a neighbour one terrace away.
@@ -167,13 +179,23 @@ func _step_into(x0: float, z0: float, x1: float, z1: float) -> bool:
 	var g := world.grid
 	var a := g.world_to_cell(x0, z0)
 	var b := g.world_to_cell(x1, z1)
-	if a == b:
-		return true
 	if not g.in_bounds(b.x, b.y):
 		return false
+	# Stay off the sloped foot of a tall wall: the ground there is already partway up it.
+	var off := _off_floor(x1, z1, b)
+	if off > Config.RAIDER_CLIMB and off > _off_floor(x0, z0, a):
+		return false
+	if a == b:
+		return true
 	if maxi(absi(b.x - a.x), absi(b.y - a.y)) > 1:
 		return false
 	return field.step_ok(a.x, a.y, b.x, b.y)
+
+
+## How far (levels) the drawn ground at a point sits from its own cell's floor.
+func _off_floor(x: float, z: float, c: Vector2i) -> float:
+	var g := world.grid
+	return absf(g.stand_y(x, z, Grid.Faction.ENEMY) / Config.LEVEL_H - g.walk_height(c.x, c.y, Grid.Faction.ENEMY))
 
 
 func _patrol(home: Vector3, r: Dictionary) -> Vector2:

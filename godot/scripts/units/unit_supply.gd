@@ -1,8 +1,8 @@
 class_name UnitSupply
 ## Unit combat, creeper damage and the resupply loop. Units are a tool, not a crutch:
 ##  - every gunshot and every creeper spray spends 1 ammo
-##  - at 0 ammo, or below RETREAT_HP, a unit walks to its barracks (any barracks if its own is
-##    gone) and docks; the barracks hands over ammo from its own packet-fed stock
+##  - at 0 ammo, or below RETREAT_HP, a unit walks to the nearest built barracks (one with
+##    stock if any has it) and docks; the barracks hands over ammo from its packet-fed stock
 ##  - restocked, it walks back to the post it was ordered to
 ## No barracks, or an empty barracks stock, means the unit stays dry.
 
@@ -29,13 +29,21 @@ static func _creeper_damage(mgr: UnitManager, u: Unit, dt: float) -> void:
 		mgr.damage(u, (Config.UNIT_CREEPER_BASE_DPS + d * Config.UNIT_CREEPER_DPS) * u.def.creeper_mult * dt)
 
 
+## Nearest built barracks, preferring one with ammo in stock. Chosen when the unit turns
+## for home and kept until it docks, so it doesn't dither between two. A dead home is
+## replaced by the nearest barracks with room (population cap).
 static func _barracks_for(mgr: UnitManager, u: Unit) -> Structure:
-	if u.home and not u.home.dead and u.home.is_built():
-		return u.home
-	var b := mgr.structures.nearest_to(int(u.pos.x / Config.CELL), int(u.pos.z / Config.CELL),
-		func(s): return s.type == "barracks" and s.is_built() and mgr.living_for(s) < Config.UNITS_PER_BARRACKS)
-	if b:
-		u.home = b
+	if u.home == null or u.home.dead:
+		u.home = mgr.structures.nearest_to(int(u.pos.x / Config.CELL), int(u.pos.z / Config.CELL),
+			func(s): return s.type == "barracks" and s.is_built() and mgr.living_for(s) < Config.UNITS_PER_BARRACKS)
+	if u.depot and not u.depot.dead and u.depot.is_built() and u.state == "resupply":
+		return u.depot
+	var cx := int(u.pos.x / Config.CELL)
+	var cz := int(u.pos.z / Config.CELL)
+	var b := mgr.structures.nearest_to(cx, cz, func(s): return s.type == "barracks" and s.is_built() and s.ammo >= 1.0)
+	if b == null:
+		b = mgr.structures.nearest_to(cx, cz, func(s): return s.type == "barracks" and s.is_built())
+	u.depot = b
 	return b
 
 

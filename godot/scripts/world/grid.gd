@@ -16,6 +16,7 @@ var w: int
 var h: int
 var height := PackedFloat32Array()  # terrain level per cell (fractional is fine)
 var blocked := PackedByteArray()    # 1 = no building here (hazard footprint)
+var yard := PackedByteArray()       # 1 = castle courtyard (buildable while you hold it)
 var zone := PackedByteArray()       # Zone per cell
 var base_height := PackedFloat32Array()  # heights as the level was built (snapshot_base)
 var material := PackedByteArray()        # Mat per cell
@@ -29,6 +30,7 @@ func _init(width: int, depth: int) -> void:
 	h = depth
 	height.resize(w * h)
 	blocked.resize(w * h)
+	yard.resize(w * h)
 	zone.resize(w * h)
 	material.resize(w * h)
 	gate.resize(w * h)

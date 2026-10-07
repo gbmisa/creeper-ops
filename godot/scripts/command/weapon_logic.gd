@@ -35,7 +35,17 @@ static func fire_interval(s: Structure) -> float:
 
 
 static func range_cells(s: Structure) -> float:
-	return s.def.get("range", 0.0) * Upgrades.mult("range")
+	return def_range(s.def)
+
+
+## Range in cells for a def (placement previews, before the structure exists).
+static func def_range(def: Dictionary) -> float:
+	return def.get("range", 0.0) * Upgrades.mult("range")
+
+
+## How far a Nullifier reaches to its emitter: a weapon range, so Fire Range extends it.
+static func nullify_range() -> float:
+	return def_range(StructureDefs.DEFS.nullifier)
 
 
 static func _muzzle(s: Structure) -> Vector3:

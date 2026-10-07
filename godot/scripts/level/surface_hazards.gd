@@ -92,7 +92,7 @@ func is_shielded(e: Dictionary) -> bool:
 
 
 func try_nullify(x: int, z: int) -> String:
-	var e = emitter_near(x, z, Config.NULLIFY_RANGE)
+	var e = emitter_near(x, z, WeaponLogic.nullify_range())
 	if e == null:
 		return "none"
 	if is_shielded(e):

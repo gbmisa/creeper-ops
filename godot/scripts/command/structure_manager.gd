@@ -115,7 +115,7 @@ func remove(s: Structure, reason := "") -> void:
 		if s.type == "node":
 			Bus.node_destroyed.emit()
 		else:
-			Bus.say("%s destroyed%s" % [s.def.label, " by creeper" if s.wet > Config.DAMAGE_DEPTH else ""], "bad")
+			Bus.say("%s destroyed%s" % [s.def.label, " by creeper" if s.wet > Config.MIN_DEPTH else ""], "bad")
 	s.node.queue_free()
 	dirty = true
 	Bus.structure_removed.emit(s)

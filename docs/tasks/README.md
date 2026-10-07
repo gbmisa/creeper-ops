@@ -20,3 +20,4 @@ One file per task. Start a **fresh** agent session in the task's worktree and gi
 | [GROK_command_mode_split.md](GROK_command_mode_split.md) | `creeper fps td-worktrees/grok-command-mode` | `grok/command-mode-split` |
 | [STAGE6_packet_senders.md](STAGE6_packet_senders.md) | `creeper fps td-worktrees/stage6` | `stage/6-packet-senders` |
 | [STAGE10b_deployment.md](STAGE10b_deployment.md) | `creeper fps td-worktrees/stage10b` | `stage/10b-deployment` |
+| [STAGE7c_traversal.md](STAGE7c_traversal.md) | `creeper fps td-worktrees/stage7c` | `stage/7c-traversal` |

@@ -16,11 +16,12 @@ class_name Debug
 ##   --salvage=N   set the Salvage stockpile
 ##   --landing     dismiss the briefing and stop at the landing-site choice
 ##   --hover=x,z   put the (fake) cursor over a cell
-##   --select=T    select the first structure of type T
+##   --select=T    select the first structure of type T (T=all-weapons: every movable weapon)
 ##   --keys        open the Controls (keybind) menu
 ##   --gpu-parity / --perf-sim=N   GPU creeper sim checks (SimBench; need a display)
 ##   --cpu-sim     force the CPU creeper sim
 ##   --raise=x,z,r,by   raise (negative: lower) a disc of terrain through TerrainEdit
+##   --fpsbuild=T  Operative near the base in first-person build mode holding structure T
 ##   --castle=I[,spot]  drop the Operative at castle I: climb (pillar route, default), pad
 ##                 (spire jump pad), top (spire top), gate (outside the gate)
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
@@ -71,6 +72,11 @@ static func apply(g) -> void:
 		_drop(g, g.level.rift.x + 9, g.level.rift.z, PI / 2.0)
 	if args.has("spire"):
 		_drop(g, 61, 37, 0.0)
+	if args.has("fpsbuild"):  # --fpsbuild=T: Operative near the base in build mode holding T
+		_drop(g, 40, 62, 0.0)
+		g.fps.controller.pitch = -0.45
+		g.fps.builder.toggle(true)
+		g.fps.builder.tool = args.fpsbuild
 	if args.has("castle"):
 		_castle(g, args.castle.split(","))
 	if args.has("cave"):
@@ -94,7 +100,12 @@ static func apply(g) -> void:
 		SmokeTest.run(g)
 	if args.has("sim"):
 		_fast_forward(g, float(args.sim))
-	if args.has("select"):
+	if args.select == "all-weapons" if args.has("select") else false:
+		var all: Array[Structure] = []
+		all.assign(g.structures.list.filter(func(x): return x.def.get("movable", false) and x.type != "node"))
+		g.command.select_structure(all[0] if not all.is_empty() else null)
+		g.command.group = all
+	elif args.has("select"):
 		var s: Structure = g.structures.nearest_to(0, 0, func(x): return x.type == args.select)
 		g.command.select_structure(s)
 	if args.has("tool"):
@@ -172,7 +183,15 @@ static func _fast_forward(g, seconds: float) -> void:
 		"coverage": snappedf(g.surface.creeper.coverage(), 0.01),
 		"objectives": g.hud.objectives.items.filter(func(o): return o.done).map(func(o): return o.id),
 		"cave_coverage": snappedf(g.cave.creeper.coverage(), 0.01), "over": g.over,
+		"emitter_ring": g.hazards.emitters.filter(func(e): return e.alive).map(func(e): return _dry_ring(g, e)),
 	}))
+
+
+## "name: dry/total" cells within Nullifier range of an emitter (where one could be built).
+static func _dry_ring(g, e: Dictionary) -> String:
+	var cells: Array[Vector2i] = g.surface.grid.cells_in_radius(e.x, e.z, WeaponLogic.nullify_range())
+	var dry: Array = cells.filter(func(c): return g.surface.creeper.depth_at(c.x, c.y) <= Config.MIN_DEPTH)
+	return "%s: %d/%d dry" % [e.name, dry.size(), cells.size()]
 
 
 static func _screenshot_later(g, path: String) -> void:

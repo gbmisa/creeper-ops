@@ -83,7 +83,9 @@ static func ray_sphere(o: Vector3, d: Vector3, c: Vector3, r: float) -> float:
 	if disc < 0.0:
 		return INF
 	var t := -b - sqrt(disc)
-	return t if t > 0.0 else INF
+	if t > 0.0:
+		return t
+	return 0.001 if -b + sqrt(disc) > 0.0 else INF  # muzzle inside the target: point-blank hit
 
 
 func _fire(world: World) -> void:

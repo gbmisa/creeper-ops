@@ -11,6 +11,7 @@ static func run(g) -> void:
 	var c: Dictionary = castles.list[0]
 	_shape(grid, lay, castles.lays.bastion)
 	SmokeCastleWalk.run(g)
+	SmokeCastleBuild.run(g)
 	_capture(g, castles, c, lay)
 	_siege(g, castles, c, lay)
 	_assault(g, castles, c, lay)

@@ -20,7 +20,7 @@ static func update(s: Structure, dt: float, mgr, time: float) -> void:
 static func _nullifier(s: Structure, dt: float, mgr) -> void:
 	if mgr.hazards == null:
 		return
-	var e = mgr.hazards.emitter_near(s.x, s.z, Config.NULLIFY_RANGE)
+	var e = mgr.hazards.emitter_near(s.x, s.z, WeaponLogic.nullify_range())
 	if e == null:
 		return
 	if mgr.hazards.is_shielded(e):

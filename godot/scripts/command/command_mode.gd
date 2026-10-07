@@ -20,6 +20,7 @@ var tool := ""
 var hover: Dictionary = {}        # { cell: Vector2i, point: Vector3 }
 var reason := ""
 var selected: Structure = null
+var group: Array[Structure] = []  # every selected structure (box select); selected is group[0]
 var drag_rect := Rect2()          # for the HUD selection box (size 0 = hidden)
 var on_land := Callable()         # GameFlow: func(cell: Vector2i)
 
@@ -34,7 +35,7 @@ func setup(w: World, sm: StructureManager, um: UnitManager, orb: Orbital, lvl: D
 	add_child(cam)
 	cam.bounds = w.grid.world_size()
 	overlay = CommandOverlay.new(w)
-	Bus.structure_removed.connect(func(s): if s == selected: select_structure(null))
+	Bus.structure_removed.connect(_on_removed)
 
 
 func set_tool(t: String) -> void:
@@ -51,6 +52,9 @@ func set_tool(t: String) -> void:
 
 func select_structure(s: Structure) -> void:
 	selected = s
+	group.clear()
+	if s:
+		group.append(s)
 	if s and s.type == "beacon":
 		structures.selected_beacon = s
 	Bus.selection_changed.emit()
@@ -63,10 +67,17 @@ func update(dt: float, input: InputState) -> void:
 	cam.update(dt, input, world.grid)
 	Sfx.listener = cam.global_position
 	CommandHover.refresh(self, input)
-	overlay.show_selection(selected, tool != "")
+	overlay.show_selection(selected, group, tool != "")
 	if input.right_clicked:
 		CommandInput.right_click(self)
 	CommandInput.left_mouse(self, input)
+
+
+func _on_removed(s: Structure) -> void:
+	group.erase(s)
+	if s == selected:
+		selected = null if group.is_empty() else group[0]
+		Bus.selection_changed.emit()
 
 
 func train(type: String) -> void:

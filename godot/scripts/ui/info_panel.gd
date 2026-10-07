@@ -52,6 +52,9 @@ func _rebuild_actions() -> void:
 	if s.def.has("fire_rate"):
 		_btn("Hold fire %s [%s]" % ["ON" if s.hold_fire else "OFF", Keybinds.short("hold_fire")], command.toggle_hold)
 	if s.type == "barracks":
+		var mine := units.living_for(s)
+		_btn("Select its units (%d)" % mine, func(): CommandSelect.select_units(command, s))
+		_btn("Select all units [%s]" % Keybinds.short("select_units"), func(): CommandSelect.select_units(command, null))
 		for t in UnitDefs.ORDER:
 			var d: Dictionary = UnitDefs.DEFS[t]
 			_btn("Train %s (%d) [%s]" % [d.label, d.cost, Keybinds.short(UnitDefs.KEYS[t])], func(): command.train(t))
@@ -81,7 +84,8 @@ func refresh() -> void:
 	var s := command.selected
 	if s:
 		visible = true
-		_title.text = s.def.label
+		var more: int = command.group.size() - 1
+		_title.text = s.def.label if more <= 0 else "%s + %d more selected" % [s.def.label, more]
 		_body.text = _structure_text(s)
 		return
 	if not units.selected.is_empty():

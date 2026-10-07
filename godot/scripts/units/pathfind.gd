@@ -1,7 +1,8 @@
 class_name Pathfind
 ## A* over the terrain grid (8-way, no corner cutting). Limits come from the unit def:
 ## `climb` (max rise between neighbours) and `drop` (max fall). Creeper adds cost so units
-## route around pools. Returns world-space XZ waypoints, string-pulled where walkable.
+## route around pools. `solid(x, z)` marks cells units can't walk through (structures); the
+## start and goal cells are exempt. Returns world-space XZ waypoints, string-pulled where walkable.
 
 const DIRS := [[1, 0, 1.0], [-1, 0, 1.0], [0, 1, 1.0], [0, -1, 1.0],
 	[1, 1, 1.414], [1, -1, 1.414], [-1, 1, 1.414], [-1, -1, 1.414]]
@@ -11,7 +12,7 @@ static func step_ok(g: Grid, ax: int, az: int, bx: int, bz: int, def: Dictionary
 	return g.step_ok(ax, az, bx, bz, def.climb, def.drop, Grid.Faction.PLAYER)
 
 
-static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, def: Dictionary, max_nodes := 6000) -> Array[Vector2]:
+static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, def: Dictionary, max_nodes := 6000, solid := Callable()) -> Array[Vector2]:
 	goal = Vector2i(clampi(goal.x, 0, g.w - 1), clampi(goal.y, 0, g.h - 1))
 	start = Vector2i(clampi(start.x, 0, g.w - 1), clampi(start.y, 0, g.h - 1))
 	var w := g.w
@@ -40,9 +41,9 @@ static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, 
 		for d in DIRS:
 			var nx: int = cx + d[0]
 			var nz: int = cz + d[1]
-			if not step_ok(g, cx, cz, nx, nz, def):
+			if not _ok(g, cx, cz, nx, nz, def, solid, start, goal):
 				continue
-			if d[0] != 0 and d[1] != 0 and (not step_ok(g, cx, cz, cx + d[0], cz, def) or not step_ok(g, cx, cz, cx, cz + d[1], def)):
+			if d[0] != 0 and d[1] != 0 and (not _ok(g, cx, cz, cx + d[0], cz, def, solid, start, goal) or not _ok(g, cx, cz, cx, cz + d[1], def, solid, start, goal)):
 				continue
 			var j := nz * w + nx
 			var ng: float = cost[cur] + d[2] + creeper.depth[j] * 4.0
@@ -61,9 +62,16 @@ static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, 
 		cells.push_front(i)
 		i = came[i]
 	var out: Array[Vector2] = []
-	for c in _smooth(g, cells, def):
+	for c in _smooth(g, cells, def, solid, start, goal):
 		out.append(Vector2((c % w + 0.5) * Config.CELL, (c / w + 0.5) * Config.CELL))
 	return out
+
+
+static func _ok(g: Grid, ax: int, az: int, bx: int, bz: int, def: Dictionary, solid: Callable, start: Vector2i, goal: Vector2i) -> bool:
+	if not step_ok(g, ax, az, bx, bz, def):
+		return false
+	var b := Vector2i(bx, bz)
+	return not solid.is_valid() or b == start or b == goal or not solid.call(bx, bz)
 
 
 static func _h(i: int, w: int, goal: Vector2i) -> float:
@@ -105,33 +113,33 @@ static func _pop(heap: Array) -> Array:
 
 
 ## Drop intermediate cells when a straight walk between kept points is legal.
-static func _smooth(g: Grid, cells: Array[int], def: Dictionary) -> Array[int]:
+static func _smooth(g: Grid, cells: Array[int], def: Dictionary, solid: Callable, start: Vector2i, goal: Vector2i) -> Array[int]:
 	var out: Array[int] = []
 	if cells.size() < 3:
 		return cells.slice(1)
 	var anchor := 0
 	for i in range(2, cells.size()):
-		if not _line_ok(g, cells[anchor], cells[i], def):
+		if not _line_ok(g, cells[anchor], cells[i], def, solid, start, goal):
 			out.append(cells[i - 1])
 			anchor = i - 1
 	out.append(cells[cells.size() - 1])
 	return out
 
 
-static func _line_ok(g: Grid, a: int, b: int, def: Dictionary) -> bool:
+## Walks the straight segment between two cell centres in quarter-cell samples, so every
+## cell the unit's centre actually crosses is checked (no clipping past a tower corner).
+static func _line_ok(g: Grid, a: int, b: int, def: Dictionary, solid: Callable, start: Vector2i, goal: Vector2i) -> bool:
 	var w := g.w
-	var ax := a % w
-	var az := a / w
-	var bx := b % w
-	var bz := b / w
-	var steps := maxi(absi(bx - ax), absi(bz - az))
-	var x := ax
-	var z := az
-	for k in range(1, steps + 1):
-		var nx := roundi(ax + float(bx - ax) * k / steps)
-		var nz := roundi(az + float(bz - az) * k / steps)
-		if not step_ok(g, x, z, nx, nz, def):
+	var pa := Vector2(a % w + 0.5, a / w + 0.5)
+	var pb := Vector2(b % w + 0.5, b / w + 0.5)
+	var n := maxi(1, ceili(pa.distance_to(pb) * 4.0))
+	var cur := Vector2i(a % w, a / w)
+	for k in range(1, n + 1):
+		var q := pa.lerp(pb, float(k) / n)
+		var c := Vector2i(floori(q.x), floori(q.y))
+		if c == cur:
+			continue
+		if not _ok(g, cur.x, cur.y, c.x, c.y, def, solid, start, goal):
 			return false
-		x = nx
-		z = nz
+		cur = c
 	return true

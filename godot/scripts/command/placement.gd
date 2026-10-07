@@ -25,6 +25,10 @@ static func _ground_rules(mgr, type: String, x: int, z: int, ignore: Structure) 
 		if g.zone[i] == Grid.Zone.BLIGHT:
 			return "Blight zone: nothing can be built or parked here. Send the Operative or units."
 		if g.blocked[i]:
+			if g.yard[i] and g.material[i] == Grid.Mat.NATURAL:
+				return "Enemy castle: capture it to build in its courtyard"
+			if g.material[i] != Grid.Mat.NATURAL:
+				return "Castle stone: build in the courtyard of a castle you hold"
 			return "Too close to a hazard"
 		var occ = mgr.occupied.get(i)
 		if occ != null and occ != ignore:
@@ -48,9 +52,9 @@ static func can_place(mgr, type: String, x: int, z: int) -> Dictionary:
 	if def.get("needs_network", true) and not mgr.network.in_range(mgr.list, x, z, def.link, null):
 		return { "ok": false, "reason": "Out of network range: build a Relay or Collector closer" }
 	if type == "nullifier":
-		var e = mgr.hazards.emitter_near(x, z, Config.NULLIFY_RANGE) if mgr.hazards else null
+		var e = mgr.hazards.emitter_near(x, z, WeaponLogic.nullify_range()) if mgr.hazards else null
 		if e == null:
-			return { "ok": false, "reason": "Nullifier must be within %d cells of an emitter" % Config.NULLIFY_RANGE }
+			return { "ok": false, "reason": "Nullifier must be within %.1f cells of an emitter" % WeaponLogic.nullify_range() }
 		if mgr.hazards.is_shielded(e):
 			return { "ok": false, "reason": "%s is SHIELDED. %s" % [e.name, e.shield_hint] }
 	return { "ok": true, "reason": "" }

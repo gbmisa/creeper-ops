@@ -121,8 +121,8 @@ static func build() -> Dictionary:
 		"landing_hint": Vector2i(40, 66),
 		"landing_min_dist": 14.0,  # cells from any emitter/vent/nest
 		"emitters": [
-			{ "id": "e1", "name": "Emitter NW", "x": 14, "z": 12, "amount": 4.0, "interval": 1.5 },
-			{ "id": "e2", "name": "Emitter East", "x": 68, "z": 50, "amount": 4.0, "interval": 1.5, "shielded_by": "core",
+			{ "id": "e1", "name": "Emitter NW", "x": 14, "z": 12, "amount": 3.0, "interval": 1.5 },
+			{ "id": "e2", "name": "Emitter East", "x": 68, "z": 50, "amount": 3.0, "interval": 1.5, "shielded_by": "core",
 				"shield_hint": "Its shield is powered from underground: send the Operative into the Rift and destroy the Deep Core." },
 		],
 		"vents": [  # fed by the Deep Core, shut off when it dies

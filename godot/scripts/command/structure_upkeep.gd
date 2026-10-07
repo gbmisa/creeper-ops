@@ -8,10 +8,12 @@ class_name StructureUpkeep
 
 static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
 	s.wet = 0.0 if (s.is_flying() or s.def.get("flying", false)) else mgr.wet_depth(s)
+	# Anything that dies on contact dies as soon as creeper is drawn on it (MIN_DEPTH),
+	# not at the damage threshold, so a thin film can't hide a "submerged" survivor.
+	if s.wet > Config.MIN_DEPTH and _dies_on_contact(s):
+		mgr.remove(s, "destroyed")
+		return
 	if s.wet > Config.DAMAGE_DEPTH:
-		if _dies_on_contact(s):
-			mgr.remove(s, "destroyed")
-			return
 		if s.def.get("weapon", false) and s.charge > 0.0:
 			return
 		var base := Config.STRUCT_BASE_DPS if s.type == "node" else Config.WEAPON_CREEPER_BASE_DPS
@@ -22,9 +24,10 @@ static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
 		s.hp = minf(s.def.hp, s.hp + Config.REPAIR_PER_SEC * dt)
 
 
-## The Node always soaks. Anything else soaks only once it is a built weapon.
+## The Node always soaks, and so does a Nullifier even while it builds (`soaks_unbuilt`), so
+## it can go up next to a pulsing emitter. Anything else soaks only once it is a built weapon.
 static func _dies_on_contact(s: Structure) -> bool:
-	if s.type == "node":
+	if s.type == "node" or s.def.get("soaks_unbuilt", false):
 		return false
 	return not s.is_built() or not s.def.get("weapon", false)
 

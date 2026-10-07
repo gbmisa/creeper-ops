@@ -17,6 +17,7 @@ var list: Array[Dictionary] = []  # saveable states
 var lays := {}                     # id -> CastleShape layout (rebuilt from level data)
 var views := {}                    # id -> StrongholdMeshes view + Node refs
 var op := func() -> Variant: return null  # injected: PlayerController in THIS world, or null
+var on_lost := func(_cells: Array) -> void: pass  # injected: destroy your structures in a lost courtyard
 var time := 0.0
 
 
@@ -135,6 +136,8 @@ func update(dt: float) -> void:
 		SpirePump.update(world, c, lay, dt)
 		if o != null and not lay.spire.pad.is_empty():
 			_pad(lay, o)
+		if o != null and c.state == "hostile":
+			_crown_push(v, o)
 		StrongholdMeshes.animate(v, c, time)
 
 
@@ -187,6 +190,7 @@ func _holding(c: Dictionary, lay: Dictionary, v: Dictionary, p, dt: float) -> vo
 	if c.capture.retake < Config.RETAKE_TIME:
 		return
 	StrongholdRules.to_hostile(world, c, lay, Config.CROWN_REGROW)
+	on_lost.call(lay.courtyard)
 	for r in inside:  # the raiders inside become its new garrison
 		r.nest.count -= 1
 		r.nest = v.garrison
@@ -205,6 +209,18 @@ func _pad(lay: Dictionary, o) -> void:
 		o.vel_y = sqrt(2.0 * Config.GRAVITY * (lay.spire.pad_levels + Config.JUMP_PAD_MARGIN) * Config.LEVEL_H)
 		o.on_ground = false
 		Sfx.play("lift")
+
+
+## The crown nest is solid: push the Operative out of its husk.
+func _crown_push(v: Dictionary, o) -> void:
+	var cp: Vector3 = (v.crown as Node3D).position
+	var d := Vector2(o.pos.x - cp.x, o.pos.z - cp.z)
+	var r := Config.CROWN_RADIUS + Config.OP_RADIUS
+	if d.length() >= r or absf(o.pos.y - cp.y) > 3.0:
+		return
+	d = d.normalized() if d.length() > 0.01 else Vector2(1, 0)
+	o.pos.x = cp.x + d.x * r
+	o.pos.z = cp.z + d.y * r
 
 
 func state() -> Dictionary:

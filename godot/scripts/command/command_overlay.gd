@@ -64,7 +64,18 @@ func hide_ghost() -> void:
 
 
 ## Selection ring + (for weapons) its firing range, drawn as ring_b / ring_a.
-func show_selection(s: Structure, tool_active: bool) -> void:
+func show_selection(s: Structure, group: Array[Structure], tool_active: bool) -> void:
+	var rings := PackedVector4Array()
+	if group.size() > 1:  # a box-selected group: one ring each, no range ring
+		for g in group.slice(0, 48):
+			rings.append(Vector4(g.pos.x, g.pos.z, StructureDefs.radius_m(g.type) + 0.7, 1.0))
+		s = null
+		if not tool_active:
+			mat.set_shader_parameter("ring_a", Vector4.ZERO)
+	var n := rings.size()
+	rings.resize(48)
+	mat.set_shader_parameter("sels", rings)
+	mat.set_shader_parameter("sel_count", n)
 	if s == null:
 		mat.set_shader_parameter("ring_b", Vector4.ZERO)
 		return
@@ -81,3 +92,4 @@ func set_overlay_visible(on: bool) -> void:
 	if not on:
 		hide_ghost()
 		mat.set_shader_parameter("ring_b", Vector4.ZERO)
+		mat.set_shader_parameter("sel_count", 0)

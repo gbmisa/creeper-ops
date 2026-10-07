@@ -15,6 +15,8 @@ static func hotkeys(cm: CommandMode, input: InputState) -> void:
 		if input.act("move"): cm.begin_move()
 		if input.act("supply"): cm.toggle_supply()
 		if input.act("hold_fire"): cm.toggle_hold()
+	if input.act("select_units"):
+		CommandSelect.select_units(cm, null)
 	if input.act("cam_home") and cm.structures.command_node():
 		cm.cam.focus(cm.structures.command_node().pos)
 	for t in UnitDefs.ORDER:
@@ -54,7 +56,7 @@ static func click(cm: CommandMode, shift: bool) -> void:
 				cm.deploy.start_drop(c)
 				if not shift: cm.set_tool("")
 			"@move":
-				cm.structures.move(cm.selected, c.x, c.y)
+				CommandSelect.move_group(cm, c)
 				cm.set_tool("")
 			_:
 				cm.structures.place(cm.tool, c.x, c.y)
@@ -90,7 +92,7 @@ static func right_click(cm: CommandMode) -> void:
 		cm.world.effects.burst(p + Vector3(0, 0.3, 0), Color("9dff7a"), 1.2, 0.3)
 		Bus.say("Barracks rally point set.", "info")
 	elif cm.selected and cm.selected.def.get("movable", false):
-		var res := cm.structures.move(cm.selected, c.x, c.y)
+		var res := CommandSelect.move_group(cm, c)
 		if not res.ok:
 			Bus.say(res.reason, "warn")
 			Sfx.play("deny")

@@ -23,6 +23,8 @@ uniform vec4 ring_a = vec4(0.0);         // xy, z = radius m, w = on
 uniform vec3 ring_a_color : source_color = vec3(0.37, 0.83, 1.0);
 uniform vec4 ring_b = vec4(0.0);
 uniform vec3 ring_b_color : source_color = vec3(0.62, 1.0, 0.48);
+uniform int sel_count = 0;
+uniform vec4 sels[48];        // box-selected structures: xy, z = radius m, w = on
 
 varying vec3 wpos;
 
@@ -53,8 +55,8 @@ void fragment() {
 		vec2 lc = fract(cf);
 		float bd = min(min(lc.x, 1.0 - lc.x), min(lc.y, 1.0 - lc.y));
 		float grid = 1.0 - smoothstep(0.02, 0.02 + fwidth(cf.x) * 1.5, bd);
-		col = mix(col, vec3(0.30, 0.95, 0.50), claim * 0.28);
-		col = mix(col, vec3(0.55, 1.0, 0.65), claim * grid * 0.45);
+		col = mix(col, vec3(0.05, 0.36, 0.14), claim * 0.5);  // dark enough to read on pale rock
+		col = mix(col, vec3(0.25, 0.80, 0.40), claim * grid * 0.55);
 		emit += claim * 0.03;
 		if (show_cover > 0.5) {
 			float cover = 0.0;
@@ -78,10 +80,16 @@ void fragment() {
 	}
 	float ra = ring(p, ring_a);
 	float rb = ring(p, ring_b);
+	float rs = 0.0;  // group rings: thicker and warm so they read on the green field
+	for (int i = 0; i < sel_count; i++) {
+		float d = abs(length(p - sels[i].xy) - sels[i].z);
+		rs = max(rs, 1.0 - smoothstep(0.22, 0.3 + fwidth(d) * 1.5, d));
+	}
 	col = mix(col, ring_a_color, ra * 0.85);
 	col = mix(col, ring_b_color, rb * 0.85);
+	col = mix(col, vec3(1.0, 0.86, 0.35), rs * 0.9);
 	ALBEDO = col;
-	EMISSION = col * emit + ring_a_color * ra * 0.35 + ring_b_color * rb * 0.35;
+	EMISSION = col * emit + ring_a_color * ra * 0.35 + ring_b_color * rb * 0.35 + vec3(1.0, 0.86, 0.35) * rs * 0.4;
 	ROUGHNESS = 0.93;
 	SPECULAR = 0.2;
 }

@@ -21,6 +21,7 @@ var hurt_flash := 0.0
 var since_hurt := 99.0
 var beacons := func(_w) -> Array: return []  # injected: built beacons when on the surface
 var mites: CaveMites = null
+var builder: OperativeBuild = null  # injected: first-person building (surface only)
 var prey: Dictionary
 
 
@@ -56,6 +57,8 @@ func leave() -> void:
 	if mites:
 		mites.target = null
 	mites = null
+	if builder:
+		builder.toggle(false)
 	world = null
 
 
@@ -80,7 +83,10 @@ func update(dt: float, input: InputState) -> void:
 	creeper_depth = depth if in_creeper else 0.0
 	controller.update(dt, input, g, Config.CREEPER_SLOW if in_creeper else 1.0)
 	body.position = controller.pos
-	weapons.update(dt, input, world, controller.pos)
+	var building := builder != null and world == builder.structures.world and builder.update(input, world, camera)
+	weapons.gun.visible = not building
+	if not building:
+		weapons.update(dt, input, world, controller.pos)
 	Sfx.listener = camera.global_position
 	since_hurt += dt
 	if in_creeper:  # suit burns, faster the deeper you wade
@@ -94,6 +100,8 @@ func update(dt: float, input: InputState) -> void:
 		Bus.operative_down.emit()
 		return
 	_interact(input)
+	if building:
+		prompt = builder.status
 	_recall(dt, input)
 
 

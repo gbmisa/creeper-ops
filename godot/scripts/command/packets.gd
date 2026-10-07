@@ -5,7 +5,8 @@ extends MultiMeshInstance3D
 ## cap. One flying Node does not stop launches while another sender is ready. Throughput is
 ## limited only by income, the bank, and each structure's request rate
 ## (Config.REQ_BUILD / REQ_AMMO / REQ_UNIT). Requests the bank can't pay are counted as unmet
-## demand so the HUD can show the red number the way CW3 does. Ammo is served before builds.
+## demand so the HUD can show the red number the way CW3 does. No priority: requesters are
+## served round robin, ammo and builds alike.
 
 const MAX_VISIBLE := 1200
 const COLORS := { "build": Color("e8fbff"), "ammo": Color("ffb13b"), "unit": Color("9dff7a") }
@@ -66,34 +67,44 @@ func update(dt: float, list: Array, sender_ready: bool) -> void:
 	var unmet := 0.0
 	if sender_ready and not list.is_empty():
 		var n := list.size()
-		_cursor = (_cursor + 1) % n  # rotate start so no structure always goes first
-		# Two passes: ammo first (a starving economy must not leave the guns dry), then
-		# construction and training.
-		for k in n * 2:
-			var s: Structure = list[(_cursor + k) % n]
+		for s in list:  # every requester builds up its request at its own rate
 			var kind := need(s)
 			if kind == "":
 				s.req_acc = 0.0
 				continue
-			if (kind == "ammo") != (k < n):
-				continue
 			var r := rate(kind)
 			wanted += r * dt
 			s.req_acc = minf(s.req_acc + r * dt, 2.0)
-			var want := kind
-			while s.req_acc >= 1.0 and kind == want:
+		# Round robin with no priority: one packet per requester per turn, ammo and builds
+		# alike, resuming after the last one served, until the bank or the requests run out.
+		var served := true
+		while served:
+			served = false
+			var base := _cursor
+			for k in n:
+				var i := (base + k) % n
+				var s: Structure = list[i]
+				if s.req_acc < 1.0:
+					continue
+				var kind := need(s)
+				if kind == "":
+					continue
 				if economy.energy < 1.0:
-					unmet += r * dt
 					break
 				var route := network.route(s)
 				if route.is_empty():
-					break
+					continue
 				economy.energy -= 1.0
 				s.req_acc -= 1.0
 				s.in_flight += 1
 				sent += 1
+				served = true
+				_cursor = (i + 1) % n
 				flying.append({ "s": s, "kind": kind, "route": route, "seg": 0, "t": 0.0 })
-				kind = need(s)
+		if economy.energy < 1.0:
+			for s in list:
+				if s.req_acc >= 1.0 and need(s) != "":
+					unmet += rate(need(s)) * dt
 	if dt > 0.0:
 		var k := clampf(dt / Config.STAT_WINDOW, 0.0, 1.0)
 		sent_rate = lerpf(sent_rate, sent / dt, k)

@@ -72,11 +72,17 @@ func _ready() -> void:
 	fps.beacons = func(w): return structures.beacons() if w == surface else []
 	deploy = OperativeDeploy.new(self)
 	command.deploy = deploy
+	fps.builder = OperativeBuild.new(structures, command.overlay)
 	fps.commit_recall = deploy.commit_recall
 	fps.preview_recall = deploy.preview_recall
 	hazards.nests.prey = surface_prey
 	hazards.nests.goal_cells = raider_goals
 	castles.op = func(): return fps.controller if fps.world == surface else null
+	castles.on_lost = func(cells: Array):
+		for cell in cells:
+			var s = structures.occupied.get(surface.grid.idx(cell.x, cell.y))
+			if s != null and not s.dead:
+				structures.remove(s, "destroyed")
 
 	hud = Hud.new()
 	add_child(hud)

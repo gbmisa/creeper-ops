@@ -51,6 +51,7 @@ static func build(g: Grid, row: Dictionary) -> Dictionary:
 		for x in range(r.position.x + 2, r.end.x - 2):
 			if g.material[g.idx(x, z)] != Grid.Mat.SPIRE:
 				lay.courtyard.append(Vector2i(x, z))
+				g.yard[g.idx(x, z)] = 1
 	return lay
 
 

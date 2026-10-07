@@ -45,7 +45,10 @@ func on_key(k: int) -> void:
 	if Keybinds.matches("mute", k):
 		Bus.say("Sound muted." if Sfx.toggle_mute() else "Sound on.", "info")
 	if g.mode != "command":
-		if k == KEY_ESCAPE:
+		if Keybinds.matches("test_recall", k) and not g.deploy.down:
+			g.teleport_cooldown = 0.0
+			to_command("Test recall: back aboard, teleporter ready.")
+		elif k == KEY_ESCAPE:
 			pause_operative()
 		return
 	if Keybinds.matches("keybinds", k):

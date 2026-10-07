@@ -50,6 +50,9 @@ static func sync_grid(world: World, c: Dictionary, lay: Dictionary) -> void:
 	for cell in lay.bridge:
 		g.deck_owner[g.idx(cell.x, cell.y)] = f if c.winch.hp > 0.0 else Grid.Faction.ALL
 		cells.append(cell)
+	for cell in lay.courtyard:  # you build in the courtyard of a castle you hold
+		if g.material[g.idx(cell.x, cell.y)] == Grid.Mat.NATURAL:
+			g.blocked[g.idx(cell.x, cell.y)] = 0 if c.owner == "player" else 1
 	if not cells.is_empty():
 		world.terrain_changed(cells)  # walkers re-plan; heights are unchanged
 

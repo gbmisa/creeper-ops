@@ -23,12 +23,12 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 			var rad := (Config.LANCE_RADIUS if cm.tool == "@lance" else 1.0) * Config.CELL
 			cm.overlay.show_ghost("", p, res.ok, rad, rad, [])
 		"@move":
-			cm.overlay.show_ghost(cm.selected.type, at, res.ok, StructureDefs.radius_m(cm.selected.type), cm.selected.def.get("range", 0.0) * Config.CELL, [])
+			cm.overlay.show_ghost(cm.selected.type, at, res.ok, StructureDefs.radius_m(cm.selected.type), WeaponLogic.def_range(cm.selected.def) * Config.CELL, [])
 		"@land":
 			cm.overlay.show_ghost("node", at, res.ok, StructureDefs.radius_m("node"), StructureDefs.DEFS.node.link * Config.CELL, [])
 		_:
 			var def: Dictionary = StructureDefs.DEFS[cm.tool]
-			var r: float = def.get("range", def.link) * Config.CELL
+			var r: float = (WeaponLogic.def_range(def) if def.has("range") else def.link) * Config.CELL
 			var cover: Array[Vector4] = cm.structures.network.cover_discs(cm.structures.list) if def.get("needs_network", true) else []
 			cm.overlay.show_ghost(cm.tool, at, res.ok, StructureDefs.radius_m(cm.tool), r, cover)
 

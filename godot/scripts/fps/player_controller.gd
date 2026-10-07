@@ -61,6 +61,7 @@ func update(dt: float, input: InputState, g: Grid, speed_factor := 1.0) -> void:
 			pos.z += dz
 		if on_ground:
 			bob += dt * speed * 1.6
+	_push_out(g)
 	if on_ground and input.act("jump"):
 		vel_y = Config.JUMP_V
 		on_ground = false
@@ -77,6 +78,30 @@ func update(dt: float, input: InputState, g: Grid, speed_factor := 1.0) -> void:
 	else:
 		on_ground = false
 	_sync()
+
+
+## Moves the body clear of any wall cell its edge sank into. In the air the edge may slide
+## over a ledge up to CLIMB above the feet; after landing beside it (worst in an inside
+## corner) every move would keep that overlap and the Operative would be stuck.
+func _push_out(g: Grid) -> void:
+	var r := Config.OP_RADIUS
+	var reach := maxf(pos.y, g.ground_y(pos.x, pos.z)) / Config.LEVEL_H + Config.CLIMB
+	for o in [Vector2(-r, -r), Vector2(r, -r), Vector2(-r, r), Vector2(r, r)]:
+		var c := g.world_to_cell(pos.x + o.x, pos.z + o.y)
+		if g.walk_height(c.x, c.y, Grid.Faction.PLAYER) <= reach:
+			continue
+		var x0 := c.x * Config.CELL
+		var z0 := c.y * Config.CELL
+		var in_x := pos.x >= x0 and pos.x < x0 + Config.CELL
+		var in_z := pos.z >= z0 and pos.z < z0 + Config.CELL
+		var px := (x0 - r - 0.01) if pos.x < x0 else (x0 + Config.CELL + r + 0.01)
+		var pz := (z0 - r - 0.01) if pos.z < z0 else (z0 + Config.CELL + r + 0.01)
+		if in_x and in_z:
+			continue  # the centre is on that cell: it's the floor, not a wall
+		if in_z or (not in_x and absf(px - pos.x) <= absf(pz - pos.z)):
+			pos.x = px
+		else:
+			pos.z = pz
 
 
 func _sync() -> void:
