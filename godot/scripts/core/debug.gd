@@ -17,6 +17,8 @@ class_name Debug
 ##   --hover=x,z   put the (fake) cursor over a cell
 ##   --select=T    select the first structure of type T
 ##   --keys        open the Controls (keybind) menu
+##   --gpu-parity / --perf-sim=N   GPU creeper sim checks (SimBench; need a display)
+##   --cpu-sim     force the CPU creeper sim
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -73,6 +75,9 @@ static func apply(g) -> void:
 		var xz: PackedStringArray = args.look.split(",")
 		g.command.cam.focus(g.level.grid.cell_ground(int(xz[0]), int(xz[1])))
 		g.command.cam.dist = float(xz[2]) if xz.size() > 2 else 55.0
+	if args.has("gpu-parity") or args.has("perf-sim"):
+		SimBench.run(g, args)
+		return
 	if args.has("smoke"):
 		SmokeTest.run(g)
 	if args.has("sim"):

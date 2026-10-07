@@ -59,6 +59,7 @@ Creeper already on a raised cell keeps its depth: its surface rises and it spill
 
 ### 1.4 GPU creeper sim (Stage 4)
 **Files:**
+- *(As built: `creeper_sim.gd` stays the CPU sim **and** the shared interface; `creeper_gpu.gd` extends it. No separate `creeper_cpu.gd`.)*
 - `sim/creeper_sim.gd` becomes the **shared interface**, with today's public API unchanged: `depth`, `add`, `remove`, `remove_radius`, `nearest_wet`, `deepest_wet`, `depth_at`, `depth_world`, `add_source`, `coverage`, `sources`, `ticks`, `update`.
 - `sim/creeper_cpu.gd` holds today's code.
 - `sim/creeper_gpu.gd` is the GPU version.

@@ -9,6 +9,8 @@ extends MeshInstance3D
 ##   dry, no creeper     -> well under the ground (hidden)
 ## Because the display level is never above a dry cell's ground and both meshes share the
 ## same interpolation, the shader can discard anything under the terrain cleanly.
+## With the GPU sim, the compute shader builds the display level and both textures are
+## sampled straight from the GPU (refresh() does nothing).
 
 const MIN_VIS := 0.12   # levels: thinnest creeper we draw
 const SHORE_DIP := 0.35 # levels below ground a shoreline cell's surface sits
@@ -46,26 +48,30 @@ func setup(creeper: CreeperSim, height_tex: Texture2D) -> void:
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	name = "Creeper"
 
-	_surf.resize(g.w * g.h)
-	_surf_img = Image.create_from_data(g.w, g.h, false, Image.FORMAT_RF, _surf.to_byte_array())
-	_surf_tex = ImageTexture.create_from_image(_surf_img)
-	_depth_img = Image.create_from_data(g.w, g.h, false, Image.FORMAT_RF, sim.depth.to_byte_array())
-	_depth_tex = ImageTexture.create_from_image(_depth_img)
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://shaders/creeper.gdshader")
 	mat.set_shader_parameter("height_tex", height_tex)
-	mat.set_shader_parameter("surf_tex", _surf_tex)
-	mat.set_shader_parameter("depth_tex", _depth_tex)
 	mat.set_shader_parameter("cells", Vector2(g.w, g.h))
 	mat.set_shader_parameter("cell", Config.CELL)
 	mat.set_shader_parameter("level_h", Config.LEVEL_H)
 	mat.set_shader_parameter("band", Config.TERRACE_BAND)
 	material_override = mat
+	if sim.is_gpu():
+		mat.set_shader_parameter("surf_tex", sim.surf_tex)
+		mat.set_shader_parameter("depth_tex", sim.depth_tex)
+		return
+	_surf.resize(g.w * g.h)
+	_surf_img = Image.create_from_data(g.w, g.h, false, Image.FORMAT_RF, _surf.to_byte_array())
+	_surf_tex = ImageTexture.create_from_image(_surf_img)
+	_depth_img = Image.create_from_data(g.w, g.h, false, Image.FORMAT_RF, sim.depth.to_byte_array())
+	_depth_tex = ImageTexture.create_from_image(_depth_img)
+	mat.set_shader_parameter("surf_tex", _surf_tex)
+	mat.set_shader_parameter("depth_tex", _depth_tex)
 
 
 ## Push the latest surface to the GPU (only for the world being rendered, once per sim tick).
 func refresh() -> void:
-	if sim.ticks == _last_tick:
+	if sim.is_gpu() or sim.ticks == _last_tick:
 		return
 	_last_tick = sim.ticks
 	_build_surface()
