@@ -95,7 +95,7 @@ static func _raiders(g) -> void:
 	var d1: float = (r.node.position as Vector3).distance_to(target.pos) if r.alive else 0.0
 	SmokeTest._check("raider marches on the base", d1 < d0 - 20.0, "(%.0f m -> %.0f m)" % [d0, d1])
 	var t0 := nests.tier
-	nests.time = Config.RAIDER_TIERS[1].from
+	nests.time = nests._tier_time(1)
 	nests.update(0.01)
 	SmokeTest._check("nests escalate with time", nests.tier == t0 + 1 and nests.spawn_interval() < Config.NEST_SPAWN_START)
 	nests.time = 0.0

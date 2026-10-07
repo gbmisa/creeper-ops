@@ -30,6 +30,11 @@ const MAP := """
 ########################################"""
 
 const WALL := 7.0
+## No nests underground yet. Same clock shape as the surface, ready if a cave fight grows them.
+const RAID_SCHEDULE := {
+	"raid_delay": 300.0,
+	"tier_times": [0.0, 480.0, 900.0, 1320.0],
+}
 
 
 static func build() -> Dictionary:
@@ -39,6 +44,7 @@ static func build() -> Dictionary:
 		w = maxi(w, r.length())
 	var g := Grid.new(w, rows.size())
 	var cave := { "grid": g, "pad": Vector2i.ZERO, "core": Vector2i.ZERO, "pylons": [], "ceiling": 8.0,
+		"raid_schedule": RAID_SCHEDULE,
 		"aether_towers": [Vector2i(6, 6), Vector2i(31, 7), Vector2i(19, 16), Vector2i(12, 20)] }
 	for z in rows.size():
 		var row: String = rows[z]

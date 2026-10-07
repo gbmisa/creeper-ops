@@ -4,8 +4,10 @@ extends RefCounted
 ##  - guards stay leashed to their nest and jump anything that comes close
 ##  - raiders walk the RaiderField toward your structures and chew through them; anything
 ##    within RAIDER_AGGRO on the way (units, the Operative, a structure) is attacked first
-## Tiers (Config.RAIDER_TIERS) get tougher the longer the mission runs. Snipers, Beams, units,
-## the Operative and the Lance kill them.
+## They only step one terrace at a time. With no walking route they attack the nearest prey
+## they can reach on foot, or else return to the nest and guard it. Melee still reaches
+## across a cliff edge. Tiers (Config.RAIDER_TIERS) get tougher as the level's schedule
+## unlocks them. Snipers, units, the Operative and the Lance kill them. Mortar splash only nicks them.
 
 var world: World
 var list: Array[Dictionary] = []
@@ -85,14 +87,16 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 	if r.guard:
 		target = _nearest(p, prey, Config.NEST_AGGRO, home)
 		if target.is_empty():
-			var a: float = time * 0.5 + r.phase
-			goal = Vector2(home.x + cos(a) * 4.0, home.z + sin(a) * 4.0)
+			goal = _patrol(home, r)
 	else:
 		target = _nearest(p, prey, Config.RAIDER_AGGRO)
 		if target.is_empty():
 			goal = field.next_step(p.x, p.z)
-			if goal == null:  # no walking route: scale the cliffs straight at the nearest prey
-				target = _nearest(p, prey, INF)
+			if goal == null:
+				target = _nearest_on_foot(p, prey)
+				if target.is_empty():
+					r.guard = true
+					goal = _patrol(home, r)
 	if not target.is_empty():
 		var tp: Vector3 = target.node.position
 		var reach: float = target.radius + r.size + 0.5
@@ -121,14 +125,89 @@ func _walk(r: Dictionary, goal: Vector2, dt: float) -> void:
 		if d.length() > 0.001 and d.length() < mn:
 			v += d.normalized() * (mn - d.length())
 	var step: float = r.tier.speed * dt
-	p.x += v.x * step
-	p.z += v.y * step
+	var nx := p.x + v.x * step
+	var nz := p.z + v.y * step
 	var ws := world.grid.world_size()
-	p.x = clampf(p.x, 0.5, ws.x - 0.5)
-	p.z = clampf(p.z, 0.5, ws.y - 0.5)
+	nx = clampf(nx, 0.5, ws.x - 0.5)
+	nz = clampf(nz, 0.5, ws.y - 0.5)
+	# Per axis, so a cliff blocks that axis and the raider slides along it.
+	if _step_into(p.x, p.z, nx, p.z):
+		p.x = nx
+	if _step_into(p.x, p.z, p.x, nz):
+		p.z = nz
 	p.y = world.grid.smooth_y(p.x, p.z)
 	r.node.position = p
 	_face(r, v)
+
+
+## True when the move stays in this cell or enters a neighbour one terrace away.
+func _step_into(x0: float, z0: float, x1: float, z1: float) -> bool:
+	var g := world.grid
+	var a := g.world_to_cell(x0, z0)
+	var b := g.world_to_cell(x1, z1)
+	if a == b:
+		return true
+	if not g.in_bounds(b.x, b.y):
+		return false
+	if maxi(absi(b.x - a.x), absi(b.y - a.y)) > 1:
+		return false
+	return field.step_ok(a.x, a.y, b.x, b.y)
+
+
+func _patrol(home: Vector3, r: Dictionary) -> Vector2:
+	var a: float = time * 0.5 + r.phase
+	return Vector2(home.x + cos(a) * 4.0, home.z + sin(a) * 4.0)
+
+
+## Nearest prey that shares a one-terrace walking route, or {}.
+func _nearest_on_foot(from: Vector3, prey: Array) -> Dictionary:
+	var g := world.grid
+	var start := g.world_to_cell(from.x, from.z)
+	if not g.in_bounds(start.x, start.y):
+		return {}
+	var at := {}
+	for q in prey:
+		if not q.alive.call():
+			continue
+		var qp: Vector3 = q.node.position
+		var c := g.world_to_cell(qp.x, qp.z)
+		if not g.in_bounds(c.x, c.y):
+			continue
+		var i := g.idx(c.x, c.y)
+		if not at.has(i):
+			at[i] = []
+		(at[i] as Array).append(q)
+	var seen := PackedByteArray()
+	seen.resize(g.w * g.h)
+	var open := PackedInt32Array()
+	open.append(g.idx(start.x, start.y))
+	seen[g.idx(start.x, start.y)] = 1
+	var best: Dictionary = {}
+	var bd := INF
+	var head := 0
+	while head < open.size():
+		var b := open[head]
+		head += 1
+		var bx := b % g.w
+		var bz := int(b / g.w)
+		if at.has(b):
+			for q in at[b]:
+				var qp: Vector3 = q.node.position
+				var d := Vector2(qp.x - from.x, qp.z - from.z).length()
+				if d < bd:
+					bd = d
+					best = q
+		for dir in RaiderField.DIRS:
+			var nx: int = bx + dir.x
+			var nz: int = bz + dir.y
+			if not g.in_bounds(nx, nz) or not field.step_ok(bx, bz, nx, nz):
+				continue
+			var ni := g.idx(nx, nz)
+			if seen[ni] != 0:
+				continue
+			seen[ni] = 1
+			open.append(ni)
+	return best
 
 
 func _face(r: Dictionary, d: Vector2) -> void:

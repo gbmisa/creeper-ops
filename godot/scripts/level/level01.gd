@@ -7,6 +7,11 @@ class_name Level01
 
 const W := 80
 const H := 80
+## When raids start, and when each Config.RAIDER_TIERS index unlocks (seconds).
+const RAID_SCHEDULE := {
+	"raid_delay": 300.0,
+	"tier_times": [0.0, 480.0, 900.0, 1320.0],
+}
 
 
 static func _smoothstep(a: float, b: float, t: float) -> float:
@@ -116,6 +121,7 @@ static func build() -> Dictionary:
 			{ "name": "Spire Heights", "x": 59, "z": 13 },
 			{ "name": "Central knoll", "x": 40, "z": 23 },
 		],
+		"raid_schedule": RAID_SCHEDULE,
 		"spire": { "x": 66, "z": 9 },
 		# Aether Towers the Operative captures (and the creeper retakes): Blight, high ground,
 		# the floodable Rift hollow.

@@ -2,7 +2,7 @@
 
 The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
 
-**Status:** Phase A not started. Next up: Stages 1 and 2.
+**Status:** Phase A in progress. Stage 2 is ⚠. Next up: Stage 1.
 **Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
 
 ---
@@ -104,7 +104,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | # | Stage | Model | Status |
 |---|---|---|---|
 | 1 | Creeper damage rules | Sonnet 5.5 (`feature-dev`) | ☐ |
-| 2 | Weapon roles, cliff rule, per-level schedules | Sonnet 5.5 | ☐ |
+| 2 | Weapon roles, cliff rule, per-level schedules | Sonnet 5.5 | ⚠ |
 | 3 | Design doc | **Opus 5.5** | ☐ |
 | 4 | GPU creeper sim | **Opus 5.5** | ☐ |
 | 5 | Terrain-editing tool | Sonnet 5.5, Opus review | ☐ |
@@ -200,3 +200,4 @@ Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix
 
 ## 6. Changelog
 - 2026-10-07: Plan created from the design conversation. Old corrections that were never built are folded into Stages 1 and 2.
+- 2026-10-07: Stage 2 done headless (⚠, no human playtest). Beams are air-only, mortar splash deals `MORTAR_RAIDER_DMG`, raiders step one terrace, and raid timing comes from each level's `RAID_SCHEDULE`.

@@ -3,9 +3,9 @@ extends RefCounted
 ## Spore Nests: surface spawners in Blight zones (where turrets can't be built). They breed
 ## ground Raiders (raiders.gd) and grow stronger the longer the mission runs: they spawn
 ## faster, hold more, toughen up, and breed higher Config.RAIDER_TIERS over time. The first
-## NEST_GUARDS of each nest stay home; after NEST_RAID_DELAY the rest march on your base.
+## NEST_GUARDS of each nest stay home; after the level's raid_delay the rest march.
 ## That is the clock: kill the nests early or face Behemoths later.
-## Nests die to unit fire, the Operative, or Snipers/Beams once the raiders are gone.
+## Nests die to unit fire or the Operative. Snipers kill raiders; Beams only shoot spores.
 
 var world: World
 var nests: Array[Dictionary] = []
@@ -15,10 +15,12 @@ var goal_cells := func() -> Array: return []  # injected by Game: cells of groun
 var time := 0.0
 var tier := 0       # highest unlocked tier index
 var raiding := false
+var schedule: Dictionary = {}  # level RAID_SCHEDULE; empty falls back to Config
 
 
-func _init(w: World, defs: Array) -> void:
+func _init(w: World, defs: Array, sched: Dictionary = {}) -> void:
 	world = w
+	schedule = sched
 	raiders = Raiders.new(w)
 	for d in defs:
 		nests.append(_make_nest(d))
@@ -94,15 +96,15 @@ func _pick_tier() -> Dictionary:
 func _escalate() -> void:
 	if alive_count() == 0:
 		return
-	if not raiding and time >= Config.NEST_RAID_DELAY:
+	if not raiding and time >= _raid_delay():
 		raiding = true
 		for n in nests:  # extra guards bred during the grace period march out now
 			var g := raiders.list.filter(func(r): return r.nest == n and r.guard)
 			for i in range(Config.NEST_GUARDS, g.size()):
 				g[i].guard = false
-		Bus.say("Spore Nests are sending raiders at your base. Snipers, Beams and units can stop them.", "bad")
+		Bus.say("Spore Nests are sending raiders at your base. Snipers and units can stop them.", "bad")
 	var tiers: Array = Config.RAIDER_TIERS
-	if tier + 1 < tiers.size() and time >= tiers[tier + 1].from:
+	if tier + 1 < tiers.size() and time >= _tier_time(tier + 1):
 		tier += 1
 		Sfx.play("alarm")
 		Bus.say("The nests have grown: they now breed %ss. Kill them before it gets worse." % tiers[tier].name, "bad")
@@ -130,3 +132,14 @@ func update(dt: float) -> void:
 
 func _guards(n: Dictionary) -> int:
 	return raiders.list.filter(func(r): return r.nest == n and r.guard).size()
+
+
+func _raid_delay() -> float:
+	return float(schedule.get("raid_delay", Config.NEST_RAID_DELAY))
+
+
+func _tier_time(i: int) -> float:
+	var times: Array = schedule.get("tier_times", Config.RAIDER_TIER_TIMES)
+	if i < 0 or i >= times.size():
+		return INF
+	return float(times[i])
