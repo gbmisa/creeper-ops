@@ -1,0 +1,71 @@
+# CLAUDE.md: Creeper Ops (working title)
+
+## Who you are
+You are a **senior game developer** with extensive coding experience. You follow best practices, think in systems, and keep the codebase easy to navigate for yourself and for cheaper models.
+- **Keep every file under ~250 lines** unless there's a stated reason. Split by responsibility *before* a file gets close.
+- Match the existing idiom: GDScript with `class_name`, small classes, data tables, static helper classes, comments only where intent isn't obvious.
+- Verify before claiming done: parse check, smoke test, headless sim, and screenshots (see Testing).
+- **Always update `HANDOFF.md` when you finish a large task or a long session, without being asked.** Overwrite it with the current state, how to run, what's verified and what isn't, known issues, and next steps. Keep it short (under ~60 lines) so a fresh chat can resume from it.
+- **At the start of a new session, read `HANDOFF.md` first, then [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md)** (the living plan: settled design + staged build list with models). **When you finish a stage, update MASTER_PLAN.md** (status box, changelog line, any new decisions) along with HANDOFF.md.
+
+## The game
+A hybrid of **Creeper World 3-style fluid tower defense** (top-down command mode) and **first-person incursions**. You teleport an Operative from the Command Node to kill targets the network can't reach (underground cores, armored spires). The creeper keeps flowing while you're on foot.
+- CW3 mechanics we copy, and why: [docs/CW3_MECHANICS.md](docs/CW3_MECHANICS.md)
+- Research and pillars: [docs/RESEARCH.md](docs/RESEARCH.md) · Level 1: [docs/LEVEL01_DESIGN.md](docs/LEVEL01_DESIGN.md) · Roadmap: [docs/DEV_PLAN.md](docs/DEV_PLAN.md)
+
+## Codebases
+- **`godot/` is the game** (Godot 4.7, GDScript, Forward+). All new work goes here.
+- `src/` + `index.html` is the **legacy Three.js prototype**, kept only as a reference. Don't add features to it.
+
+## Run
+```
+godot --path godot                       # play
+godot -e --path godot                    # editor
+```
+
+## Architecture map (godot/scripts/)
+| Folder | Owns |
+|---|---|
+| `core/` | `game.gd` (construction + loop, wiring only), `game_flow.gd` (briefing, Node landing, mode switches, teleport/recall, global hotkeys, end screen), `config.gd` (**all tuning numbers**), `bus.gd` (autoload `Bus`: signals + `Bus.say()` log), `audio_synth.gd` (autoload `Sfx`, procedural), `input_state.gd` (`act()`/`held()` for actions), `keybinds.gd` (**rebindable keys**), `debug.gd` (CLI test hooks), `smoke_test.gd` + `smoke_rules.gd` |
+| `world/` | `grid.gd` (heightfield, zones, `smooth_y`, `raycast`), `world.gd` (a playable space: terrain, creeper, env, effects, targets/interactables/updaters/markers), `terrain_mesh.gd`, `world_look.gd` (env, lights, cave ceiling), `props.gd`, `bar.gd` (billboard bars), `effects.gd`, `noise2d.gd` |
+| `sim/` | `creeper_sim.gd` (fluid automaton), `creeper_mesh.gd` (GPU-displaced surface) |
+| `command/` | `structure_defs.gd` (**data + tooltips + the 4 build tabs**), `structure.gd`, `structure_meshes.gd`, `structure_manager.gd` (lifecycle, damage, tick), `structure_upkeep.gd` (creeper contact, construction, bars), `placement.gd` (place/move/land rules), `network.gd` (Dijkstra relay graph), `packets.gd` (**CW3 dispatcher**), `economy.gd`, `collector_field.gd`, `mover.gd` (lift/fly/land), `weapon_logic.gd`, `structure_behaviors.gd`, `orbital.gd` (Lance), `upgrades.gd` (**Forge/Aether**, static, multipliers read by economy/packets/weapons/mover), `command_mode.gd`, `command_overlay.gd`, `command_camera.gd` |
+| `units/` | `unit_defs.gd`, `unit.gd`, `unit_manager.gd` (spawn, orders, movement), `unit_supply.gd` (combat + go-home-to-resupply), `pathfind.gd`, `unit_meshes.gd` |
+| `fps/` | `fps_mode.gd`, `player_controller.gd`, `operative_weapons.gd`, `rocket_launcher.gd`, `cave_hazards.gd`, `cave_mites.gd` |
+| `level/` | `level01.gd` / `cave01.gd` (**pure data + shaping helpers**), `surface_hazards.gd`, `spore_nests.gd` (escalating spawners), `raiders.gd` + `raider_field.gd` (ground enemies, shared flow field), `hazard_meshes.gd`, `aether_towers.gd` (Operative captures, creeper retakes) |
+| `ui/` | `hud.gd` (root), `top_bar.gd` (production/demand), `build_menu.gd` (4 tabs), `info_panel.gd`, `objectives.gd`, `markers.gd`, `fps_hud.gd`, `keybind_menu.gd` (Controls screen, F10), `ui_kit.gd` |
+| `shaders/` | `terrain.gdshader` (**all ground overlays**), `creeper.gdshader` |
+
+**Key contracts**
+- Both the surface and the cave are `World`s. Both simulate every frame; only the active one is visible (`World.set_active`).
+- **CW3 economy: energy IS packets.** The Command Node launches a packet whenever a structure requests one and the bank has ≥ 1 energy. There is **no global launch cap**. Each structure requests at `Config.REQ_BUILD / REQ_AMMO / REQ_UNIT`. Weapons add *transit headroom* so long supply lines stay fed. Only `relays: true` structures pass packets on. Drop pods (Beacon) and the Lance are paid up front.
+- **Collector fields are squares** (7x7, `CollectorField.field_cells`), drawn as grid tiles by the terrain shader. The Node starts with 0 energy. Packets serve ammo before builds.
+- **Forge/Aether:** read stats through `WeaponLogic.fire_interval/range_cells`, `Packets.speed()`, `Upgrades.mult()`; never `def.range` directly.
+- **Build tool stays armed** after placing (CW3); right-click/Esc cancels. Unfinished collectors/relays extend placement range so chains can be laid out at once.
+- **Movable:** every def with `movable: true` (weapons, titans, the Node; never the Nullifier) lifts, flies and lands via `mover.gd`. No packets or firing in flight. The Node produces nothing while flying.
+- **Ground visuals are shader tints, never quads.** Collector field, ghost footprint, range rings and network cover are uniforms on `terrain.gdshader`, set through `CommandOverlay`/`CollectorField`. **Terrain is CW3 terraces:** whole levels 0..10 (levels round heights at the end of `build()`), flat tops, steep walls via `Grid.terrace()` (same formula in `creeper.gdshader`). The creeper is drawn at a per-cell *display level* (`creeper_mesh.gd`) that runs flat into cliffs and dips under shorelines; fragments below the terrain are discarded, so it can't clip. **Never add decorative height noise inside the map.**
+- **Creeper contact destroys any grounded structure instantly, built or not** (`StructureUpkeep`). Only the Command Node loses HP instead. Nothing can be placed on creeper deeper than `MIN_DEPTH`. Full weapons never request ammo; transit headroom applies only while a weapon is firing (`s.firing`).
+- **Nests escalate with mission time** (`Config.NEST_*`, `RAIDER_TIERS`): faster spawns, bigger caps, higher raider tiers. Raids start after `NEST_RAID_DELAY`. Aether comes from objectives, nests and held **Aether Towers**.
+- **Blight zones** (`Grid.Zone.BLIGHT`): nothing can be built or parked there. Units and the Operative can enter. Objective actions are **Operative-only**.
+- **Units are not self-sufficient:** each shot or spray costs 1 ammo; when dry or hurt they walk to a barracks and draw from its packet-fed stock. Cap is `Config.UNITS_PER_BARRACKS`.
+- Agent dictionaries: shootable targets `{ node, oy, radius, alive(), on_hit(dmg, point) }`; prey/enemies `{ node, oy?, radius, alive(), hit(dmg) }`; interactables `{ pos, radius, prompt(), use() }`; markers `{ pos, label (String or Callable), color, visible(), minor? }`.
+- Grid: 1 terrain level = 1 creeper depth unit = `Config.LEVEL_H` m. Cell = `Config.CELL` m. `grid.idx(x,z) = z*w + x`. Use `grid.smooth_y()` / `cell_ground()` for anything standing on the ground.
+
+## Conventions
+- **Keys:** never test raw keycodes for game actions. Add an action to `Keybinds.DEFAULTS` and read it with `input.act(id)` / `input.held(id)` / `Keybinds.matches(id, k)`; show it with `Keybinds.short(id)`. Only Esc is fixed. **The player's binds live in `user://keybinds.cfg` (`~/.local/share/godot/app_userdata/Creeper Ops/`) and must survive every update:** never delete or overwrite that file, never rename an action id (renaming drops the player's bind), and tests set `Keybinds.persist = false`. When changing defaults, check that file first and keep the player's choices.
+- New tunables go in `config.gd`, a def table, or the level file. Never hard-code them in logic.
+- New structure: add a row to `structure_defs.gd` DEFS and its tab in MENU, a case in `structure_meshes.gd`, and (if it acts) `weapon_logic.gd` or `structure_behaviors.gd`.
+- New unit: `unit_defs.gd` (+ ORDER/KEYS) and `unit_meshes.gd`. New level: copy `level01.gd` / `cave01.gd`.
+- `game.gd` stays a wiring file. Rules belong in a subsystem.
+- After adding a new `class_name` file, run `godot --headless --path godot --import` once so the class cache knows it.
+
+## Testing (run from `godot/`)
+1. Parse: `godot --headless --path . --import 2>&1 | grep -A1 "SCRIPT ERROR"` (should print nothing). `tools/check.sh` checks per file.
+2. Mechanics: `godot --headless --path . -- --smoke --quit=0.1 | grep smoke` (all PASS).
+3. Sim report: `godot --headless --path . -- --demo --units --sim=900 --quit=0.1 | grep "\[sim\]"`. Also `--demo=slow` (real packet builds), `--autostart` (undefended).
+4. Screenshots (needs GL, so use Xvfb):
+   `xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --rendering-driver opengl3 --resolution 1600x900 -- --demo --sim=120 --select=cannon --shot=/abs/out.png`
+   Other hooks: `--landing --hover=x,z --tool=T --surface --spire --cave --killcore --look=x,z --fast --nocapture`. See `debug.gd`.
+
+## Saved design direction (NOT implemented yet; don't build until asked)
+From level 3 onward, levels should be **hard and evolving**: time-gated objectives, enemy **reinforcements** so turtling fails, and **dynamic** creeper spawn rate and reinforcement speed that force strategy changes mid-level. Not meant to be beaten first try. A 40-minute loss is acceptable. Details: DEV_PLAN.md, Phase 3.

@@ -1,0 +1,5 @@
+# Godot cache (rebuilt by --import)
+godot/.godot/
+*.tmp
+# Local Claude settings
+.claude/settings.local.json
