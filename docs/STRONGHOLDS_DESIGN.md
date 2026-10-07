@@ -8,7 +8,7 @@ The buildable spec for Phase A Stages 4–11. Readers: the user (approve the dec
 | # | Decision | Answer |
 |---|---|---|
 | 1 | Walls, gates and spires are **terrain**, not meshes; decorative meshes sit on top | **Yes, extended:** castles come in two variants, **ground** and **raised** (with a drawbridge and/or moat), and have platforming on the walls so the Operative can breach from the top (§3.1). |
-| 2 | Spires stay within `MAX_LEVEL` 10 | **No.** Spires are the exception: tall, **indestructible**, with a **pump** that lifts creeper from the ground floor to the top (§3.4). |
+| 2 | Spires stay within `MAX_LEVEL` 10 | **No.** Spires are the exception: tall and **indestructible**. Their **pump** draws creeper from the moat to fuel enemy building; draining the moat slows the enemy (§3.4). |
 | 3 | Gates belong to a faction | Approved |
 | 4 | Earth / Metal / Stone materials | Approved for now |
 | 5 | Mortars only lower built-up terrain | Approved |
@@ -192,7 +192,11 @@ Today's `spore_nests.gd` becomes the hive's spawner part (rename to `hive_spawni
 ### 3.4 Spires
 - **Tall and indestructible.** Spire cells use material `5` (Spire). TerrainEdit, mortars, the Terp and breaches all skip them. They're exempt from `MAX_LEVEL`: a spire rises **18–24 levels above the courtyard** (22–30 m). The height limit becomes `SPIRE_MAX_LEVEL` 34. The creeper mesh's culling box and the terrain colour ramp clamp to it.
 - **Shape:** a 7×7 base. A 1-cell ramp climbs the outer ring at 1 level per cell (one lap of 24 cells reaches about +22), up to a 3×3 top platform with the crown nest and capture zone. Where the ramp would be too long for the target height, a jump pad (an interactable that launches the Operative 4 levels up) bridges the rest.
-- **The pump:** whenever creeper sits on the cells around the spire's base, the pump moves `SPIRE_PUMP_RATE` (0.8 depth per second) from those cells to the top platform, regardless of who owns the castle. A creeper-flooded top is how the enemy contests a held spire, so **the capture zone only progresses while it's dry**, and a held spire wants a Lobber turret on its platform. The Operative can **jam** the pump for 60 s by holding E at its base intake (it re-primes itself; it's indestructible).
+- **The pump (enemy production, not flooding):** the spire pump draws creeper from the castle's **moat** (or, for a castle without one, the cells around its base) and **turns it into build material** for enemy construction (§4.5). It never deposits creeper on the spire: the top stays reachable for the Operative.
+  - Intake = `SPIRE_PUMP_RATE` × average moat depth (capped), so **the deeper the moat, the faster the enemy builds.** The drawn creeper is removed from the moat.
+  - The enemy feeds its moats through creeper channels from emitters (terraformed "rivers"). You often can't stop the inflow, but **you can drain the moat**: cannons or blasters along its edge cut the depth, which cuts the pump's intake and slows every structure that castle builds.
+  - The pump runs only while the castle is enemy-held. A held castle's pump is idle (later idea: a captured pump could feed *your* production).
+  - Indestructible like the spire. The Operative can **jam** it for 60 s (hold E at its intake).
 - Spires are part of their castle; there are no stand-alone spires.
 ---
 
@@ -242,8 +246,9 @@ The enemy expands with its own structures, so it feels like an RTS opponent, not
 
 - **Where it comes from:** every **enemy-held castle** is a construction hub. If you take a castle, building from it stops; if raiders retake it, building starts again. Hives spawn raiders but don't build.
 - **Builders:** a hub sends **Weaver** drones (HP 12, no attack, Operative and Snipers can kill them) to a build site. A structure grows while at least one Weaver is on site.
-- **Build speed:** `ENEMY_BUILD_BASE` (slow; the first structure takes about 3 minutes at pressure 0) multiplied by:
-  - **creeper depth at the site:** ×(1 + depth × 0.5), so deep creeper becomes forward bases;
+- **Build speed:** each hub's **material income** comes from its spire pump (§3.4, moat depth) plus its Leeches. Base rate `ENEMY_BUILD_BASE` is slow (the first structure takes about 3 minutes at pressure 0), multiplied by:
+  - **pump intake:** ×(1 + intake ÷ `PUMP_REF`), so a full moat roughly doubles build speed and a drained one leaves only the base rate;
+  - **creeper depth at the build site:** ×(1 + depth × 0.25), so building inside creeper is still faster;
   - **enemy mining:** ×(1 + 0.25 per enemy **Leech** on an ore deposit). Leeches are enemy structures that sit on ore deposits. **Holding a deposit with your own Miner denies it**, which gives mine control a second value;
   - **pressure:** ×(1 + pressure).
 - **Site choice:** the hub's build planner picks a cell toward the nearest player structure, at the edge of creeper or on Blight, at least 10 cells from your weapons where possible. One structure at a time per hub, two from pressure 0.5.
