@@ -107,7 +107,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 2 | Weapon roles, cliff rule, per-level schedules | Sonnet 5.5 (Grok) | ⚠ |
 | 3 | Design doc ([STRONGHOLDS_DESIGN.md](STRONGHOLDS_DESIGN.md)) | **Opus 5.5** | ☑ §0 answered 2026-10-07 |
 | 4 | GPU creeper sim | **Opus 5.5** | ⚠ built + parity verified; needs a human play check |
-| 5 | Terrain-editing tool | **Opus 5.5** (built) | ⚠ verified headless + GPU parity |
+| 5 | Terrain-editing tool | Sonnet 5.5 (Grok), merged before review | ⚠ verified headless + GPU parity |
 | 6 | Multiple packet senders and Outposts | Sonnet 5.5 (Grok), Opus review | ⚠ merged, verified headless |
 | 7 | Strongholds, castles, spire climb | **Opus 5.5** (built) | ⚠ verified headless + screenshots |
 | 8a | Nest bases and enemy mortars | Sonnet 5.5 | ☐ |
@@ -202,7 +202,7 @@ Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix
 
 ## 6. Changelog
 - 2026-10-07: Stage 7 done (Opus, ⚠ no human playtest). Castles replace Aether Towers: `CastleShape`/`SpireShape` cut ground and raised (plateau + drawbridge) variants with moats, 2-wide stone walls with corner stairs, faction gates, pillar climb routes and a 7x7 obsidian spire (16-step ramp + jump pad, top 20 levels up). `Strongholds` runs hostile → capturing → held → siege with garrisons, counterattacks, Aether income, breaches through `TerrainEdit`, gate/winch damage and the spire pump (moat creeper → `pump.material` for 8c). `Grid.deck`/`stand_y` for drawbridges. Level 1 gets Ashmoat Keep (ground, moat, SW) and High Bastion (raised, N); cave towers removed. 40 new smoke checks incl. a scripted first-person pillar climb and jump pad (118/118). Decisions: creeper ignores gates/decks; a dead winch opens the bridge to everyone; walls are raider prey only where raiders can stand (no moat, not raised); counterattack size uses nest tier until 8a's pressure; Salvage trickle, turrets and wall repair wait for 9a.
-- 2026-10-07: Stage 5 done (Opus). `TerrainEdit` + `World.terrain_changed`, chunked terrain (`TerrainChunks`, 2 rebuilds/frame), `Grid.step_ok` with faction gates shared by raiders, units and the Operative, `base_height`, materials. 18 new smoke checks (`smoke_terrain.gd`). GPU parity now includes a mid-run ring wall and fails if the height upload is skipped. `--raise=x,z,r,by` debug hook.
+- 2026-10-07: Stage 5 done (Grok; merged in session 7, exercised by Stage 7). `TerrainEdit` + `World.terrain_changed`, chunked terrain (`TerrainChunks`, 2 rebuilds/frame), `Grid.step_ok` with faction gates shared by raiders, units and the Operative, `base_height`, materials. 18 new smoke checks (`smoke_terrain.gd`). GPU parity now includes a mid-run ring wall and fails if the height upload is skipped. `--raise=x,z,r,by` debug hook.
 - 2026-10-07: Split `command_mode.gd` (247 lines) into `command_input.gd`, `command_select.gd` and `command_hover.gd`. No behaviour change. `CommandMode` stays the entry class.
 - 2026-10-07: Stage 6 ⚠. Packets launch from the nearest sender (Command Node or Outpost). Outposts cost 40, add `OUTPOST_STORAGE` 50 to the shared bank, and produce nothing. A flying Node no longer stops packets while an Outpost is up.
 - 2026-10-07: Stage 10b ⚠. Totems (beacon id), `@drop` pods, recall cooldown from the walk path, and paid respawn. Smoke in `smoke_deploy.gd`. Opus review on merge: `@drop` ported into the split command files; the recall path now uses `Grid.step_ok` (gates, decks); recalling from the cave measures from the Rift.
