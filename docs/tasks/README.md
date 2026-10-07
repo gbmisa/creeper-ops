@@ -1,0 +1,21 @@
+# Task briefs for delegated agents
+
+One file per task. Start a **fresh** agent session in the task's worktree and give it this one line:
+
+> Read CLAUDE.md, HANDOFF.md, docs/MASTER_PLAN.md and docs/tasks/<FILE>.md, then do that task.
+
+## Rules for every task
+- Work only in your worktree, on its branch. Commit there. Never commit to `main` (Opus reviews and merges).
+- Godot 4.7, GDScript. Match the existing style. Keep every file under ~250 lines.
+- After adding a new `class_name` file, run `godot --headless --path godot --import`.
+- Put new smoke checks in the **new** smoke file named in the brief, and register it with one line in `smoke_test.gd`, the way `smoke_raiders.gd` is registered.
+- Verify before reporting: the parse check, smoke tests all passing, and the sim command in the brief (CLAUDE.md Testing).
+- In docs/MASTER_PLAN.md, set your stage's status to ⚠ and add one Changelog line. **Don't edit HANDOFF.md.**
+- Never touch `user://keybinds.cfg`. Never rename an existing action id or structure id.
+- Finish by reporting: files changed, config values added or changed, test output, and anything you weren't sure about.
+
+| Brief | Worktree | Branch |
+|---|---|---|
+| [GROK_command_mode_split.md](GROK_command_mode_split.md) | `creeper fps td-worktrees/grok-command-mode` | `grok/command-mode-split` |
+| [STAGE6_packet_senders.md](STAGE6_packet_senders.md) | `creeper fps td-worktrees/stage6` | `stage/6-packet-senders` |
+| [STAGE10b_deployment.md](STAGE10b_deployment.md) | `creeper fps td-worktrees/stage10b` | `stage/10b-deployment` |
