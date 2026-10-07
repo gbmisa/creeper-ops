@@ -6,7 +6,7 @@ class_name StructureDefs
 ## ammo: max rounds, per_packet = rounds one packet adds, per_shot (default 1).
 ## Tooltips live next to the numbers so in-game explanations never drift from real values.
 
-const TABS := ["Structures", "Weapons", "Titans", "Orbital"]
+const TABS := ["Structures", "Weapons", "Titans", "Orbital", "Castle"]
 
 ## Build menu contents per tab. Entries are structure types, or "@action" for orbital actions.
 const MENU := {
@@ -14,16 +14,17 @@ const MENU := {
 	"Weapons": ["cannon", "mortar", "beam", "sniper"],
 	"Titans": ["bertha", "thor", "forge"],
 	"Orbital": ["beacon", "@drop", "@lance", "@operative"],
+	"Castle": ["@repeater", "@lobber", "@flak"],
 }
 
-static var ACTIONS := {
+static var ACTIONS := _turret_actions().merged({
 	"@drop": { "label": "Drop Pod", "cost_text": "%d-%d" % [int(Config.DROP_BASE), int(Config.DROP_MAX)],
 		"desc": "Drop the Operative on any surface cell. Costs %d energy plus 1 per %.0f cells from the nearest Totem, capped at %d. The pod falls for %.0fs. Shield Domes block it." % [int(Config.DROP_BASE), Config.DROP_PER_CELLS, int(Config.DROP_MAX), Config.DROP_TIME] },
 	"@lance": { "label": "Orbital Lance", "cost_text": "%d now" % Config.LANCE_COST,
 		"desc": "Strike from orbit: after %ds, burns away creeper in a %.0f-cell radius anywhere you can see. Paid up front (%d), %ds cooldown." % [Config.LANCE_DELAY, Config.LANCE_RADIUS, Config.LANCE_COST, Config.LANCE_COOLDOWN] },
 	"@operative": { "label": "Deploy Operative", "cost_text": "T",
 		"desc": "Send the Operative to the selected Totem (or the newest). Free and instant while the teleporter is ready. Only the Operative can plant charges, enter the Rift and kill the Deep Core." },
-}
+})
 
 static var DEFS := {
 	"node": { "label": "Command Node", "hp": 500.0, "link": 10.0, "relays": true, "sender": true, "link_y": 3.2, "footprint": 1,
@@ -103,3 +104,13 @@ static func label(type: String) -> String:
 
 static func desc(type: String) -> String:
 	return ACTIONS[type].desc if type.begins_with("@") else DEFS[type].desc
+
+
+## Castle tab: turrets bought with Salvage on the sockets of a castle you hold.
+static func _turret_actions() -> Dictionary:
+	var out := {}
+	for t in CastleTurrets.ORDER:
+		var d: Dictionary = CastleTurrets.DEFS[t]
+		out["@" + t] = { "label": d.label, "cost_text": "%s Salv" % "/".join(d.costs.map(func(n): return str(n))),
+			"desc": "%s Click a socket (wall corners, beside the gate) of a castle you hold; click again to upgrade (I-III). Paid in Salvage, no packets." % d.desc }
+	return out

@@ -29,6 +29,7 @@ const DEFAULTS := {
 	"tab_2": ["Command", "Build tab: Weapons", [KEY_F2]],
 	"tab_3": ["Command", "Build tab: Titans", [KEY_F3]],
 	"tab_4": ["Command", "Build tab: Orbital", [KEY_F4]],
+	"tab_5": ["Command", "Build tab: Castle", [KEY_F5]],
 	"tab_next": ["Command", "Next build tab", [KEY_TAB]],
 	"build_1": ["Command", "Build slot 1", [KEY_1]],
 	"build_2": ["Command", "Build slot 2", [KEY_2]],

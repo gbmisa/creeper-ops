@@ -26,6 +26,8 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 			cm.overlay.show_ghost(cm.selected.type, at, res.ok, StructureDefs.radius_m(cm.selected.type), WeaponLogic.def_range(cm.selected.def) * Config.CELL, [])
 		"@land":
 			cm.overlay.show_ghost("node", at, res.ok, StructureDefs.radius_m("node"), StructureDefs.DEFS.node.link * Config.CELL, [])
+		"@repeater", "@lobber", "@flak":
+			cm.overlay.show_ghost("", at, res.ok, 1.2 * Config.CELL, CastleTurrets.DEFS[cm.tool.substr(1)].range * Config.CELL, [])
 		_:
 			var def: Dictionary = StructureDefs.DEFS[cm.tool]
 			var r: float = (WeaponLogic.def_range(def) if def.has("range") else def.link) * Config.CELL
@@ -39,4 +41,15 @@ static func check(cm: CommandMode, c: Vector2i) -> Dictionary:
 		"@drop": return cm.deploy.can_drop(c)
 		"@move": return Placement.can_move(cm.structures, cm.selected, c.x, c.y) if cm.selected else { "ok": false, "reason": "" }
 		"@land": return Placement.can_land(cm.structures, cm.level, c.x, c.y)
+		"@repeater", "@lobber", "@flak": return turret_check(cm, c).res
 		_: return Placement.can_place(cm.structures, cm.tool, c.x, c.y)
+
+
+## The castle and socket under `cell` for a turret tool, and whether it can be bought.
+static func turret_check(cm: CommandMode, cell: Vector2i) -> Dictionary:
+	var type := cm.tool.substr(1)
+	for c in cm.castles.list if cm.castles else []:
+		var i := CastleTurrets.socket_at(c, cell)
+		if i >= 0:
+			return { "castle": c, "i": i, "res": CastleTurrets.check(c, i, type, cm.castles.stockpile.salvage) }
+	return { "castle": {}, "i": -1, "res": { "ok": false, "reason": "Pick a turret socket on a castle you hold (wall corners, beside the gate)" } }

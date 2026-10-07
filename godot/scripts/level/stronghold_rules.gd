@@ -21,7 +21,8 @@ static func new_state(row: Dictionary, lay: Dictionary) -> Dictionary:
 		"winch": { "hp": Config.CASTLE_WINCH_HP, "max_hp": Config.CASTLE_WINCH_HP },
 		"crown": { "hp": Config.CROWN_HP, "max_hp": Config.CROWN_HP },
 		"capture": { "progress": 0.0, "away": 0.0, "retake": 0.0 },
-		"pump": { "material": 0.0, "intake": 0.0, "jam": 0.0 }, "garrison_timer": 0.0 }
+		"pump": { "material": 0.0, "intake": 0.0, "jam": 0.0 }, "garrison_timer": 0.0,
+		"sockets": CastleTurrets.new_sockets(lay) }
 
 
 static func faction(owner: String) -> int:
@@ -93,6 +94,7 @@ static func to_hostile(world: World, c: Dictionary, lay: Dictionary, regrow: flo
 	c.crown.hp = c.crown.max_hp * regrow
 	c.capture = { "progress": 0.0, "away": 0.0, "retake": 0.0 }
 	c.garrison_timer = 0.0
+	CastleTurrets.clear(c)
 	set_owner(world, c, lay, "enemy")
 
 
@@ -113,3 +115,15 @@ static func in_zone(lay: Dictionary, p: Variant) -> bool:
 static func in_courtyard(lay: Dictionary, p: Vector3) -> bool:
 	var r: Rect2i = lay.rect.grow(-2)
 	return r.has_point(Vector2i(floori(p.x / Config.CELL), floori(p.z / Config.CELL)))
+
+
+## The crown nest is solid: push the Operative out of its husk.
+static func crown_push(v: Dictionary, o) -> void:
+	var cp: Vector3 = (v.crown as Node3D).position
+	var d := Vector2(o.pos.x - cp.x, o.pos.z - cp.z)
+	var r := Config.CROWN_RADIUS + Config.OP_RADIUS
+	if d.length() >= r or absf(o.pos.y - cp.y) > 3.0:
+		return
+	d = d.normalized() if d.length() > 0.01 else Vector2(1, 0)
+	o.pos.x = cp.x + d.x * r
+	o.pos.z = cp.z + d.y * r

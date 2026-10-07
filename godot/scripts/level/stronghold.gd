@@ -6,9 +6,10 @@ extends RefCounted
 ##   hostile    enemy gates and bridge; the crown nest on the spire top breeds a garrison
 ##   capturing  crown dead: the Operative holds the spire top for CAPTURE_TIME while the
 ##              nearest nest counterattacks. Abandon it and the nest regrows.
-##   held       your gates; pays Aether. Raiders target it and break walls, gates or the winch
+##   held       your gates; pays Aether and Salvage; turrets on its sockets (CastleTurrets).
+##              Raiders target it and break walls, gates, the winch or turrets
 ##   siege      raiders in the courtyard: RETAKE_TIME of that, with the Operative off the
-##              top, flips it back to hostile
+##              top and no turret standing, flips it back to hostile
 ## Replaces the old Aether Towers.
 
 var world: World
@@ -18,6 +19,7 @@ var lays := {}                     # id -> CastleShape layout (rebuilt from leve
 var views := {}                    # id -> StrongholdMeshes view + Node refs
 var op := func() -> Variant: return null  # injected: PlayerController in THIS world, or null
 var on_lost := func(_cells: Array) -> void: pass  # injected: destroy your structures in a lost courtyard
+var stockpile: Stockpile = null  # injected: Salvage for turrets, the castle trickle and capture bounty
 var time := 0.0
 
 
@@ -30,6 +32,7 @@ func _init(w: World, castles: Array, sn: SporeNests) -> void:
 		list.append(c)
 		lays[c.id] = lay
 		var v := StrongholdMeshes.build(w, lay)
+		CastleTurretFire.build_views(w, c, v)
 		v["garrison"] = { "name": c.name, "pos": w.grid.cell_ground(lay.home.x, lay.home.y), "count": 0 }
 		views[c.id] = v
 		StrongholdHooks.attach(self, c, lay, v)
@@ -134,10 +137,11 @@ func update(dt: float) -> void:
 			"capturing": _capturing(c, lay, p, dt)
 			_: _holding(c, lay, v, p, dt)
 		SpirePump.update(world, c, lay, dt)
+		CastleTurretFire.refresh(v, c)
 		if o != null and not lay.spire.pad.is_empty():
 			_pad(lay, o)
 		if o != null and c.state == "hostile":
-			_crown_push(v, o)
+			StrongholdRules.crown_push(v, o)
 		StrongholdMeshes.animate(v, c, time)
 
 
@@ -160,6 +164,8 @@ func _capturing(c: Dictionary, lay: Dictionary, p, dt: float) -> void:
 		cap.progress = minf(1.0, cap.progress + dt / Config.CAPTURE_TIME)
 		if cap.progress >= 1.0:
 			StrongholdRules.to_held(world, c, lay)
+			if stockpile:
+				stockpile.add("salvage", Config.CASTLE_CAPTURE_SALVAGE)
 			Sfx.play("good")
 			Bus.say("%s is yours: +%.0f Aether/min while you hold it. Raiders will come for it." % [c.name, Config.CASTLE_AETHER_RATE * 60.0], "good")
 			StrongholdMeshes.refresh(views[c.id], c)
@@ -174,6 +180,9 @@ func _capturing(c: Dictionary, lay: Dictionary, p, dt: float) -> void:
 
 func _holding(c: Dictionary, lay: Dictionary, v: Dictionary, p, dt: float) -> void:
 	Upgrades.trickle(Config.CASTLE_AETHER_RATE * dt)
+	if stockpile:
+		stockpile.add("salvage", Config.CASTLE_SALVAGE_RATE * dt)
+	CastleTurretFire.tick(world, c, v, nests.raiders, dt)
 	var inside := nests.raiders.list.filter(func(r): return StrongholdRules.in_courtyard(lay, r.node.position))
 	if inside.is_empty():
 		if c.state == "siege":
@@ -185,7 +194,7 @@ func _holding(c: Dictionary, lay: Dictionary, v: Dictionary, p, dt: float) -> vo
 		c.state = "siege"
 		Sfx.play("alarm")
 		Bus.say("Raiders are inside %s! Clear the courtyard or hold the spire top." % c.name, "bad")
-	if not StrongholdRules.in_zone(lay, p):  # Stage 9a: "and no castle turret alive"
+	if not StrongholdRules.in_zone(lay, p) and not CastleTurrets.any_alive(c):
 		c.capture.retake += dt
 	if c.capture.retake < Config.RETAKE_TIME:
 		return
@@ -209,18 +218,6 @@ func _pad(lay: Dictionary, o) -> void:
 		o.vel_y = sqrt(2.0 * Config.GRAVITY * (lay.spire.pad_levels + Config.JUMP_PAD_MARGIN) * Config.LEVEL_H)
 		o.on_ground = false
 		Sfx.play("lift")
-
-
-## The crown nest is solid: push the Operative out of its husk.
-func _crown_push(v: Dictionary, o) -> void:
-	var cp: Vector3 = (v.crown as Node3D).position
-	var d := Vector2(o.pos.x - cp.x, o.pos.z - cp.z)
-	var r := Config.CROWN_RADIUS + Config.OP_RADIUS
-	if d.length() >= r or absf(o.pos.y - cp.y) > 3.0:
-		return
-	d = d.normalized() if d.length() > 0.01 else Vector2(1, 0)
-	o.pos.x = cp.x + d.x * r
-	o.pos.z = cp.z + d.y * r
 
 
 func state() -> Dictionary:

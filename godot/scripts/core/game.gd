@@ -78,6 +78,8 @@ func _ready() -> void:
 	hazards.nests.prey = surface_prey
 	hazards.nests.goal_cells = raider_goals
 	castles.op = func(): return fps.controller if fps.world == surface else null
+	castles.stockpile = stockpile
+	command.castles = castles
 	castles.on_lost = func(cells: Array):
 		for cell in cells:
 			var s = structures.occupied.get(surface.grid.idx(cell.x, cell.y))

@@ -22,6 +22,7 @@ class_name Debug
 ##   --cpu-sim     force the CPU creeper sim
 ##   --raise=x,z,r,by   raise (negative: lower) a disc of terrain through TerrainEdit
 ##   --fpsbuild=T  Operative near the base in first-person build mode holding structure T
+##   --turrets=I   castle I held with a Repeater, Lobber and Flak on its first sockets
 ##   --castle=I[,spot]  drop the Operative at castle I: climb (pillar route, default), pad
 ##                 (spire jump pad), top (spire top), gate (outside the gate)
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
@@ -79,6 +80,13 @@ static func apply(g) -> void:
 		g.fps.builder.tool = args.fpsbuild
 	if args.has("castle"):
 		_castle(g, args.castle.split(","))
+	if args.has("turrets"):  # --turrets=I: castle I held, one of each turret type armed
+		var c: Dictionary = g.castles.list[int(args.turrets)]
+		StrongholdRules.to_held(g.surface, c, g.castles.lays[c.id])
+		g.stockpile.salvage = 999.0
+		for i in CastleTurrets.ORDER.size():
+			CastleTurrets.buy(c, i, CastleTurrets.ORDER[i], g.stockpile)
+		StrongholdMeshes.refresh(g.castles.views[c.id], c)
 	if args.has("cave"):
 		Bus.enter_cave.emit()
 	if args.has("killcore"):

@@ -57,6 +57,10 @@ static func click(cm: CommandMode, shift: bool) -> void:
 				if not shift: cm.set_tool("")
 			"@move":
 				CommandSelect.move_group(cm, c)
+			"@repeater", "@lobber", "@flak":
+				var t := CommandHover.turret_check(cm, c)
+				CastleTurrets.buy(t.castle, t.i, cm.tool.substr(1), cm.castles.stockpile)
+				Sfx.play("good")
 				cm.set_tool("")
 			_:
 				cm.structures.place(cm.tool, c.x, c.y)

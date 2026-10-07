@@ -12,6 +12,7 @@ static func run(g) -> void:
 	_shape(grid, lay, castles.lays.bastion)
 	SmokeCastleWalk.run(g)
 	SmokeCastleBuild.run(g)
+	SmokeCastleTurrets.run(g)
 	_capture(g, castles, c, lay)
 	_siege(g, castles, c, lay)
 	_assault(g, castles, c, lay)

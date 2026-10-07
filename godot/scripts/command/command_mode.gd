@@ -13,6 +13,7 @@ var structures: StructureManager
 var units: UnitManager
 var orbital: Orbital
 var deploy: OperativeDeploy
+var castles: Strongholds = null   # injected: Castle tab turret tools
 var level: Dictionary
 var cam := CommandCamera.new()
 var overlay: CommandOverlay

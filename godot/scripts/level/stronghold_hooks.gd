@@ -32,6 +32,7 @@ static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 			var e := { "node": p[2], "oy": 0.5, "radius": p[3] * 0.6, "alive": func(): return enemy_owned.call(state.call()), "hit": hit }
 			v.enemies.append(e)
 			world.add_target({ "node": p[2], "radius": e.radius, "oy": 0.5, "alive": e.alive, "on_hit": hit })
+	_turrets(s, c, v)
 	world.interactables.append({ "pos": v.pump.position, "radius": Config.PUMP_JAM_RANGE,
 		"prompt": func(): return "[%s] Jam the spire pump (%ds)" % [Keybinds.short("use"), Config.PUMP_JAM_TIME] \
 			if c.owner == "enemy" and c.pump.jam <= 0.0 else "",
@@ -41,6 +42,23 @@ static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 			Bus.say("Spire pump jammed: %s builds nothing from its moat for %ds." % [c.name, Config.PUMP_JAM_TIME], "good") })
 	world.markers.append({ "pos": (v.crown as Node3D).position + Vector3(0, 5, 0), "label": func(): return label(c),
 		"color": StrongholdMeshes.PLAYER if c.owner == "player" else Color("ff6a8a"), "visible": func(): return true })
+
+
+## Turrets are raider prey, and each socket is an E prompt in first person (arm / upgrade).
+static func _turrets(s: Strongholds, c: Dictionary, v: Dictionary) -> void:
+	for i in c.sockets.size():
+		var node: Node3D = v.turrets[i]
+		var sock := func() -> Dictionary: return c.sockets[i]
+		v.prey.append({ "node": node, "radius": 1.0, "alive": func(): return c.owner == "player" and CastleTurrets.alive(sock.call()),
+			"hit": func(d, _pt = null): CastleTurretFire.hit(c, sock.call(), d) })
+		s.world.interactables.append({ "pos": node.position, "radius": 2.5,
+			"prompt": func(): return CastleTurrets.use_label(c, i, s.stockpile.salvage) if c.owner == "player" and s.stockpile else "",
+			"use": func():
+				var t: String = sock.call().turret if sock.call().turret != "" else "repeater"
+				var why := CastleTurrets.buy(c, i, t, s.stockpile)
+				Sfx.play("good" if why == "" else "deny")
+				if why != "":
+					Bus.say(why, "warn") })
 
 
 static func label(c: Dictionary) -> String:
