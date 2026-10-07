@@ -112,6 +112,8 @@ func refresh(energy: float) -> void:
 		var up_front := 0.0
 		if item == "@lance":
 			up_front = Config.LANCE_COST
+		elif item == "@drop":
+			up_front = Config.DROP_BASE
 		elif not item.begins_with("@") and StructureDefs.DEFS[item].get("drop_pod", false):
 			up_front = StructureDefs.DEFS[item].cost
 		b.modulate = Color(1, 1, 1, 0.5) if energy < up_front else Color.WHITE

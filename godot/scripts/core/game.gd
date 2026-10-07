@@ -7,6 +7,8 @@ const SPEEDS := [1, 2, 3]
 var input: InputState
 var hud: Hud
 var economy: Economy
+var stockpile: Stockpile
+var deploy: OperativeDeploy
 var level: Dictionary
 var surface: World
 var structures: StructureManager
@@ -37,6 +39,7 @@ func _ready() -> void:
 	input = InputState.new()
 	add_child(input)
 	economy = Economy.new()
+	stockpile = Stockpile.new()
 	level = Level01.build()
 	surface = World.new()
 	surface.setup("Surface", level.grid, false)
@@ -67,6 +70,10 @@ func _ready() -> void:
 	fps = FpsMode.new()
 	add_child(fps)
 	fps.beacons = func(w): return structures.beacons() if w == surface else []
+	deploy = OperativeDeploy.new(self)
+	command.deploy = deploy
+	fps.commit_recall = deploy.commit_recall
+	fps.preview_recall = deploy.preview_recall
 	hazards.nests.prey = surface_prey
 	hazards.nests.goal_cells = raider_goals
 	for t in towers:
@@ -121,6 +128,8 @@ func _process(delta: float) -> void:
 func update(dt: float) -> void:
 	time += dt
 	teleport_cooldown = maxf(0.0, teleport_cooldown - dt)
+	stockpile.tick(dt)
+	deploy.update(dt)
 	flow.update(dt)
 	if mode != "command":
 		fps.update(dt, input)

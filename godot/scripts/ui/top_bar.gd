@@ -8,6 +8,8 @@ extends PanelContainer
 
 var energy_bar: ProgressBar
 var energy_lbl: Label
+var ore_lbl: Label
+var salvage_lbl: Label
 var prod_lbl: Label
 var demand_lbl: Label
 var status_lbl: Label
@@ -30,6 +32,10 @@ func _init() -> void:
 	energy_lbl = UiKit.label("0 / 0", 18)
 	energy_lbl.custom_minimum_size.x = 90
 	row.add_child(energy_lbl)
+	ore_lbl = UiKit.label("Ore 0", 16, UiKit.WARN)
+	row.add_child(ore_lbl)
+	salvage_lbl = UiKit.label("Salvage 0", 16, UiKit.GOOD)
+	row.add_child(salvage_lbl)
 	prod_lbl = _stat(row, "PRODUCTION /s", UiKit.GOOD)
 	demand_lbl = _stat(row, "DEMAND /s", UiKit.BAD)
 	status_lbl = UiKit.label("", 14, UiKit.WARN)
@@ -61,11 +67,16 @@ func refresh(g) -> void:
 	var pk: Packets = g.structures.packets
 	energy_bar.value = eco.energy / eco.max_energy
 	energy_lbl.text = "%d / %d" % [floori(eco.energy), eco.max_energy]
+	ore_lbl.text = "Ore %s" % String.num(g.stockpile.ore, 1)
+	salvage_lbl.text = "Salvage %s" % String.num(g.stockpile.salvage, 1)
 	prod_lbl.text = "+%.1f" % eco.income
 	demand_lbl.text = "-%.1f" % pk.demand_rate
 	if g.landing:
 		status_lbl.text = "Choose a landing site for the Command Node"
 		status_lbl.add_theme_color_override("font_color", UiKit.ENERGY)
+	elif g.deploy.down:
+		status_lbl.text = "Operative down — %s" % g.deploy.status_text()
+		status_lbl.add_theme_color_override("font_color", UiKit.BAD)
 	elif pk.unmet_rate > 0.15:
 		status_lbl.text = "STARVING: %.1f/s of requests unpaid" % pk.unmet_rate
 		status_lbl.add_theme_color_override("font_color", UiKit.BAD)

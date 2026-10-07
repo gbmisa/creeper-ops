@@ -13,14 +13,16 @@ const MENU := {
 	"Structures": ["collector", "relay", "reactor", "storage", "barracks", "nullifier"],
 	"Weapons": ["cannon", "mortar", "beam", "sniper"],
 	"Titans": ["bertha", "thor", "forge"],
-	"Orbital": ["beacon", "@lance", "@operative"],
+	"Orbital": ["beacon", "@drop", "@lance", "@operative"],
 }
 
 static var ACTIONS := {
+	"@drop": { "label": "Drop Pod", "cost_text": "%d-%d" % [int(Config.DROP_BASE), int(Config.DROP_MAX)],
+		"desc": "Drop the Operative on any surface cell. Costs %d energy plus 1 per %.0f cells from the nearest Totem, capped at %d. The pod falls for %.0fs. Shield Domes block it." % [int(Config.DROP_BASE), Config.DROP_PER_CELLS, int(Config.DROP_MAX), Config.DROP_TIME] },
 	"@lance": { "label": "Orbital Lance", "cost_text": "%d now" % Config.LANCE_COST,
 		"desc": "Strike from orbit: after %ds, burns away creeper in a %.0f-cell radius anywhere you can see. Paid up front (%d), %ds cooldown." % [Config.LANCE_DELAY, Config.LANCE_RADIUS, Config.LANCE_COST, Config.LANCE_COOLDOWN] },
 	"@operative": { "label": "Deploy Operative", "cost_text": "T",
-		"desc": "Teleport the Operative to the selected Beacon (or the newest). Only the Operative can plant charges, enter the Rift and kill the Deep Core." },
+		"desc": "Send the Operative to the selected Totem (or the newest). Free and instant while the teleporter is ready. Only the Operative can plant charges, enter the Rift and kill the Deep Core." },
 }
 
 static var DEFS := {
@@ -67,8 +69,8 @@ static var DEFS := {
 		"desc": "Titan gunship. Hovers, so creeper can't touch it and it can park over pools. Rapid fire into the nearest creeper within range 12, but it drinks packets." },
 	"forge": { "tab": "Titans", "label": "Forge", "cost": 100, "hp": 260.0, "link": 5.0, "link_y": 2.4, "footprint": 2, "unique": true,
 		"desc": "Titan workshop (5x5, needs level ground). Spend Aether on permanent upgrades: energy, build speed, packet speed, storage, fire rate, range, move speed. Aether comes from objectives, nests and Aether Towers the Operative captures and holds." },
-	"beacon": { "tab": "Orbital", "label": "Beacon", "cost": 10, "hp": 40.0, "link": 0.0, "needs_network": false, "link_y": 1.0, "drop_pod": true,
-		"desc": "Operative drop point, dropped from orbit: needs no network, paid up front, but not in Blight. Select it, then press T to send the Operative down." },
+	"beacon": { "tab": "Orbital", "label": "Totem", "cost": 10, "hp": 40.0, "link": 0.0, "needs_network": false, "link_y": 1.0, "drop_pod": true,
+		"desc": "Operative arrival point, dropped from orbit: no network, paid up front, not in Blight. Deploying here (T) is free and instant. Recalling within %.0f m is free and does not cool the teleporter down." % Config.TOTEM_FREE_RADIUS },
 }
 
 

@@ -1,10 +1,6 @@
 class_name CommandMode
 extends Node3D
-## Top-down commander. Tools: a structure type (build; stays armed until right-click/Esc,
-## like CW3), "@move" (relocate the selected
-## structure), "@lance" (orbital strike), "@land" (Command Node landing at mission start).
-## Selection: click / drag-box units, click structures. Orders: right-click moves units,
-## relocates a selected movable structure, or sets a barracks rally point.
+## Top-down commander. Build tools stay armed. "@move", "@lance", "@drop" and "@land" are special.
 
 const DRAG_PX := 6.0
 
@@ -12,6 +8,7 @@ var world: World
 var structures: StructureManager
 var units: UnitManager
 var orbital: Orbital
+var deploy: OperativeDeploy
 var level: Dictionary
 var cam := CommandCamera.new()
 var overlay: CommandOverlay
@@ -140,8 +137,9 @@ func _update_hover(input: InputState) -> void:
 	var res := _check(c)
 	reason = res.reason if not res.ok else res.get("warn", "")
 	match tool:
-		"@lance":
-			overlay.show_ghost("", p, res.ok, Config.LANCE_RADIUS * Config.CELL, Config.LANCE_RADIUS * Config.CELL, [])
+		"@lance", "@drop":
+			var rad := (Config.LANCE_RADIUS if tool == "@lance" else 1.0) * Config.CELL
+			overlay.show_ghost("", p, res.ok, rad, rad, [])
 		"@move":
 			overlay.show_ghost(selected.type, at, res.ok, StructureDefs.radius_m(selected.type), selected.def.get("range", 0.0) * Config.CELL, [])
 		"@land":
@@ -156,6 +154,7 @@ func _update_hover(input: InputState) -> void:
 func _check(c: Vector2i) -> Dictionary:
 	match tool:
 		"@lance": return orbital.can_fire()
+		"@drop": return deploy.can_drop(c)
 		"@move": return Placement.can_move(structures, selected, c.x, c.y) if selected else { "ok": false, "reason": "" }
 		"@land": return Placement.can_land(structures, level, c.x, c.y)
 		_: return Placement.can_place(structures, tool, c.x, c.y)
@@ -201,6 +200,9 @@ func _click(shift: bool) -> void:
 				on_land.call(c)
 			"@lance":
 				orbital.fire(hover.point)
+				if not shift: set_tool("")
+			"@drop":
+				deploy.start_drop(c)
 				if not shift: set_tool("")
 			"@move":
 				structures.move(selected, c.x, c.y)

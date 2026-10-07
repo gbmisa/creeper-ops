@@ -10,6 +10,7 @@ var _weapon: Label
 var _prompt: Label
 var _warn: Label
 var _recall: ProgressBar
+var _recall_note: Label
 var _flash: ColorRect
 var _tint: ColorRect
 
@@ -45,6 +46,12 @@ func _init() -> void:
 	_recall.set_anchors_preset(Control.PRESET_CENTER)
 	_recall.position = Vector2(-130, 100)
 	add_child(_recall)
+	_recall_note = UiKit.label("", 16, UiKit.ENERGY)
+	_recall_note.set_anchors_preset(Control.PRESET_CENTER)
+	_recall_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_recall_note.position = Vector2(-160, 116)
+	_recall_note.custom_minimum_size.x = 320
+	add_child(_recall_note)
 
 
 func _rect(c: Color) -> ColorRect:
@@ -76,8 +83,10 @@ func refresh(fps: FpsMode) -> void:
 	_prompt.text = fps.prompt
 	_warn.text = ("IN CREEPER: SUIT BURNING%s" % (" FAST" if fps.creeper_depth > 1.0 else "")) if fps.in_creeper else ""
 	_cross.add_theme_color_override("font_color", UiKit.BAD if fps.weapons.hit_marker > 0.0 else UiKit.TEXT)
-	var r := fps.recall_hold / Config.RECALL_HOLD
-	_recall.visible = r > 0.0
-	_recall.value = r
+	var holding := fps.recall_hold > 0.0
+	_recall.visible = holding
+	_recall.value = fps.recall_hold / Config.RECALL_HOLD
+	_recall_note.visible = holding
+	_recall_note.text = "Free recall" if fps.recall_cd <= 0.0 else "Teleporter cooldown %ds" % ceili(fps.recall_cd)
 	_flash.color.a = 0.3 if fps.hurt_flash > 0.0 else (0.12 if fps.in_creeper else 0.0)
 	_tint.color.a = minf(0.45, 0.15 + fps.creeper_depth * 0.15) if fps.in_creeper else 0.0
