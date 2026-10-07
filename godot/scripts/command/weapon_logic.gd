@@ -1,7 +1,7 @@
 class_name WeaponLogic
 ## Active behaviour for built, connected, landed weapons. Every shot spends ammo, and ammo
-## only arrives as packets. Targets by def.targets: "creeper", "air" (spore volleys, and
-## later flyers), "raiders" (Snipers). Hold-fire (CW3 toggle) skips firing entirely.
+## only arrives as packets. Targets by def.targets: "creeper", "air" (Beam: surface-to-air,
+## burns flying enemies), "raiders" (Snipers). Hold-fire (CW3 toggle) skips firing entirely.
 ## Mortar splash also nicks raiders for MORTAR_RAIDER_DMG. Snipers are the anti-raider weapon.
 
 
@@ -86,7 +86,8 @@ static func _lob(s: Structure, mgr) -> bool:
 	return true
 
 
-## Beam: air only. Spore volleys now, flyers later. Never nest raiders.
+## Beam: surface-to-air. Burns flying enemies. Spore volleys are the flying threat today;
+## flyers join this shot when they exist. Ground raiders are left to Snipers.
 static func _beam(s: Structure, mgr) -> bool:
 	var w: World = mgr.world
 	var a := _muzzle(s)

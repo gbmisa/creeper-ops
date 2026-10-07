@@ -51,7 +51,7 @@ static var DEFS := {
 	"beam": { "tab": "Weapons", "label": "Beam", "cost": 40, "hp": 45.0, "link": 4.0, "link_y": 1.6,
 		"movable": true, "move_speed": 6.0, "range": 14.0, "fire_rate": 0.15, "power": 1.0,
 		"ammo": { "max": 20.0, "per_packet": 5.0 }, "targets": "air",
-		"desc": "Point-defence laser: shoots down incoming spore volleys, then burns nest raiders within range 14. Ignores creeper. Movable." },
+		"desc": "Surface-to-air laser: burns flying enemies within range 14 (spore volleys now, flyers later). Ignores creeper and ground raiders. Movable." },
 	"sniper": { "tab": "Weapons", "label": "Sniper", "cost": 50, "hp": 40.0, "link": 4.0, "link_y": 1.8,
 		"movable": true, "move_speed": 6.0, "range": 26.0, "fire_rate": 1.2, "power": 4.0,
 		"ammo": { "max": 6.0, "per_packet": 2.0 }, "targets": "raiders",

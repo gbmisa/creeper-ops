@@ -5,7 +5,7 @@ extends RefCounted
 ## faster, hold more, toughen up, and breed higher Config.RAIDER_TIERS over time. The first
 ## NEST_GUARDS of each nest stay home; after the level's raid_delay the rest march.
 ## That is the clock: kill the nests early or face Behemoths later.
-## Nests die to unit fire or the Operative. Snipers kill raiders; Beams only shoot spores.
+## Nests die to unit fire or the Operative. Snipers kill raiders. Beams are surface-to-air and burn flying enemies.
 
 var world: World
 var nests: Array[Dictionary] = []

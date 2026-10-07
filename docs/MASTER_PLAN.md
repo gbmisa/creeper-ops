@@ -79,7 +79,7 @@ Mixed groups (Brutes up front, Spitters behind, a Warden in the middle) start on
 |---|---|
 | Sniper | **Main anti-raider weapon** |
 | Mortar | Creeper. Splash does about 30% damage to raiders. Never the main defence. |
-| Beam | **Air only** (spores, flyers) |
+| Beam | **Surface-to-air.** Burns flying enemies (spore volleys now, flyers later) |
 | Cannon | Creeper only |
 | Castle turrets, Operative, Lance, units | Raiders |
 
@@ -125,7 +125,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 **1. Creeper damage rules.** `command/structure_upkeep.gd`, `smoke_rules.gd`. Built weapons take HP damage from creeper depth, and unbuilt structures still die instantly. The Nullifier is immune while charging. Check: new smoke tests (a weapon survives a short soak, an unbuilt one dies, a charging Nullifier survives).
 
 **2. Weapon roles, cliff rule, per-level schedules.** `weapon_logic.gd`, `raider_field.gd`, `raiders.gd`, `spore_nests.gd`, `level01.gd`, `cave01.gd`, `config.gd`.
-- Beams target air only. Mortar splash does `MORTAR_RAIDER_MULT` damage to raiders.
+- Beams are surface-to-air and burn flying enemies. Mortar splash does `MORTAR_RAIDER_DMG` to raiders.
 - Remove cliff climbing; raiders with no route attack the nearest structure they can reach.
 - `NEST_RAID_DELAY` and the tier times move into the level data.
 - Check: smoke tests (a Beam ignores raiders, a raider stops at a cliff, schedules are read from the level). `--sim=1200` report.
@@ -200,4 +200,4 @@ Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix
 
 ## 6. Changelog
 - 2026-10-07: Plan created from the design conversation. Old corrections that were never built are folded into Stages 1 and 2.
-- 2026-10-07: Stage 2 done headless (⚠, no human playtest). Beams are air-only, mortar splash deals `MORTAR_RAIDER_DMG`, raiders step one terrace, and raid timing comes from each level's `RAID_SCHEDULE`.
+- 2026-10-07: Stage 2 done headless (⚠, no human playtest). Beams are surface-to-air and burn flying enemies, mortar splash deals `MORTAR_RAIDER_DMG`, raiders step one terrace, and raid timing comes from each level's `RAID_SCHEDULE`.
