@@ -2,7 +2,7 @@
 
 The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
 
-**Status:** Stages 1, 3, 4 merged to `main` (⚠ = not human-verified). Stage 2 in progress (Grok). Stage 3 §0 awaits your approval before Stages 5+.
+**Status:** Stages 1, 3, 4 merged to `main` (⚠ = not human-verified). Stage 2 in progress (Grok). Design approved; Stage 5 starts once Stage 2 is merged (they share raider files).
 **Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
 
 ---
@@ -105,16 +105,18 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 |---|---|---|---|
 | 1 | Creeper damage rules | Sonnet 5.5 (`feature-dev`) | ⚠ |
 | 2 | Weapon roles, cliff rule, per-level schedules | Sonnet 5.5 | ☐ |
-| 3 | Design doc ([STRONGHOLDS_DESIGN.md](STRONGHOLDS_DESIGN.md)) | **Opus 5.5** | ⚠ awaiting approval of §0 |
+| 3 | Design doc ([STRONGHOLDS_DESIGN.md](STRONGHOLDS_DESIGN.md)) | **Opus 5.5** | ☑ §0 answered 2026-10-07 |
 | 4 | GPU creeper sim | **Opus 5.5** | ⚠ built + parity verified; needs a human play check |
 | 5 | Terrain-editing tool | Sonnet 5.5, Opus review | ☐ |
 | 6 | Multiple packet senders and Outposts | Sonnet 5.5, Opus review | ☐ |
 | 7 | Strongholds, castles, spire climb | Sonnet 5.5 | ☐ |
 | 8a | Nest bases and enemy mortars | Sonnet 5.5 | ☐ |
-| 8b | Enemy roster | Sonnet 5.5 | ☐ |
+| 8b | Enemy roster (incl. Burrower, Weaver) | Sonnet 5.5 | ☐ |
+| 8c | **Enemy construction:** hubs in enemy castles, Weavers, Leeches, build planner, enemy structures (design §4.5) | Sonnet 5.5, Opus review | ☐ |
 | 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ☐ |
 | 9b | Extractors and supply points | Sonnet 5.5 | ☐ |
-| 10 | Armoury | Sonnet 5.5 | ☐ |
+| 10 | Armoury (incl. Ctrl + wheel ammo switching) | Sonnet 5.5 | ☐ |
+| 10b | **Operative deployment:** Totems, drop anywhere, recall cooldown, Shield Domes block drops, expensive respawn (design §5.4) | Sonnet 5.5 | ☐ |
 | 11 | Terp | Sonnet 5.5 | ☐ |
 | 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ☐ |
 | 13 | Tuning | Haiku 4.5 (`balance-tester`) | ☐ |
@@ -199,6 +201,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix. First-pass Aether Towers (Stage 7 replaces them). First-pass nest raiders with tier escalation (Stages 2 and 8 rework them). 49/49 smoke tests pass.
 
 ## 6. Changelog
+- 2026-10-07: §0 answered. Added: castle variants (ground / raised with drawbridge and moat), wall platforming, tall indestructible spires with a creeper pump, enemy construction (§4.5), Operative deployment rework (§5.4), Ctrl + wheel ammo. New Stages 8c and 10b.
 - 2026-10-07: Stage 4 done. GPU creeper sim (creeper_gpu.gd + creeper_flow.glsl) with CPU fallback. Parity PASS (300 ticks, max cell diff < 0.00001). Perf on the RTX 5090: 80x80 0.55 → 0.027 ms/tick, 512x512 12.3 → 0.055 ms/tick. Live and fast-forward runs match the CPU build.
 - 2026-10-07: Stage 3 design doc written (docs/STRONGHOLDS_DESIGN.md). Its §0 lists 10 decisions for the user to approve.
 - 2026-10-07: Plan created from the design conversation. Old corrections that were never built are folded into Stages 1 and 2.

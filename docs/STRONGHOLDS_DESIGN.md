@@ -4,22 +4,21 @@ The buildable spec for Phase A Stages 4–11. Readers: the user (approve the dec
 
 ---
 
-## 0. Decisions to approve
-These are the calls I made where the conversation left room. Everything else follows from the settled design in MASTER_PLAN §1.
+## 0. Decisions (answered 2026-10-07)
+| # | Decision | Answer |
+|---|---|---|
+| 1 | Walls, gates and spires are **terrain**, not meshes; decorative meshes sit on top | **Yes, extended:** castles come in two variants, **ground** and **raised** (with a drawbridge and/or moat), and have platforming on the walls so the Operative can breach from the top (§3.1). |
+| 2 | Spires stay within `MAX_LEVEL` 10 | **No.** Spires are the exception: tall, **indestructible**, with a **pump** that lifts creeper from the ground floor to the top (§3.4). |
+| 3 | Gates belong to a faction | Approved |
+| 4 | Earth / Metal / Stone materials | Approved for now |
+| 5 | Mortars only lower built-up terrain | Approved |
+| 6 | Hive Core: Operative and Lance only | Approved |
+| 7 | One `pressure` value with an Overrun cap | **Approved, plus enemy construction:** the enemy builds contesting structures and towers out of the castles it holds, slowly at first and faster in deep creeper and with enemy mining (§4.5). |
+| 8 | Magazines hold one ammo grade | Approved. **Ctrl + mouse wheel cycles the ammo type** (§5.3). |
+| 9 | The Terp skips occupied cells; the Operative rises and falls with the ground | Approved |
+| 10 | A `Stockpile` instance holds Ore and Salvage | Approved |
 
-1. **Castle walls, gates and spires are terrain, not meshes.** The game is a heightfield: first-person collision, raider pathing, unit pathing and creeper flow all read `grid.height`. Building walls out of raised cells means all four just work, and creeper flows *around* castles the way it does around cliffs. Decorative meshes (battlements, gate arches) sit on top. The catch: no overhangs, tunnels or interiors. A spire is a stepped tower with a ramp spiralling up its outside.
-2. **Spires stay within `MAX_LEVEL` 10.** Castles sit on low ground (levels 1–4) so a spire rises 6–9 levels (7.5–11 m) above the courtyard.
-3. **Gates belong to a faction.** A gate is a row of wall cells. The owner's side walks through it (the Operative and units for a player gate, raiders for an enemy gate). Everyone else treats it as a wall until it's breached.
-4. **Wall materials:**
-   - **Earth** (Terp, costs packets): raiders can't damage it; enemy mortars lower it one level per shell.
-   - **Metal** (Terp, costs Ore): raiders can't damage it; it takes 8 mortar shells to lower one level.
-   - **Stone** (castle walls only): has HP that raiders, Lancers and mortars all damage; at 0 HP the segment collapses (a breach); repaired with Salvage; can be plated with Ore, which doubles its HP and makes it as mortar-resistant as Metal.
-5. **Enemy mortars can only lower *built-up* terrain** (cells higher than the level's original height). They can never dig into natural ground, so your mesa can't be carved out from under you.
-6. **Hive Cores take damage only from the Operative and the Lance.** Snipers can kill hive defences and pits from outside, but the last step is always the Operative inside. That keeps the first-person half essential.
-7. **One pressure value drives everything.** `pressure` goes from 0 to 1 over the level's schedule and sets spawn rates, caps, tier unlocks, hive growth and enemy mortar building. At 1.0 the level enters **Overrun**: hives send continuous waves at the Node. You're meant to win before that.
-8. **Magazines hold one grade of ammo.** Switching a weapon to improved ammo empties its magazine, and only improved-ammo packets refill it after that.
-9. **The Terp can't edit cells that have a structure on them** (as in CW3). If the Operative is standing on a cell that rises, they rise with it; on a cell that drops, they fall.
-10. **Resources live in a new `Stockpile` instance** (Ore, Salvage), owned by `game.gd` and passed to the systems that need it. Static state like `Upgrades.aether` stays for now but isn't copied.
+New from the same review: **Operative deployment is reworked** (Totems, drop anywhere, recall anywhere, expensive respawn). See §5.4.
 
 ---
 
@@ -35,7 +34,7 @@ These are the calls I made where the conversation left room. Everything else fol
 | Field | Type | Meaning |
 |---|---|---|
 | `base_height` | PackedFloat32 | Height after level build. Enemy mortars never lower a cell below it |
-| `material` | PackedByte | `0` natural, `1` Earth, `2` Metal, `3` Stone, `4` Plated stone |
+| `material` | PackedByte | `0` natural, `1` Earth, `2` Metal, `3` Stone, `4` Plated stone, `5` Spire (indestructible) |
 | `gate` | PackedByte | `0` none, `1` player gate, `2` enemy gate |
 | `terp_target` | PackedFloat32 | `-1` = none, else the target level the Terp works toward |
 | `terp_mat` | PackedByte | Material to lay at the target |
@@ -136,9 +135,15 @@ Files: `stronghold.gd` (state + update, under 250 lines), `stronghold_rules.gd` 
 ### 3.1 Castle
 **Shape** (`castle_shape.gd`, from a level row `{ x, z, w: 15, h: 15, gates: ["s"], floor }`):
 - Stone walls 2 cells thick, 3 levels above the floor. A 1-cell walkway on the inner ring at +2, reached by ramps from the inside at 1 level per cell. That lets the Operative and turrets stand on the wall.
-- A 5×5 **spire** in the middle, stepped up to `floor + 7`, with a 1-cell ramp spiralling up its outside at 1 level per cell (walkable at `CLIMB` 1.1). A 3×3 platform on top holds the **crown nest** and the **capture zone**.
+- The **spire** stands in the middle of the courtyard (§3.4), with the crown nest and the **capture zone** on its top platform.
 - Each gate is 3 cells wide in the middle of a side.
 - 4 turret sockets on the walkway corners, 1 above each gate, and 2 on the spire platform.
+
+**Variants** (level row `"variant": "ground" | "raised"`, plus `"moat": true` and `"bridge": true` as options):
+- **Ground castle:** walls on natural ground at the courtyard floor. Creeper flows in through breaches, open gates, or over the walls once it's deeper than 3 levels. You hold it against creeper as well as raiders.
+- **Raised castle:** the whole castle stands on a plateau (`floor + 4`, sheer cliffs). The only ground way in is a **drawbridge**: a 3-wide row of bridge cells across the gap that sit at plateau height for the owner and drop to the gap floor for everyone else (the faction-gate rule). A **winch** (HP 150) holds it up. A frontal assault that destroys the winch drops the bridge for everyone until it's repaired (Salvage). Creeper only reaches the top by piling up the cliffs or through the spire pump (§3.4).
+- **Moat (either variant):** a 2-cell-wide trench 2 levels deep around the walls. Creeper pools in it, which keeps your structures and units out and burns the Operative crossing it. Raiders are immune to creeper, but they can't climb its 2-level walls, so a moat forces them to the gate or bridge.
+- **Platforming:** each castle's outer wall faces have 1–2 **climb routes**: pillar cells rising 1 level at a time with 1-cell gaps between them (sprint-jumping covers about 3 cells). Raiders can't cross the gaps, so these routes belong to the Operative. They end on the walkway, so **a castle can always be breached from the top** without opening the gate.
 
 **States:**
 | State | What happens | Leaves when |
@@ -183,6 +188,12 @@ Turrets have HP 80 / 120 / 180, and creeper damages them like weapons (Stage 1 r
 
 Today's `spore_nests.gd` becomes the hive's spawner part (rename to `hive_spawning.gd`). The `nests` rows in level data become `hives`.
 
+
+### 3.4 Spires
+- **Tall and indestructible.** Spire cells use material `5` (Spire). TerrainEdit, mortars, the Terp and breaches all skip them. They're exempt from `MAX_LEVEL`: a spire rises **18–24 levels above the courtyard** (22–30 m). The height limit becomes `SPIRE_MAX_LEVEL` 34. The creeper mesh's culling box and the terrain colour ramp clamp to it.
+- **Shape:** a 7×7 base. A 1-cell ramp climbs the outer ring at 1 level per cell (one lap of 24 cells reaches about +22), up to a 3×3 top platform with the crown nest and capture zone. Where the ramp would be too long for the target height, a jump pad (an interactable that launches the Operative 4 levels up) bridges the rest.
+- **The pump:** whenever creeper sits on the cells around the spire's base, the pump moves `SPIRE_PUMP_RATE` (0.8 depth per second) from those cells to the top platform, regardless of who owns the castle. A creeper-flooded top is how the enemy contests a held spire, so **the capture zone only progresses while it's dry**, and a held spire wants a Lobber turret on its platform. The Operative can **jam** the pump for 60 s by holding E at its base intake (it re-primes itself; it's indestructible).
+- Spires are part of their castle; there are no stand-alone spires.
 ---
 
 ## 4. Enemies
@@ -226,6 +237,31 @@ Loot drops as glowing pickups that last 90 s, collected only by the Operative (a
 
 ---
 
+### 4.5 Enemy construction (the enemy's take on building)
+The enemy expands with its own structures, so it feels like an RTS opponent, not just waves. It builds differently from you: no packets or relays.
+
+- **Where it comes from:** every **enemy-held castle** is a construction hub. If you take a castle, building from it stops; if raiders retake it, building starts again. Hives spawn raiders but don't build.
+- **Builders:** a hub sends **Weaver** drones (HP 12, no attack, Operative and Snipers can kill them) to a build site. A structure grows while at least one Weaver is on site.
+- **Build speed:** `ENEMY_BUILD_BASE` (slow; the first structure takes about 3 minutes at pressure 0) multiplied by:
+  - **creeper depth at the site:** ×(1 + depth × 0.5), so deep creeper becomes forward bases;
+  - **enemy mining:** ×(1 + 0.25 per enemy **Leech** on an ore deposit). Leeches are enemy structures that sit on ore deposits. **Holding a deposit with your own Miner denies it**, which gives mine control a second value;
+  - **pressure:** ×(1 + pressure).
+- **Site choice:** the hub's build planner picks a cell toward the nearest player structure, at the edge of creeper or on Blight, at least 10 cells from your weapons where possible. One structure at a time per hub, two from pressure 0.5.
+
+| Enemy structure | HP | Effect | Counter |
+|---|---|---|---|
+| **Leech** | 60 | Mines an ore deposit for the enemy (build speed) | Destroy it, then put your own Miner there |
+| **Blight Pylon** | 80 | Spreads a Blight zone (radius 6) where you can't build; your structures inside slowly lose HP | Operative sabotage, Snipers, Lance |
+| **Spitter Tower** | 70 | Medium-range turret (20 cells), as the hive spitter | Snipers outrange it |
+| **Lancer Spire** | 90 | Long-range beam tower (32), hunts Snipers | Operative, Lance, Bertha |
+| **Shield Dome** | 120 | Covers a hive or castle (radius 8): **blocks Operative drops** inside it and halves Lance damage | Destroy it from the ground; then drops are open |
+| **Creeper Pump** | 100 | A small emitter (1.0 every 2 s) fed by nearby enemy Leeches | Destroy or nullify it |
+| **Enemy mortar** | 80 | §4.3 (hubs build these too when the Node is sealed off) | §4.3 |
+
+Every enemy structure can be **sabotaged** by the Operative (hold E for 3 s within 2 m, destroying it and dropping 5 Salvage) or destroyed normally. Destroyed enemy structures leave rubble that Weavers rebuild at half cost.
+
+---
+
 ## 5. The Operative
 
 ### 5.1 Extractors and supply points (Stage 9b)
@@ -258,10 +294,22 @@ Bought at the **Armoury** (the Command Node or any held castle's spire platform,
 | Incendiary | +2 dps for 3 s, removes creeper at the impact cell | 12 | +0.5 Salvage |
 | Cluster (rockets only) | 4 sub-blasts | 15 per 3 rockets | — |
 
+- **Switching:** **Ctrl + mouse wheel** cycles ammo types for the Operative's current weapon (new actions `ammo_next` and `ammo_prev`). `keybinds.gd` doesn't support the mouse wheel or modifiers yet, so Stage 10 adds both. A selected network weapon or unit uses the same binding in command mode.
 - **Unlock:** level data `"ammo_unlock": "<objective id>"` (Level 1: when the Deep Core objective becomes available). It's milestone-based, not time-based.
 - Applies to the Operative, Snipers, Repeater turrets and units. For units, the barracks stock becomes the selected grade, and each resupply costs the surcharge.
 
 ---
+
+### 5.4 Deployment, recall and respawn (replaces today's Beacon teleport and recall)
+- **Totems** (today's Beacon, renamed in the UI and keeping the `beacon` id): 10 energy up front, drop-pod delivered, no network needed. Deploying to a Totem and recalling from one are **free and instant**.
+- **Drop anywhere:** in the Orbital tab, pick any cell on the surface. It costs `DROP_BASE` 20 energy + 1 energy per 4 cells from the nearest Totem (capped at 80). A pod falls for 3 s (it's visible to enemies).
+  - **Blocked** inside an enemy Shield Dome's radius. Not blocked by hives or castles themselves: you can drop straight into an enemy base if no shield is up, at your own risk.
+- **Recall anywhere:** hold Recall as now. **No energy cost**, but unless you're at a Totem the teleporter goes on **cooldown = 2 × the time it would take to run to the nearest Totem** (Operative path length ÷ `WALK`; straight line × 1.4 if no path). The HUD shows the cooldown before you commit.
+- **Death:** the suit is lost.
+  - Carried extractors and crafted Operative ammo are lost. Advanced weapon unlocks and upgrades stay (they're level-wide).
+  - **Respawn** at the Command Node costs `RESPAWN_ENERGY` 100 + `RESPAWN_SALVAGE` 25 and takes 45 s. **Each further death this level adds 50%** to both. If you can't afford it, the respawn waits until you can.
+  - Today's "suit failure auto-recall" goes away; dying is dying.
+- All costs and timers are tunables in `config.gd`.
 
 ## 6. The Terp (Stage 11)
 - **Structure `terp`:** 25 packets to build, link 6, works on cells within 7 cells. A def flag `"unlock": "terp"`; level data `"unlocks": ["terp"]` (not in Level 1 by default).
@@ -290,6 +338,10 @@ Bought at the **Armoury** (the Command Node or any held castle's spire platform,
 | `fps/operative_upgrades.gd`, `fps/advanced_weapons.gd`, `ui/armoury_menu.gd`, `ui/castle_panel.gd` | New |
 | `command/terp.gd`, `command/terp_paint.gd` | New |
 | `ui/top_bar.gd` | Ore, Salvage and the pressure meter |
+| `level/enemy_builder.gd`, `level/enemy_structures.gd` | New: hubs, Weavers, build planner, enemy structure table (§4.5) |
+| `level/spire_pump.gd` | New (§3.4) |
+| `fps/operative_deploy.gd` | New: drops, recall cooldown, death and respawn (§5.4). Takes the teleport code out of `game_flow.gd` |
+| `core/keybinds.gd` | Mouse wheel and modifier bindings (`ammo_next`, `ammo_prev`) |
 
 **New smoke tests go in new files** (`smoke_terrain.gd`, `smoke_strongholds.gd`, `smoke_economy2.gd`, `smoke_operative.gd`), each registered like the others, so separate branches don't conflict.
 
