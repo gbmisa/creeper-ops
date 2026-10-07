@@ -1,35 +1,42 @@
-# Handoff: 2026-10-07 (session 6: keybinds, CW creeper rules, Aether Towers, nest raiders)
+# Handoff: 2026-10-07 (session 7: plan, GPU sim, terrain editing, orchestration)
 
 ## State
-The game is **Godot 4.7** in `godot/`. The JS build in `src/` is a frozen reference. This session:
-- **Rebindable keys** (`core/keybinds.gd`, `ui/keybind_menu.gd`): 45 actions, two keys each. Open the Controls screen with F10, or the Controls button on the briefing and Operative pause screens. Binds save to `user://keybinds.cfg`, and only changed actions are stored, so later updates keep the player's keys and new actions get their defaults. Esc stays fixed. The help line, build menu and info panel show the current keys.
-- **CW creeper rules** (`command/structure_upkeep.gd`, split out of structure_manager): creeper destroys any grounded structure on contact, built or not. The Command Node takes HP damage instead. Nothing can be placed on creeper, and the Nullifier lost its exemption, so you have to clear the creeper around an emitter before nullifying it.
-- **Ammo fix:** full weapons never request packets. Transit headroom now applies only while a weapon is firing (`Structure.firing`).
-- **Aether Towers** (`level/aether_towers.gd`) replace the crystals: 7 on the surface and 4 in the cave. The Operative presses E and holds the tower for 4 s while it stays dry. A held tower makes about 5 Aether/min. Creeper sitting on it for 3 s retakes it. The top bar shows Aether and towers held.
-- **Nest raiders** (`level/spore_nests.gd`, `raiders.gd`, `raider_field.gd`) replace the floating mites: six-legged ground bugs that are immune to creeper. They follow one shared BFS flow field to your structures and climb cliffs when no route exists. Each nest keeps 2 guards. Raids start at 5:00. Over time the spawn rate, the cap, nest HP and the raider tier all rise: Skitter, Brute (8:00), Ravager (15:00), Behemoth (22:00). Snipers (power raised to 4), Beams, units, the Operative and the Lance kill them.
+Godot 4.7 game in `godot/`. **The plan lives in [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md)**, the buildable spec in [docs/STRONGHOLDS_DESIGN.md](docs/STRONGHOLDS_DESIGN.md) (§0 answered by the user). The project is now a **git repo**; parallel work happens in worktrees under `../creeper fps td-worktrees/`.
 
-## Run
-`godot --path godot`. Tests: CLAUDE.md Testing. New debug hooks: `--keys` (open Controls) and `--look=x,z,dist`.
+**Roles:** Claude Opus orchestrates: it writes briefs in `docs/tasks/`, reviews every branch and is the only one that merges. Grok Build and other delegated agents follow [AGENTS.md](AGENTS.md): only their brief, commit on their own branch, never merge.
+
+Merged to `main` this session (Phase A):
+- **Stage 1** (Grok + Opus fix): built weapons lose HP in creeper (`WEAPON_CREEPER_*`); unbuilt or non-weapon structures die instantly; a charging Nullifier is immune. The Node keeps `STRUCT_*`.
+- **Stage 2** (Grok): Beams air only; mortar splash does `MORTAR_RAIDER_DMG`; raiders step one terrace only (no cliff climbing or dropping); raid timing per level (`RAID_SCHEDULE`).
+- **Stage 3** (Opus): the design doc.
+- **Stage 4** (Opus): **GPU creeper sim** (`sim/creeper_gpu.gd`, `shaders/creeper_flow.glsl`); the CPU sim stays for headless. About 20× faster at 80×80 and about 200× at 512×512 on an RTX 5090.
+- **Stage 5** (Opus): `TerrainEdit` (the only runtime terrain change), chunked terrain, `Grid.step_ok` with faction gates for every walker, `base_height`, materials.
+
+## In progress (Grok, one fresh session each; brief in docs/tasks/)
+| Worktree | Branch | Brief |
+|---|---|---|
+| `stage6` | `stage/6-packet-senders` | Outposts send packets (Opus reviews before merge) |
+| `stage10b` | `stage/10b-deployment` | Totems, drop anywhere, recall cooldown, death and respawn, Stockpile |
+| `grok-command-mode` | `grok/command-mode-split` | Split `command_mode.gd` (no behaviour change) |
+
+Start line for Grok: *"Read AGENTS.md, CLAUDE.md, HANDOFF.md, docs/MASTER_PLAN.md and docs/tasks/<FILE>.md, then do that task and nothing else."*
+
+## Run / test
+`godot --path godot`. Tests: CLAUDE.md Testing. The GPU checks need the real display: `-- --gpu-parity` (must PASS) and `-- --perf-sim=512`. New hooks: `--cpu-sim`, `--raise=x,z,r,by`.
 
 ## Verified
-- No parse errors. `--smoke`: **49/49 PASS**. New checks: can't build on creeper, creeper kills unbuilt and built instantly, Node only loses HP, full weapon requests nothing, tower capture/pay/retake, raider marches on the base, nests escalate, rebind and key-stealing. Smoke never writes the player's keybind file (confirmed).
-- `--demo --units --sim=1200`: base survives 20 min with Node 358/500. It's ground down to 8 structures, the nests reach Ravagers, Emitter NW gets nullified, and the bot never rebuilds. Undefended `--autostart`: raiders kill the Node at about 5:50 (it used to survive 15 min).
-- Screenshots: Controls menu, towers with markers in FPS view, a raider walking through creeper.
+- Smoke: **78/78 PASS** on `main`. `--demo --units --sim=900`: Node 500/500; wall time unchanged (≈31 s).
+- GPU parity PASS, including a mid-run terrain wall, and it FAILS if the height upload is skipped (`--skip-upload`). GPU and CPU screenshots match.
 
 ## NOT verified (needs a human)
-- Rebinding by hand (click, press a key, right-click to clear), and whether the binds survive a restart.
-- Capture feel (press E, stay close), how raider pressure feels, whether 5:00 is a fair grace period, and whether the base can keep up with Ravagers and Behemoths.
-- Raider animation is minimal (it slides with a bob when attacking).
+- How creeper soaking weapons and raiders that can't climb feel in play. GPU sim during a long real session.
 
-## Known issues / ideas
-- `command_mode.gd` (247) is at the size limit. Split it first.
-- Cannons and mortars ignore raiders (CW-faithful). If early defence feels too thin, consider letting mortar splash hurt them.
-- Spore volleys now one-shot whatever they land on, because creeper kills on contact. Beams matter more.
-- The demo bot never builds a Forge or captures towers.
-- Not ported: Shields, Terps, Guppies, Ore, Power Zones, Forge singularity, Totems.
+## Known issues
+- `RID ... Environment leaked at exit` and "resources still in use" at quit: pre-existing, also on the old build.
+- Raiders with no route become guards permanently (Stage 2). Fine until enemy mortars arrive (8a); revisit then.
+- Creeper ignores gates (Stage 7 decides).
 
 ## Next steps
-**The full plan is now [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md).** Start with its Stages 1–2 (they fix several items below: weapons vs creeper, Beams, cliff climbing).
-1. User playtest: keybinds, raids, towers, the instant-death creeper rule.
-2. Tune `Config.NEST_*` and `RAIDER_TIERS` from the playtest. Split command_mode.
-3. Phase 3 (saved, build only when asked): director, reinforcements, time gates. The nest clock is a first step toward it.
+1. **Stage 7, Strongholds (Opus):** castles (ground and raised, moat, drawbridge, wall platforming), tall indestructible spires with the moat pump feeding enemy production, capture and retake. Replaces `aether_towers.gd`. Best started in a **fresh Opus session** (cheaper than carrying this one's context).
+2. Review and merge Grok's three branches as they report in. Stage 6 gets a close review.
+3. Then write briefs for 8b (roster) and 9a (return packets, Ore, Salvage) for Grok.
