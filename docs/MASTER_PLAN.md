@@ -2,7 +2,7 @@
 
 The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
 
-**Status:** Stages 1–7 and 10b merged to `main` (⚠ = not human-verified), plus the command-mode split. Playtest fixes 2026-10-07 on `main` (uncommitted). Next, in parallel: **7b castle stakes (Opus)** and **7c traversable terrain (Grok, brief written)**; then 8a/8b/9a.
+**Status:** Stages 1–7 and 10b merged to `main` (⚠ = not human-verified), plus the command-mode split. Playtest fixes 2026-10-07 on `main` (uncommitted). Next, in parallel: **7b castle stakes (Opus)**, and Grok on **7c traversable terrain**, **10a Armoury**, **11a Terp (Earth)** (briefs written); then 8a/8b/9a.
 **Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
 
 ---
@@ -117,9 +117,9 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 8c | **Enemy construction:** hubs in enemy castles, Weavers, Leeches, build planner, enemy structures (design §4.5) | Sonnet 5.5, Opus review | ☐ |
 | 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ☐ |
 | 9b | Extractors and supply points | Sonnet 5.5 | ☐ |
-| 10 | Armoury (incl. Ctrl + wheel ammo switching) | Sonnet 5.5 | ☐ |
+| 10 | Armoury (incl. Ctrl + wheel ammo switching). **10a** = upgrades + advanced weapons; 10b-ammo later | Sonnet 5.5 (Grok) | ☐ 10a brief: [tasks/STAGE10a_armoury.md](tasks/STAGE10a_armoury.md) |
 | 10b | **Operative deployment:** Totems, drop anywhere, recall cooldown, Shield Domes block drops, expensive respawn (design §5.4) | Sonnet 5.5 (Grok), Opus review | ⚠ merged, verified headless |
-| 11 | Terp | Sonnet 5.5 | ☐ |
+| 11 | Terp. **11a** = Earth only; Metal (11b) after 9a's Ore | Sonnet 5.5 (Grok) | ☐ 11a brief: [tasks/STAGE11a_terp_earth.md](tasks/STAGE11a_terp_earth.md) |
 | 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ☐ |
 | 13 | Tuning | Haiku 4.5 (`balance-tester`) | ☐ |
 | 14 | Review and screenshots | **Opus 5.5** | ☐ |
@@ -211,6 +211,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix. First-pass Aether Towers (Stage 7 replaces them). First-pass nest raiders with tier escalation (Stages 2 and 8 rework them). 49/49 smoke tests pass.
 
 ## 6. Changelog
+- 2026-10-07: Briefs for 10a (Armoury: upgrades + advanced weapons) and 11a (Terp, Earth only) so three Grok agents run beside 7b. Improved ammo, Pack and Metal wait for 8b/9a.
 - 2026-10-07: **Castle turrets** pulled forward from 9a into 7b (Opus, ⚠ no human playtest). `castle_turrets.gd` (defs, sockets, buy/upgrade I–III with Salvage) + `castle_turret_fire.gd` (Repeater → raiders, Lobber → creeper at 60% mortar, Flak → spore volleys; creeper damage like weapons; models). 5 sockets per castle (4 wall corners, 1 beside each gate). Bought from the new **Castle tab (F5)** by clicking a socket, or with E in first person. A standing turret blocks a retake; a retake clears them. Salvage now flows: `CASTLE_SALVAGE_RATE` 0.1/s per held castle and `CASTLE_CAPTURE_SALVAGE` 30 on capture. Raiders can melee turrets. `--turrets=I` debug hook. 167 smoke checks pass.
 - 2026-10-07: Playtest batch 3 (Opus). **Packets have no priority**: round robin over every requester, ammo and builds alike (was ammo first). **CW3 box select of weapons** (units first, else movable weapons); group move keeps formation, hold fire/supply/recycle apply to all; amber group rings on the terrain shader (`sels`). **Units can't walk through structures** (`Pathfind` `solid` + `UnitManager._move`; string-pulling samples every crossed cell). Units restock at the **nearest stocked barracks** (`Unit.depot`); the Barracks panel can select its units or all units (U). **First-person building** (`fps/operative_build.gd`, B): tab/slot keys as in command mode, crosshair ghost, normal placement rules. **Nullifier** range scales with Forge Fire Range (`WeaponLogic.nullify_range`) and it soaks creeper HP while unbuilt (`soaks_unbuilt`); Level 1 emitters 4.0 → 3.0 per pulse. Raiders blocked on the way to a target follow the flow field for `RAIDER_DETOUR_TIME` (Bastion garrison stuck at its gate). `emitter_ring` in the sim report. 159 smoke checks pass.
 - 2026-10-07: Castle fixes (Opus). The rifle now hits a target when the muzzle is inside it (it missed the crown point-blank). The crown nest is solid (`CROWN_RADIUS` 1.2) and has 40 HP (was 60). **The courtyard of a castle you hold is buildable** (`Grid.yard`, unblocked in `StrongholdRules.sync_grid`), so a relay there links the castle to the network. Hostile courtyards and castle stone say why they can't be built on. A retake destroys what you built in the courtyard (`Strongholds.on_lost`). `smoke_castle_build.gd`.
