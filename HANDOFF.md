@@ -1,42 +1,36 @@
-# Handoff: 2026-10-07 (session 7: plan, GPU sim, terrain editing, orchestration)
+# Handoff: 2026-10-07 (session 8: Stage 7 castles, Grok branches merged)
 
 ## State
-Godot 4.7 game in `godot/`. **The plan lives in [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md)**, the buildable spec in [docs/STRONGHOLDS_DESIGN.md](docs/STRONGHOLDS_DESIGN.md) (§0 answered by the user). The project is now a **git repo**; parallel work happens in worktrees under `../creeper fps td-worktrees/`.
+Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md); spec: [docs/STRONGHOLDS_DESIGN.md](docs/STRONGHOLDS_DESIGN.md) (§3 has "As built (Stage 7)" notes). Git repo; parallel work in worktrees under `../creeper fps td-worktrees/`.
 
-**Roles:** Claude Opus orchestrates: it writes briefs in `docs/tasks/`, reviews every branch and is the only one that merges. Grok Build and other delegated agents follow [AGENTS.md](AGENTS.md): only their brief, commit on their own branch, never merge.
+**Roles:** Opus orchestrates (briefs in `docs/tasks/`, reviews, only one who merges). Grok and other agents follow [AGENTS.md](AGENTS.md).
 
-Merged to `main` this session (Phase A):
-- **Stage 1** (Grok + Opus fix): built weapons lose HP in creeper (`WEAPON_CREEPER_*`); unbuilt or non-weapon structures die instantly; a charging Nullifier is immune. The Node keeps `STRUCT_*`.
-- **Stage 2** (Grok): Beams air only; mortar splash does `MORTAR_RAIDER_DMG`; raiders step one terrace only (no cliff climbing or dropping); raid timing per level (`RAID_SCHEDULE`).
-- **Stage 3** (Opus): the design doc.
-- **Stage 4** (Opus): **GPU creeper sim** (`sim/creeper_gpu.gd`, `shaders/creeper_flow.glsl`); the CPU sim stays for headless. About 20× faster at 80×80 and about 200× at 512×512 on an RTX 5090.
-- **Stage 5** (Opus): `TerrainEdit` (the only runtime terrain change), chunked terrain, `Grid.step_ok` with faction gates for every walker, `base_height`, materials.
-
-## In progress (Grok, one fresh session each; brief in docs/tasks/)
-| Worktree | Branch | Brief |
-|---|---|---|
-| `stage6` | `stage/6-packet-senders` | Outposts send packets (Opus reviews before merge) |
-| `stage10b` | `stage/10b-deployment` | Totems, drop anywhere, recall cooldown, death and respawn, Stockpile |
-| `grok-command-mode` | `grok/command-mode-split` | Split `command_mode.gd` (no behaviour change) |
-
-Start line for Grok: *"Read AGENTS.md, CLAUDE.md, HANDOFF.md, docs/MASTER_PLAN.md and docs/tasks/<FILE>.md, then do that task and nothing else."*
+Merged to `main` this session:
+- **Stage 7 (Opus): castles replace Aether Towers.** `CastleShape`/`SpireShape` carve ground and raised castles at level build: 2-wide stone walls with corner stairs, faction gates, moat, drawbridge (`Grid.deck`, owner-only, open to all once the winch dies), pillar climb routes, and a 7x7 obsidian spire (16-step ramp + jump pad, top 20 levels up). `Strongholds` (+ `_rules`, `_hooks`, `_meshes`, `spire_pump`) runs hostile → capturing → held → siege, with garrison, counterattack, Aether, breaches through `TerrainEdit`, and the moat pump (`pump.material`, for 8c). Level 1: **Ashmoat Keep** (ground, moat, SW, vent-fed) and **High Bastion** (raised, N). Cave towers removed.
+- **Command-mode split** (Grok): `command_input/select/hover.gd`. Clean.
+- **Stage 6** (Grok, reviewed): packets launch from the nearest sender; `outpost` structure; shared bank.
+- **Stage 10b** (Grok, reviewed): Totems, `@drop` pods, recall cooldown, death and paid respawn, `Stockpile`. Fixed on merge: `@drop` ported into the split files, recall path uses `Grid.step_ok`, cave recall measures from the Rift.
 
 ## Run / test
-`godot --path godot`. Tests: CLAUDE.md Testing. The GPU checks need the real display: `-- --gpu-parity` (must PASS) and `-- --perf-sim=512`. New hooks: `--cpu-sim`, `--raise=x,z,r,by`.
+`godot --path godot`. Tests: CLAUDE.md Testing. New hook: `--castle=I[,climb|pad|top|gate]` drops the Operative at castle I (0 Ashmoat, 1 Bastion). From 10b: `--salvage=N`, `--tool=@drop`.
 
-## Verified
-- Smoke: **78/78 PASS** on `main`. `--demo --units --sim=900`: Node 500/500; wall time unchanged (≈31 s).
-- GPU parity PASS, including a mid-run terrain wall, and it FAILS if the height upload is skipped (`--skip-upload`). GPU and CPU screenshots match.
+## Verified (headless + Xvfb)
+- Smoke **144/144 PASS** on merged `main` (Stage 7 adds 40 checks: a scripted first-person pillar climb and jump-pad landing, raider-proof walls, bridge rules, capture, counterattack, siege/retake, gate break by real raiders, breach, pump + jam, state round-trip).
+- `--demo --units --sim=900`: Node 500/500. Wall time 35 s vs 31 s before (castle flow field + garrisons).
+- Screenshots: climb route, spire top, Bastion gate and drawbridge, command views, Drop tool.
 
 ## NOT verified (needs a human)
-- How creeper soaking weapons and raiders that can't climb feel in play. GPU sim during a long real session.
+- How the climb, jump pad, capture and siege feel in play. Whether 20 s capture / 15 s retake / 4-raider garrisons are fair. GPU parity wasn't rerun (Stage 7 didn't touch the sim; spires only raise heights).
+- Stages 1, 2, 4, 5, 6, 10b still lack a human playtest.
 
-## Known issues
-- `RID ... Environment leaked at exit` and "resources still in use" at quit: pre-existing, also on the old build.
-- Raiders with no route become guards permanently (Stage 2). Fine until enemy mortars arrive (8a); revisit then.
-- Creeper ignores gates (Stage 7 decides).
+## Known issues / decisions to remember
+- **Creeper ignores gates and decks** (decided in Stage 7). Ashmoat's moat fills from the SW vent and creeper can cross the gate causeway.
+- Castle walls are raider prey only where raiders can stand next to them; a moat castle is attacked through its gate, a raised one through its winch, then its gate.
+- Deferred to 9a: castle turrets, wall repair, Salvage trickle. Deferred to 8a: `pressure` (counterattack size uses nest tier for now).
+- Pre-existing: `RID ... Environment leaked at exit` at quit. Raiders with no route become guards permanently.
+- Merged worktrees (`stage5/6/7/10b`, `grok-command-mode`) are clean and can be removed.
 
 ## Next steps
-1. **Stage 7, Strongholds (Opus):** castles (ground and raised, moat, drawbridge, wall platforming), tall indestructible spires with the moat pump feeding enemy production, capture and retake. Replaces `aether_towers.gd`. Best started in a **fresh Opus session** (cheaper than carrying this one's context).
-2. Review and merge Grok's three branches as they report in. Stage 6 gets a close review.
-3. Then write briefs for 8b (roster) and 9a (return packets, Ore, Salvage) for Grok.
+1. Human playtest: `godot --path godot -- --castle=0` (Ashmoat climb) and `--castle=1,gate` (Bastion).
+2. Write Grok briefs for **8a** (hives, enemy mortars, pressure), **8b** (roster; can run alongside 8a), **9a** (return packets, Ore, Salvage, turrets, wall repair).
+3. Stage 12 will place castles properly; the two in Level 1 are placeholders that work.
