@@ -28,6 +28,7 @@ func _init(game) -> void:
 	Bus.victory.connect(func(): end_game(true))
 	g.command.on_land = land
 	Upgrades.reset()
+	OperativeUpgrades.reset()
 	Bus.objective_done.connect(func(id):
 		if Upgrades.REWARDS.has(id):
 			Upgrades.gain(Upgrades.REWARDS[id], "objective"))
@@ -40,6 +41,12 @@ func update(dt: float) -> void:
 
 ## Global keys (fired from InputState._input, before the frame update).
 func on_key(k: int) -> void:
+	if ArmouryMenu.is_open():
+		if k == KEY_ESCAPE or Keybinds.matches("use", k):
+			if Keybinds.matches("use", k):
+				ArmouryMenu.suppress_use = true
+			ArmouryMenu.close_menu()
+		return
 	if g.over or g.hud.keys.visible or g.hud.overlay_open() and not g.fps_paused:
 		return
 	if Keybinds.matches("mute", k):

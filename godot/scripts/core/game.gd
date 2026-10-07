@@ -75,6 +75,15 @@ func _ready() -> void:
 	fps.builder = OperativeBuild.new(structures, command.overlay)
 	fps.commit_recall = deploy.commit_recall
 	fps.preview_recall = deploy.preview_recall
+	fps.stockpile = stockpile
+	fps.weapons.advanced.stockpile = stockpile
+	fps.node_pos = func():
+		if mode == "cave":
+			return null
+		var n: Structure = structures.command_node()
+		if n == null or n.is_flying():
+			return null
+		return n.pos
 	hazards.nests.prey = surface_prey
 	hazards.nests.goal_cells = raider_goals
 	castles.op = func(): return fps.controller if fps.world == surface else null
@@ -89,6 +98,8 @@ func _ready() -> void:
 	hud = Hud.new()
 	add_child(hud)
 	hud.setup(command, units)
+	hud.info.stockpile = stockpile
+	ArmouryMenu.bind(self)
 	hud.build.on_pick = func(item): flow.pick(item)
 	input.on_key = func(k): flow.on_key(k)
 	flow = GameFlow.new(self)

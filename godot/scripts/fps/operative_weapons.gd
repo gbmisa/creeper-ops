@@ -14,6 +14,7 @@ var gun: Node3D
 var coil: MeshInstance3D
 var cone: MeshInstance3D
 var launcher := RocketLauncher.new()
+var advanced: AdvancedWeapons
 
 
 func _init(cam: Camera3D) -> void:
@@ -38,24 +39,37 @@ func _init(cam: Camera3D) -> void:
 	cone.position = Vector3(0, -0.2, -Config.SPRAYER.range * 0.4 - 0.3)
 	cone.visible = false
 	cam.add_child(cone)
+	advanced = AdvancedWeapons.new(self)
 
 
 func label() -> String:
+	if advanced.handles(current):
+		return advanced.label()
 	match current:
 		"rifle": return "[%s] %s" % [Keybinds.short("rifle"), Config.RIFLE.name]
 		"sprayer": return "[%s] %s" % [Keybinds.short("sprayer"), Config.SPRAYER.name]
-	return "[%s] %s  %d/%d" % [Keybinds.short("rocket"), Config.ROCKET.name, launcher.loaded, Config.ROCKET.mag]
+	return "[%s] %s  %d/%d" % [Keybinds.short("rocket"), Config.ROCKET.name, launcher.loaded, launcher.mag_size()]
 
 
 func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 	for w in ["rifle", "sprayer", "rocket"]:
-		if input.act(w): current = w
+		if input.act(w):
+			current = w
+	advanced.update(dt, input, world, feet)
 	var m := coil.material_override as StandardMaterial3D
-	m.emission = { "rifle": Color("2a9fd0"), "sprayer": Color("3faa22"), "rocket": Color("ff8a1a") }[current]
+	m.emission = { "rifle": Color("2a9fd0"), "sprayer": Color("3faa22"), "rocket": Color("ff8a1a"),
+		"railgun": Color("d7f6ff"), "plasma": Color("c45bff"), "demo": Color("ff8844") }.get(current, Color("2a9fd0"))
+	var cone_mat := cone.material_override as StandardMaterial3D
+	cone_mat.albedo_color = Color(0.75, 0.35, 1.0, 0.28) if current == "plasma" else Color(0.62, 0.96, 1.0, 0.16)
 	launcher.update(dt, world)
 	cooldown -= dt
 	hit_marker = maxf(0.0, hit_marker - dt)
 	gun.position.z = lerpf(gun.position.z, -0.5, minf(1.0, dt * 18.0))  # recoil recovery
+	if advanced.handles(current):
+		spraying = false
+		cone.visible = current == "plasma" and advanced.firing
+		tank = minf(Config.TANK_MAX, tank + Config.TANK_REGEN * dt)
+		return
 	var trigger := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	spraying = current == "sprayer" and trigger and tank > 0.0
 	cone.visible = spraying
@@ -108,7 +122,7 @@ func _fire(world: World) -> void:
 	var end := o + d * reach
 	if not best.is_empty() and bt < gd:
 		end = o + d * bt
-		best.on_hit.call(Config.RIFLE.damage, end)
+		best.on_hit.call(Config.RIFLE.damage * OperativeUpgrades.mult("firepower"), end)
 		hit_marker = 0.15
 		Sfx.play("hit")
 	elif ground != null:

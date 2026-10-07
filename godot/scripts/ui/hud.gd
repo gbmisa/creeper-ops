@@ -77,6 +77,7 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 		build.relabel()
 		set_mode(_mode)
 	add_child(keys)
+	add_child(ArmouryMenu.new())
 	Bus.log_msg.connect(add_log)
 	set_mode("command")
 
@@ -136,9 +137,10 @@ func set_mode(mode: String) -> void:
 	_help.text = ("%s%s%s%s/edge pan · %s/%s rotate · wheel zoom · right-click move/order · %s move · %s recycle · %s Operative · %s pause · %s/%s speed · %s controls" % [
 		k.call("cam_forward"), k.call("cam_left"), k.call("cam_back"), k.call("cam_right"), k.call("cam_rot_left"), k.call("cam_rot_right"),
 		k.call("move"), k.call("recycle"), k.call("teleport"), k.call("pause"), k.call("speed_up"), k.call("speed_down"), k.call("keybinds")]
-		if cmd else "%s%s%s%s move · %s sprint · %s jump · %s/%s/%s rifle/sprayer/rockets · %s use · %s build · hold %s recall (free at a Totem) · Esc pause" % [
+		if cmd else "%s%s%s%s move · %s sprint · %s jump · %s/%s/%s rifle/sprayer/rockets · %s/%s/%s rail/plasma/charge · %s use · %s build · hold %s recall (free at a Totem) · Esc pause" % [
 		k.call("op_forward"), k.call("op_left"), k.call("op_back"), k.call("op_right"), k.call("sprint"), k.call("jump"),
-		k.call("rifle"), k.call("sprayer"), k.call("rocket"), k.call("use"), k.call("op_build"), k.call("recall")])
+		k.call("rifle"), k.call("sprayer"), k.call("rocket"), k.call("adv_railgun"), k.call("adv_plasma"), k.call("adv_demo"),
+		k.call("use"), k.call("op_build"), k.call("recall")])
 
 
 ## Modal overlay: html-free rich text + buttons [{ label, on_click }].
@@ -182,3 +184,5 @@ func refresh(g, dt: float) -> void:
 	else:
 		_selbox.visible = false
 		fps.refresh(g.fps)
+	if ArmouryMenu.is_open():
+		ArmouryMenu.current.refresh()

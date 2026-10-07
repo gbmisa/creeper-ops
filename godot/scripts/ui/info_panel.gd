@@ -5,6 +5,7 @@ extends PanelContainer
 
 var command: CommandMode
 var units: UnitManager
+var stockpile: Stockpile
 var _title: Label
 var _body: RichTextLabel
 var _actions: HFlowContainer
@@ -64,6 +65,8 @@ func _rebuild_actions() -> void:
 			var txt := "%s %d/%d: MAX" % [d.label, Upgrades.level(id), d.max] if Upgrades.maxed(id) \
 				else "%s %d→%d (%d Æ)" % [d.label, Upgrades.level(id), Upgrades.level(id) + 1, Upgrades.cost(id)]
 			_btn(txt, func(): _buy(id))
+	if s.type == "node" and stockpile != null:
+		ArmouryMenu.add_rows(_actions, stockpile, _rebuild_actions)
 	if s.type != "node":
 		_btn("Recycle [%s]" % Keybinds.short("recycle"), command.recycle_selected)
 
@@ -114,6 +117,8 @@ func _structure_text(s: Structure) -> String:
 		lines.append("[color=#ffc857]Holding fire[/color]")
 	if s.type == "forge":
 		lines.append("[color=#d38cff]Aether: %d[/color]" % Upgrades.aether)
+	if s.type == "node" and stockpile != null:
+		lines.append("[color=#ffc857]Salvage: %s[/color]" % String.num(stockpile.salvage, 1))
 	if s.type == "barracks":
 		lines.append("Units %d / %d" % [units.living_for(s), Config.UNITS_PER_BARRACKS])
 		for q in s.queue:
