@@ -3,6 +3,8 @@ class_name WeaponLogic
 ## only arrives as packets. Targets by def.targets: "creeper", "air" (Beam: surface-to-air,
 ## burns flying enemies), "raiders" (Snipers). Hold-fire (CW3 toggle) skips firing entirely.
 ## Mortar splash also nicks raiders for MORTAR_RAIDER_DMG. Snipers are the anti-raider weapon.
+## Creeper removal follows CW3 (CreeperStrike): cannons spread `hits` over a disk, mortars and
+## Bertha hit every wet cell in theirs. A `roams` weapon (Thor) also fires in flight.
 
 
 static func update(s: Structure, dt: float, mgr) -> void:
@@ -59,12 +61,18 @@ static func _aim(s: Structure, target: Vector3) -> void:
 		tur.rotation.y = atan2(-d.z, d.x)
 
 
+## The cell a weapon fires from: where it is now, even mid-flight.
+static func _cell(s: Structure, w: World) -> Vector2i:
+	return w.grid.world_to_cell(s.pos.x, s.pos.z) if s.is_flying() else Vector2i(s.x, s.z)
+
+
 static func _zap(s: Structure, mgr) -> bool:
 	var w: World = mgr.world
-	var t = w.creeper.nearest_wet(s.x, s.z, range_cells(s))
+	var at := _cell(s, w)
+	var t = w.creeper.nearest_wet(at.x, at.y, range_cells(s))
 	if t == null:
 		return false
-	w.creeper.remove(t.x, t.y, s.def.power)
+	CreeperStrike.hits(w.creeper, t.x, t.y, s.def.splash, s.def.hits, s.def.power)
 	var a := _muzzle(s)
 	var b := w.grid.cell_ground(t.x, t.y) + Vector3(0, w.creeper.depth_at(t.x, t.y), 0)
 	_aim(s, b)
@@ -77,7 +85,9 @@ static func _zap(s: Structure, mgr) -> bool:
 
 static func _lob(s: Structure, mgr) -> bool:
 	var w: World = mgr.world
-	var t = w.creeper.deepest_wet(s.x, s.z, range_cells(s), w.grid.height_at(s.x, s.z), Config.LOB_RANGE_PER_LEVEL)
+	var at := _cell(s, w)
+	var t = w.creeper.deepest_wet(at.x, at.y, range_cells(s), w.grid.height_at(at.x, at.y),
+		Config.LOB_RANGE_PER_LEVEL, s.def.get("min_range", 0))
 	if t == null:
 		return false
 	var a := _muzzle(s)
@@ -88,7 +98,7 @@ static func _lob(s: Structure, mgr) -> bool:
 	var power: float = s.def.power
 	w.effects.lob(a, b, { "color": Color("ffb347"), "time": 2.2 if big else 1.0, "arc": 30.0 if big else 10.0,
 		"size": 0.8 if big else 0.45, "on_arrive": func():
-			w.creeper.remove_radius(t.x, t.y, splash, power)
+			CreeperStrike.disk(w.creeper, t.x, t.y, splash, power)
 			WeaponLogic._splash_raiders(mgr, b, splash)
 			w.effects.burst(b, Color("ffaa33"), splash * Config.CELL * 0.7, 0.45)
 			Sfx.play("boom", b) })

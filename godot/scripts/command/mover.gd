@@ -1,7 +1,8 @@
 class_name Mover
 ## Relocating structures, CW3 style: lift off, fly over terrain and creeper, settle, reconnect.
-## Weapons keep their ammo but don't fire or receive packets while airborne. The Command Node
-## produces nothing while flying. Thor is a "flying" def: it always hovers.
+## Weapons keep their ammo but don't fire or receive packets while airborne, except a `roams`
+## weapon (Thor), which fires from its magazine in flight. The Command Node produces nothing
+## while flying. Thor is a "flying" def: it always hovers.
 
 const HOVER := 4.0  # metres Thor floats above ground/creeper
 

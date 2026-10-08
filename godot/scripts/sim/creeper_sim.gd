@@ -2,7 +2,7 @@ class_name CreeperSim
 extends RefCounted
 ## Heightfield fluid automaton (Creeper World style). Each cell holds a creeper depth.
 ## Every tick creeper flows toward neighbours whose (terrain + creeper) "head" is lower,
-## so it pools in basins and spills over ridges.
+## so it pools in basins and spills over ridges. Rules follow docs/CREEPER_SPEC.md (CW3).
 ## This class is the CPU sim and the shared interface. CreeperGpu (creeper_gpu.gd) runs the
 ## same rule as a compute shader and keeps `depth` as a CPU copy for gameplay. Always create
 ## sims with CreeperSim.create(): headless (no rendering device) or --cpu-sim gets the CPU one.
@@ -28,10 +28,12 @@ func _init(g: Grid) -> void:
 	_delta.resize(g.w * g.h)
 
 
-## src: { x, z, amount, interval, cap? }. Returns the live dict (set "active" false to stop).
+## src: { x, z, amount, interval, start?, cap? }. CW3 emitter: every `interval` s from `start` s
+## (0 fires on the first tick) it raises its cell UP TO `amount` depth, adding only the gap, so a
+## pooled emitter slows down. Returns the live dict (set "active" false to stop).
 func add_source(src: Dictionary) -> Dictionary:
 	var s := src.duplicate()
-	s["timer"] = 0.0
+	s["timer"] = float(s.interval) - float(s.get("start", 0.0))
 	s["active"] = true
 	sources.append(s)
 	return s
@@ -55,47 +57,40 @@ func _emit(dt: float) -> void:
 		s.timer += dt
 		if s.timer >= s.interval:
 			s.timer -= s.interval
-			add(s.x, s.z, s.amount)
+			raise(s.x, s.z, s.amount)
 
 
+## CW3 flow: each east and south edge is handled once from a snapshot. The move is
+## FLOW_RATE x head difference, clamped so neither side gives more than FLOW_RATE of its own
+## depth; the same amount leaves one cell and enters the other, so volume is conserved.
 func _flow() -> void:
 	var w := grid.w
 	var hh := grid.h
 	var height := grid.height
 	_delta.fill(0.0)
-	var rate := Config.FLOW_RATE
+	var mu := Config.FLOW_RATE
 	for z in hh:
 		var row := z * w
 		for x in w:
 			var i := row + x
 			var d := depth[i]
-			if d < 0.0005:
-				continue
 			var head := height[i] + d
-			var o0 := 0.0
-			var o1 := 0.0
-			var o2 := 0.0
-			var o3 := 0.0
 			if x + 1 < w:
-				o0 = maxf(0.0, head - height[i + 1] - depth[i + 1]) * rate
-			if x > 0:
-				o1 = maxf(0.0, head - height[i - 1] - depth[i - 1]) * rate
+				var de := depth[i + 1]
+				if d > 0.0 or de > 0.0:
+					var f := clampf(mu * (head - height[i + 1] - de), -mu * de, mu * d)
+					_delta[i] -= f
+					_delta[i + 1] += f
 			if z + 1 < hh:
-				o2 = maxf(0.0, head - height[i + w] - depth[i + w]) * rate
-			if z > 0:
-				o3 = maxf(0.0, head - height[i - w] - depth[i - w]) * rate
-			var total := o0 + o1 + o2 + o3
-			if total <= 0.0:
-				continue
-			var scale := d / total if total > d else 1.0
-			_delta[i] -= total * scale
-			if o0 > 0.0: _delta[i + 1] += o0 * scale
-			if o1 > 0.0: _delta[i - 1] += o1 * scale
-			if o2 > 0.0: _delta[i + w] += o2 * scale
-			if o3 > 0.0: _delta[i - w] += o3 * scale
+				var ds := depth[i + w]
+				if d > 0.0 or ds > 0.0:
+					var f := clampf(mu * (head - height[i + w] - ds), -mu * ds, mu * d)
+					_delta[i] -= f
+					_delta[i + w] += f
+	var dry := Config.CREEPER_DRY
 	for i in depth.size():
 		var v := depth[i] + _delta[i]
-		depth[i] = 0.0 if v < 0.0005 else minf(v, Config.MAX_DEPTH)
+		depth[i] = 0.0 if v < dry else minf(v, Config.MAX_DEPTH)
 
 
 func is_gpu() -> bool:
@@ -126,6 +121,13 @@ func add(x: int, z: int, amount: float) -> void:
 	if grid.in_bounds(x, z):
 		var i := z * grid.w + x
 		depth[i] = minf(depth[i] + amount, Config.MAX_DEPTH)
+
+
+## Raise a cell to at least `v` (CW3 emitter burst). Adds only the gap.
+func raise(x: int, z: int, v: float) -> void:
+	if grid.in_bounds(x, z):
+		var i := z * grid.w + x
+		depth[i] = maxf(depth[i], minf(v, Config.MAX_DEPTH))
 
 
 func remove(x: int, z: int, amount: float) -> float:
@@ -162,13 +164,14 @@ func nearest_wet(cx: int, cz: int, r: float) -> Variant:
 
 ## Deepest cell within range (artillery prefers big pools). CW4: lobbing from high ground
 ## reaches further, +per_level cells for each level the target sits below `from_h`.
-func deepest_wet(cx: int, cz: int, r: float, from_h := -1.0, per_level := 0.0) -> Variant:
+## `min_cheb`: skip the square of that half-size around the gun (CW3 Bertha: 5).
+func deepest_wet(cx: int, cz: int, r: float, from_h := -1.0, per_level := 0.0, min_cheb := 0) -> Variant:
 	var best: Variant = null
 	var bd := Config.MIN_DEPTH
 	var reach := r + maxf(0.0, from_h) * per_level
 	for c in grid.cells_in_radius(cx, cz, reach):
 		var d := depth[c.y * grid.w + c.x]
-		if d > bd:
+		if d > bd and (min_cheb <= 0 or maxi(absi(c.x - cx), absi(c.y - cz)) > min_cheb):
 			if per_level > 0.0:
 				var drop := maxf(0.0, from_h - grid.height_at(c.x, c.y))
 				if Vector2(c.x - cx, c.y - cz).length() > r + drop * per_level:

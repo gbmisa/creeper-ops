@@ -124,7 +124,7 @@ func remove(s: Structure, reason := "") -> void:
 func recycle(s: Structure) -> void:
 	if s.type == "node":
 		return
-	economy.add(floorf(s.delivered * Config.RECYCLE_REFUND))
+	economy.add(floorf((s.delivered - s.lost) * Config.RECYCLE_REFUND))
 	world.effects.burst(s.node.position + Vector3.UP, Color("7fe0ff"), 2.0, 0.3)
 	remove(s, "recycled")
 
@@ -194,13 +194,18 @@ func update(dt: float, time: float) -> void:
 		StructureUpkeep.bars(s, time)
 		if s.type == "outpost" and s.is_built():
 			outpost_storage += Config.OUTPOST_STORAGE
+		# A roaming weapon (Thor) fires from its magazine anywhere: off-network and in flight.
+		var roams: bool = s.is_built() and s.def.get("roams", false)
+		if roams:
+			WeaponLogic.update(s, dt, self)
 		if not s.is_built() or not s.connected or s.is_flying():
 			continue
 		if s.type == "collector":
 			collectors.append(s)
 		reactor += s.def.get("income", 0.0)
 		storage += s.def.get("storage", 0.0)
-		WeaponLogic.update(s, dt, self)
+		if not roams:
+			WeaponLogic.update(s, dt, self)
 		StructureBehaviors.update(s, dt, self, time)
 	field.update(dt, collectors)
 	economy.tick(dt, producing, field.income, field.cells, reactor, storage, outpost_storage)

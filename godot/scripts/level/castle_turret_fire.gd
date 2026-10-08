@@ -47,8 +47,8 @@ static func tick(world: World, c: Dictionary, v: Dictionary, raiders: Raiders, d
 		if not CastleTurrets.alive(s):
 			continue
 		var d := world.creeper.depth_at(s.cell.x, s.cell.y)
-		if d > Config.DAMAGE_DEPTH:
-			s.hp -= (Config.WEAPON_CREEPER_BASE_DPS + d * Config.WEAPON_CREEPER_DPS) * dt
+		if d > Config.MIN_DEPTH:  # CW3 flat wet damage, like network weapons
+			s.hp -= CastleTurrets.DEFS[s.turret].hp[s.level - 1] / Config.WET_TIME * dt
 			if s.hp <= 0.0:
 				_lost(c, s)
 				changed = true

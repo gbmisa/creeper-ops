@@ -15,6 +15,7 @@ var body: Node3D            # visual, scaled while under construction
 var hp: float
 var built := 0.0            # 0..1
 var delivered := 0          # build packets arrived
+var lost := 0.0             # build progress (in packets) creeper has undone (CW3)
 var in_flight := 0          # packets en route to it
 var req_acc := 0.0          # packet request accumulator (CW3 request rate)
 var connected := false
