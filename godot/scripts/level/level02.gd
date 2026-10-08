@@ -94,6 +94,11 @@ static func build() -> Dictionary:
 		"spire": { "x": 138, "z": 58 },
 		"castles": castles,
 		"castle_rules": CASTLE_RULES,
+		"ores": [
+			{ "x": 96, "z": 124 },
+			{ "x": 52, "z": 48 },
+			{ "x": 108, "z": 48 },
+		],
 		"rift": { "x": 20, "z": 64 },
 		"objectives": OBJECTIVES,
 		"demo": DEMO,

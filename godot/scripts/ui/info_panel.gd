@@ -117,6 +117,10 @@ func _structure_text(s: Structure) -> String:
 		lines.append("[color=#ffc857]Holding fire[/color]")
 	if s.type == "forge":
 		lines.append("[color=#d38cff]Aether: %d[/color]" % Upgrades.aether)
+	if s.type == "miner" and command.structures.deposits != null:
+		var vein: Dictionary = command.structures.deposits.ore_at(s.x, s.z)
+		var left := 0.0 if vein.is_empty() else float(vein.left)
+		lines.append("Vein %d left    stored %d / %d" % [int(left), int(s.ore_hold), int(Config.MINER_BUFFER)])
 	if s.type == "node" and stockpile != null:
 		lines.append("[color=#ffc857]Salvage: %s[/color]" % String.num(stockpile.salvage, 1))
 	if s.type == "barracks":

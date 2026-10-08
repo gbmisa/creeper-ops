@@ -36,6 +36,8 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 			cm.overlay.show_ghost("node", at, res.ok, StructureDefs.radius_m("node"), StructureDefs.DEFS.node.link * Config.CELL, [])
 		"@repeater", "@lobber", "@flak":
 			cm.overlay.show_ghost("", at, res.ok, 1.2 * Config.CELL, CastleTurrets.DEFS[cm.tool.substr(1)].range * Config.CELL, [])
+		"@repair":
+			cm.overlay.show_ghost("", at, res.ok, 1.2 * Config.CELL, 0.0, [])
 		_:
 			var def: Dictionary = StructureDefs.DEFS[cm.tool]
 			var reach := float(def.work_range) if def.has("work_range") else (WeaponLogic.def_range(def) if def.has("range") else float(def.link))
@@ -51,6 +53,7 @@ static func check(cm: CommandMode, c: Vector2i) -> Dictionary:
 		"@move": return Placement.can_move(cm.structures, cm.selected, c.x, c.y) if cm.selected else { "ok": false, "reason": "" }
 		"@land": return Placement.can_land(cm.structures, cm.level, c.x, c.y)
 		"@repeater", "@lobber", "@flak": return turret_check(cm, c).res
+		"@repair": return WallRepair.check(cm.castles, c)
 		"@terp":
 			var why := TerpPaint.cell_reason(cm.world.grid, c)
 			return { "ok": why == "", "reason": why }

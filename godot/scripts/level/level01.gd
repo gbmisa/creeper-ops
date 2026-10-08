@@ -187,6 +187,11 @@ static func build() -> Dictionary:
 		"spire": { "x": 66, "z": 9 },
 		"castles": castles,
 		"castle_rules": CASTLE_RULES,
+		"ores": [
+			{ "x": 50, "z": 58 },
+			{ "x": 72, "z": 36 },
+			{ "x": 22, "z": 58 },
+		],
 		"rift": { "x": 14, "z": 42 },
 		"intro": [
 			["Ops: Choose where the Command Node lands. High, dry ground far from emitters buys you time.", "radio"],

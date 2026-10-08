@@ -10,11 +10,11 @@ const TABS := ["Structures", "Weapons", "Titans", "Orbital", "Castle"]
 
 ## Build menu contents per tab. Entries are structure types, or "@action" for orbital actions.
 const MENU := {
-	"Structures": ["collector", "relay", "outpost", "reactor", "storage", "barracks"],
+	"Structures": ["collector", "relay", "outpost", "miner", "reactor", "storage", "barracks"],
 	"Weapons": ["cannon", "mortar", "beam", "sniper", "nullifier"],
 	"Titans": ["bertha", "thor", "forge", "terp", "@terp"],
 	"Orbital": ["beacon", "@drop", "@lance", "@operative"],
-	"Castle": ["@repeater", "@lobber", "@flak"],
+	"Castle": ["@repeater", "@lobber", "@flak", "@repair"],
 }
 
 static var ACTIONS := _turret_actions().merged({
@@ -26,6 +26,8 @@ static var ACTIONS := _turret_actions().merged({
 		"desc": "Send the Operative to the selected Totem (or the newest). Free and instant while the teleporter is ready. Only the Operative can plant charges, enter the Rift and kill the Deep Core." },
 	"@terp": { "label": "Terp Paint", "cost_text": "paint", "unlock": "terp",
 		"desc": "Drag a rectangle to paint a target level (0-%d). It starts at the ground under the first cell; Page Up and Page Down change it, hold C to erase. Hatched until a Terp finishes the cell." % Config.MAX_LEVEL },
+	"@repair": { "label": "Repair Wall", "cost_text": "Salvage",
+		"desc": "Click a damaged wall of a castle you hold. Costs 1 Salvage per %d HP. A breach is rebuilt in stone." % int(Config.WALL_REPAIR_HP) },
 })
 
 static var DEFS := {
@@ -38,7 +40,9 @@ static var DEFS := {
 		"desc": "Long-range network node (link 13). Packets hop relay to relay along the shortest path." },
 	"outpost": { "tab": "Structures", "label": "Outpost", "cost": 40, "hp": 200.0, "link": 6.0, "relays": true, "sender": true,
 		"link_y": 1.7, "footprint": 1, "movable": false,
-		"desc": "A packet sender away from the Command Node (link 6). Structures take packets from whichever sender is nearest, so a front stays supplied while the Node is flying. Adds %d to the shared energy bank and produces none. Cannot be moved." % int(Config.OUTPOST_STORAGE) },
+		"desc": "A packet sender away from the Command Node (link 6). Structures take packets from whichever sender is nearest, so a front stays supplied while the Node is flying. Adds %d to the shared energy bank and produces none. Costs %d Ore up front, then 40 packets. Cannot be moved." % [int(Config.OUTPOST_STORAGE), int(Config.OUTPOST_ORE)] },
+	"miner": { "tab": "Structures", "label": "Miner", "cost": 15, "hp": 40.0, "link": 4.0, "link_y": 1.6, "movable": false,
+		"desc": "Sits on an ore vein and ships 1 Ore back along the relays every %.0fs. The vein holds %d. While the relays are cut it stores %d, then waits. Creeper destroys it on contact. Not movable." % [Config.MINER_INTERVAL, int(Config.ORE_DEPOSIT), int(Config.MINER_BUFFER)] },
 	"reactor": { "tab": "Structures", "label": "Reactor", "cost": 50, "hp": 60.0, "link": 4.0, "link_y": 1.2, "income": 0.4,
 		"desc": "Generates a flat +0.4 energy/s (two full collector fields). Expensive, but needs no land." },
 	"storage": { "tab": "Structures", "label": "Storage", "cost": 15, "hp": 50.0, "link": 4.0, "link_y": 1.0, "storage": 30.0,
@@ -104,6 +108,8 @@ static func cost_text(type: String) -> String:
 	if type.begins_with("@"):
 		return ACTIONS[type].cost_text
 	var d: Dictionary = DEFS[type]
+	if type == "outpost":
+		return "%d Ore + %d" % [int(Config.OUTPOST_ORE), int(d.cost)]
 	return ("%d now" % d.cost) if d.get("drop_pod", false) else str(d.cost)
 
 

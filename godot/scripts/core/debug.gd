@@ -15,6 +15,7 @@ class_name Debug
 ##   --tool=T      hold a build tool (screenshots of the ghost/overlays)
 ##   --drag=T,x0,z0,x1,z1  drag-build preview of T from one cell to another
 ##   --salvage=N   set the Salvage stockpile
+##   --ore=N       set the Ore stockpile
 ##   --armoury=id[,id...]  grant those upgrades free (unlock_railgun or railgun).
 ##                 id "open" shows the first-person Armoury at the Node; "fire" holds
 ##                 the trigger on an unlocked advanced weapon just before --shot
@@ -140,6 +141,8 @@ static func apply(g) -> void:
 		TerrainEdit.raise(g.surface, cells, float(p[3]), Grid.Mat.EARTH)
 	if args.has("salvage"):
 		g.stockpile.salvage = float(args.salvage)
+	if args.has("ore"):
+		g.stockpile.ore = float(args.ore)
 	if args.has("unlock"):
 		for id in str(args.unlock).split(","):
 			StructureDefs.grant_unlock(g.level, id.strip_edges())

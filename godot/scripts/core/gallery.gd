@@ -35,6 +35,9 @@ static func run(g, mode: String) -> void:
 			tur.rotation.y = -0.6  # three-quarter view: heads swing toward the camera
 	for row in SUPPORT:
 		g.structures.place(row[0], row[1], SUPPORT_Z, true)
+	if g.structures.deposits != null:
+		g.structures.deposits.add(60, SUPPORT_Z, Config.ORE_DEPOSIT)
+		g.structures.place("miner", 60, SUPPORT_Z, true)
 	var terp := StructureMeshes.make("terp")
 	terp.position = w.grid.cell_ground(TERP.x, TERP.y)
 	w.add_child(terp)

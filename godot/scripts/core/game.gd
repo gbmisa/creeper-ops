@@ -50,6 +50,12 @@ func _ready() -> void:
 	structures = StructureManager.new()
 	structures.setup(surface, economy)
 	structures.level = level
+	structures.stockpile = stockpile
+	structures.packets.stockpile = stockpile
+	var deposits := Deposits.new()
+	var ore_rows: Array = level.get("ores", [])
+	deposits.setup(surface, ore_rows)
+	structures.deposits = deposits
 	surface.add_child(structures)
 	hazards = SurfaceHazards.new(surface, level, structures)
 	structures.hazards = hazards

@@ -53,6 +53,11 @@ func _init() -> void:
 	row.add_child(time_lbl)
 
 
+func _pile(title: String, amount: float, rate: float) -> String:
+	var tail := "" if absf(rate) < 0.05 else " (%+.1f)" % rate
+	return "%s %s%s" % [title, String.num(amount, 1), tail]
+
+
 func _stat(row: HBoxContainer, title: String, color: Color) -> Label:
 	var v := UiKit.vbox(0)
 	v.add_child(UiKit.label(title, 11, UiKit.DIM))
@@ -67,8 +72,8 @@ func refresh(g) -> void:
 	var pk: Packets = g.structures.packets
 	energy_bar.value = eco.energy / eco.max_energy
 	energy_lbl.text = "%d / %d" % [floori(eco.energy), eco.max_energy]
-	ore_lbl.text = "Ore %s" % String.num(g.stockpile.ore, 1)
-	salvage_lbl.text = "Salvage %s" % String.num(g.stockpile.salvage, 1)
+	ore_lbl.text = _pile("Ore", g.stockpile.ore, g.stockpile.ore_rate)
+	salvage_lbl.text = _pile("Salvage", g.stockpile.salvage, g.stockpile.salvage_rate)
 	prod_lbl.text = "+%.1f" % eco.income
 	demand_lbl.text = "-%.1f" % pk.demand_rate
 	if g.landing:
