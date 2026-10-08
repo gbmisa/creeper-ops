@@ -152,13 +152,13 @@ const NEST_SPAWN_MIN := 5.0
 const NEST_CAP_START := 3      # live raiders per nest at minute 0
 const NEST_CAP_PER_MIN := 0.35
 const NEST_CAP_MAX := 10
-const NEST_GUARDS := 2         # raiders per nest that stay home once raids start
+const NEST_GUARDS := 1         # one stays home; the rest of the opening cap marches (Stage 8 balance)
 const NEST_RAID_DELAY := 300.0 # fallback grace period when a level has no RAID_SCHEDULE
 ## Hives (§3.3). Stage 0 is up at the start; later parts grow in. Mortar bodies are Phase 7.
-const HIVE_P1 := 0.20
-const HIVE_P2 := 0.45
-const HIVE_P3 := 0.70
-const HIVE_P4 := 0.90
+const HIVE_P1 := 0.55 # spec 0.20; later so the scripted base still holds (Stage 8 balance)
+const HIVE_P2 := 0.70
+const HIVE_P3 := 0.85
+const HIVE_P4 := 0.95
 const HIVE_GROW := 20.0
 const HIVE_REBUILD_TIME := 30.0
 const HIVE_REBUILD_RANGE := 4.0   # cells
@@ -211,7 +211,7 @@ const RAIDER_BEAM_SPEED := 32.0 # m/s, Lancer bolts. Still a travel time, so a m
 const RAIDER_BEAM_RADIUS := 1.2 # metres around the aim point. No splash
 const RAIDER_LANCER_GAP := 1.5  # seconds after a Lancer bolt before the next charge (the charge itself is the row interval)
 ## Mixed groups (§4.2). Below this pressure, nests spawn one weighted raider at a time.
-const GROUP_PRESSURE := 0.35
+const GROUP_PRESSURE := 0.60 # spec 0.35; blobs start with Ravagers (Stage 8 balance)
 const GROUP_GATHER := 10.0    # seconds the group mills at the nest before it marches
 const GROUP_FRONT := 0.50     # share of a group that rolls front line
 const GROUP_RANGED := 0.35    # then ranged; the rest are support

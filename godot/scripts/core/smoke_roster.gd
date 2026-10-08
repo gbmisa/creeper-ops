@@ -91,7 +91,7 @@ static func _same(who: String, hp: float, dps: float, speed: float, size: float,
 
 
 static func _roster(g) -> void:
-	var kept := _same("Skitter", 4.0, 3.0, 4.2, 0.45, "a8ff5a") \
+	var kept := _same("Skitter", 4.0, 6.0, 4.2, 0.45, "a8ff5a") \
 		and _same("Brute", 16.0, 8.0, 3.4, 0.75, "ffd24a") \
 		and _same("Ravager", 40.0, 16.0, 4.0, 0.9, "ff7a3a") \
 		and _same("Behemoth", 120.0, 35.0, 2.6, 1.4, "ff3355")

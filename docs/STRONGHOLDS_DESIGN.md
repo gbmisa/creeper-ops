@@ -192,6 +192,8 @@ Turrets have HP 80 / 120 / 180, and creeper damages them like weapons (Stage 1 r
 
 Today's `spore_nests.gd` becomes the hive's spawner part (rename to `hive_spawning.gd`). The `nests` rows in level data become `hives`.
 
+*As built (Stage 8):* the class stays `SporeNests` and the objective id stays `nests`. Level rows are `hives`, and `nests` is an alias. The mortar is not a hive part (§4.3). An Outpost pays the existing 40 energy and no Ore. A rebuild returns already grown. The Lance hurts a Core from `game.gd`. Growth is 0.55 / 0.70 / 0.85 / 0.95 rather than 0.20 / 0.45 / 0.70 / 0.90, so a scripted base still holds.
+
 
 ### 3.4 Spires
 - **Tall and indestructible.** Spire cells use material `5` (Spire). TerrainEdit, mortars, the Terp and breaches all skip them. They're exempt from `MAX_LEVEL`: a spire rises **18–24 levels above the courtyard** (22–30 m). The height limit becomes `SPIRE_MAX_LEVEL` 34. The creeper mesh's culling box and the terrain colour ramp clamp to it.
@@ -210,6 +212,8 @@ Today's `spore_nests.gd` becomes the hive's spawner part (rename to `hive_spawni
 Level data: `"pressure": { "grace": 300, "cap": 2400 }` (seconds). `pressure = clamp((t − grace) / (cap − grace), 0, 1)` after the grace period, 0 before it. Tier unlocks, hive stages, spawn interval (`lerp(20 s, 5 s)`), cap per pit (`lerp(3, 10)`) and enemy mortar building all read `pressure`. Each level can override the curve with a `"pressure_points"` array, so a level can add a spike.
 
 **Overrun (pressure = 1):** every 45 s each active hive sends a wave of `6 + tier × 2` straight at the Node, ignoring guard rules. The HUD shows a pressure meter so the race can be seen.
+
+*As built (Stage 8):* L1 grace 300, cap 2400, with points so Brute is 0.20 at 480 s, Ravager 0.60 at 900 s and Behemoth 0.85 at 1320 s. L2 grace 180, cap 1800, Brute at 300 s, Ravager at 600 s, Behemoth at 900 s. The overrun's tier is `Pressure.legacy_tier`. The threat line in the top bar also reads `Pressure NN%`.
 
 ### 4.2 Roster (`level/raider_defs.gd`, a table replacing `Config.RAIDER_TIERS`)
 Sniper: range 26 cells, 4 damage per shot. Operative rifle and rockets as in config.
@@ -232,6 +236,8 @@ Sniper: range 26 cells, 4 damage per shot. Operative rifle and rockets as in con
 
 **Prey for ranged enemies:** structures, units, the Operative, castle turrets, wall segments.
 
+*As built (Stage 8):* ordinary spawns weight `2^order` toward the newest unlock. The Spotter is not in that pool; it arrives with a mortar. Loot is data only (§4.4). Groups start at pressure 0.60, not 0.35, and Burrowers and Spotters stay out of them. Skitter melee is 6 dps and one raider stays home as a guard, so an undefended Node still dies inside the old window. A Spitter's range is 2 cells (HP 4), so the lob comes from the melee line where a Sniper can answer it. Lancers unlock at 0.55 and Burrowers at 0.65. Brute, Ravager and Behemoth stats are unchanged.
+
 ### 4.3 Enemy mortars
 - **Range** 36 cells, **minimum range 6**. Fires every 6 s. Blast radius 2.5 cells.
 - **Damage:** structures 30, units 20, the Operative 70% of max HP at the centre (falling off with distance). Earth: −1 level at the 3×3 impact cells, never below `base_height`. Metal and plated stone: 1/8 of a level per shell, stored per cell. Stone wall segment: 40 HP.
@@ -239,6 +245,8 @@ Sniper: range 26 cells, 4 damage per shot. Operative rifle and rockets as in con
 - **Targeting:** structures in range, preferring weapons and Terps. It targets **the Operative only while a Spotter has line of sight to them** (`grid.raycast`, 25 m). The HUD shows "SPOTTED" in red.
 - **Sabotage:** the Operative within 2 m holds E for 3 s, and the mortar is destroyed and drops 5 Salvage. A demolition charge (§5.2) works from 20 m.
 - **When they're built:** a hive at stage ≥ 3 builds one. **Any** active hive builds one within 60 s once the Node has had no raider route for 60 s (the reaction to sealing yourself in). At most 1 per hive, 2 at stage 4. Each mortar spawns with 1 Spotter, which respawns 30 s after dying while the mortar lives.
+
+*As built (Stage 8):* the ring is `uniform vec4 shells[8]` on `terrain.gdshader`, and a ninth shell still lands without a ring. SPOTTED is `Bus.say`, not a HUD label. Sabotage starts on a tap of E and finishes if the Operative is still within 2 m after 3 s. Metal and plated stone are not chipped, and a stone wall segment is not given 40 HP. A killed mortar is not rebuilt, and mortars are not in the hive save.
 
 ### 4.4 Loot pickups
 Loot drops as glowing pickups that last 90 s, collected only by the Operative (auto-pickup within 1.5 m). Pickups show on the markers layer as minor markers. Hive parts drop 5, crown nests 15, a Core 40.

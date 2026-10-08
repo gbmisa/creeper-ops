@@ -36,8 +36,8 @@ static func _shape(nests: SporeNests, grid: Grid) -> void:
 
 static func _stages(nests: SporeNests) -> void:
 	SmokeTest._check("hive stages follow pressure",
-		Hives.stage_for(0.0) == 0 and Hives.stage_for(0.19) == 0 and Hives.stage_for(0.2) == 1
-		and Hives.stage_for(0.45) == 2 and Hives.stage_for(0.7) == 3 and Hives.stage_for(0.9) == 4
+		Hives.stage_for(0.0) == 0 and Hives.stage_for(0.54) == 0 and Hives.stage_for(0.55) == 1
+		and Hives.stage_for(0.70) == 2 and Hives.stage_for(0.85) == 3 and Hives.stage_for(0.95) == 4
 		and Hives.stage_for(nests.pressure()) == int(nests.nests[0].stage))
 
 

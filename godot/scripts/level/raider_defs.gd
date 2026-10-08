@@ -1,7 +1,8 @@
 class_name RaiderDefs
 extends RefCounted
 ## Enemy roster (§4.2). Replaces Config.RAIDER_TIERS. Skitter, Brute, Ravager and Behemoth
-## keep today's hp / dps / speed / size / colour. Unlock is a pressure, not a clock time.
+## Brute, Ravager and Behemoth keep today's stats. Skitter dps and Spitter hp are the
+## Stage 8 balance pass. Unlock is a pressure, not a clock time.
 ## `special` rows are not in the ordinary weighted pick: Spotter arrives with a mortar (phase 7).
 ## Loot numbers are data only. Pickups are §4.4 and are not spawned here.
 ## Weight among the ordinary unlocked rows is 2^order (oldest 1, next 2, ...), so the newest
@@ -9,19 +10,19 @@ extends RefCounted
 
 
 const ROWS := [
-	{ "name": "Skitter", "hp": 4.0, "dps": 3.0, "speed": 4.2, "size": 0.45, "color": Color("a8ff5a"),
+	{ "name": "Skitter", "hp": 4.0, "dps": 6.0, "speed": 4.2, "size": 0.45, "color": Color("a8ff5a"),
 		"attack": "melee", "range": 0.5, "unlock": 0.0, "loot": 1, "loot_p": 0.1, "role": "front" },
-	{ "name": "Spitter", "hp": 10.0, "dps": 0.0, "speed": 3.0, "size": 0.6, "color": Color("d6ff3a"),
-		"attack": "acid", "range": 20.0, "interval": 2.0, "damage": 6.0, "splash": 1.5,
+	{ "name": "Spitter", "hp": 4.0, "dps": 0.0, "speed": 3.0, "size": 0.6, "color": Color("d6ff3a"),
+		"attack": "acid", "range": 2.0, "interval": 2.0, "damage": 6.0, "splash": 1.5,
 		"unlock": 0.10, "loot": 1, "loot_p": 1.0, "role": "ranged" },
 	{ "name": "Brute", "hp": 16.0, "dps": 8.0, "speed": 3.4, "size": 0.75, "color": Color("ffd24a"),
 		"attack": "melee", "range": 0.6, "wall_mult": 3.0, "unlock": 0.20, "loot": 2, "loot_p": 1.0, "role": "front" },
 	{ "name": "Lancer", "hp": 14.0, "dps": 0.0, "speed": 2.6, "size": 0.85, "color": Color("e6d2ff"),
 		"attack": "beam", "range": 32.0, "interval": 1.5, "damage": 25.0,
-		"unlock": 0.35, "loot": 3, "loot_p": 1.0, "role": "ranged" },
+		"unlock": 0.55, "loot": 3, "loot_p": 1.0, "role": "ranged" },
 	{ "name": "Burrower", "hp": 20.0, "dps": 0.0, "speed": 3.0, "size": 0.7, "color": Color("c4a06a"),
 		"attack": "burrow", "range": 0.5, "damage": 60.0, "splash": 1.5, "surface": 1.5,
-		"unlock": 0.40, "loot": 2, "loot_p": 1.0, "role": "front", "special": "burrow" },
+		"unlock": 0.65, "loot": 2, "loot_p": 1.0, "role": "front", "special": "burrow" },
 	{ "name": "Warden", "hp": 30.0, "dps": 0.0, "speed": 2.8, "size": 1.0, "color": Color("ffb03a"),
 		"attack": "aura", "range": 5.0, "unlock": 0.50, "loot": 3, "loot_p": 1.0, "role": "support" },
 	{ "name": "Ravager", "hp": 40.0, "dps": 16.0, "speed": 4.0, "size": 0.9, "color": Color("ff7a3a"),

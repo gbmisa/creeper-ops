@@ -112,8 +112,8 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 7 | Strongholds, castles, spire climb | **Opus 5.5** (built) | ⚠ verified headless + screenshots |
 | 7b | **Castle stakes:** reprisal raid on capture, recurring sieges, aggression that stacks with castles held, hostile castles buff nests, prep window. **Castle turrets pulled in (done ⚠)** | **Opus 5.5** | ⚠ done, verified headless + screenshot |
 | 7c | Traversable terrain on Level 1 (stairs, no isolated shelves) | Sonnet 5.5 (Grok), Opus review | ☐ brief: [tasks/STAGE7c_traversal.md](tasks/STAGE7c_traversal.md) |
-| 8a | Nest bases and enemy mortars | Grok Build (long run with 8b) | ☐ brief: [tasks/STAGE8_enemies_long.md](tasks/STAGE8_enemies_long.md) |
-| 8b | Enemy roster (incl. Burrower, Weaver) | Grok Build (long run, before 8a) | ☐ brief: [tasks/STAGE8_enemies_long.md](tasks/STAGE8_enemies_long.md) |
+| 8a | Nest bases and enemy mortars | Grok Build (long run with 8b) | ⚠ brief: [tasks/STAGE8_enemies_long.md](tasks/STAGE8_enemies_long.md) |
+| 8b | Enemy roster (incl. Burrower, Weaver) | Grok Build (long run, before 8a) | ⚠ brief: [tasks/STAGE8_enemies_long.md](tasks/STAGE8_enemies_long.md) |
 | 8c | **Enemy construction:** hubs in enemy castles, Weavers, Leeches, build planner, enemy structures (design §4.5) | Sonnet 5.5, Opus review | ☐ |
 | 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ☐ |
 | 9b | Extractors and supply points | Sonnet 5.5 | ☐ |
@@ -218,6 +218,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix. First-pass Aether Towers (Stage 7 replaces them). First-pass nest raiders with tier escalation (Stages 2 and 8 rework them). 49/49 smoke tests pass.
 
 ## 6. Changelog
+- 2026-10-08: Stage 8a and 8b ⚠ (Grok, `stage/8-enemies`). Hives, the roster through Burrower, and enemy mortars. Balance so the scripted bases still hold: Skitter 6 dps, one nest guard, later hive stages, Spitters lob from the melee line, later Lancer and Burrower unlocks, groups from pressure 0.60.
 - 2026-10-07: Long overnight brief for Grok: Stage 8 (8b roster, then 8a hives + enemy mortars) in 8 committed phases with a progress log.
 - 2026-10-07: Stage 18a ⚠ (Opus). Terrain look + creeper surface shaders, DragBuild (chains/rows). Briefs out for Grok: 18b FPS visuals, 18c HUD, 18d drag-build polish, and SYNC (merge main into 7c/10a/11a).
 - 2026-10-07: Merged Stages 15, 16, 17 to `main` (Opus). Integration: Level 2 emitters retuned as CW3 bursts (4/4/6 every 0.5 s, delayed 5s at 300/600 s; vents every 1 s), Nullifier text "within 10 cells", Level 2 terrain towers crowned (battlements, flagpoles, banners; no roof, Sentinels stand there). User requests: **held castles launch packets** (`CastleKeeps`, `keep` def), **a flying Command Node keeps its network connected** (no launches until it lands), **raiders ignore prey they can't walk to** (walking areas in `RaiderField`, 14 ms relabel on 160x160 after a terrain/gate change). Sniper stays at 5 packets/shot (user: build reactors). New `smoke_keeps.gd`; 235 smoke checks.

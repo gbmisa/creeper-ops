@@ -47,9 +47,9 @@ static func _spitter_hits_cannon(g) -> void:
 	_clear_shots(g)
 	var sm: StructureManager = g.structures
 	var cannon := sm.place("cannon", 21, 72, true)
-	var r := _spawn_at(g, "Spitter", Vector2i(6, 72))
+	var r := _spawn_at(g, "Spitter", Vector2i(20, 72))
 	var hp0: float = cannon.hp
-	for _i in 50:  # 2.5 s: the first lob lands, the next has not
+	for _i in 30:  # 1.5 s: one short lob lands; the next shot is still on its 2 s cooldown
 		g.hazards.nests.raiders.update(0.05, [cannon.prey], [])
 		g.surface.effects.update(0.05)
 	SmokeTest._check("spitter in range damages a cannon", cannon.hp < hp0 - 5.0 and cannon.hp > hp0 - 7.0,
@@ -90,7 +90,7 @@ static func _shot_can_miss(g) -> void:
 	_clear_shots(g)
 	var sm: StructureManager = g.structures
 	var cannon := sm.place("cannon", 21, 52, true)
-	var r := _spawn_at(g, "Spitter", Vector2i(6, 52))
+	var r := _spawn_at(g, "Spitter", Vector2i(20, 52))
 	var raiders: Raiders = g.hazards.nests.raiders
 	var shot: Dictionary = {}
 	for _i in 4:

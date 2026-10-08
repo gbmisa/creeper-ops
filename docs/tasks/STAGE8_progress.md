@@ -236,4 +236,36 @@ Commit message: `Stage 8 P7: enemy mortars and spotters`.
 
 ### Not finished
 
-- Phase 8: the four baseline sims, tuning, the as-built notes, and the 8a/8b status cells. Metal chip, stone-wall HP, and a real SPOTTED widget are not in this phase.
+- Phase 8 closed the balance pass. Metal chip, stone-wall HP, and a real SPOTTED widget stay unbuilt.
+
+## Phase 8: balance and wrap-up — done
+
+Commit message: `Stage 8 P8: balance pass and as-built notes`.
+
+### Sims, before then after
+
+Phase 0 baselines are in the Phase 0 section. The "before" column is this branch after Phase 7, before the tune. Logs are under `/tmp/stage8-p8/`.
+
+| Run | Phase 0 | Before the tune | After |
+|---|---|---|---|
+| L1 `--demo --units --sim=900` | time 900, node_hp 500 | time 638, node_hp 0 | time 900, over false, node_hp 500 |
+| L1 `--autostart --sim=900` | time 354, node_hp 0 | time 381, node_hp 0 | time 341, node_hp 0 |
+| L2 `--autostart --sim=900` | time 235, node_hp 0 | time 254, node_hp 0 | time 226, node_hp 0 |
+| L2 `--demo --sim=900` | time 668, node_hp 0 | time 373, node_hp 0 | time 645, node_hp 0 |
+
+The L1 demo Node is still up at 900 s. The undefended L1 Node dies at 341 s, inside (200, 354). The L2 demo dies at 645 s, which is after the floor of 548 s (baseline minus 120). The undefended L2 Node dies at 226 s.
+
+### What the tune changed
+
+- Skitter melee is 6 dps. One raider per nest stays home (`NEST_GUARDS` 1). That is what pulls the undefended L1 loss under the old 354 s.
+- Hive stages start at pressure 0.55 / 0.70 / 0.85 / 0.95. Groups start at 0.60. Lancers unlock at 0.55 and Burrowers at 0.65.
+- Spitter HP is 4 and the lob range is 2 cells, so they stand in the melee line. At range 20 they shelled the scripted base while Snipers shot nearer Skitters.
+- Brute, Ravager and Behemoth stats are unchanged. `STRONGHOLDS_DESIGN.md` has an "*As built (Stage 8):*" note on §3.3, §4.1, §4.2 and §4.3. MASTER_PLAN 8a and 8b are ⚠, with one changelog line.
+
+### Tests
+
+- Smoke **307 PASS / 0 FAIL**, same count as Phase 7. Log `/tmp/stage8-p8/smoke2.log`. No new `class_name`. The Spitter cannon check waits 1.5 s so one short lob is the only hit.
+
+### Not done
+
+- Loot pickups (§4.4), enemy construction and the Weaver (§4.5), a real hold-E, a SPOTTED HUD widget, the metal/plated 1/8 chip, stone-wall 40 HP, and Ore on Outposts. Mortars are still absent from the hive save. More than 8 shell rings are not drawn. The demolition charge (§5.2) is not this stage.
