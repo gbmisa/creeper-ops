@@ -22,20 +22,32 @@ static func update(s: Structure, dt: float, mgr, time: float) -> void:
 static func _nullifier(s: Structure, dt: float, mgr) -> void:
 	if mgr.hazards == null:
 		return
-	var e = mgr.hazards.emitter_near(s.x, s.z, WeaponLogic.nullify_range())
-	if e == null:
-		return
-	if mgr.hazards.is_shielded(e):
-		if not s.warned:
-			s.warned = true
-			Bus.say("Nullifier ready but %s is shielded. %s" % [e.name, e.shield_hint], "warn")
-		return
+	var reach := WeaponLogic.nullify_range()
+	var e = mgr.hazards.emitter_near(s.x, s.z, reach)
+	var shielded: bool = e != null and mgr.hazards.is_shielded(e)
+	var pump: bool = mgr.enemy_build != null and mgr.enemy_build.pump_near(s.x, s.z)
+	if e != null and not shielded:
+		_charge_null(s, dt, mgr, false)
+	elif pump:
+		_charge_null(s, dt, mgr, true)
+	elif e != null and not s.warned:
+		s.warned = true
+		Bus.say("Nullifier ready but %s is shielded. %s" % [e.name, e.shield_hint], "warn")
+
+
+static func _charge_null(s: Structure, dt: float, mgr, pump: bool) -> void:
 	s.charge = minf(Config.NULLIFY_TIME, s.charge + dt)
 	var core := s.body.get_node_or_null("Core") as Node3D
 	if core:
 		core.rotation.y += dt * (1.0 + s.charge * 2.0)
 		core.scale = Vector3.ONE * (1.0 + s.charge / Config.NULLIFY_TIME * 0.8)
-	if s.charge >= Config.NULLIFY_TIME and mgr.hazards.try_nullify(s.x, s.z) == "destroyed":
+	if s.charge < Config.NULLIFY_TIME:
+		return
+	if pump:
+		if mgr.enemy_build.nullify(s.x, s.z):
+			mgr.remove(s, "spent")
+		return
+	if mgr.hazards.try_nullify(s.x, s.z) == "destroyed":
 		mgr.remove(s, "spent")
 
 

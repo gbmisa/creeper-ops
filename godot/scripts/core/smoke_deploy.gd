@@ -16,10 +16,11 @@ static func run(g) -> void:
 		and is_equal_approx(g.deploy.drop_cost(far), Config.DROP_BASE + floorf(20.0 / Config.DROP_PER_CELLS))
 	SmokeTest._check("drop cost grows", grew, "near %.0f far %.0f" % [g.deploy.drop_cost(origin), g.deploy.drop_cost(far)])
 	SmokeTest._check("drop cost capped", is_equal_approx(g.deploy.drop_cost_cells(10000.0), Config.DROP_MAX))
-	g.deploy.drop_blocked = func(c): return c == far
+	var prev: Callable = g.deploy.drop_blocked
+	g.deploy.drop_blocked = func(c): return c == far or prev.call(c)
 	var blocked: Dictionary = g.deploy.can_drop(far)
 	SmokeTest._check("shield blocks drop", not blocked.ok and "Shield" in str(blocked.reason), blocked.reason)
-	g.deploy.drop_blocked = func(_c): return false
+	g.deploy.drop_blocked = prev
 
 	_recall(g, origin, far)
 	_pod(g, far)

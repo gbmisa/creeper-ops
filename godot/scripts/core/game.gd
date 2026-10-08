@@ -18,6 +18,7 @@ var cave_data: Dictionary
 var cave: World
 var cave_hazards: CaveHazards
 var castles: Strongholds
+var builder: EnemyBuilder
 var castle_raids: CastleRaids
 var keeps: CastleKeeps
 var guards: CastleGuards
@@ -109,6 +110,11 @@ func _ready() -> void:
 	castles.stockpile = stockpile
 	hazards.nests.stockpile = stockpile
 	hazards.nests.operative = func(): return fps if fps.world == surface else null
+	builder = EnemyBuilder.new(surface, castles, hazards.nests, structures, stockpile)
+	structures.enemy_build = builder
+	hazards.nests.builder = builder
+	hazards.nests.hub_mortars = builder.mortars
+	deploy.drop_blocked = func(cell: Vector2i) -> bool: return builder.shields(cell)
 	command.castles = castles
 	keeps = CastleKeeps.new(castles, structures)
 	castles.on_lost = func(cells: Array):
@@ -181,7 +187,7 @@ func update(dt: float) -> void:
 	cave.update(dt)
 	keeps.update()
 	structures.update(dt, time)
-	units.update(dt, hazards.nests.enemies() + castles.enemies() + guards.enemies())
+	units.update(dt, hazards.nests.enemies() + castles.enemies() + guards.enemies() + builder.enemies())
 	var due: Array[Vector3] = []
 	for i in orbital._pending.size():
 		var strike: Dictionary = orbital._pending[i]
