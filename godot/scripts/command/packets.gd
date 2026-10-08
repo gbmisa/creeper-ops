@@ -177,6 +177,13 @@ func launch_return(s: Structure, kind: String, n: float) -> bool:
 	if route.size() < 2:
 		return false
 	route.reverse()
+	return launch_route(route, kind, n, s)
+
+
+## A return packet along an explicit route (Salvage Engines start at their socket, not at a Structure).
+func launch_route(route: PackedVector3Array, kind: String, n: float, s: Structure = null) -> bool:
+	if route.size() < 2:
+		return false
 	flying.append({ "s": s, "kind": kind, "route": route, "seg": 0, "t": 0.0, "returns": true, "n": n })
 	return true
 

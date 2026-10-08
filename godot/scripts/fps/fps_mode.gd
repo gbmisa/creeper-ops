@@ -26,6 +26,7 @@ var beacons := func(_w) -> Array: return []  # injected: built beacons when on t
 var mites: CaveMites = null
 var builder: OperativeBuild = null  # injected: first-person building (surface only)
 var prey: Dictionary
+var hold_t := 0.0  # seconds the use key has been held on a hold interactable
 
 
 func _init() -> void:
@@ -111,7 +112,7 @@ func update(dt: float, input: InputState) -> void:
 	_vitals(dt, depth)
 	if suit <= 0.0:
 		return
-	_interact(input)
+	_interact(input, dt)
 	if building:
 		prompt = builder.status
 	_recall(dt, input)
@@ -133,7 +134,7 @@ func _vitals(dt: float, depth: float) -> void:
 		Bus.operative_down.emit()
 
 
-func _interact(input: InputState) -> void:
+func _interact(input: InputState, dt := 0.0) -> void:
 	var feet := controller.pos
 	var best: Dictionary = {}
 	var bd := INF
@@ -148,14 +149,35 @@ func _interact(input: InputState) -> void:
 			"use": func(): commit_recall.call() })
 	for it in candidates:
 		var d := Vector2(it.pos.x - feet.x, it.pos.z - feet.z).length()
+		if it.has("near") and not it.near.call(feet):
+			continue
 		if d <= it.radius and d < bd and it.prompt.call() != "":
 			best = it
 			bd = d
 	prompt = best.prompt.call() if not best.is_empty() else ""
 	if ArmouryMenu.take_suppress():
 		return
-	if not best.is_empty() and input.act("use"):
-		best.use.call()
+	if not best.is_empty() and float(best.get("hold", 0.0)) > 0.0:
+		_hold_use(best, input, dt)
+	else:
+		hold_t = 0.0
+		if not best.is_empty() and input.act("use"):
+			best.use.call()
+
+
+## Hold-to-use interactables (Salvage Engine sockets): `hold` seconds with the use key held.
+func _hold_use(it: Dictionary, input: InputState, dt: float) -> void:
+	var ok: bool = it.get("ready", func(): return true).call()
+	if not ok or not input.held("use"):
+		hold_t = 0.0
+		return
+	hold_t += dt
+	var frac := minf(1.0, hold_t / float(it.hold))
+	it.progress.call(frac, weapons.gun.global_position + (-camera.global_transform.basis.z) * 0.3)
+	prompt = "%s  %d%%" % [prompt, roundi(frac * 100.0)]
+	if hold_t >= float(it.hold):
+		hold_t = 0.0
+		it.use.call()
 
 
 func _recall(dt: float, input: InputState) -> void:

@@ -3,6 +3,7 @@ class_name SmokeTest
 ## Prints PASS/FAIL per check and a summary. Uses the live game objects; no rendering needed.
 
 static var _fails := 0
+static var only := ""  # --smoke=engines runs just that group (dev shortcut; full runs stay the authority)
 
 
 static func _check(name: String, ok: bool, detail := "") -> void:
@@ -22,6 +23,9 @@ static func run(g) -> void:
 	var sm: StructureManager = g.structures
 	var grid: Grid = g.level.grid
 	g.economy.energy = 60.0
+	if only != "":
+		_run_only(g)
+		return
 
 	# CW3 packets: no launch cap. 12 unbuilt relays at once should all be served at REQ_BUILD.
 	var relays := []
@@ -153,6 +157,16 @@ static func run(g) -> void:
 	SmokeEconomy.run(g)
 	SmokeEnemyBuild.run(g)
 	SmokeLoot.run(g)
+	SmokeEngines.run(g)
+	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
+
+
+static func _run_only(g) -> void:
+	for part in only.split(","):
+		match part:
+			"engines":
+				SmokeEngines.run(g)
+				SmokeEnginesShip.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

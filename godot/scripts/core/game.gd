@@ -22,6 +22,7 @@ var builder: EnemyBuilder
 var castle_raids: CastleRaids
 var keeps: CastleKeeps
 var guards: CastleGuards
+var engines: SalvageEngines
 var orbital: Orbital
 var command: CommandMode
 var fps: FpsMode
@@ -73,6 +74,10 @@ func _ready() -> void:
 	castle_raids = CastleRaids.new(castles, level.get("castle_rules", {}))
 	guards = CastleGuards.new(surface, castles, level.castles)
 	hazards.guards = guards
+
+	engines = SalvageEngines.new(surface, level.get("engines", []), structures, stockpile)
+	engines.nests = hazards.nests
+	engines.castles = castles
 
 	orbital = Orbital.new(surface, economy)
 	orbital.hazards = hazards
@@ -157,6 +162,7 @@ func surface_prey() -> Array:
 		row["weapon"] = bool(s.def.get("weapon", false))
 		prey.append(row)
 	prey.append_array(castles.prey())
+	prey.append_array(engines.prey())
 	if mode == "surface":
 		prey.append(fps.prey)
 	return prey

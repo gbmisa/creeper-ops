@@ -39,6 +39,8 @@ class_name Debug
 ##   --gallery     one of every structure, unit and raider tier in rows (art screenshots)
 ##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
 ##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
+##   --engine=I[,hold|hooked|top[,S]]  Operative at Salvage Engine I (hold: mid-hook; hooked: all sockets
+##                 hooked with a relay chain; top: on its roof). See debug_engines.gd
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -61,7 +63,7 @@ static func apply(g) -> void:
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
 	if args.has("nocapture") or args.has("shot"):
 		g.ignore_capture = true
-	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "raid", "gallery", "sim", "shot", "smoke"].any(func(k): return args.has(k))
+	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "raid", "gallery", "sim", "shot", "smoke", "engine"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
 	elif auto:
@@ -126,6 +128,8 @@ static func apply(g) -> void:
 		RaiderBurrow.demo(g)
 	if args.has("mortar"):
 		EnemyMortars.demo(g)
+	if args.has("engine"):
+		DebugEngines.apply(g, str(args.engine))
 	if args.has("look"):
 		var xz: PackedStringArray = args.look.split(",")
 		g.command.cam.focus(g.level.grid.cell_ground(int(xz[0]), int(xz[1])))
@@ -151,6 +155,7 @@ static func apply(g) -> void:
 	if args.has("armoury"):
 		DebugHooks._armoury(g, str(args.armoury))
 	if args.has("smoke"):
+		SmokeTest.only = str(args.smoke)
 		SmokeTest.run(g)
 	if args.has("sim"):
 		DebugHooks._fast_forward(g, float(args.sim))
