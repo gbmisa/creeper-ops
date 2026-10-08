@@ -101,6 +101,8 @@ func place(type: String, x: int, z: int, instant := false) -> Structure:
 	occupy(s)
 	list.append(s)
 	dirty = true
+	if not instant:
+		Bus.metric.emit("placed", { "type": type })
 	if type == "beacon" and not instant:
 		selected_beacon = s
 	return s
@@ -114,6 +116,9 @@ func remove(s: Structure, reason := "") -> void:
 	vacate(s)
 	if selected_beacon == s:
 		selected_beacon = null
+	if reason == "destroyed" or reason == "recycled":
+		Bus.metric.emit("structure_lost" if reason == "destroyed" else "recycled",
+			{ "type": s.type, "reason": reason, "wet": s.wet > Config.MIN_DEPTH, "built": s.is_built() })
 	if reason != "":
 		world.effects.burst(s.node.position + Vector3.UP, Color("ff5533"), 2.5)
 	if reason == "destroyed":

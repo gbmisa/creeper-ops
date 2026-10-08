@@ -118,6 +118,7 @@ static func right_click(cm: CommandMode) -> void:
 	var p: Vector3 = cm.hover.point
 	var c: Vector2i = cm.hover.cell
 	if not cm.units.selected.is_empty():
+		Bus.metric.emit("order", {})
 		cm.units.order(cm.units.selected, Vector2(p.x, p.z), true)
 		cm.world.effects.burst(p + Vector3(0, 0.3, 0), Color("9dff7a"), 1.2, 0.3)
 	elif cm.selected and cm.selected.type == "barracks":

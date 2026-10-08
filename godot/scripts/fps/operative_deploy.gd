@@ -49,6 +49,7 @@ func deploy_totem() -> void:
 		_deny("No finished Totem. Drop one (Orbital tab) outside Blight, then press T.")
 		return
 	_spawn(Vector2i(b.x, b.z - 1), 0.0)
+	Bus.metric.emit("deploy", { "how": "totem" })
 	Bus.say("Operative deployed. The creeper won't wait for you.", "radio")
 
 
@@ -79,6 +80,7 @@ func start_drop(cell: Vector2i) -> void:
 		_deny("Drop needs %d energy." % ceili(cost))
 		return
 	_pod = { "cell": cell, "t": 0.0, "tick": 0.0 }
+	Bus.metric.emit("deploy", { "how": "drop", "cost": cost })
 	Sfx.play("lift")
 	Bus.say("Drop pod inbound (%d energy)." % ceili(cost), "info")
 
@@ -104,6 +106,7 @@ func commit_recall() -> void:
 		return
 	var cd := preview_recall()
 	g.teleport_cooldown = cd
+	Bus.metric.emit("recall", { "cooldown": cd })
 	var msg := "Operative back aboard." if cd <= 0.0 else "Operative recalled. Teleporter offline %ds." % ceili(cd)
 	g.flow.to_command(msg)
 
