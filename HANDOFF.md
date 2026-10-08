@@ -1,4 +1,4 @@
-# Handoff: 2026-10-08 (session 14: 19, 21, 24, 9b merged; playtest 1 fixes)
+# Handoff: 2026-10-08 (session 14: 19, 21, 24, 9b merged; playtest 1 fixes; Art 3 planned)
 
 ## State
 Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Castles: [docs/CASTLES2_DESIGN.md](docs/CASTLES2_DESIGN.md). Playtest feedback + plan: [docs/tasks/PLAYTEST1_plan.md](docs/tasks/PLAYTEST1_plan.md).
@@ -20,6 +20,7 @@ Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Ru
 - Demo sims aren't seeded, so they're noisy.
 
 ## Next
+0. **Art 3 tonight (user is burning ~40% of the weekly limit before the reset, but wants it done efficiently):** follow [docs/tasks/ART3_plan.md](docs/tasks/ART3_plan.md). Create worktrees `art3-models`, `art3-feel`, `art3-fx` from `main`, then spawn: Opus for Track M P1 (Blender pipeline + Skitter), Sonnet `feature-dev` for F and X, and a Haiku `balance-tester` as the screenshot judge. Opus does the final pass and merge of each track. First ask the user how "Holding down left..." ended (their message was cut off).
 1. **Muse:** run `PLAYTEST1_C_hive_sites.md` in worktree `playtest1c` (branch `fix/playtest1-hive-sites`); Opus reviews/scores it (Muse.md §3b). Fallback: Sonnet `level-builder`.
 2. Then D: Haiku screenshot check of every enemy structure (visible + reachable).
 3. User replays → `--metrics-report` → Haiku `balance-tester` tunes raider pressure if still needed.
