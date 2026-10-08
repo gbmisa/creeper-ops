@@ -33,10 +33,22 @@ static func left_mouse(cm: CommandMode, input: InputState) -> void:
 	if cm.tool == "@terp":
 		TerpPaint.pointer(cm, input)
 		return
-	var dragging := input.left and cm.tool == "" and input.mouse.distance_to(input.down_pos) > DRAG_PX
+	var moved := input.mouse.distance_to(input.down_pos) > DRAG_PX
+	var dragging := input.left and cm.tool == "" and moved
 	cm.drag_rect = Rect2(input.down_pos, input.mouse - input.down_pos).abs() if dragging else Rect2()
+	var building := cm.tool != "" and not cm.tool.begins_with("@")
+	if building and input.left_pressed and not cm.hover.is_empty():
+		cm.drag_start = cm.hover.cell
+	if building and input.left and moved and cm.drag_start.x >= 0 and not cm.hover.is_empty():
+		cm.drag_plan = DragBuild.plan(cm, cm.drag_start, cm.hover.cell)
+		cm.overlay.show_plan(cm.drag_plan, cm.tool)
 	if not input.left_released:
 		return
+	if not cm.drag_plan.is_empty():
+		DragBuild.commit(cm, cm.drag_plan)
+		cm.cancel_drag()
+		return
+	cm.drag_start = Vector2i(-1, -1)
 	if cm.tool == "" and input.mouse.distance_to(input.down_pos) > DRAG_PX:
 		CommandSelect.box_select(cm, Rect2(input.down_pos, input.mouse - input.down_pos).abs(), input.shift)
 	elif input.left_pressed or input.mouse.distance_to(input.down_pos) <= DRAG_PX:

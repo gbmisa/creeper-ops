@@ -16,7 +16,7 @@ static func new_state(row: Dictionary, lay: Dictionary) -> Dictionary:
 	var gates := []
 	for gt in lay.gates:
 		gates.append({ "hp": Config.CASTLE_GATE_HP, "max_hp": Config.CASTLE_GATE_HP })
-	return { "id": row.id, "name": row.get("name", row.id), "owner": "enemy", "state": "hostile",
+	return { "id": row.id, "name": row.get("name", row.id), "owner": "enemy", "state": "hostile", "yield": row.get("yield", 1.0),
 		"walls": walls, "gates": gates,
 		"winch": { "hp": Config.CASTLE_WINCH_HP, "max_hp": Config.CASTLE_WINCH_HP },
 		"crown": { "hp": Config.CROWN_HP, "max_hp": Config.CROWN_HP },

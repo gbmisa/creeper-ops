@@ -167,7 +167,7 @@ func _capturing(c: Dictionary, lay: Dictionary, p, dt: float) -> void:
 			if stockpile:
 				stockpile.add("salvage", Config.CASTLE_CAPTURE_SALVAGE)
 			Sfx.play("good")
-			Bus.say("%s is yours: +%.0f Aether/min while you hold it. Raiders will come for it." % [c.name, Config.CASTLE_AETHER_RATE * 60.0], "good")
+			Bus.say("%s is yours: +%.0f Aether/min while you hold it. Raiders will come for it." % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)], "good")
 			StrongholdMeshes.refresh(views[c.id], c)
 		return
 	cap.away += dt
@@ -179,9 +179,9 @@ func _capturing(c: Dictionary, lay: Dictionary, p, dt: float) -> void:
 
 
 func _holding(c: Dictionary, lay: Dictionary, v: Dictionary, p, dt: float) -> void:
-	Upgrades.trickle(Config.CASTLE_AETHER_RATE * dt)
+	Upgrades.trickle(Config.CASTLE_AETHER_RATE * c.get("yield", 1.0) * dt)
 	if stockpile:
-		stockpile.add("salvage", Config.CASTLE_SALVAGE_RATE * dt)
+		stockpile.add("salvage", Config.CASTLE_SALVAGE_RATE * c.get("yield", 1.0) * dt)
 	CastleTurretFire.tick(world, c, v, nests.raiders, dt)
 	var inside := nests.raiders.list.filter(func(r): return StrongholdRules.in_courtyard(lay, r.node.position))
 	if inside.is_empty():

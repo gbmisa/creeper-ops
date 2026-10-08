@@ -55,6 +55,9 @@ func _strike(at: Vector3) -> void:
 	Sfx.play("boom", at)
 	if hazards:
 		var reach := Config.LANCE_RADIUS * Config.CELL
-		for m in hazards.nests.raiders.list.duplicate():
+		var foes: Array = hazards.nests.raiders.list.duplicate()
+		if hazards.guards:
+			foes.append_array(hazards.guards.foes())
+		for m in foes:
 			if (m.node.position as Vector3).distance_to(at) < reach:
 				m.enemy.hit.call(99.0)

@@ -1,35 +1,35 @@
 class_name StructureUpkeep
 ## Per-structure upkeep each frame: creeper contact, repair, construction progress and bars.
-## Creeper rule: unbuilt structures, and built ones that are not weapons, die on contact.
-## Built weapons (def.weapon) lose HP from depth (Config.WEAPON_CREEPER_*) and die at 0.
-## A weapon with charge > 0 (the charging Nullifier) takes none. Hovering and in-flight
-## structures are out of reach.
+## Creeper rule (CW3, docs/CREEPER_SPEC.md §1): depth decides only whether a structure is wet.
+## Weapons and the Node have a health reserve: wet, they lose max HP / `wet_time` per second
+## whatever the depth, and an unfinished one loses build progress at the same rate (and asks
+## for no packets) instead. Everything else dies on contact, built or not. A charging weapon
+## (Nullifier) takes nothing. Dry built structures heal to full over HEAL_TIME.
 
 
 static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
 	s.wet = 0.0 if (s.is_flying() or s.def.get("flying", false)) else mgr.wet_depth(s)
-	# Anything that dies on contact dies as soon as creeper is drawn on it (MIN_DEPTH),
-	# not at the damage threshold, so a thin film can't hide a "submerged" survivor.
-	if s.wet > Config.MIN_DEPTH and _dies_on_contact(s):
+	# Wet means any creeper drawn on it (MIN_DEPTH), so a thin film can't hide a "submerged" survivor.
+	if s.wet <= Config.MIN_DEPTH:
+		if s.is_built():
+			s.hp = minf(s.def.hp, s.hp + s.def.hp / Config.HEAL_TIME * dt)
+		return
+	if not has_reserve(s):
 		mgr.remove(s, "destroyed")
 		return
-	if s.wet > Config.DAMAGE_DEPTH:
-		if s.def.get("weapon", false) and s.charge > 0.0:
-			return
-		var base := Config.STRUCT_BASE_DPS if s.type == "node" else Config.WEAPON_CREEPER_BASE_DPS
-		var per := Config.STRUCT_DPS if s.type == "node" else Config.WEAPON_CREEPER_DPS
-		var dps: float = (base + s.wet * per) * (1.0 - s.def.get("creeper_resist", 0.0))
-		mgr.damage(s, dps * dt)
-	elif s.connected:
-		s.hp = minf(s.def.hp, s.hp + Config.REPAIR_PER_SEC * dt)
+	if s.charge > 0.0:
+		return
+	var rate := dt / float(s.def.get("wet_time", Config.WET_TIME))
+	if s.is_built():
+		mgr.damage(s, s.def.hp * rate)
+	else:
+		s.lost = minf(float(s.delivered), s.lost + s.def.cost * rate)
 
 
-## The Node always soaks, and so does a Nullifier even while it builds (`soaks_unbuilt`), so
-## it can go up next to a pulsing emitter. Anything else soaks only once it is a built weapon.
-static func _dies_on_contact(s: Structure) -> bool:
-	if s.type == "node" or s.def.get("soaks_unbuilt", false):
-		return false
-	return not s.is_built() or not s.def.get("weapon", false)
+## The Node, weapons and `reserve` defs (castle keeps) soak creeper for a while; everything
+## else dies on contact.
+static func has_reserve(s: Structure) -> bool:
+	return s.type == "node" or s.def.get("weapon", false) or s.def.get("reserve", false)
 
 
 static func construction(mgr, s: Structure, dt: float) -> void:
@@ -38,7 +38,7 @@ static func construction(mgr, s: Structure, dt: float) -> void:
 	if s.def.get("drop_pod", false):
 		s.built = minf(1.0, s.built + dt / mgr.DROP_POD_TIME)
 	else:
-		s.built = minf(1.0, float(s.delivered) / s.def.cost)
+		s.built = minf(1.0, (s.delivered - s.lost) / s.def.cost)
 	s.body.scale.y = 0.15 + 0.85 * s.built
 	if s.is_built():
 		mgr.dirty = true  # a finished relay may connect new nodes

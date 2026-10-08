@@ -29,8 +29,10 @@ static func transit_headroom(network: Network, s: Structure) -> float:
 static func need(network: Network, s: Structure) -> String:
 	if not s.connected or s.dead or s.def.get("drop_pod", false):
 		return ""
-	if not s.is_built():
-		return "build" if s.delivered + s.in_flight < s.def.cost else ""
+	if not s.is_built():  # a wet site asks for nothing (CW3)
+		if s.wet > Config.MIN_DEPTH:
+			return ""
+		return "build" if s.delivered - s.lost + s.in_flight < s.def.cost else ""
 	if s.is_flying():
 		return ""
 	if s.has_ammo_store() and s.supply_on:

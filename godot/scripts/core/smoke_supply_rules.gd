@@ -69,12 +69,13 @@ static func _nearest_barracks(g, sm: StructureManager) -> void:
 static func _nullifier_soaks(g, sm: StructureManager) -> void:
 	var nd := sm.command_node()
 	var n: Structure = sm.place("nullifier", nd.x + 4, nd.z + 4)
-	var c: Structure = sm.place("cannon", nd.x - 4, nd.z + 4)
+	var c: Structure = sm.place("collector", nd.x - 4, nd.z + 4)
+	n.delivered = 20
 	for s in [n, c]:
 		g.surface.creeper.set_depth(s.x, s.z, 0.5)
 		StructureUpkeep.creeper_and_repair(sm, s, 0.1)
-	SmokeTest._check("creeper: unbuilt Nullifier soaks HP instead of dying", not n.dead and n.hp < n.def.hp)
-	SmokeTest._check("creeper: other unbuilt structures still die at once", c.dead)
+	SmokeTest._check("creeper: unbuilt Nullifier loses build progress instead of dying", not n.dead and n.lost > 0.0)
+	SmokeTest._check("creeper: an unbuilt collector still dies at once", c.dead)
 	for s in [n, c]:
 		g.surface.creeper.set_depth(s.x, s.z, 0.0)
 		if not s.dead:

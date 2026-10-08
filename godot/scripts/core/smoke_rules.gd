@@ -26,12 +26,17 @@ static func _creeper_contact(g) -> void:
 	_check_no_creeper_build()
 	_wet(g, cx, cz, 0.0)
 	var unbuilt: Structure = sm.place("cannon", cx, cz)
+	unbuilt.delivered = 10
 	var built: Structure = sm.place("cannon", cx + 3, cz, true)
+	built.hold_fire = true  # its CW3 area shot would clear the test cells
 	var collector: Structure = sm.place("collector", cx + 6, cz, true)
 	_wet(g, cx, cz, 1.0)  # a lone wet cell drains fast, so make it deep enough to last a tick
 	_wet(g, cx + 6, cz, 1.0)
 	g.update(0.05)
-	SmokeTest._check("creeper kills unbuilt instantly", unbuilt.dead)
+	_hold_wet(g, unbuilt, 1.0, 0.25)  # pinned: nearby guns would clear a lone cell
+	SmokeTest._check("CW3: wet unbuilt cannon loses progress, not its life", not unbuilt.dead and unbuilt.lost > 0.0
+		and PacketRequests.need(sm.network, unbuilt) == "", "(lost %.2f)" % unbuilt.lost)
+	sm.remove(unbuilt)
 	SmokeTest._check("creeper kills built collector instantly", collector.dead)
 	var shallow: float = built.hp
 	_hold_wet(g, built, 1.0, 0.25)  # pinned: one free cell drains away inside g.update before damage
@@ -58,22 +63,17 @@ static func _creeper_contact(g) -> void:
 	n.hp = n.def.hp
 
 
-## Depth is pinned, so this measures the DPS formula and not the fluid draining away.
+## Depth is pinned, so this measures the CW3 wet rule and not the fluid draining away:
+## a cannon lasts WET_TIME (12 s) whatever the depth.
 static func _cannon_soak_times(g, sm: StructureManager, x: int, z: int) -> void:
-	var shallow: Structure = sm.place("cannon", x, z, true)
-	_hold_wet(g, shallow, 1.0, 4.9)
-	SmokeTest._check("cannon lasts about 5 s at depth 1", not shallow.dead and shallow.hp < shallow.def.hp,
-		"(hp %.1f)" % shallow.hp)
-	_hold_wet(g, shallow, 1.0, 0.3)
-	SmokeTest._check("cannon dies soon after 5 s at depth 1", shallow.dead)
-	var deep: Structure = sm.place("cannon", x + 3, z, true)
-	_hold_wet(g, deep, 3.0, 2.0)
-	var alive_at_2: bool = not deep.dead
-	_hold_wet(g, deep, 3.0, 2.0)
-	SmokeTest._check("cannon dies in 2-4 s at depth 3", alive_at_2 and deep.dead,
-		"(alive at 2s=%s)" % alive_at_2)
-	_wet(g, x, z, 0.0)
-	_wet(g, x + 3, z, 0.0)
+	for pair in [[0, 1.0], [3, 3.0]]:
+		var c: Structure = sm.place("cannon", x + pair[0], z, true)
+		_hold_wet(g, c, pair[1], Config.WET_TIME - 0.4)
+		var alive: bool = not c.dead
+		_hold_wet(g, c, pair[1], 0.8)
+		SmokeTest._check("CW3: cannon dies after %.0f s at depth %.0f" % [Config.WET_TIME, pair[1]], alive and c.dead,
+			"(alive before=%s)" % alive)
+		_wet(g, x + pair[0], z, 0.0)
 
 
 static func _hold_wet(g, s: Structure, depth: float, seconds: float) -> void:

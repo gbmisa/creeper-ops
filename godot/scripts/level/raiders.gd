@@ -77,6 +77,7 @@ func _grounded(q: Dictionary) -> bool:
 	return p.y - world.grid.smooth_y(p.x, p.z) < 3.0
 
 
+## Nearest prey in range that the raider can walk to (never one up a cliff).
 func _nearest(from: Vector3, prey: Array, max_d: float, leash_home = null) -> Dictionary:
 	var best: Dictionary = {}
 	var bd := max_d
@@ -85,7 +86,7 @@ func _nearest(from: Vector3, prey: Array, max_d: float, leash_home = null) -> Di
 		if leash_home != null and qp.distance_to(leash_home) > Config.NEST_LEASH:
 			continue
 		var d := Vector2(qp.x - from.x, qp.z - from.z).length()
-		if d < bd:
+		if d < bd and field.reachable(from, qp, q.radius):
 			bd = d
 			best = q
 	return best

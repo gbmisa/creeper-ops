@@ -34,7 +34,7 @@ func _init() -> void:
 	add_child(body)
 	controller = PlayerController.new(camera)
 	weapons = OperativeWeapons.new(camera)
-	prey = { "node": body, "radius": 0.5, "alive": func(): return world != null, "hit": func(d): damage(d) }
+	prey = { "kind": "operative", "node": body, "radius": 0.5, "alive": func(): return world != null, "hit": func(d): damage(d) }
 
 
 func enter(w: World, cell: Vector2i, facing: float, cave_mites: CaveMites = null) -> void:

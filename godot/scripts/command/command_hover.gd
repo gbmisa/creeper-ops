@@ -18,6 +18,10 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 		cm.reason = cm.overlay.paint.hover_text(cm) if cm.overlay.paint else ""
 		cm.overlay.hide_ghost()
 		return
+	if not cm.drag_plan.is_empty():  # DragBuild draws its own preview
+		cm.overlay.hide_ghost()
+		cm.reason = DragBuild.summary(cm.drag_plan)
+		return
 	var c: Vector2i = cm.hover.cell
 	var at := cm.world.grid.cell_ground(c.x, c.y)
 	var res := check(cm, c)

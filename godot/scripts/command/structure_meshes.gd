@@ -1,13 +1,42 @@
 class_name StructureMeshes
-## Procedural meshes for every structure. Each returns a body Node3D; animated parts are
-## named children: "Spin" (rotates), "Turret" (aims), "Core" (nullifier/charge), "Glow".
+## Procedural meshes for every structure: the shared kit (cached materials, primitives) and
+## the dispatch. Armed weapons live in weapon_meshes.gd, everything else in support_meshes.gd,
+## lathes/struts/arches in world/shape_kit.gd. Animated parts are named children:
+## "Spin" (rotates), "Turret" (yaw, aimed by WeaponLogic), "Arm" (pitch), "Core" (nullifier
+## charge), "Glow" (Totem pulse), "Muzzle" (where shots leave).
+## Art direction "Arcane Forge": pale stone, bronze, dark oak, cloth, cyan rune crystals.
 
 const METAL := Color("8a96a6")
 const DARK := Color("2f3540")
 const ACCENT := Color("5fd4ff")
 
+## Named player-side materials: [albedo, metallic, roughness, emission energy].
+const PALETTE := {
+	"stone": [Color("a69d89"), 0.0, 0.9, 0.0],
+	"stone_dark": [Color("6f675a"), 0.0, 0.92, 0.0],
+	"bronze": [Color("b8843f"), 0.85, 0.38, 0.0],
+	"bronze_dark": [Color("7a5428"), 0.8, 0.45, 0.0],
+	"iron": [Color("5a554e"), 0.7, 0.45, 0.0],
+	"oak": [Color("5b3c22"), 0.0, 0.8, 0.0],
+	"cloth": [Color("1f5f86"), 0.0, 0.95, 0.0],
+	"slate": [Color("3a4656"), 0.1, 0.65, 0.0],
+	"rune": [Color("19b4ff"), 0.0, 0.3, 1.0],
+	"rune_soft": [Color("19b4ff"), 0.0, 0.3, 0.6],
+	"rune_deep": [Color("0c86d8"), 0.0, 0.25, 0.55],  # big crystals: lower energy keeps the hue
+}
 
+static var _mats := {}
+
+
+## Shared material per colour/style (callers must not mutate it; use mat_new for that).
 static func mat(color: Color, metal := 0.6, rough := 0.4, emit := Color.BLACK, emit_e := 0.0) -> StandardMaterial3D:
+	var key := "%s|%s|%s|%s|%s" % [color.to_html(), metal, rough, emit.to_html(), emit_e]
+	if not _mats.has(key):
+		_mats[key] = mat_new(color, metal, rough, emit, emit_e)
+	return _mats[key]
+
+
+static func mat_new(color: Color, metal := 0.6, rough := 0.4, emit := Color.BLACK, emit_e := 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = color
 	m.metallic = metal
@@ -19,12 +48,28 @@ static func mat(color: Color, metal := 0.6, rough := 0.4, emit := Color.BLACK, e
 	return m
 
 
+## Palette material by name ("stone", "bronze", "rune", ...).
+static func pal(name: String) -> StandardMaterial3D:
+	var p: Array = PALETTE[name]
+	return mat(p[0], p[1], p[2], p[0] if p[3] > 0.0 else Color.BLACK, p[3])
+
+
+## Glowing material in any colour (crystals, eyes, embers). Energy is capped so crystals
+## keep their hue under bloom instead of washing out white.
+const GLOW_CAP := 1.2
+
+
+static func glow(c: Color, e := 2.0) -> StandardMaterial3D:
+	return mat(c, 0.0, 0.3, c, minf(e, GLOW_CAP))
+
+
 static func cyl(parent: Node3D, top: float, bottom: float, h: float, m: Material, y := 0.0, sides := 16) -> MeshInstance3D:
 	var c := CylinderMesh.new()
 	c.top_radius = top
 	c.bottom_radius = bottom
 	c.height = h
 	c.radial_segments = sides
+	c.rings = 1
 	return _add(parent, c, m, Vector3(0, y + h * 0.5, 0))
 
 
@@ -34,11 +79,27 @@ static func box(parent: Node3D, size: Vector3, m: Material, at := Vector3.ZERO) 
 	return _add(parent, b, m, at)
 
 
-static func ball(parent: Node3D, r: float, m: Material, at := Vector3.ZERO) -> MeshInstance3D:
+static func ball(parent: Node3D, r: float, m: Material, at := Vector3.ZERO, seg := 16) -> MeshInstance3D:
 	var s := SphereMesh.new()
 	s.radius = r
 	s.height = r * 2.0
+	s.radial_segments = seg
+	s.rings = maxi(4, seg / 2)
 	return _add(parent, s, m, at)
+
+
+## Faceted crystal (an octahedron stretched along Y).
+static func crystal(parent: Node3D, r: float, h: float, m: Material, at := Vector3.ZERO) -> MeshInstance3D:
+	return ShapeKit.lathe(parent, PackedVector2Array([Vector2(0.0, -h * 0.5), Vector2(r, 0.0), Vector2(0.0, h * 0.5)]), m, at, 6)
+
+
+static func torus(parent: Node3D, inner: float, outer: float, m: Material, at := Vector3.ZERO) -> MeshInstance3D:
+	var t := TorusMesh.new()
+	t.inner_radius = inner
+	t.outer_radius = outer
+	t.rings = 24
+	t.ring_segments = 8
+	return _add(parent, t, m, at)
 
 
 static func _add(parent: Node3D, mesh: Mesh, m: Material, at: Vector3) -> MeshInstance3D:
@@ -60,121 +121,18 @@ static func _part(parent: Node3D, part_name: String, y := 0.0) -> Node3D:
 
 static func make(type: String) -> Node3D:
 	var root := Node3D.new()
-	var metal := mat(METAL)
-	var dark := mat(DARK, 0.4, 0.6)
-	var glow := mat(ACCENT, 0.0, 0.3, ACCENT, 2.5)
-	match type:
-		"node":
-			cyl(root, 2.6, 3.0, 1.0, dark)
-			cyl(root, 2.0, 2.5, 1.4, metal, 1.0)
-			var spin := _part(root, "Spin", 2.4)
-			cyl(spin, 0.3, 1.6, 0.5, metal)
-			ball(spin, 0.55, glow, Vector3(0, 0.9, 0))
-			for i in 4:
-				box(spin, Vector3(0.25, 0.25, 2.6), metal, Vector3(0, 0.3, 0)).rotation.y = i * PI / 4.0
-		"collector":
-			cyl(root, 0.5, 0.7, 0.4, dark)
-			var spin := _part(root, "Spin", 0.4)
-			for i in 3:
-				var arm := box(spin, Vector3(1.4, 0.08, 0.22), metal, Vector3(0, 0.25, 0))
-				arm.rotation.y = i * TAU / 3.0
-			ball(spin, 0.22, mat(Color("5dff8a"), 0, 0.3, Color("5dff8a"), 2.0), Vector3(0, 0.45, 0))
-		"relay":
-			cyl(root, 0.2, 0.55, 2.4, metal)
-			var spin := _part(root, "Spin", 2.5)
-			box(spin, Vector3(1.2, 0.1, 0.1), metal)
-			ball(spin, 0.3, glow, Vector3(0, 0.35, 0))
-		"outpost":
-			cyl(root, 1.55, 1.75, 0.4, dark)
-			cyl(root, 0.45, 0.65, 1.1, metal, 0.4)
-			var ring := TorusMesh.new()
-			ring.inner_radius = 0.85
-			ring.outer_radius = 1.15
-			_add(root, ring, glow, Vector3(0, 1.5, 0)).rotation.x = PI / 2.0
-			ball(root, 0.2, glow, Vector3(0, 1.65, 0))
-		"reactor":
-			cyl(root, 0.9, 1.0, 0.6, dark)
-			var spin := _part(root, "Spin", 1.1)
-			var ring := TorusMesh.new()
-			ring.inner_radius = 0.45
-			ring.outer_radius = 0.65
-			_add(spin, ring, mat(Color("ffb13b"), 0.2, 0.3, Color("ff8a1a"), 2.5), Vector3.ZERO).rotation.x = PI / 2.0
-			ball(root, 0.35, mat(Color("ffd27a"), 0, 0.2, Color("ffb13b"), 3.0), Vector3(0, 1.1, 0))
-		"storage":
-			cyl(root, 0.8, 0.9, 1.0, metal, 0.0, 6)
-			cyl(root, 0.65, 0.65, 0.12, glow, 1.0, 6)
-		"barracks":
-			box(root, Vector3(4.6, 1.6, 4.6), dark, Vector3(0, 0.8, 0))
-			box(root, Vector3(3.6, 0.5, 3.6), metal, Vector3(0, 1.85, 0))
-			var spin := _part(root, "Spin", 2.3)
-			box(spin, Vector3(1.8, 0.12, 0.12), metal)
-			ball(root, 0.3, mat(Color("9dff7a"), 0, 0.3, Color("9dff7a"), 2.0), Vector3(1.6, 2.2, 1.6))
-		"nullifier":
-			cyl(root, 0.7, 1.0, 0.8, dark)
-			var core := _part(root, "Core", 1.6)
-			ball(core, 0.5, mat(Color("d38cff"), 0, 0.2, Color("b060ff"), 3.0))
-			for i in 3:
-				box(root, Vector3(0.15, 1.8, 0.15), metal, Vector3(cos(i * TAU / 3) * 0.75, 1.2, sin(i * TAU / 3) * 0.75))
-		"cannon":
-			cyl(root, 0.55, 0.7, 0.5, dark)
-			var tur := _part(root, "Turret", 0.75)
-			ball(tur, 0.38, metal)
-			box(tur, Vector3(1.1, 0.16, 0.16), metal, Vector3(0.55, 0.05, 0))
-			ball(tur, 0.1, mat(Color("fff27a"), 0, 0.3, Color("fff27a"), 3.0), Vector3(1.1, 0.05, 0))
-		"mortar":
-			cyl(root, 0.75, 0.9, 0.6, dark)
-			var tur := _part(root, "Turret", 0.9)
-			cyl(tur, 0.32, 0.4, 0.9, metal).rotation.z = -0.5
-			ball(tur, 0.2, mat(Color("ffb347"), 0, 0.3, Color("ffb347"), 2.0), Vector3(0, -0.1, 0))
-		"beam":
-			cyl(root, 0.35, 0.6, 1.0, dark)
-			var tur := _part(root, "Turret", 1.3)
-			box(tur, Vector3(0.9, 0.22, 0.22), metal, Vector3(0.3, 0, 0))
-			ball(tur, 0.18, mat(Color("ff6a6a"), 0, 0.2, Color("ff4040"), 3.0), Vector3(0.8, 0, 0))
-		"sniper":
-			cyl(root, 0.25, 0.5, 1.4, dark)
-			var tur := _part(root, "Turret", 1.6)
-			box(tur, Vector3(1.8, 0.1, 0.1), metal, Vector3(0.7, 0, 0))
-			box(tur, Vector3(0.4, 0.18, 0.18), dark, Vector3(0.1, 0.12, 0))
-		"bertha":
-			box(root, Vector3(4.2, 1.0, 4.2), dark, Vector3(0, 0.5, 0))
-			var tur := _part(root, "Turret", 1.6)
-			ball(tur, 1.0, metal)
-			cyl(tur, 0.35, 0.5, 4.0, metal).rotation.z = -1.1
-			ball(root, 0.3, glow, Vector3(1.6, 1.2, 1.6))
-		"thor":
-			var hull := _part(root, "Hull", 0.0)
-			box(hull, Vector3(4.4, 0.7, 2.2), metal, Vector3.ZERO)
-			box(hull, Vector3(1.6, 0.5, 4.6), dark, Vector3.ZERO)
-			var tur := _part(root, "Turret", -0.4)
-			box(tur, Vector3(1.6, 0.25, 0.25), metal, Vector3(0.8, 0, 0))
-			for sx in [-1.8, 1.8]:
-				ball(hull, 0.35, mat(Color("7fe0ff"), 0, 0.2, Color("7fe0ff"), 3.0), Vector3(sx, -0.35, 0))
-		"forge":
-			box(root, Vector3(8.6, 0.8, 8.6), dark, Vector3(0, 0.4, 0))
-			box(root, Vector3(6.4, 1.6, 6.4), metal, Vector3(0, 1.6, 0))
-			for i in 4:
-				var a := i * TAU / 4.0 + PI / 4.0
-				cyl(root, 0.35, 0.5, 3.6, dark, 1.8).position += Vector3(cos(a) * 3.2, 0, sin(a) * 3.2)
-			var spin := _part(root, "Spin", 3.0)
-			var ring := TorusMesh.new()
-			ring.inner_radius = 1.2
-			ring.outer_radius = 1.5
-			_add(spin, ring, mat(Color("d38cff"), 0.2, 0.3, Color("b060ff"), 2.5), Vector3.ZERO)
-			ball(root, 0.7, mat(Color("f0d0ff"), 0, 0.2, Color("c080ff"), 3.0), Vector3(0, 3.0, 0))
-		"terp":
-			cyl(root, 0.75, 0.95, 0.4, dark)
-			var arm := _part(root, "Spin", 0.4)
-			box(arm, Vector3(1.6, 0.14, 0.28), metal, Vector3(0.75, 0.2, 0))
-			box(arm, Vector3(0.4, 0.45, 0.7), mat(Color("c4a46a"), 0.3, 0.55), Vector3(1.4, 0.12, 0))
-			ball(root, 0.2, glow, Vector3(0, 0.75, 0))
-		"beacon":
-			cyl(root, 0.3, 0.7, 0.3, dark)
-			var g := _part(root, "Glow", 0.3)
-			cyl(g, 0.12, 0.2, 1.6, mat(Color("66ffcc"), 0, 0.2, Color("116644"), 2.0))
+	if not WeaponMeshes.build(type, root):
+		SupportMeshes.build(type, root)
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	return root
+
+
+## Height of the model's top (metres above its cell), for the HP/ammo bars.
+static func top_y(type: String) -> float:
+	return { "node": 11.5, "collector": 2.6, "relay": 3.7, "outpost": 5.6, "keep": 5.6, "reactor": 3.0, "storage": 2.6,
+		"barracks": 5.0, "nullifier": 4.4, "cannon": 4.0, "mortar": 4.1, "beam": 5.4, "sniper": 4.2,
+		"bertha": 8.6, "thor": 5.0, "forge": 8.6, "terp": 7.4, "beacon": 2.7 }.get(type, 3.0)
 
 
 ## Translucent copy used as the placement / move ghost.
