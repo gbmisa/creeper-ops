@@ -1,35 +1,30 @@
-# Handoff: 2026-10-08 (session 13: Grok work merged; three long runs out)
+# Handoff: 2026-10-08 (session 14: Stages 19, 21, 24 merged)
 
 ## State
-Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Rules: [docs/CREEPER_SPEC.md](docs/CREEPER_SPEC.md); enemies: [docs/STRONGHOLDS_DESIGN.md](docs/STRONGHOLDS_DESIGN.md) (§3.3, §4 have "As built (Stage 8)" notes). `docs/CW4_SPEC.md` (user's, untracked) still unread.
-**Roles:** Opus orchestrates and merges; Grok follows [AGENTS.md](AGENTS.md). The user is budget-limited: **give Grok everything a lesser model can do**; flag it when Opus isn't needed.
-**Muse Code** (Meta) can now take the Grok role: setup and task queue in [Muse.md](Muse.md).
+Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Rules: [docs/CREEPER_SPEC.md](docs/CREEPER_SPEC.md); castles: [docs/CASTLES2_DESIGN.md](docs/CASTLES2_DESIGN.md).
+**Roles:** Opus orchestrates and merges; delegated agents follow [AGENTS.md](AGENTS.md). Token rules: CLAUDE.md "Token budget rules" (`feature-dev`/`balance-tester`/`level-builder`, not general-purpose; no `stage-runner`/`auditor` agent types exist in this setup, use `feature-dev` / `balance-tester`).
 
-## Merged to main this session (all Grok, reviewed by Opus)
-- **7c** stairs on L1 · **11a** Terp (Earth) · **10a** Armoury (upgrades, railgun/plasma/demo charge)
-- **18b** viewmodels (`WeaponModels`), `dusk_sky.gdshader` with clouds, haze, SSAO · **18c** compact objectives (J), fading log, small banner, "Crossbow" · **18d** drag-build ghosts, field outlines, cost line, Operative drag-build
-- **Stage 8** (overnight, 8 phases, log `docs/tasks/STAGE8_progress.md`): `Pressure` curve + overrun, `RaiderDefs` roster (Spitter, Lancer, Warden, Spotter, Burrower), ranged shots, mixed groups, **hives** replace nests (Core: Operative/Lance only, raze, Outpost, rebuild), **enemy mortars** with telegraph ring, Spotter, sabotage, sealed-Node rule.
-- **Opus merge fixes:** raider separation clamped (packed groups outran their slowest member); Armoury weapons fall back to the crossbow model; Lancer smoke kills leftover raiders first; command view uses 1/4 fog (`WorldLook.set_command_view`; 18b's haze washed the whole top-down map beige/lavender); creeper roughness 0.32 / specular 0.25.
+## Merged to main this session
+- **19 flyers** (Sonnet): Spore Bat, Gasbag, Wyvern, Roost at pressure 0.30 (`Config.FLYER_ROOST_P`). Hit by Beams, castle Flak (block at end of `CastleTurretFire._flak`, survived the 21 merge), Lance, Operative. Hooks `--flyers=T,N`, `--t0=S`, `--noflyers`.
+- **21 Castles 2.0** (Opus): concentric castles, Operative-only roof layer (`Grid.roof`), capture gate → bailey → keep, trebuchets, held perks, tunables in `level/castle_defs.gd`. L1 has one compact castle (Ashmoat, SW); High Bastion is still Stage 7 style.
+- **24 Play metrics** (Sonnet, Opus review): `PlayMetrics` records events, 10 s samples and a summary per mission to `user://metrics/*.json`. Report: `godot --headless --path godot -- --metrics-report[=N] [--metrics-dir=D]`. Sims write only with `--metrics=PATH`. Opus fix: surface→cave is one incursion. Post-merge hooks: `castle_held/hostile/siege`, `flyer_killed`.
+- Conflicts were only registration lines (smoke_test.gd) and docs rows; resolved keep-both.
 
-## Later the same session
-- Merged **9a** economy, **8c** enemy construction, **loot + SPOTTED** (Grok did these from HANDOFF's next steps without briefs; all green alone and merged). Spitter restored to spec on main. Smoke OK x2 merged. L1 demo now loses the Node at 603 s (Snipers ignore Spitters): handed to the 9b run.
-- **Long runs out** (rules: `docs/tasks/LONG_RUN_RULES.md`): `stage9b` (9b extractors, improved ammo, level placement, tuning), `stage19` (flyers), `stage20` (art pass 2). Each keeps `docs/tasks/<STAGE>_progress.md`.
-- User asked about map size: current maps 80²/160² cells; ~256² fits today, 512²-1024² needs the Phase B "large-map performance" stage (creeper mesh is one whole-map mesh, full readback, whole-grid flow field). Waiting for the user's target size.
-
-## Running when this was written (2026-10-08 evening)
-Background Claude agents: Stage 21 castles (Opus, `stage21`), 9b Salvage Engines (Sonnet, `stage9b`), 19 flyers (Sonnet, `stage19`). Stage 23 FPS feel is merged. Queue for Muse: see [Muse.md](Muse.md). New token rules: CLAUDE.md "Token budget rules" (use `stage-runner`/`auditor`, not general-purpose).
-
-## Verified
-- Smoke **382/382 PASS**, three runs. Parse clean.
-- Sims (merged): L1 demo 900 s Node 500/500; L1 undefended dies 336 s; L2 undefended 226 s; L2 demo dies 652 s. All four tiers + Spitter/Lancer/Warden seen in the L1 demo.
-- Xvfb screenshots: command view, first person (new crossbow, clouds), gallery (new enemies), mortar ring.
+## Verified (merged main)
+- Parse clean. Smoke OK, 0 failures (612+ checks).
+- Sims: L1 `--autostart` Node dies 337 s (unchanged); L1 `--demo --units --sim=900` dies 704 s (36 flyers spawned, 12 killed); L2 `--level=2 --demo` dies 395 s.
+- `--metrics-report` prints per-mission lines and per-level averages.
 
 ## NOT verified / needs the user
-- **Spitter:** the user chose the spec. HP 10, range 20 (`raider_defs.gd`). Skitter dps 6, `NEST_GUARDS` 1, and the later unlocks (Lancer 0.55, groups 0.60) stay as the balance pass left them. L1 `--demo --units --sim=900` now loses the Node at 622 s (was 500/500 at 900 s). Snipers still shoot nearer Skitters while Spitters shell from 20 cells.
-- Nothing played by a human: Forward+ look (SSAO, sky), drag-build feel, Armoury, Terp, hives, mortars.
+- **Nothing played by a human:** castles 2.0 interiors and capture, flyers, metrics files from real play.
+- Demo sim is not deterministic (no fixed seed), so before/after comparisons are noisy.
+- Ground raiders kill the L1/L2 demo bases before flyers matter; that's 9b's balance job.
 
-## Known gaps (from Stage 8 log)
-No loot pickups (§4.4), no SPOTTED HUD widget (uses Bus.say), mortars not in the hive save, metal/stone-wall shell damage not built, Outpost Ore cost waits for 9a. Smoke files over 250 lines: smoke_terp 436, smoke_armoury 313, smoke_dragbuild 308; debug.gd ~280.
+## Open branches
+- `stage/9b-content` (Salvage Engines, level placement, tuning): 1 commit ahead, **not reviewed**. Will conflict with 21 in `level01.gd`/`level02.gd` (castles moved hives and Thornwall).
 
 ## Next
-1. Playtest. 2. Grok briefs: 8c enemy construction, 9a economy, splitting the long smoke files/debug.gd, SPOTTED widget + loot pickups. 3. Opus: CW4_SPEC read if wanted.
+1. **User: play a few missions** on L1 and L2, then run `--metrics-report`; tune difficulty from that (a `balance-tester` can read the JSON).
+2. Review + merge 9b (resolve level placement against Castles 2.0).
+3. 21b castles detail brief is ready (`docs/tasks/STAGE21b_castles_detail_long.md`, worktree not created).
+4. Small: seed the RNG for `--sim` runs; count weapon move orders in metrics APM.
