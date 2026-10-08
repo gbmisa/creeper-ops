@@ -23,6 +23,7 @@ var seal_arm := 0.0
 var operative: Callable = func(): return null
 var node_pos := func() -> Vector3: return Vector3.ZERO
 var builder = null                 # EnemyBuilder: Lance scale inside a Shield Dome
+var flyers: Flyers
 var hub_mortars: Array = []       # finished hub mortars; shells() draws their telegraphs
 
 
@@ -32,6 +33,7 @@ func _init(w: World, defs: Array, sched: Dictionary = {}, lvl: Dictionary = {}) 
 	level = lvl
 	raiders = Raiders.new(w)
 	raiders.loot_host = self
+	flyers = Flyers.new(self)
 	for d in defs:
 		nests.append(_make_nest(d))
 
@@ -126,6 +128,7 @@ func update(dt: float) -> void:
 		n.timer += dt
 		try_spawn(n)
 	EnemyMortars.tick(self, dt)
+	flyers.update(dt)
 	raiders.update(dt, prey.call(), goal_cells.call())
 
 
@@ -195,7 +198,7 @@ func state() -> Dictionary:
 	var rows: Array = []
 	for n in nests:
 		rows.append(Hives.pack(n))
-	return { "time": time, "tier": tier, "raiding": raiding, "overrun_t": overrun_t, "hives": rows }
+	return { "time": time, "tier": tier, "raiding": raiding, "overrun_t": overrun_t, "hives": rows, "flyers": flyers.state() }
 
 
 func load_state(d: Dictionary) -> void:
@@ -203,6 +206,7 @@ func load_state(d: Dictionary) -> void:
 	tier = int(d.tier)
 	raiding = bool(d.raiding)
 	overrun_t = float(d.overrun_t)
+	flyers.load_state(d.get("flyers", []))
 	for row in d.hives:
 		var src: Dictionary = row
 		for n in nests:

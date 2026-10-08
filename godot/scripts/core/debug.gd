@@ -126,6 +126,8 @@ static func apply(g) -> void:
 		RaiderBurrow.demo(g)
 	if args.has("mortar"):
 		EnemyMortars.demo(g)
+	if args.has("flyers"):
+		FlyerLaunch.demo(g, args.flyers)
 	if args.has("look"):
 		var xz: PackedStringArray = args.look.split(",")
 		g.command.cam.focus(g.level.grid.cell_ground(int(xz[0]), int(xz[1])))

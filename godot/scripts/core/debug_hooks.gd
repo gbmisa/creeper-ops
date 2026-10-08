@@ -79,6 +79,7 @@ static func _fast_forward(g, seconds: float) -> void:
 		"nests_alive": g.hazards.nests.alive_count(),
 		"raiders": g.hazards.nests.raiders.list.map(func(r): return r.tier.name.left(2) + ("g" if r.guard else "")),
 		"raider_seen": g.hazards.nests.raiders.seen,
+		"flyers": g.hazards.nests.flyers.stats,
 		"raider_tier": RaiderDefs.newest(g.hazards.nests.pressure()).name,
 		"aether": Upgrades.aether, "castles": g.castles.list.map(func(c): return "%s:%s" % [c.id, c.state]),
 		"castle_raids": g.castle_raids.launched,

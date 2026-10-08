@@ -25,6 +25,8 @@ static func part(kind: String) -> Node3D:
 			_launcher(root)
 		"mortar":
 			_mortar(root)
+		"roost":
+			_roost(root)
 		_:
 			StructureMeshes.ball(root, 0.4, StructureMeshes.glow(Color("ff8844"), 1.0), Vector3(0, 0.6, 0))
 	return root
@@ -58,3 +60,14 @@ static func _mortar(root: Node3D) -> void:
 	StructureMeshes.cyl(root, 0.55, 0.7, 0.35, StructureMeshes.mat(Color("2a2420"), 0.05, 0.7), 0.12)
 	StructureMeshes.cyl(root, 0.22, 0.28, 1.35, StructureMeshes.mat(Color("4a3028"), 0.15, 0.45), 0.7)
 	StructureMeshes.ball(root, 0.2, StructureMeshes.glow(Color("ff4422"), 1.5), Vector3(0.15, 1.55, 0.35))
+
+
+static func _roost(root: Node3D) -> void:
+	var bone := RaiderMeshes.bone()
+	StructureMeshes.cyl(root, 0.5, 0.75, 0.3, StructureMeshes.mat(Color("2a2420"), 0.0, 0.9), 0.1)
+	for i in 3:  # three bone masts holding a hanging nest
+		var a := i * TAU / 3.0
+		ShapeKit.taper(root, Vector3(cos(a) * 0.55, 0.2, sin(a) * 0.55), Vector3(cos(a) * 0.15, 2.0, sin(a) * 0.15), 0.07, 0.02, bone, 5)
+	var nest := StructureMeshes.ball(root, 0.4, StructureMeshes.mat(Color("3a2a3e"), 0.0, 0.85), Vector3(0, 1.7, 0), 8)
+	nest.scale = Vector3(1.2, 0.8, 1.2)
+	StructureMeshes.ball(root, 0.16, StructureMeshes.glow(Color("a8ff5a"), 1.2), Vector3(0, 1.55, 0.2), 6)

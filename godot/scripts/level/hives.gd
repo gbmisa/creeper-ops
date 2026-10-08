@@ -50,6 +50,8 @@ static func base_hp(host, hive: Dictionary, kind: String) -> float:
 		return Config.HIVE_SPITTER_HP
 	if kind == "launcher":
 		return Config.HIVE_LAUNCHER_HP
+	if kind == "roost":
+		return Config.FLYER_ROOST_HP
 	return Config.HIVE_MORTAR_HP
 
 
@@ -160,6 +162,7 @@ static func _caps(host, hive: Dictionary) -> void:
 static func tick(host, hive: Dictionary, dt: float) -> void:
 	if str(hive.state) == "active":
 		sync(host, hive)
+		FlyerLaunch.sync(host, hive)
 		age(hive, dt)
 		HiveParts.combat(host, hive, dt)
 		_boost(hive)
