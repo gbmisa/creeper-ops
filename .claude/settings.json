@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git commit *)",
-      "Bash(pkill -f \"godot --headless\")"
+      "Bash(pkill -f \"godot --headless\")",
+      "Bash(git commit -q -m 'HANDOFF: session 8 \\(Stage 7 castles; Stages 6, 10b and the command-mode split merged\\) *)"
     ]
   }
 }

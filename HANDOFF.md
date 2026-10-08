@@ -16,7 +16,7 @@ Done on `main` this session (all committed):
 | 7c traversable terrain | `stage7c` / `stage/7c-traversal` | docs/tasks/STAGE7c_traversal.md |
 | 10a Armoury | `stage10a` / `stage/10a-armoury` | docs/tasks/STAGE10a_armoury.md |
 | 11a Terp (Earth) | `stage11a` / `stage/11a-terp` | docs/tasks/STAGE11a_terp_earth.md |
-| 15 Fantasy art (Claude subagent; judge round 1 = REVISE 3.1/5, round 2 running) | `stage15` / `stage/15-fantasy-art` | docs/tasks/STAGE15_fantasy_art.md + JUDGE_art_rubric.md |
+| 15 Fantasy art (done at round 4, e8e0f7a; judge 3.1 → 3.75 → 4.125, all criteria ≥ 4; **not merged**. Minor leftovers: crown-nest ribs, barracks roof, blocky FPS crossbow, HUD says "Pulse Rifle") | `stage15` / `stage/15-fantasy-art` | docs/tasks/STAGE15_fantasy_art.md + JUDGE_art_rubric.md |
 | 16 Level 2 (done, reviewed, **not merged**: 217 smoke, undefended Node dies 236 s) | `stage16` / `stage/16-level02` | docs/tasks/STAGE16_level02.md |
 | 17 CW3 fidelity (Opus, done, **not merged**: 192 smoke, GPU parity exact) | `stage17` / `stage/17-cw3-fidelity` | docs/CW3_FIDELITY_GAPS.md |
 Merge order: 7c → 17 → 16 (then retune Level 2 emitters as CW3 burst depths; its `start` keys work after 17) → 15 (port 11a's Terp case to `TitanMeshes.terp`; crown 16's `lay.towers`) → 10a, 11a. 15 and 17 both touch `weapon_logic.gd` and `castle_turret_fire.gd`; 16 and 17 both touch `config.gd`, `debug.gd`, `smoke_test.gd`. Level 2 objective text still says "Nullifier within 4 cells" (now 10).
