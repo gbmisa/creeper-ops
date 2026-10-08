@@ -47,10 +47,11 @@ func _muster(c: Dictionary) -> void:
 		Bus.say("%s musters a Castle Barracks: train and resupply units there." % c.name, "good")
 
 
-## The free barracks: the first ward cell (nearest the keep sender) where it fits on level ground.
+## The free barracks: the courtyard cell nearest the keep where it fits on level ground (the ward
+## first; a compact castle's ward is too narrow, so then the bailey).
 func _place_muster(lay: Dictionary) -> Structure:
 	var home: Vector2i = lay.rect.position + lay.rect.size / 2
-	var cells: Array = lay.get("ward", lay.courtyard).duplicate()
+	var cells: Array = lay.courtyard.duplicate()
 	cells.sort_custom(func(a, b): return (a - home).length_squared() < (b - home).length_squared())
 	for cell in cells:
 		if Placement._ground_rules(structures, "barracks", cell.x, cell.y, null) == "":

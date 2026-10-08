@@ -22,7 +22,7 @@ static func run(g) -> void:
 	var keep: Dictionary = castles.lays.ashmoat
 	var raised: Dictionary = castles.lays.bastion
 	_pillars(grid, keep)
-	_spire(castles, grid, keep)
+	_spire(castles, grid, raised)  # Ashmoat is concentric (no spire ramp) since Stage 21
 	_raider_proof(g, castles, grid, keep)
 	_bridge(g, castles, grid, raised)
 

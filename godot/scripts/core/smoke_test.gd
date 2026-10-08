@@ -110,7 +110,7 @@ static func run(g) -> void:
 	_check("node landed + producing", not node.is_flying() and g.economy.income >= Config.NODE_INCOME)
 
 	# Barracks population cap.
-	var b: Structure = sm.place("barracks", 33, 70, true)
+	var b: Structure = sm.place("barracks", 37, 72, true)  # on the mesa (Ashmoat's apron took x 31-34)
 	var queued := 0
 	for i in 6:
 		if StructureBehaviors.queue_unit(b, "soldier", g.units.living_for(b)):

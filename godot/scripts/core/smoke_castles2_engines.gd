@@ -68,7 +68,7 @@ static func run(g) -> void:
 	# Death, respawn, and silence once the bailey is taken.
 	for i in c.engines.size():
 		(v.engine_foes[i].enemy.hit as Callable).call(CastleDefs.ENGINE.hp + 1.0)
-	SmokeTest._check("castles2 engines: can be destroyed", CastleEngines.alive_count(c) == 0 and CastleEngines.foes(castles).is_empty())
+	SmokeTest._check("castles2 engines: can be destroyed", CastleEngines.alive_count(c) == 0 and v.engine_foes.all(func(f): return not f.alive.call()))
 	CastleEngines.tick(castles, c, v, [], CastleDefs.ENGINE.respawn + 1.0)
 	SmokeTest._check("castles2 engines: rebuilt while the bailey is hostile", CastleEngines.alive_count(c) == c.engines.size())
 	CastleStages.set_stage(castles, c, 2)

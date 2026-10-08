@@ -3,7 +3,7 @@ class_name Level02Terrain
 ## raiders and the Operative can roam it), castle pads blended into it, and only then the
 ## cliffed features, which keep clear of the castles.
 
-const NEST_KNOLLS := [Vector2i(15, 60), Vector2i(44, 66), Vector2i(82, 40), Vector2i(104, 100), Vector2i(30, 146)]
+const NEST_KNOLLS := [Vector2i(15, 60), Vector2i(44, 66), Vector2i(82, 40), Vector2i(112, 104), Vector2i(34, 151)]
 
 
 static func shape(g: Grid, castles: Array) -> void:

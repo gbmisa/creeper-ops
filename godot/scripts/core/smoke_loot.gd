@@ -85,6 +85,7 @@ static func _crown(g) -> void:
 		SmokeTest._check("loot: crown target", false)
 		return
 	var salvage: float = g.stockpile.salvage
+	CastleStages.set_stage(castles, c, castles.lays[c.id].stages.size() - 1)  # concentric crowns are warded until the keep stage
 	hits[0].on_hit.call(1e6)
 	SmokeTest._check("loot: a crown nest drops 15", str(c.state) == "capturing" and Loot.holding(crown.position, Config.LOOT_CROWN)
 		and is_equal_approx(g.stockpile.salvage, salvage))

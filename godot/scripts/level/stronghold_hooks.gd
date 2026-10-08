@@ -69,7 +69,7 @@ static func _turrets(s: Strongholds, c: Dictionary, v: Dictionary) -> void:
 static func label(c: Dictionary, lay: Dictionary) -> String:
 	match c.state:
 		"hostile": return CastleStages.marker(c, lay)
-		"capturing": return "%s: hold the spire top %d%%" % [c.name, roundi(c.capture.progress * 100.0)]
+		"capturing": return "%s: hold the %s %d%%" % [c.name, "keep hall" if lay.stages.size() > 1 else "spire top", roundi(c.capture.progress * 100.0)]
 		"siege": return "%s UNDER SIEGE %ds" % [c.name, ceili(Config.RETAKE_TIME - c.capture.retake)]
 	return "%s (yours) +%.0f Æ/min" % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)]
 

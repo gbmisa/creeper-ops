@@ -3,8 +3,8 @@ extends RefCounted
 ## Castles (design §3.1, §3.4). Terrain comes from CastleShape during the level build; each
 ## castle then has a plain, saveable state (StrongholdRules) and a view of decoration Nodes
 ## (StrongholdMeshes). States:
-##   hostile    enemy gates and bridge; the crown nest on the spire top breeds a garrison
-##   capturing  crown dead: the Operative holds the spire top for CAPTURE_TIME while the
+##   hostile    enemy gates and bridge; the crown nest (spire top / keep hall) breeds a garrison
+##   capturing  crown dead: the Operative holds its zone for CAPTURE_TIME while the
 ##              nearest nest counterattacks. Abandon it and the nest regrows.
 ##   held       your gates; pays Aether and Salvage; turrets on its sockets (CastleTurrets).
 ##              Raiders target it and break walls, gates, the winch or turrets

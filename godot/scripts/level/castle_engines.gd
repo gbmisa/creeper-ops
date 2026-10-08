@@ -5,7 +5,8 @@ class_name CastleEngines
 ## ENGINE.telegraph seconds, then a stone lands there: whatever is still inside the blast is hit.
 ## Kill them (Operative, Snipers, Lance) to unlock the bailey stage; once the bailey is yours
 ## they are gone for good, until the castle falls again. State per castle (saveable):
-##   c.engines = [{ post: Vector2i, hp, max_hp, cd, dead, shot: {} | { at: Vector3, t, whistled } }]
+##   c.engines = [{ post: Vector2i, hp, max_hp, cd, dead, range, shot: {} | { at: Vector3, t, whistled } }]
+## A level row may shorten the reach with "engine_range" (cells; Level 1 keeps its base out of it).
 
 const E := CastleDefs.ENGINE
 const POST_ORDER := [0, 3, 1, 2]  # opposite corners first
@@ -18,7 +19,8 @@ static func new_state(row: Dictionary, lay: Dictionary) -> Array:
 	var posts: Array = lay.get("engine_posts", [])
 	var n: int = mini(posts.size(), row.get("engines", CastleDefs.ENGINES_DEFAULT if not posts.is_empty() else 0))
 	for i in n:
-		out.append({ "post": posts[POST_ORDER[i % 4]], "hp": E.hp, "max_hp": E.hp, "cd": 3.0 + 2.0 * i, "dead": 0.0, "shot": {} })
+		out.append({ "post": posts[POST_ORDER[i % 4]], "hp": E.hp, "max_hp": E.hp, "cd": 3.0 + 2.0 * i, "dead": 0.0, "shot": {},
+			"range": float(row.get("engine_range", E.range)) })
 	return out
 
 
@@ -89,7 +91,7 @@ static func tick(s: Strongholds, c: Dictionary, v: Dictionary, prey: Array, dt: 
 		e.cd -= dt
 		if e.cd > 0.0:
 			continue
-		var q := pick(s.world.grid, node.position, prey)
+		var q := pick(s.world.grid, node.position, prey, e.get("range", E.range))
 		if q.is_empty():
 			e.cd = 1.0
 			continue
@@ -116,7 +118,9 @@ static func _flight(s: Strongholds, e: Dictionary, prey: Array, dt: float) -> vo
 
 
 ## Nearest prey in the best band within [min_range, range] cells of `from`, or {}.
-static func pick(g: Grid, from: Vector3, prey: Array) -> Dictionary:
+static func pick(g: Grid, from: Vector3, prey: Array, reach := -1.0) -> Dictionary:
+	if reach < 0.0:
+		reach = E.range
 	var best := {}
 	var band := 0
 	var near := INF
@@ -125,7 +129,7 @@ static func pick(g: Grid, from: Vector3, prey: Array) -> Dictionary:
 			continue
 		var p: Vector3 = (q.node as Node3D).position
 		var cells := Vector2(p.x - from.x, p.z - from.z).length() / Config.CELL
-		if cells < E.min_range or cells > E.range:
+		if cells < E.min_range or cells > reach:
 			continue
 		var kind: String = q.get("kind", "")
 		var b := 1 if kind == "unit" else (3 if q.get("weapon", false) else 2)

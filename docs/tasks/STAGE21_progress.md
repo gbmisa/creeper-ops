@@ -66,6 +66,28 @@ Branch `stage/21-castles`, worktree `creeper fps td-worktrees/stage21`. Design: 
   includes the ward factor.
 - Screenshot: p5_held.png (held Crown Keep: blue banners, keep sender + Castle Barracks in the ward).
 
+## P6 Level conversion
+- **Level 2:** all five castles concentric. Ashgate 35 at (6,104), Thornwall 35 raised at (121,121) (was (126,108): the
+  Spore Spire ramp ends at z 104), Crown Keep 39 (bailey 7) at (61,61), Northreach 35 raised at (8,8), Stormcrown 35 at
+  (117,8). Moved hives East Moor → (112,104) and Southern Barrows → (34,151) (and their knolls) so stamps don't cut walls;
+  `demo_target` follows East Moor. Intro line explains the rings.
+- **Level 1:** Ashmoat → compact concentric 31 (bailey 5, 9x9 keep, no spire column) at (0,49): the SW is the only corner
+  with room; it replaces most of the west ridge and notches the landing mesa's west edge (x 31-34 is now its apron).
+  One trebuchet with `engine_range` 24 (new row key) so it guards the castle, not the landing mesa. SW vent moved to
+  (20,45) (feeds the north moat), ore (22,58) → (33,66), Level 1 gets its own `demo` list (relay (28,48) → (33,47), cannon
+  (29,50) → (35,50)). **High Bastion stays a Stage 7 raised keep**: no room in the north for 31+ cells; it also keeps the
+  Stage 7 code (spire ramp, jump pad, drawbridge) under test.
+- Castle smoke adapted (decisions, all in castle smoke files unless noted): Stage 7-only checks (spire past MAX_LEVEL,
+  spire ramp/jump pad) use Bastion; crown tests set the keep stage first; siege/retake raiders stand in the ward; breach
+  checks use the outer ring; turret sockets may sit on tower tops; `smoke_loot` crown test sets the keep stage;
+  `smoke_supply_rules` and `smoke_test` barracks/path checks moved 3-4 cells east onto the mesa (the apron took x 31-34).
+- New row keys: `engine_range`. Socket cells for inner gates use the inner rect.
+- Smoke: 575 PASS.
+- Sims (before → after): L1 `--demo --units --sim=900` Node dies 663 → 640 s; L1 `--autostart` 337 → 337 s;
+  L2 `--demo` 383 → 348 s (Thornwall's NW trebuchet reaches the east collectors of the demo base: by design);
+  L2 `--autostart` 227 → 226 s. Without the 24-cell range, L1's trebuchet shelled the demo base and the Node died at 365 s.
+- Screenshots: p6_l2_map.png (all five castles), p6_l1_map.png, p6_l1_held.png (held Ashmoat + muster barracks).
+
 ## Shared-file edits (for the orchestrator)
 - `command/weapon_logic.gd`: `static var range_bonus` (callable) multiplies `range_cells` (set by `CastlePerks.attach`).
 - `core/game.gd`: `CastlePerks.attach(castles)` (1 line).
@@ -75,7 +97,10 @@ Branch `stage/21-castles`, worktree `creeper fps td-worktrees/stage21`. Design: 
 - `world/grid.gd`: `roof` array (+resize) and `GridRoofs.in_slab` in `raycast` (2 lines).
 - `fps/player_controller.gd`: `can_occupy`/`_push_out` use `GridRoofs.op_height`; ceiling clamp + `GridRoofs.stand_y`.
 - `core/debug.gd`: one `CastleDebug.apply(g, args)` line, header doc line, `castle2` in the auto list.
-- `core/smoke_test.gd`: registration lines. `core/smoke_level02.gd`: tower check floods roofs for concentric castles.
+- `core/smoke_test.gd`: registration lines; the barracks-cap test barracks moved (33,70) → (37,72).
+- `core/smoke_supply_rules.gd`: the solid-towers path test moved one cell east (35..41, 74).
+- `core/smoke_loot.gd`: crown-drop test sets the keep stage first (1 line).
+- `level/level01.gd`: Ashmoat row, vent, ore, `demo` list (9b also edits level placement here: conflicts likely). `core/smoke_level02.gd`: tower check floods roofs for concentric castles.
 - `level/level02.gd`: Crown Keep row.
 
 ## Suggestions

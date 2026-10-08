@@ -24,13 +24,25 @@ const PRESSURE_POINTS := [
 	{ "t": 2400.0, "p": 1.0 },
 ]
 ## Castles (CastleShape rows). The Operative takes them; raiders take them back.
-## Ashmoat: a ground keep whose moat the core-fed SW vent fills. High Bastion: a raised keep
-## on a plateau, reached by a drawbridge from the south or the climbing pillars on its east.
+## Ashmoat (Stage 21): a compact concentric castle in the SW (outer wall, bailey, inner wall,
+## keep hall), its moat fed by the core-fed vent on its north side; one trebuchet on the NW tower
+## with a short reach (24 cells): it guards the castle's surroundings, not the landing mesa. High Bastion stays a Stage 7 raised keep on its plateau
+## (no room in the north for a 31-cell castle), reached by a drawbridge from the south or the
+## climbing pillars on its east.
 const CASTLES := [
-	{ "id": "ashmoat", "name": "Ashmoat Keep", "x": 1, "z": 60, "size": 15, "floor": 2,
-		"variant": "ground", "moat": true, "gates": ["n"], "climbs": ["e"], "spire_h": 20 },
+	{ "id": "ashmoat", "name": "Ashmoat Keep", "x": 0, "z": 49, "size": 31, "floor": 2, "plan": "concentric",
+		"bailey": 5, "variant": "ground", "moat": true, "gates": ["n"], "inner_gate": "e", "climbs": ["e"],
+		"spire_h": 20, "engines": 1, "engine_range": 24.0 },
 	{ "id": "bastion", "name": "High Bastion", "x": 25, "z": 2, "size": 15, "floor": 4,
 		"variant": "raised", "bridge": true, "gates": ["s"], "climbs": ["e"], "spire_h": 20 },
+]
+## Scripted base for --demo (debug only; Debug.DEMO_BUILD with the relay chain moved off Ashmoat's moat).
+const DEMO := [
+	["relay", 34, 58], ["relay", 33, 47], ["relay", 27, 36], ["relay", 24, 24], ["relay", 19, 14], ["nullifier", 17, 14],
+	["collector", 34, 63], ["collector", 46, 63], ["collector", 40, 59], ["collector", 35, 70], ["collector", 45, 70],
+	["cannon", 33, 56], ["cannon", 47, 57], ["cannon", 40, 55], ["cannon", 35, 50], ["mortar", 37, 59],
+	["beam", 44, 60], ["reactor", 43, 62], ["storage", 37, 63], ["barracks", 47, 66],
+	["sniper", 36, 56], ["sniper", 44, 56],
 ]
 ## Castle stakes (CastleRaids; keys default to Config.CASTLE_RULES). Level 1 is gentle.
 const CASTLE_RULES := { "aggression": 0.5, "reprisal_warn": 90.0, "nest_buff": 0.15 }
@@ -174,7 +186,7 @@ static func build() -> Dictionary:
 		],
 		"vents": [  # fed by the Deep Core, shut off when it dies
 			{ "x": 24, "z": 36, "amount": 1.6, "interval": 1.0 },
-			{ "x": 18, "z": 58, "amount": 1.4, "interval": 1.0 },
+			{ "x": 20, "z": 45, "amount": 1.4, "interval": 1.0 },  # pours into Ashmoat's north moat
 		],
 		"hives": [
 			{ "name": "Rift", "x": 9, "z": 38 },
@@ -190,9 +202,10 @@ static func build() -> Dictionary:
 		"ores": [
 			{ "x": 50, "z": 58 },
 			{ "x": 72, "z": 36 },
-			{ "x": 22, "z": 58 },
+			{ "x": 33, "z": 66 },  # under Ashmoat's east wall
 		],
 		"rift": { "x": 14, "z": 42 },
+		"demo": DEMO,
 		"intro": [
 			["Ops: Choose where the Command Node lands. High, dry ground far from emitters buys you time.", "radio"],
 			["Ops: Energy IS packets. The Node fires one wherever a structure asks, as long as the bank has energy.", "radio"],

@@ -30,8 +30,9 @@ static func run(g) -> void:
 
 static func _level1_unchanged() -> void:
 	var l1 := Level01.build()
-	var plain: bool = l1.castles.all(func(c): return c.layout.towers.is_empty() and c.layout.keep.is_empty())
-	SmokeTest._check("L1: castle layouts have no towers or keep", plain)
+	var old: Array = l1.castles.filter(func(c): return c.layout.get("plan", "") != "concentric")  # Stage 21: Ashmoat is concentric
+	var plain: bool = old.all(func(c): return c.layout.towers.is_empty() and c.layout.keep.is_empty())
+	SmokeTest._check("L1: Stage 7 castle layouts have no towers or keep", not old.is_empty() and plain)
 
 
 static func _reach(lvl: Dictionary) -> void:

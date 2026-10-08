@@ -76,7 +76,7 @@ func _warn(c: Dictionary, kind: String, secs: float) -> void:
 	if src.is_empty():
 		return
 	Sfx.play("alarm")
-	Bus.say("%s: the %s nest is gathering a %s (~%d raiders). It marches in %ds. Buy turrets (Castle tab), move Snipers and units, or hold the spire top." \
+	Bus.say("%s: the %s nest is gathering a %s (~%d raiders). It marches in %ds. Buy turrets (Castle tab), move Snipers and units, or hold the capture point." \
 		% [c.name, src.name, KIND_LABEL[kind].to_lower(), size(kind), ceili(secs)], "bad")
 
 
