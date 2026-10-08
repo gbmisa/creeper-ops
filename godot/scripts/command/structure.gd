@@ -25,6 +25,7 @@ var charge := 0.0
 var ammo := 0.0
 var queue: Array = []       # barracks training queue: { type, cost, delivered, train }
 var rally: Variant = null   # barracks rally point (Vector3)
+var job := {}               # Terp step, plain saveable data: { x, z, paid, timer }
 var dead := false
 var wet := 0.0
 var hurt := 0.0

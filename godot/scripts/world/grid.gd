@@ -23,6 +23,8 @@ var material := PackedByteArray()        # Mat per cell
 var gate := PackedByteArray()            # Faction owning a gate on this cell (NONE = no gate)
 var deck := PackedFloat32Array()         # drawbridge deck level over this cell (castle_shape)
 var deck_owner := PackedByteArray()      # Faction that may walk the deck (NONE = no deck, ALL)
+var terp_target := PackedFloat32Array()  # -1 = not painted; else the level the Terp works toward
+var terp_mat := PackedByteArray()         # material to lay (Earth now; 11b: Metal)
 
 
 func _init(width: int, depth: int) -> void:
@@ -36,6 +38,9 @@ func _init(width: int, depth: int) -> void:
 	gate.resize(w * h)
 	deck.resize(w * h)
 	deck_owner.resize(w * h)
+	terp_target.resize(w * h)
+	terp_target.fill(-1.0)
+	terp_mat.resize(w * h)
 
 
 func idx(x: int, z: int) -> int:

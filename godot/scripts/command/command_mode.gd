@@ -2,7 +2,8 @@ class_name CommandMode
 extends Node3D
 ## Top-down commander. Tools: a structure type (build; stays armed until right-click/Esc,
 ## like CW3), "@move" (relocate the selected
-## structure), "@lance" (orbital strike), "@drop" (Operative drop pod), "@land" (Command Node landing at mission start).
+## structure), "@lance" (orbital strike), "@drop" (Operative drop pod), "@land" (Command Node landing at mission start),
+## "@terp" (paint a target level; the drag cancels with the tool).
 ## Dragging with a structure tool lays a chain or row (DragBuild).
 ## Selection: click / drag-box units, click structures. Orders: right-click moves units,
 ## relocates a selected movable structure, or sets a barracks rally point.
@@ -45,6 +46,9 @@ func setup(w: World, sm: StructureManager, um: UnitManager, orb: Orbital, lvl: D
 func set_tool(t: String) -> void:
 	if tool == "@land" and t != "@land":
 		return  # landing must finish first
+	if tool == "@terp" and t != "@terp" and overlay != null and overlay.paint != null:
+		overlay.paint.cancel()
+		drag_rect = Rect2()
 	tool = t
 	cancel_drag()
 	if t != "" and t != "@move":

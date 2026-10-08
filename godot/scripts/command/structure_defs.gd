@@ -12,7 +12,7 @@ const TABS := ["Structures", "Weapons", "Titans", "Orbital", "Castle"]
 const MENU := {
 	"Structures": ["collector", "relay", "outpost", "reactor", "storage", "barracks"],
 	"Weapons": ["cannon", "mortar", "beam", "sniper", "nullifier"],
-	"Titans": ["bertha", "thor", "forge"],
+	"Titans": ["bertha", "thor", "forge", "terp", "@terp"],
 	"Orbital": ["beacon", "@drop", "@lance", "@operative"],
 	"Castle": ["@repeater", "@lobber", "@flak"],
 }
@@ -24,6 +24,8 @@ static var ACTIONS := _turret_actions().merged({
 		"desc": "Strike from orbit: after %ds, burns away creeper in a %.0f-cell radius anywhere you can see. Paid up front (%d), %ds cooldown." % [Config.LANCE_DELAY, Config.LANCE_RADIUS, Config.LANCE_COST, Config.LANCE_COOLDOWN] },
 	"@operative": { "label": "Deploy Operative", "cost_text": "T",
 		"desc": "Send the Operative to the selected Totem (or the newest). Free and instant while the teleporter is ready. Only the Operative can plant charges, enter the Rift and kill the Deep Core." },
+	"@terp": { "label": "Terp Paint", "cost_text": "paint", "unlock": "terp",
+		"desc": "Drag a rectangle to paint a target level (0-%d). It starts at the ground under the first cell; Page Up and Page Down change it, hold C to erase. Hatched until a Terp finishes the cell." % Config.MAX_LEVEL },
 })
 
 static var DEFS := {
@@ -79,6 +81,9 @@ static var DEFS := {
 		"desc": "Your held castle's keep. A packet sender and relay (link 10): structures nearby take packets from it, like an Outpost. Comes with the castle and falls with it." },
 	"beacon": { "tab": "Orbital", "label": "Totem", "cost": 10, "hp": 40.0, "link": 0.0, "needs_network": false, "link_y": 1.0, "drop_pod": true,
 		"desc": "Operative arrival point, dropped from orbit: no network, paid up front, not in Blight. Deploying here (T) is free and instant. Recalling within %.0f m is free and does not cool the teleporter down." % Config.TOTEM_FREE_RADIUS },
+	"terp": { "tab": "Titans", "label": "Terp", "cost": 25, "hp": 80.0, "link": 6.0, "link_y": 1.5,
+		"work_range": 7.0, "movable": false, "unlock": "terp",
+		"desc": "Raises or lowers painted ground one level at a time, within 7 cells. Each level costs %d packets and takes %.0fs once they arrive. Earth only. Link 6. Not movable." % [Config.TERP_PACKETS, Config.TERP_STEP_TIME] },
 }
 
 
@@ -108,6 +113,30 @@ static func label(type: String) -> String:
 
 static func desc(type: String) -> String:
 	return ACTIONS[type].desc if type.begins_with("@") else DEFS[type].desc
+
+
+## "" when this structure or @action is available. Level files list ids in "unlocks";
+## a def with no "unlock" is always available. One reader so callers never open level files.
+static func lock_reason(level: Dictionary, type: String) -> String:
+	var id := ""
+	if type.begins_with("@"):
+		id = str(ACTIONS.get(type, {}).get("unlock", ""))
+	elif DEFS.has(type):
+		id = str(DEFS[type].get("unlock", ""))
+	if id == "" or (level.get("unlocks", []) as Array).has(id):
+		return ""
+	return "Not available on this level"
+
+
+## Debug and tests add an id to the live level dict. Does not touch level files.
+static func grant_unlock(level: Dictionary, id: String) -> void:
+	if id == "":
+		return
+	if not level.has("unlocks"):
+		level["unlocks"] = []
+	var list: Array = level.unlocks
+	if not list.has(id):
+		list.append(id)
 
 
 ## Castle tab: turrets bought with Salvage on the sockets of a castle you hold.

@@ -4,12 +4,12 @@ extends MultiMeshInstance3D
 ## moment a structure requests one AND the bank holds >= 1 energy. There is no global launch
 ## cap. One flying Node does not stop launches while another sender is ready. Throughput is
 ## limited only by income, the bank, and each structure's request rate
-## (Config.REQ_BUILD / REQ_AMMO / REQ_UNIT). Requests the bank can't pay are counted as unmet
+## (Config.REQ_BUILD / REQ_AMMO / REQ_UNIT / REQ_TERP). Requests the bank can't pay are counted as unmet
 ## demand so the HUD can show the red number the way CW3 does. No priority: requesters are
 ## served round robin, ammo and builds alike.
 
 const MAX_VISIBLE := 1200
-const COLORS := { "build": Color("e8fbff"), "ammo": Color("ffb13b"), "unit": Color("9dff7a") }
+const COLORS := { "build": Color("e8fbff"), "ammo": Color("ffb13b"), "unit": Color("9dff7a"), "terp": Color("e2b15a") }
 
 var network: Network
 var economy: Economy
@@ -157,6 +157,10 @@ func _arrive(p: Dictionary) -> void:
 		"unit":
 			if not s.queue.is_empty():
 				s.queue[0].delivered += 1
+		"terp":
+			if s.job.is_empty() or int(s.job.get("x", -1)) < 0:
+				return  # step was cancelled while this packet was in flight
+			s.job["paid"] = int(s.job.paid) + 1
 
 
 func count() -> int:

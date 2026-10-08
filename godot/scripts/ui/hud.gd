@@ -173,6 +173,7 @@ func refresh(g, dt: float) -> void:
 	markers.refresh(world, cam, g.mode != "command")
 	if g.mode == "command":
 		_reason.text = g.command.reason
+		build.level = g.level
 		build.refresh(g.economy.energy)
 		info.refresh()
 		var r: Rect2 = g.command.drag_rect

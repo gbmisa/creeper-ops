@@ -23,6 +23,9 @@ class_name Debug
 ##   --cpu-sim     force the CPU creeper sim
 ##   --level=N     play Level N (1 Hollow Ridge, 2 The Crown Marches); see Levels
 ##   --raise=x,z,r,by   raise (negative: lower) a disc of terrain through TerrainEdit
+##   --unlock=id[,id]  add ids to this level's unlock list (e.g. terp)
+##   --paint=x,z,x2,z2,level  paint a Terp target rectangle (whole levels)
+##   --terp=x,z   place a finished Terp and give it energy to dig
 ##   --fpsbuild=T  Operative near the base in first-person build mode holding structure T
 ##   --turrets=I   castle I held with a Repeater, Lobber and Flak on its first sockets
 ##   --raid=I[,S]  castle I held; its reprisal raid marches in S seconds (default 20)
@@ -126,6 +129,11 @@ static func apply(g) -> void:
 		TerrainEdit.raise(g.surface, cells, float(p[3]), Grid.Mat.EARTH)
 	if args.has("salvage"):
 		g.stockpile.salvage = float(args.salvage)
+	if args.has("unlock"):
+		for id in str(args.unlock).split(","):
+			StructureDefs.grant_unlock(g.level, id.strip_edges())
+	if args.has("paint") or args.has("terp"):
+		TerpPaint.debug_scene(g, args)
 	if args.has("smoke"):
 		SmokeTest.run(g)
 	if args.has("sim"):

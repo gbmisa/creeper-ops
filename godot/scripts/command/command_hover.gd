@@ -14,6 +14,10 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 	if cm.tool == "":
 		cm.reason = ""
 		return
+	if cm.tool == "@terp":
+		cm.reason = cm.overlay.paint.hover_text(cm) if cm.overlay.paint else ""
+		cm.overlay.hide_ghost()
+		return
 	if not cm.drag_plan.is_empty():  # DragBuild draws its own preview
 		cm.overlay.hide_ghost()
 		cm.reason = DragBuild.summary(cm.drag_plan)
@@ -34,7 +38,8 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 			cm.overlay.show_ghost("", at, res.ok, 1.2 * Config.CELL, CastleTurrets.DEFS[cm.tool.substr(1)].range * Config.CELL, [])
 		_:
 			var def: Dictionary = StructureDefs.DEFS[cm.tool]
-			var r: float = (WeaponLogic.def_range(def) if def.has("range") else def.link) * Config.CELL
+			var reach := float(def.work_range) if def.has("work_range") else (WeaponLogic.def_range(def) if def.has("range") else float(def.link))
+			var r := reach * Config.CELL
 			var cover: Array[Vector4] = cm.structures.network.cover_discs(cm.structures.list) if def.get("needs_network", true) else []
 			cm.overlay.show_ghost(cm.tool, at, res.ok, StructureDefs.radius_m(cm.tool), r, cover)
 
@@ -46,6 +51,9 @@ static func check(cm: CommandMode, c: Vector2i) -> Dictionary:
 		"@move": return Placement.can_move(cm.structures, cm.selected, c.x, c.y) if cm.selected else { "ok": false, "reason": "" }
 		"@land": return Placement.can_land(cm.structures, cm.level, c.x, c.y)
 		"@repeater", "@lobber", "@flak": return turret_check(cm, c).res
+		"@terp":
+			var why := TerpPaint.cell_reason(cm.world.grid, c)
+			return { "ok": why == "", "reason": why }
 		_: return Placement.can_place(cm.structures, cm.tool, c.x, c.y)
 
 
