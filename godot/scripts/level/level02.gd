@@ -10,6 +10,15 @@ const RAID_SCHEDULE := {
 	"raid_delay": 180.0,
 	"tier_times": [0.0, 300.0, 600.0, 900.0],
 }
+## Harder clock: Brute ~5 min, Ravager ~10, Behemoth ~15. Grace matches the raid start.
+const PRESSURE := { "grace": 180.0, "cap": 1800.0 }
+const PRESSURE_POINTS := [
+	{ "t": 180.0, "p": 0.0 },
+	{ "t": 300.0, "p": 0.20 },
+	{ "t": 600.0, "p": 0.60 },
+	{ "t": 900.0, "p": 0.85 },
+	{ "t": 1800.0, "p": 1.0 },
+]
 ## Ground castles keep a moat; raised ones a drawbridge. Sizes >= 19 get gatehouses.
 ## `guards`: Sentinels posted on tower tops, then along the walls. `yield` scales Aether/Salvage.
 const CASTLES := [
@@ -71,7 +80,7 @@ static func build() -> Dictionary:
 			{ "x": 116, "z": 86, "amount": 1.6, "interval": 1.0 },
 			{ "x": 62, "z": 118, "amount": 1.4, "interval": 1.0 },
 		],
-		"nests": [
+		"hives": [
 			{ "name": "Rift", "x": 15, "z": 60 },
 			{ "name": "Spire Heights", "x": 133, "z": 64 },
 			{ "name": "North Knoll", "x": 82, "z": 40 },
@@ -80,6 +89,8 @@ static func build() -> Dictionary:
 			{ "name": "Southern Barrows", "x": 30, "z": 146 },
 		],
 		"raid_schedule": RAID_SCHEDULE,
+		"pressure": PRESSURE,
+		"pressure_points": PRESSURE_POINTS,
 		"spire": { "x": 138, "z": 58 },
 		"castles": castles,
 		"castle_rules": CASTLE_RULES,
@@ -96,6 +107,8 @@ static func build() -> Dictionary:
 			["Ops: Raids start in three minutes. The nests will not wait.", "radio"],
 		],
 	}
+	level["nests"] = level.hives # alias: older readers still say nests
+	HiveShape.stamp_all(g, level.hives)
 	var hazards: Array = level.emitters + level.vents + level.nests + [level.spire, level.rift]
 	for p in hazards:
 		LevelShape.disc(g, p.x, p.z, 1.5, func(x, z, _d): g.blocked[g.idx(x, z)] = 1)

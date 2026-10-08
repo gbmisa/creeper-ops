@@ -55,7 +55,7 @@ static func _garrison_exits(g, castles: Strongholds, c: Dictionary, lay: Diction
 	bait.position = grid.cell_ground(out.x, out.y)
 	var prey := { "node": bait, "radius": 0.6, "alive": func(): return true, "hit": func(_d): pass }
 	var v: Dictionary = castles.views[c.id]
-	raiders.spawn(v.garrison, Config.RAIDER_TIERS[0], true)
+	raiders.spawn(v.garrison, RaiderDefs.named("Skitter"), true)
 	var r: Dictionary = raiders.list.back()
 	var start := grid.world_to_cell(r.node.position.x, r.node.position.z)
 	for i in 600:  # 30 s

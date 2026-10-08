@@ -31,6 +31,7 @@ uniform vec4 ring_a = vec4(0.0);         // xy, z = radius m, w = on
 uniform vec3 ring_a_color : source_color = vec3(0.37, 0.83, 1.0);
 uniform vec4 ring_b = vec4(0.0);
 uniform vec3 ring_b_color : source_color = vec3(0.62, 1.0, 0.48);
+uniform vec4 shells[8];          // enemy mortar telegraphs: xy, z = radius m, w = on
 uniform int sel_count = 0;
 uniform int plan_count = 0;
 uniform vec4 plans[48];       // drag-build preview: xy, z = radius m, w = 1 ok / 0 blocked
@@ -136,6 +137,12 @@ void fragment() {
 	}
 	float ra = ring(p, ring_a);
 	float rb = ring(p, ring_b);
+	float sh = 0.0;  // enemy mortar telegraphs: a red ring that grows to the blast
+	for (int i = 0; i < 8; i++) {
+		float d = abs(length(p - shells[i].xy) - shells[i].z);
+		float aa = fwidth(d) * 1.5;
+		sh = max(sh, shells[i].w * (1.0 - smoothstep(0.35, 0.35 + aa + 0.2, d)));
+	}
 	float rs = 0.0;  // group rings: thicker and warm so they read on the green field
 	for (int i = 0; i < sel_count; i++) {
 		float d = abs(length(p - sels[i].xy) - sels[i].z);
@@ -143,9 +150,10 @@ void fragment() {
 	}
 	col = mix(col, ring_a_color, ra * 0.85);
 	col = mix(col, ring_b_color, rb * 0.85);
+	col = mix(col, vec3(1.0, 0.16, 0.08), sh * 0.92);
 	col = mix(col, vec3(1.0, 0.86, 0.35), rs * 0.9);
 	ALBEDO = col;
-	EMISSION = glow + col * emit + ring_a_color * ra * 0.35 + ring_b_color * rb * 0.35 + vec3(1.0, 0.86, 0.35) * rs * 0.4;
+	EMISSION = glow + col * emit + ring_a_color * ra * 0.35 + ring_b_color * rb * 0.35 + vec3(1.0, 0.22, 0.1) * sh * 0.55 + vec3(1.0, 0.86, 0.35) * rs * 0.4;
 	ROUGHNESS = rough;
 	SPECULAR = 0.2;
 }

@@ -107,7 +107,7 @@ static func _raiders(g) -> void:
 	var nest: Dictionary = nests.nests.filter(func(n): return n.alive)[0]
 	var target: Structure = g.structures.command_node()
 	nests.raiders.field.rebuild(g.raider_goals())
-	nests.raiders.spawn(nest, Config.RAIDER_TIERS[0], false)
+	nests.raiders.spawn(nest, RaiderDefs.named("Skitter"), false)
 	var r: Dictionary = nests.raiders.list.back()
 	var d0: float = (r.node.position as Vector3).distance_to(target.pos)
 	SmokeTest._sim(g, 12.0)

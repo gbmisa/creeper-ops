@@ -34,7 +34,7 @@ static func run(g) -> void:
 
 static func _fires(castles: Strongholds, c: Dictionary, v: Dictionary) -> void:
 	var raiders: Raiders = castles.nests.raiders
-	raiders.spawn(v.garrison, Config.RAIDER_TIERS[0], true)
+	raiders.spawn(v.garrison, RaiderDefs.named("Skitter"), true)
 	var r: Dictionary = raiders.list.back()
 	r.node.position = (v.turrets[0] as Node3D).position + Vector3(6.0, -3.0, 6.0)
 	var hp0: float = r.hp
@@ -47,7 +47,7 @@ static func _fires(castles: Strongholds, c: Dictionary, v: Dictionary) -> void:
 
 static func _blocks_retake(g, castles: Strongholds, c: Dictionary, lay: Dictionary) -> void:
 	var raiders: Raiders = castles.nests.raiders
-	raiders.spawn(castles.views[c.id].garrison, Config.RAIDER_TIERS[0], true)
+	raiders.spawn(castles.views[c.id].garrison, RaiderDefs.named("Skitter"), true)
 	var r: Dictionary = raiders.list.back()
 	var yard: Vector2i = lay.courtyard[0]
 	r.node.position = g.surface.grid.cell_ground(yard.x, yard.y)

@@ -27,7 +27,10 @@ static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 		var state := func() -> Dictionary: return c.winch if part == "winch" else c[part][i]
 		var hit := func(d, _pt = null): s._hit(c, lay, part, i, d)
 		var reach := func(): return part != "gates" or not lay.raised or c.winch.hp <= 0.0  # raised gate: winch first
-		v.prey.append({ "node": p[2], "radius": p[3], "alive": func(): return ours_sealed.call(state.call()) and reach.call(), "hit": hit })
+		var prey_row := { "node": p[2], "radius": p[3], "alive": func(): return ours_sealed.call(state.call()) and reach.call(), "hit": hit }
+		if part == "walls":
+			prey_row["wall"] = true  # Brute / Behemoth wall_mult
+		v.prey.append(prey_row)
 		if part != "walls":
 			var e := { "node": p[2], "oy": 0.5, "radius": p[3] * 0.6, "alive": func(): return enemy_owned.call(state.call()), "hit": hit }
 			v.enemies.append(e)
@@ -49,7 +52,7 @@ static func _turrets(s: Strongholds, c: Dictionary, v: Dictionary) -> void:
 	for i in c.sockets.size():
 		var node: Node3D = v.turrets[i]
 		var sock := func() -> Dictionary: return c.sockets[i]
-		v.prey.append({ "node": node, "radius": 1.0, "alive": func(): return c.owner == "player" and CastleTurrets.alive(sock.call()),
+		v.prey.append({ "node": node, "radius": 1.0, "weapon": true, "alive": func(): return c.owner == "player" and CastleTurrets.alive(sock.call()),
 			"hit": func(d, _pt = null): CastleTurretFire.hit(c, sock.call(), d) })
 		s.world.interactables.append({ "pos": node.position, "radius": 2.5,
 			"prompt": func(): return CastleTurrets.use_label(c, i, s.stockpile.salvage) if c.owner == "player" and s.stockpile else "",

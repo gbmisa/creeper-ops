@@ -33,6 +33,8 @@ static func make(tier: Dictionary) -> Node3D:
 		"Ravager": _ravager(root, s * 1.8, glow)
 		"Behemoth": _behemoth(root, s * 1.7, glow)
 		"Sentinel": _sentinel(root, glow)  # fixed 2.4 m design height, whatever its hit size
+		"Spitter", "Lancer", "Warden", "Spotter", "Burrower":
+			RaiderMeshesRanged.add(root, tier.name, s * 1.8, glow)
 		_: _bug(root, s, glow)
 	return root
 

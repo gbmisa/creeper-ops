@@ -88,13 +88,12 @@ func _launch(c: Dictionary) -> void:
 	if src.is_empty():
 		return
 	var n := size(kind)
+	var gid := RaiderGroups.spawn(nests.raiders, src, RaiderGroups.compose(n, nests.pressure(), launched + int(src.get("x", 0))), "castle")
 	var sent := 0
-	for i in n:
-		if nests.raiders.list.size() >= Config.RAIDER_MAX_TOTAL:
-			break
-		nests.raiders.spawn(src, nests.pick_tier(), false)
-		nests.raiders.list.back()["mission"] = "castle"
-		sent += 1
+	if gid >= 0:
+		for m in nests.raiders.list:
+			if int(m.get("group", -1)) == gid:
+				sent += 1
 	launched += 1
 	Sfx.play("alarm")
 	Bus.say("%s: %d raiders from the %s nest are marching on it." % [KIND_LABEL[kind], sent, src.name], "bad")

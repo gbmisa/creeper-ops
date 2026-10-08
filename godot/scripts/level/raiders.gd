@@ -6,8 +6,8 @@ extends RefCounted
 ##    within RAIDER_AGGRO on the way (units, the Operative, a structure) is attacked first
 ## They only step one terrace at a time. With no walking route they attack the nearest prey
 ## they can reach on foot, or else return to the nest and guard it. Melee still reaches
-## across a cliff edge. Tiers (Config.RAIDER_TIERS) get tougher as the level's schedule
-## unlocks them. Snipers, units, the Operative and the Lance kill them. Mortar splash only nicks them.
+## across a cliff edge. Tiers (RaiderDefs) unlock with pressure. Brutes and Behemoths hit
+## walls three times harder. Snipers, units, the Operative and the Lance kill them. Mortar splash only nicks them.
 
 var world: World
 var list: Array[Dictionary] = []
@@ -17,6 +17,8 @@ var castle_field: RaiderField
 var castle_goals := func() -> Array: return []
 var on_march := func(_r: Dictionary) -> void: pass  # injected: may give a marcher a mission
 var time := 0.0
+var next_group := 1
+var seen := {}  # tier name -> how many have spawned this mission
 
 
 func _init(w: World) -> void:
@@ -36,8 +38,14 @@ func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
 	world.add_child(node)
 	var r := { "tier": tier, "node": node, "hp": tier.hp, "alive": true, "nest": nest, "guard": guard,
 		"phase": randf() * TAU, "size": tier.size }
+	var attack := str(tier.get("attack", ""))
+	if attack == "aura" or attack == "burrow":
+		RaiderBurrow.setup(r)
 	var hit := func(dmg: float, _p = null):
-		r.hp -= dmg
+		var dealt: float = RaiderBurrow.filter(self, r, dmg)
+		if dealt < 0.0:
+			return
+		r.hp -= dealt
 		if r.hp <= 0.0:
 			kill(r)
 	r["enemy"] = { "node": node, "oy": tier.size * 0.6, "radius": tier.size, "alive": func(): return r.alive, "hit": hit }
@@ -45,6 +53,7 @@ func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
 	world.add_target(r.target)
 	list.append(r)
 	nest.count += 1
+	seen[tier.name] = int(seen.get(tier.name, 0)) + 1
 	if not guard:
 		on_march.call(r)
 
@@ -93,8 +102,24 @@ func _nearest(from: Vector3, prey: Array, max_d: float, leash_home = null) -> Di
 
 
 func _think(r: Dictionary, dt: float, prey: Array) -> void:
+	if float(r.get("gather", 0.0)) > 0.0:
+		r["gather"] = float(r.gather) - dt
+		_walk(r, _patrol(r.nest.pos, r), dt)
+		return
+	var tier := r.tier as Dictionary
+	var attack := str(tier.get("attack", "melee"))
+	if attack == "burrow":
+		RaiderBurrow.step(self, r, dt, prey)
+		return
+	if attack == "acid" or attack == "beam":
+		RaiderShots.step(self, r, dt, prey)
+		return
 	var p: Vector3 = r.node.position
 	var home: Vector3 = r.nest.pos
+	if str(tier.get("special", "")) == "spotter" and r.has("post"):
+		var post: Vector3 = r.post
+		_walk(r, Vector2(post.x, post.z), dt)
+		return
 	var goal = null  # Vector2 XZ
 	var target: Dictionary
 	if r.guard:
@@ -114,7 +139,10 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 		var tp: Vector3 = target.node.position
 		var reach: float = target.radius + r.size + 0.5
 		if Vector2(tp.x - p.x, tp.z - p.z).length() <= reach and absf(tp.y - p.y) <= reach + 2.5:
-			target.hit.call(r.tier.dps * dt)
+			var dmg: float = float(tier.dps) * dt
+			if target.get("wall", false):
+				dmg *= float(tier.get("wall_mult", 1.0))
+			target.hit.call(dmg)
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
 			r.node.position.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY) + absf(sin(time * 12.0 + r.phase)) * 0.2
 			return
@@ -134,6 +162,9 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 ## Castle raiders follow the castle field while it has a route for them; everyone else
 ## (and castle raiders with no route) follows the field to your structures.
 func _route(r: Dictionary, p: Vector3) -> Variant:
+	if r.get("overrun", false):
+		var rush: Vector3 = r.get("rush", r.nest.pos)
+		return Vector2(rush.x, rush.z)
 	if r.get("mission", "") == "castle" and castle_field.has_goals:
 		var s = castle_field.next_step(p.x, p.z)
 		if s != null:
@@ -155,7 +186,8 @@ func _walk(r: Dictionary, goal: Vector2, dt: float) -> bool:
 		var mn: float = r.size + o.size
 		if d.length() > 0.001 and d.length() < mn:
 			v += d.normalized() * (mn - d.length())
-	var step: float = r.tier.speed * dt
+	v = v.limit_length(1.0)  # separation steers; it must not add speed (a packed group would outrun its slowest)
+	var step: float = RaiderGroups.speed(self, r) * dt
 	var nx := p.x + v.x * step
 	var nz := p.z + v.y * step
 	var ws := world.grid.world_size()

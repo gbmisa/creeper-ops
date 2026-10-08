@@ -36,6 +36,8 @@ class_name Debug
 ##                 (spire jump pad), top (spire top), gate (outside the gate)
 ##   --guardsfire  every Sentinel is ready to fire now (screenshots of a bolt in flight)
 ##   --gallery     one of every structure, unit and raider tier in rows (art screenshots)
+##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
+##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -117,6 +119,12 @@ static func apply(g) -> void:
 		g.cave_hazards.kill_all()
 	if args.has("gallery"):
 		Gallery.run(g, args.gallery)
+	if args.has("ranged"):
+		RaiderShots.demo(g)
+	if args.has("burrow"):
+		RaiderBurrow.demo(g)
+	if args.has("mortar"):
+		EnemyMortars.demo(g)
 	if args.has("look"):
 		var xz: PackedStringArray = args.look.split(",")
 		g.command.cam.focus(g.level.grid.cell_ground(int(xz[0]), int(xz[1])))
@@ -258,7 +266,8 @@ static func _fast_forward(g, seconds: float) -> void:
 		"units": " ".join(g.units.list.map(func(u): return "%s:%d hp/%d ammo/%s" % [u.type, u.hp, u.ammo, u.state])),
 		"nests_alive": g.hazards.nests.alive_count(),
 		"raiders": g.hazards.nests.raiders.list.map(func(r): return r.tier.name.left(2) + ("g" if r.guard else "")),
-		"raider_tier": Config.RAIDER_TIERS[g.hazards.nests.tier].name,
+		"raider_seen": g.hazards.nests.raiders.seen,
+		"raider_tier": RaiderDefs.newest(g.hazards.nests.pressure()).name,
 		"aether": Upgrades.aether, "castles": g.castles.list.map(func(c): return "%s:%s" % [c.id, c.state]),
 		"castle_raids": g.castle_raids.launched,
 		"coverage": snappedf(g.surface.creeper.coverage(), 0.01),

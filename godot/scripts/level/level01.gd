@@ -13,6 +13,16 @@ const RAID_SCHEDULE := {
 	"raid_delay": 300.0,
 	"tier_times": [0.0, 480.0, 900.0, 1320.0],
 }
+## Pressure curve (§4.1). Points hold the old unlocks: Brute ~8 min (0.20), Ravager ~15 (0.60),
+## Behemoth ~22 (0.85). Grace matches the raid start; cap is the spec's 2400 s.
+const PRESSURE := { "grace": 300.0, "cap": 2400.0 }
+const PRESSURE_POINTS := [
+	{ "t": 300.0, "p": 0.0 },
+	{ "t": 480.0, "p": 0.20 },
+	{ "t": 900.0, "p": 0.60 },
+	{ "t": 1320.0, "p": 0.85 },
+	{ "t": 2400.0, "p": 1.0 },
+]
 ## Castles (CastleShape rows). The Operative takes them; raiders take them back.
 ## Ashmoat: a ground keep whose moat the core-fed SW vent fills. High Bastion: a raised keep
 ## on a plateau, reached by a drawbridge from the south or the climbing pillars on its east.
@@ -166,12 +176,14 @@ static func build() -> Dictionary:
 			{ "x": 24, "z": 36, "amount": 1.6, "interval": 1.0 },
 			{ "x": 18, "z": 58, "amount": 1.4, "interval": 1.0 },
 		],
-		"nests": [
+		"hives": [
 			{ "name": "Rift", "x": 9, "z": 38 },
 			{ "name": "Spire Heights", "x": 59, "z": 13 },
 			{ "name": "Central knoll", "x": 40, "z": 23 },
 		],
 		"raid_schedule": RAID_SCHEDULE,
+		"pressure": PRESSURE,
+		"pressure_points": PRESSURE_POINTS,
 		"spire": { "x": 66, "z": 9 },
 		"castles": castles,
 		"castle_rules": CASTLE_RULES,
@@ -183,6 +195,8 @@ static func build() -> Dictionary:
 			["Ops: Purple Blight can't be built on. Barracks units can go there, but they run dry and must come home.", "radio"],
 		],
 	}
+	level["nests"] = level.hives # alias: older readers still say nests
+	HiveShape.stamp_all(g, level.hives)
 	var hazards: Array = level.emitters + level.vents + level.nests + [level.spire, level.rift]
 	for p in hazards:
 		_disc(g, p.x, p.z, 1.5, func(x, z, _d): g.blocked[g.idx(x, z)] = 1)

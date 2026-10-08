@@ -40,11 +40,12 @@ static func run(g, mode: String) -> void:
 	w.add_child(terp)
 	_unit(g, w, "soldier", 25, 73)
 	_unit(g, w, "crawler", 29, 74)
-	var tiers: Array = Config.RAIDER_TIERS.duplicate()
+	var tiers: Array = RaiderDefs.ROWS.duplicate()
 	tiers.append(SENTINEL)
 	for i in tiers.size():
-		var r := HazardMeshes.raider(tiers[i])
-		r.position = w.grid.cell_ground(34 + i * 5, RAIDER_Z)
+		var tier: Dictionary = tiers[i]
+		var r := HazardMeshes.raider(tier)
+		r.position = w.grid.cell_ground(24 + i * 4, RAIDER_Z)
 		r.rotation.y = -PI / 2.0 + 0.7  # three-quarter view toward the command camera
 		w.add_child(r)
 	g.command.cam.focus(w.grid.cell_ground(43, 73))

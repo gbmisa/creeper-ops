@@ -163,24 +163,76 @@ const NEST_SPAWN_MIN := 5.0
 const NEST_CAP_START := 3      # live raiders per nest at minute 0
 const NEST_CAP_PER_MIN := 0.35
 const NEST_CAP_MAX := 10
-const NEST_GUARDS := 2         # raiders per nest that stay home once raids start
+const NEST_GUARDS := 1         # one stays home; the rest of the opening cap marches (Stage 8 balance)
 const NEST_RAID_DELAY := 300.0 # fallback grace period when a level has no RAID_SCHEDULE
+## Hives (§3.3). Stage 0 is up at the start; later parts grow in. Mortar bodies are Phase 7.
+const HIVE_P1 := 0.55 # spec 0.20; later so the scripted base still holds (Stage 8 balance)
+const HIVE_P2 := 0.70
+const HIVE_P3 := 0.85
+const HIVE_P4 := 0.95
+const HIVE_GROW := 20.0
+const HIVE_REBUILD_TIME := 30.0
+const HIVE_REBUILD_RANGE := 4.0   # cells
+const HIVE_REBUILD_NEED := 3
+const HIVE_RADIUS := 6.0          # cells; player structures on the site die when a rebuild lands
+const HIVE_CORE_BASE := 150.0
+const HIVE_CORE_PER_P := 100.0
+const HIVE_PIT_HP := 40.0
+const HIVE_SPITTER_HP := 50.0
+const HIVE_LAUNCHER_HP := 40.0
+const HIVE_MORTAR_HP := 80.0
+const HIVE_STAGE4_HP := 1.5
+const HIVE_SALVAGE := 40.0
+const HIVE_LANCE_DMG := 100.0     # a Lance hurts the Core; it does not erase a fresh one
+const HIVE_SPITTER_DMG := 6.0
+const HIVE_SPITTER_INTERVAL := 2.0
+const HIVE_SPITTER_RANGE := 20.0  # cells
+const HIVE_SPITTER_SPLASH := 1.5  # cells
+## Enemy mortars (§4.3). Range is in cells. The Operative takes a fraction of max suit at the centre.
+const MORTAR_RANGE := 36.0
+const MORTAR_MIN_RANGE := 6.0
+const MORTAR_INTERVAL := 6.0
+const MORTAR_BLAST := 2.5
+const MORTAR_STRUCT := 30.0
+const MORTAR_UNIT := 20.0
+const MORTAR_OPERATIVE := 0.70
+const MORTAR_TELEGRAPH := 2.5
+const MORTAR_WHISTLE := 1.0       # last seconds of the telegraph
+const MORTAR_SEAL := 60.0         # no walking route to the Node
+const MORTAR_SEAL_BUILD := 60.0   # then a mortar is up within this long
+const MORTAR_SIGHT := 25.0        # metres, Spotter line of sight
+const MORTAR_SABOTAGE_TIME := 3.0
+const MORTAR_SABOTAGE_RANGE := 2.0
+const MORTAR_SALVAGE := 5.0
+const MORTAR_SPOTTER_RESPAWN := 30.0
+## Overrun (§4.1): at pressure 1, every OVERRUN_INTERVAL each active nest sends this many
+## straight at the Node. "Tier" is Pressure.legacy_tier (0..3), so a capped wave is 12.
+const OVERRUN_INTERVAL := 45.0
+const OVERRUN_BASE := 6
+const OVERRUN_PER_TIER := 2
 const RAIDER_MAX_TOTAL := 60
 const RAIDER_AGGRO := 9.0      # metres: a marching raider attacks anything this close
 const RAIDER_CLIMB := 1.1      # max terrain levels a raider may step up between cells
 const RAIDER_DETOUR_TIME := 2.0  # s a raider blocked on its way to a target follows the flow field
 const RAIDER_DROP := RAIDER_CLIMB # one terrace down as well; steeper ground is a wall
 const RAIDER_FIELD_INTERVAL := 2.0
+const RAIDER_STANDOFF := 0.65  # ranged raiders back up when closer than this share of their range
+const RAIDER_SHOT_SPEED := 18.0 # m/s, acid lobs. A 40 m shot takes about 2 s and can be walked out of
+const RAIDER_BEAM_SPEED := 32.0 # m/s, Lancer bolts. Still a travel time, so a moving target is missed
+const RAIDER_BEAM_RADIUS := 1.2 # metres around the aim point. No splash
+const RAIDER_LANCER_GAP := 1.5  # seconds after a Lancer bolt before the next charge (the charge itself is the row interval)
+## Mixed groups (§4.2). Below this pressure, nests spawn one weighted raider at a time.
+const GROUP_PRESSURE := 0.60 # spec 0.35; blobs start with Ravagers (Stage 8 balance)
+const GROUP_GATHER := 10.0    # seconds the group mills at the nest before it marches
+const GROUP_FRONT := 0.50     # share of a group that rolls front line
+const GROUP_RANGED := 0.35    # then ranged; the rest are support
+const GROUP_MIN := 4
+const GROUP_MAX := 8
 const MORTAR_RAIDER_DMG := 1.2 # mortar/Bertha splash vs one raider; 30% of a Sniper shot (power 4)
 ## Fallback tier unlock times (seconds) when a level has no RAID_SCHEDULE.
 const RAIDER_TIER_TIMES := [0.0, 480.0, 900.0, 1320.0]
-## Raider tier stats. When each tier unlocks lives on the level (RAID_SCHEDULE.tier_times).
-const RAIDER_TIERS := [
-	{ "name": "Skitter", "hp": 4.0, "dps": 3.0, "speed": 4.2, "size": 0.45, "color": Color("a8ff5a") },
-	{ "name": "Brute", "hp": 16.0, "dps": 8.0, "speed": 3.4, "size": 0.75, "color": Color("ffd24a") },
-	{ "name": "Ravager", "hp": 40.0, "dps": 16.0, "speed": 4.0, "size": 0.9, "color": Color("ff7a3a") },
-	{ "name": "Behemoth", "hp": 120.0, "dps": 35.0, "speed": 2.6, "size": 1.4, "color": Color("ff3355") },
-]
+## Raider stats live in RaiderDefs (pressure unlocks). RAID_SCHEDULE.tier_times still advances
+## the legacy 0..3 index that castle-raid size and the old escalate smoke read.
 
 # ---- units (barracks) --------------------------------------------------------------
 const UNITS_PER_BARRACKS := 4  # population cap: more barracks, more (dependent) units

@@ -26,7 +26,7 @@ static func _free(sm: StructureManager, grid: Grid, x0: int, z0: int) -> Vector2
 
 static func _spawn(nests: SporeNests) -> Dictionary:
 	var nest: Dictionary = nests.nests.filter(func(n): return n.alive)[0]
-	nests.raiders.spawn(nest, Config.RAIDER_TIERS[0], false)
+	nests.raiders.spawn(nest, RaiderDefs.named("Skitter"), false)
 	var r: Dictionary = nests.raiders.list.back()
 	r.guard = false
 	return r
