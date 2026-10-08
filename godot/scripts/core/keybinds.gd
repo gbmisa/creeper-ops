@@ -6,6 +6,10 @@ class_name Keybinds
 ## Esc is fixed (cancel / pause / close menus) and can't be rebound.
 
 const PATH := "user://keybinds.cfg"
+## Mouse-wheel chords share the keycode lists as pseudo keycodes above any real key (InputState
+## presses them when the wheel turns with Ctrl held). They are never read from the keyboard.
+const CTRL_WHEEL_UP := 0x7A000001
+const CTRL_WHEEL_DOWN := 0x7A000002
 const SLOTS := 2  # keys per action: primary, alternate
 const GROUPS := ["Global", "Command", "Operative"]
 
@@ -15,6 +19,8 @@ const DEFAULTS := {
 	"keybinds": ["Global", "Controls menu", [KEY_F10]],
 	"objectives_toggle": ["Global", "Expand objectives", [KEY_J]],
 	"test_recall": ["Global", "Test: recall now (no cooldown)", [KEY_F8]],
+	"ammo_next": ["Global", "Next ammo grade", [CTRL_WHEEL_DOWN]],
+	"ammo_prev": ["Global", "Previous ammo grade", [CTRL_WHEEL_UP]],
 	"cam_forward": ["Command", "Camera forward", [KEY_W, KEY_UP]],
 	"cam_back": ["Command", "Camera back", [KEY_S, KEY_DOWN]],
 	"cam_left": ["Command", "Camera left", [KEY_A, KEY_LEFT]],
@@ -94,14 +100,23 @@ static func label(id: String) -> String:
 
 ## "W / Up" style text for hints and menus.
 static func text(id: String) -> String:
-	var names := keys(id).map(func(k): return OS.get_keycode_string(k))
+	var names := keys(id).map(func(k): return key_name(k))
 	return " / ".join(PackedStringArray(names)) if not names.is_empty() else "unbound"
 
 
 ## Primary key only (compact hints).
 static func short(id: String) -> String:
 	var k := keys(id)
-	return OS.get_keycode_string(k[0]) if not k.is_empty() else "-"
+	return key_name(k[0]) if not k.is_empty() else "-"
+
+
+## Display name of a bound key code, including the Ctrl + wheel chords.
+static func key_name(k: int) -> String:
+	if k == CTRL_WHEEL_UP:
+		return "Ctrl+Wheel Up"
+	if k == CTRL_WHEEL_DOWN:
+		return "Ctrl+Wheel Down"
+	return OS.get_keycode_string(k)
 
 
 ## Bind `keycode` to slot 0/1 of `id` (0 keycode clears the slot). Any other action in a
