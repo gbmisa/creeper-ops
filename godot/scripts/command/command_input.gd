@@ -82,6 +82,13 @@ static func click(cm: CommandMode, shift: bool) -> void:
 				CastleTurrets.buy(t.castle, t.i, cm.tool.substr(1), cm.castles.stockpile)
 				Sfx.play("good")
 				cm.set_tool("")
+			"@repair":
+				var fixed := WallRepair.apply(cm.castles, c)
+				if fixed.ok:
+					Sfx.play("good")
+				else:
+					Bus.say(str(fixed.reason), "warn")
+					Sfx.play("deny")
 			"@terp":
 				return  # TerpPaint.pointer owns the drag; a click must not place "@terp"
 			_:

@@ -57,6 +57,14 @@ static func can_place(mgr, type: String, x: int, z: int, planned: Array[Vector3]
 		return { "ok": false, "reason": why }
 	if def.get("unique", false) and mgr.count_type(type) > 0:
 		return { "ok": false, "reason": "Only one %s per mission" % def.label }
+	if type == "miner":
+		var vein: Dictionary = mgr.deposits.ore_at(x, z) if mgr.deposits != null else {}
+		if vein.is_empty() or float(vein.get("left", 0.0)) < 1.0:
+			return { "ok": false, "reason": "Miner must sit on an ore deposit" }
+	if type == "outpost":
+		var pile: Stockpile = mgr.stockpile
+		if pile == null or not pile.can_afford("ore", Config.OUTPOST_ORE):
+			return { "ok": false, "reason": "Outpost needs %d Ore up front" % int(Config.OUTPOST_ORE) }
 	if def.get("drop_pod", false) and mgr.economy.energy < def.cost:
 		return { "ok": false, "reason": "Drop pod needs %d energy up front" % def.cost }
 	if def.get("needs_network", true) and not mgr.network.in_range(mgr.list, x, z, def.link, null) \

@@ -1,6 +1,6 @@
 class_name SupportMeshes
 ## Every structure that isn't an armed weapon: the Command Node citadel, collectors, relays,
-## outposts, reactor, storage, barracks, Forge and the Totem. Same "Arcane Forge" kit as
+## outposts, miners, reactor, storage, barracks, Forge and the Totem. Same "Arcane Forge" kit as
 ## weapon_meshes.gd. Named parts: "Spin", "Glow" (see StructureMeshes).
 
 
@@ -11,6 +11,7 @@ static func build(type: String, root: Node3D) -> void:
 		"collector": collector(root)
 		"relay": relay(root)
 		"outpost", "keep": outpost(root)
+		"miner": miner(root)
 		"reactor": reactor(root)
 		"storage": storage(root)
 		"barracks": barracks(root)
@@ -165,3 +166,12 @@ static func beacon(root: Node3D) -> void:
 	for sz in [-1.0, 1.0]:
 		StructureMeshes.box(g, Vector3(0.1, 1.4, 0.05), teal, Vector3(0, 0.75, sz * 0.27))
 	StructureMeshes.crystal(root, 0.14, 0.45, teal, Vector3(0, 2.55, 0))
+
+
+## Miner: a stone well with a bronze drill and an amber crystal, short enough to read as a machine.
+static func miner(root: Node3D) -> void:
+	ShapeKit.lathe(root, PackedVector2Array([Vector2(0.75, 0.0), Vector2(0.75, 0.22), Vector2(0.38, 0.4),
+		Vector2(0.0, 0.4)]), StructureMeshes.pal("stone"), Vector3.ZERO, 6)
+	StructureMeshes.cyl(root, 0.1, 0.16, 0.8, StructureMeshes.pal("bronze_dark"), 0.4, 6)
+	var spin := StructureMeshes._part(root, "Spin", 1.2)
+	StructureMeshes.crystal(spin, 0.2, 0.7, StructureMeshes.glow(Color("e0a24a"), 1.6), Vector3(0, 0.4, 0))

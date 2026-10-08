@@ -1,6 +1,6 @@
 class_name Stockpile
 extends RefCounted
-## Ore and Salvage (design §2). Nothing produces them yet (Stage 9a). Respawn spends Salvage.
+## Ore and Salvage (design §2). Miners add Ore by return packet. Respawn and wall repair spend Salvage.
 ## ore_rate / salvage_rate are per-second rolling averages for the HUD.
 
 var ore := 0.0

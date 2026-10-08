@@ -7,12 +7,16 @@ extends MultiMeshInstance3D
 ## (Config.REQ_BUILD / REQ_AMMO / REQ_UNIT / REQ_TERP). Requests the bank can't pay are counted as unmet
 ## demand so the HUD can show the red number the way CW3 does. No priority: requesters are
 ## served round robin, ammo and builds alike.
+## Return packets (kind "ore" or "salvage") fly route() reversed and credit the Stockpile.
+## They cost no energy. One already in flight still arrives if its source is gone.
 
 const MAX_VISIBLE := 1200
-const COLORS := { "build": Color("e8fbff"), "ammo": Color("ffb13b"), "unit": Color("9dff7a"), "terp": Color("e2b15a") }
+const COLORS := { "build": Color("e8fbff"), "ammo": Color("ffb13b"), "unit": Color("9dff7a"), "terp": Color("e2b15a"),
+	"ore": Color("e0a24a"), "salvage": Color("7dff9a") }
 
 var network: Network
 var economy: Economy
+var stockpile: Stockpile
 var flying: Array[Dictionary] = []
 var _cursor := 0
 
@@ -139,12 +143,16 @@ func _fly(dt: float) -> void:
 		if shown < MAX_VISIBLE:
 			var pos := route[p.seg].lerp(route[p.seg + 1], p.t)
 			mm.set_instance_transform(shown, Transform3D(Basis(), pos))
-			mm.set_instance_color(shown, COLORS[p.kind])
+			mm.set_instance_color(shown, COLORS.get(p.kind, Color.WHITE))
 			shown += 1
 	mm.visible_instance_count = shown
 
 
 func _arrive(p: Dictionary) -> void:
+	if p.get("returns", false):
+		if stockpile != null:
+			stockpile.add(str(p.kind), float(p.n))
+		return
 	var s: Structure = p.s
 	s.in_flight = maxi(0, s.in_flight - 1)
 	if s.dead:
@@ -161,6 +169,16 @@ func _arrive(p: Dictionary) -> void:
 			if s.job.is_empty() or int(s.job.get("x", -1)) < 0:
 				return  # step was cancelled while this packet was in flight
 			s.job["paid"] = int(s.job.paid) + 1
+
+
+## Ore or Salvage already extracted. The route is copied reversed, so a later rebuild cannot recall it.
+func launch_return(s: Structure, kind: String, n: float) -> bool:
+	var route := network.route(s)
+	if route.size() < 2:
+		return false
+	route.reverse()
+	flying.append({ "s": s, "kind": kind, "route": route, "seg": 0, "t": 0.0, "returns": true, "n": n })
+	return true
 
 
 func count() -> int:

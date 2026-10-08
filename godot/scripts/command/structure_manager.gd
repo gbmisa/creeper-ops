@@ -8,6 +8,8 @@ const DROP_POD_TIME := 3.0
 
 var world: World
 var economy: Economy
+var stockpile: Stockpile
+var deposits: Deposits
 var hazards = null            # SurfaceHazards (set by Game)
 var list: Array[Structure] = []
 var occupied := {}            # grid idx -> Structure
@@ -72,6 +74,8 @@ func structure_at(x: int, z: int) -> Structure:
 func place(type: String, x: int, z: int, instant := false) -> Structure:
 	var s := Structure.new(type, x, z)
 	if s.def.get("drop_pod", false) and not instant and not economy.spend(s.def.cost):
+		return null
+	if not _pay_ore(type, x, z, instant):
 		return null
 	s.pos = world.grid.cell_ground(x, z)
 	s.node = Node3D.new()
@@ -201,6 +205,8 @@ func update(dt: float, time: float) -> void:
 		var roams: bool = s.is_built() and s.def.get("roams", false)
 		if roams:
 			WeaponLogic.update(s, dt, self)
+		if s.type == "miner":
+			Miner.update(self, s, dt)
 		if not s.is_built() or not s.connected or s.is_flying():
 			continue
 		if s.type == "collector":
@@ -212,6 +218,16 @@ func update(dt: float, time: float) -> void:
 		StructureBehaviors.update(s, dt, self, time)
 	field.update(dt, collectors)
 	economy.tick(dt, producing, field.income, field.cells, reactor, storage, outpost_storage)
+
+
+## Miner must be on a live vein. Outpost pays its Ore when placed (instant test builds skip it).
+func _pay_ore(type: String, x: int, z: int, instant: bool) -> bool:
+	if type == "miner":
+		var vein: Dictionary = deposits.ore_at(x, z) if deposits != null else {}
+		return not vein.is_empty() and float(vein.get("left", 0.0)) >= 1.0
+	if type == "outpost" and not instant:
+		return stockpile != null and stockpile.spend("ore", Config.OUTPOST_ORE)
+	return true
 
 
 ## Packets launch while any sender is built, connected and on the ground.
