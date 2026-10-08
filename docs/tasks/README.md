@@ -35,3 +35,4 @@ One file per task. Start a **fresh** agent session in the task's worktree and gi
 | [STAGE19_flyers_long.md](STAGE19_flyers_long.md) | `creeper fps td-worktrees/stage19` | `stage/19-flyers` |
 | [STAGE20_art2_long.md](STAGE20_art2_long.md) | `creeper fps td-worktrees/stage20` | `stage/20-art2` |
 | [BENCH512_long.md](BENCH512_long.md) | `creeper fps td-worktrees/bench512` | `stage/bench512` |
+| [STAGE23_fps_feel.md](STAGE23_fps_feel.md) | `creeper fps td-worktrees/stage23` | `stage/23-fps-feel` |
