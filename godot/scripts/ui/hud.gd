@@ -4,8 +4,6 @@ extends CanvasLayer
 ## Operative HUD, event log, centre alerts, placement reason, drag-select box, help line and
 ## modal overlays. Game calls refresh() every rendered frame.
 
-const MAX_LOG := 9
-
 var top: TopBar
 var build: BuildMenu
 var info: InfoPanel
@@ -43,7 +41,7 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	_log.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_log.position = Vector2(12, -12)
 	add_child(_log)
-	_alert = UiKit.label("", 30, UiKit.BAD)
+	_alert = UiKit.label("", Config.HUD_BANNER_SIZE, UiKit.BAD)
 	_alert.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_alert.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_alert.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -100,30 +98,76 @@ func _build_overlay() -> void:
 
 
 func add_log(text: String, kind: String) -> void:
+	var life := _log_life(kind)
 	var top_l: Label = _log.get_child(_log.get_child_count() - 1) if _log.get_child_count() > 0 else null
 	if top_l and top_l.get_meta("text") == text:  # collapse repeats into "xN"
 		var n: int = top_l.get_meta("count") + 1
 		top_l.set_meta("count", n)
+		top_l.set_meta("age", 0.0)
+		top_l.set_meta("life", life)
 		top_l.text = "%s  x%d" % [text, n]
+		top_l.modulate.a = 1.0
 		return
 	var l := UiKit.label(text, 14, UiKit.KIND_COLORS.get(kind, UiKit.TEXT))
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size.x = 400  # stays clear of the centred build menu
 	l.set_meta("text", text)
 	l.set_meta("count", 1)
+	l.set_meta("age", 0.0)
+	l.set_meta("life", life)
 	l.add_theme_color_override("font_outline_color", Color.BLACK)
 	l.add_theme_constant_override("outline_size", 4)
 	_log.add_child(l)
-	while _log.get_child_count() > MAX_LOG:
+	_trim_log()
+
+
+func _log_life(kind: String) -> float:
+	return Config.HUD_LOG_LIFE * (2.0 if kind == "warn" or kind == "bad" else 1.0)
+
+
+func _trim_log() -> void:
+	while _log.get_child_count() > Config.HUD_LOG_LINES:
 		var old := _log.get_child(0)
 		_log.remove_child(old)
 		old.queue_free()
 
 
-func alert(text: String, kind := "bad", secs := 3.0) -> void:
+func _tick_log(dt: float) -> void:
+	var gone: Array[Node] = []
+	for c in _log.get_children():
+		var age: float = float(c.get_meta("age")) + dt
+		var life: float = float(c.get_meta("life"))
+		c.set_meta("age", age)
+		var left := life - age
+		if left <= 0.0:
+			gone.append(c)
+		else:
+			(c as CanvasItem).modulate.a = clampf(left, 0.0, 1.0)
+	for c in gone:
+		_log.remove_child(c)
+		c.queue_free()
+
+
+func log_count() -> int:
+	return _log.get_child_count()
+
+
+func log_has(text: String) -> bool:
+	return log_line(text) != ""
+
+
+func log_line(text: String) -> String:
+	for c in _log.get_children():
+		if str(c.get_meta("text")) == text:
+			return (c as Label).text
+	return ""
+
+
+func alert(text: String, kind := "bad", _secs := 0.0) -> void:
 	_alert.text = text
 	_alert.add_theme_color_override("font_color", UiKit.KIND_COLORS.get(kind, UiKit.BAD))
-	_alert_t = secs
+	_alert.modulate.a = 1.0
+	_alert_t = Config.HUD_BANNER_LIFE
 
 
 func set_mode(mode: String) -> void:
@@ -137,7 +181,7 @@ func set_mode(mode: String) -> void:
 	_help.text = ("%s%s%s%s/edge pan · %s/%s rotate · wheel zoom · right-click move/order · %s move · %s recycle · %s Operative · %s pause · %s/%s speed · %s controls" % [
 		k.call("cam_forward"), k.call("cam_left"), k.call("cam_back"), k.call("cam_right"), k.call("cam_rot_left"), k.call("cam_rot_right"),
 		k.call("move"), k.call("recycle"), k.call("teleport"), k.call("pause"), k.call("speed_up"), k.call("speed_down"), k.call("keybinds")]
-		if cmd else "%s%s%s%s move · %s sprint · %s jump · %s/%s/%s rifle/sprayer/rockets · %s/%s/%s rail/plasma/charge · %s use · %s build · hold %s recall (free at a Totem) · Esc pause" % [
+		if cmd else "%s%s%s%s move · %s sprint · %s jump · %s/%s/%s crossbow/sprayer/rockets · %s/%s/%s rail/plasma/charge · %s use · %s build · hold %s recall (free at a Totem) · Esc pause" % [
 		k.call("op_forward"), k.call("op_left"), k.call("op_back"), k.call("op_right"), k.call("sprint"), k.call("jump"),
 		k.call("rifle"), k.call("sprayer"), k.call("rocket"), k.call("adv_railgun"), k.call("adv_plasma"), k.call("adv_demo"),
 		k.call("use"), k.call("op_build"), k.call("recall")])
@@ -168,6 +212,9 @@ func overlay_open() -> bool:
 
 func refresh(g, dt: float) -> void:
 	top.refresh(g)
+	objectives.refresh(dt, g.input, g.mode != "command")
+	_tick_log(dt)
+	_help.visible = g.time < Config.HUD_HINT_SECS
 	_alert_t -= dt
 	_alert.modulate.a = clampf(_alert_t, 0.0, 1.0)
 	var world: World = g.cave if g.mode == "cave" else g.surface

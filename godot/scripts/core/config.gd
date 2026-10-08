@@ -82,10 +82,18 @@ const RESPAWN_ENERGY := 100.0
 const RESPAWN_SALVAGE := 25.0
 const RESPAWN_TIME := 45.0
 const RESPAWN_GROWTH := 1.5      # each further death this level multiplies both respawn costs
-const RIFLE := { "name": "Pulse Rifle", "damage": 1.0, "cooldown": 0.14, "range": 90.0 }
+const RIFLE := { "name": "Crossbow", "damage": 1.0, "cooldown": 0.14, "range": 90.0 }
 const ROCKET := { "name": "Rocket Launcher", "speed": 30.0, "range": 90.0, "blast": 3.0, "power": 6.0,
 	"damage": 5.0, "mag": 4, "reload": 6.0 }  # blast in cells; power = creeper removed at the centre
 const SPRAYER := { "name": "Null Sprayer", "range": 10.0, "half_angle": 0.45, "remove_per_sec": 5.0, "tank_per_sec": 20.0 }
+
+# ---- HUD ------------------------------------------------------------------------
+const HUD_OBJ_FLASH := 5.0    # seconds a new or just-completed objective shows its hint
+const HUD_LOG_LINES := 5
+const HUD_LOG_LIFE := 8.0     # seconds an ordinary log line stays; warn and bad last twice this
+const HUD_BANNER_LIFE := 3.0  # centre banner ("COMMAND NODE LANDED" and the rest)
+const HUD_BANNER_SIZE := 18   # about 60% of the old 30px banner
+const HUD_HINT_SECS := 60.0   # mission seconds the bottom key-help row stays up (it sat on the build menu)
 
 # ---- strongholds: castles (level/stronghold.gd, design §3.1 and §3.4) -------------
 const CASTLE_WALL_HP := 300.0     # per stone wall segment; at 0 it is breached (TerrainEdit)
