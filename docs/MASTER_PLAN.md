@@ -2,7 +2,7 @@
 
 The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
 
-**Status:** Stage 17 (CW3 fidelity) on `stage/17-cw3-fidelity`, Stage 15 art in round 2, Stage 16 Level 2 awaiting review. Stages 1–7 and 10b merged to `main` (⚠ = not human-verified), plus the command-mode split. Playtest fixes 2026-10-07 on `main` (uncommitted). 7b castle stakes done ⚠. In parallel, Grok on **7c traversable terrain**, **10a Armoury**, **11a Terp (Earth)** (briefs written). Next for Opus: review/merge those, then briefs for 8a/8b/9a.
+**Status (2026-10-08):** everything through Stage 18 and Stage 8 (8a + 8b) is merged to `main` (⚠ = not human-verified). Open: 8c enemy construction, 9a/9b economy, 12 level placement, 13 tuning, 14 review. Waiting on the user: a playtest of the merged build and the Spitter decision (see HANDOFF).
 **Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
 
 ---
@@ -111,22 +111,22 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 6 | Multiple packet senders and Outposts | Sonnet 5.5 (Grok), Opus review | ⚠ merged, verified headless |
 | 7 | Strongholds, castles, spire climb | **Opus 5.5** (built) | ⚠ verified headless + screenshots |
 | 7b | **Castle stakes:** reprisal raid on capture, recurring sieges, aggression that stacks with castles held, hostile castles buff nests, prep window. **Castle turrets pulled in (done ⚠)** | **Opus 5.5** | ⚠ done, verified headless + screenshot |
-| 7c | Traversable terrain on Level 1 (stairs, no isolated shelves) | Sonnet 5.5 (Grok), Opus review | ☐ brief: [tasks/STAGE7c_traversal.md](tasks/STAGE7c_traversal.md) |
-| 8a | Nest bases and enemy mortars | Grok Build (long run with 8b) | ☐ brief: [tasks/STAGE8_enemies_long.md](tasks/STAGE8_enemies_long.md) |
-| 8b | Enemy roster (incl. Burrower, Weaver) | Grok Build (long run, before 8a) | ☐ brief: [tasks/STAGE8_enemies_long.md](tasks/STAGE8_enemies_long.md) |
+| 7c | Traversable terrain on Level 1 (stairs, no isolated shelves) | Sonnet 5.5 (Grok), Opus review | ⚠ merged 2026-10-08 (Grok, Opus review) |
+| 8a | Nest bases and enemy mortars | Grok Build (long run with 8b) | ⚠ merged 2026-10-08 (Grok long run; Spitter retuned to melee range: needs user call) |
+| 8b | Enemy roster (incl. Burrower, Weaver) | Grok Build (long run, before 8a) | ⚠ merged 2026-10-08 (Grok long run) |
 | 8c | **Enemy construction:** hubs in enemy castles, Weavers, Leeches, build planner, enemy structures (design §4.5) | Sonnet 5.5, Opus review | ☐ |
 | 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ☐ |
 | 9b | Extractors and supply points | Sonnet 5.5 | ☐ |
-| 10 | Armoury (incl. Ctrl + wheel ammo switching). **10a** = upgrades + advanced weapons; 10b-ammo later | Sonnet 5.5 (Grok) | ☐ 10a brief: [tasks/STAGE10a_armoury.md](tasks/STAGE10a_armoury.md) |
+| 10 | Armoury (incl. Ctrl + wheel ammo switching). **10a** = upgrades + advanced weapons; 10b-ammo later | Sonnet 5.5 (Grok) | ⚠ merged 2026-10-08 (Grok, Opus review) |
 | 10b | **Operative deployment:** Totems, drop anywhere, recall cooldown, Shield Domes block drops, expensive respawn (design §5.4) | Sonnet 5.5 (Grok), Opus review | ⚠ merged, verified headless |
-| 11 | Terp. **11a** = Earth only; Metal (11b) after 9a's Ore | Sonnet 5.5 (Grok) | ⚠ 11a |
+| 11 | Terp. **11a** = Earth only; Metal (11b) after 9a's Ore | Sonnet 5.5 (Grok) | ⚠ merged 2026-10-08 (Grok, Opus review) |
 | 15 | **Fantasy art pass:** structures redesigned, weapons on jointed arms, soldiers at Operative height, structures taller than the Operative, Blight enemies, castle decor, dusk lighting. Judged by an art-judge agent each round | Opus 5.5 subagent + Opus judge | ⚠ round 4 on `stage/15-fantasy-art` (awaiting judge); brief: [tasks/STAGE15_fantasy_art.md](tasks/STAGE15_fantasy_art.md) |
 | 17 | **CW3 fidelity** ([CREEPER_SPEC.md](CREEPER_SPEC.md), gaps: [CW3_FIDELITY_GAPS.md](CW3_FIDELITY_GAPS.md)): 30 Hz clamped edge flow, top-up emitters with `start`, flat wet damage by `wet_time`, progress loss for unbuilt sites, slow heal, `CreeperStrike` area removal, CW3 weapon ranges/costs, roaming Thor | **Opus 5.5** | ⚠ verified headless + GPU parity |
 | 16 | **Level 2 "The Crown Marches":** 160x160, five castles with towers/gatehouses, ranged Sentinel guards from t=0, harder schedule, level select | Sonnet 5.5 subagent, Opus review | ⚠ done headless, branch stage/16-level02; brief: [tasks/STAGE16_level02.md](tasks/STAGE16_level02.md) |
 | 18a | **Visual pass 1 + drag-build:** per-pixel ground (grass, rock strata, castle ashlar, Blight cracks, bump), glossy deep-navy creeper; drag a tool to lay Collector/Relay chains at max link or rows of other structures | **Opus 5.5** | ⚠ on main, smoke 235/235, Xvfb screenshots only |
-| 18b | **First-person visuals:** crossbow/sprayer/launcher models, sky with sun disc + clouds, aerial haze, SSAO | Grok Build | ☐ brief: [tasks/STAGE18b_fps_visuals.md](tasks/STAGE18b_fps_visuals.md) |
-| 18c | **HUD declutter:** compact objectives (J expands), fading 5-line log, smaller fading banner, "Crossbow" label | Grok Build | ☐ brief: [tasks/STAGE18c_hud_declutter.md](tasks/STAGE18c_hud_declutter.md) |
-| 18d | **Drag-build polish:** ghosts per piece, field outlines, cost line, Operative drag-build, smoke | Grok Build | ☐ brief: [tasks/STAGE18d_dragbuild_polish.md](tasks/STAGE18d_dragbuild_polish.md) |
+| 18b | **First-person visuals:** crossbow/sprayer/launcher models, sky with sun disc + clouds, aerial haze, SSAO | Grok Build | ⚠ merged 2026-10-08 (Grok, Opus review) |
+| 18c | **HUD declutter:** compact objectives (J expands), fading 5-line log, smaller fading banner, "Crossbow" label | Grok Build | ⚠ merged 2026-10-08 (Grok, Opus review) |
+| 18d | **Drag-build polish:** ghosts per piece, field outlines, cost line, Operative drag-build, smoke | Grok Build | ⚠ merged 2026-10-08 (Grok, Opus review) |
 | 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ☐ |
 | 13 | Tuning | Haiku 4.5 (`balance-tester`) | ☐ |
 | 14 | Review and screenshots | **Opus 5.5** | ☐ |
@@ -218,6 +218,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix. First-pass Aether Towers (Stage 7 replaces them). First-pass nest raiders with tier escalation (Stages 2 and 8 rework them). 49/49 smoke tests pass.
 
 ## 6. Changelog
+- 2026-10-08: Opus merged 7c, 11a, 10a, 18b, 18c, 18d and Stage 8 (8b roster + 8a hives/mortars, 8 phases, log in tasks/STAGE8_progress.md). Smoke 382/382 x3. Merge fixes: raider separation can't add speed (groups march together), Armoury weapons show the crossbow model, Lancer smoke isolated from leftover raiders, command view uses 1/4 fog (18b haze washed the map out). Sims: L1 demo 900 s Node 500; L1 undefended dies 336 s; L2 undefended 226 s; L2 demo 652 s.
 - 2026-10-07: Stage 11a Terp (Earth only, ⚠): paint a target level; a Terp spends 4 packets and 3s per level via TerrainEdit. Metal, mortar-by-material, and the seal warning wait for 11b.
 - 2026-10-07: Long overnight brief for Grok: Stage 8 (8b roster, then 8a hives + enemy mortars) in 8 committed phases with a progress log.
 - 2026-10-07: Stage 18a ⚠ (Opus). Terrain look + creeper surface shaders, DragBuild (chains/rows). Briefs out for Grok: 18b FPS visuals, 18c HUD, 18d drag-build polish, and SYNC (merge main into 7c/10a/11a).

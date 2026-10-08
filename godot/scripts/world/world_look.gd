@@ -33,11 +33,13 @@ static func make_environment(cave: bool) -> WorldEnvironment:
 		e.sky = s
 		e.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 		e.ambient_light_energy = 0.9
+		e.ambient_light_color = Color("8f98a8")  # neutral share so the warm cloud sky doesn't tint the map yellow
+		e.ambient_light_sky_contribution = 0.6
 		e.fog_enabled = true
 		e.fog_light_color = Color("c4a090")
 		# 1 - exp(-density * metres). 0.0032 is about 40% haze at 160 m, Level 1's far edge.
-		e.fog_density = 0.0032
-		e.fog_aerial_perspective = 0.7
+		e.fog_density = FOG_FPS * 0.25  # missions start in command view; set_command_view switches
+		e.fog_aerial_perspective = 0.2
 		e.fog_sun_scatter = 0.3
 		e.fog_sky_affect = 0.28
 		e.adjustment_enabled = true
@@ -83,3 +85,14 @@ static func _ceiling(g: Grid, y: float) -> MeshInstance3D:
 	m.roughness = 1.0
 	mi.material_override = m
 	return mi
+
+
+## The command camera looks down from 40-120 m, so first-person haze would wash out the whole
+## map. Command mode keeps a quarter of the density and little aerial tint.
+const FOG_FPS := 0.0032
+static func set_command_view(we: WorldEnvironment, command: bool) -> void:
+	var e := we.environment
+	if e.background_mode != Environment.BG_SKY:
+		return  # the cave keeps its own fog
+	e.fog_density = FOG_FPS * (0.25 if command else 1.0)
+	e.fog_aerial_perspective = 0.2 if command else 0.7

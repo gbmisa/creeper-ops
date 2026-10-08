@@ -131,6 +131,7 @@ func set_mode(m: String) -> void:
 	g.surface.set_active(m != "cave")
 	g.cave.set_active(m == "cave")
 	g.command.overlay.set_overlay_visible(cmd)
+	WorldLook.set_command_view(g.surface.env, cmd)
 	if cmd:
 		g.command.cam.current = true
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

@@ -86,7 +86,7 @@ void fragment() {
 	ALBEDO = col + vec3(0.15, 0.3, 0.7) * contour * 0.3;
 	EMISSION = glow * (0.03 + 0.06 * (1.0 - k) + 0.05 * (1.0 - churn) + 0.35 * rim + 0.2 * contour)
 		+ sheen * fres * 0.12;
-	ROUGHNESS = 0.18;
-	SPECULAR = 0.4;
+	ROUGHNESS = 0.32;  // glossy, but not a mirror for the lavender dusk clouds
+	SPECULAR = 0.25;
 	METALLIC = 0.0;
 }

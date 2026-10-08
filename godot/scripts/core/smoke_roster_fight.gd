@@ -62,6 +62,8 @@ static func _spitter_hits_cannon(g) -> void:
 static func _lancer_picks_sniper(g) -> void:
 	_pad(g, 2, 60, 36, 64)
 	_clear_shots(g)
+	for o in g.hazards.nests.raiders.list.duplicate():  # raiders left by earlier smoke files would chew the cannon
+		g.hazards.nests.raiders.kill(o)
 	var sm: StructureManager = g.structures
 	var cannon := sm.place("cannon", 12, 62, true)
 	var sniper := sm.place("sniper", 28, 62, true)
