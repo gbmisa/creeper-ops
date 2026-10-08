@@ -166,6 +166,15 @@ static func _splash_builds(mgr, at: Vector3, splash: float, big: bool) -> void:
 	mgr.enemy_build.splash(at, splash * Config.CELL, dmg)
 
 
+## Line of sight over terrain and castle roofs: true when nothing solid sits between a and b.
+static func sees(grid: Grid, a: Vector3, b: Vector3) -> bool:
+	var d := a.distance_to(b)
+	if d < 0.01:
+		return true
+	var hit: Variant = grid.raycast(a, (b - a) / d, d)
+	return hit == null or (hit as Vector3).distance_to(a) >= d - Config.SNIPER_LOS_SLACK
+
+
 static func _snipe(s: Structure, mgr) -> bool:
 	if mgr.hazards == null:
 		return false
@@ -179,14 +188,17 @@ static func _snipe(s: Structure, mgr) -> bool:
 		foes.append_array(mgr.hazards.guards.foes())  # Sentinels, if the range allows
 	if mgr.enemy_build != null:
 		foes.append_array(mgr.enemy_build.snipe_foes())
+	var p := Vector3.ZERO
 	for m in foes:
-		var d := (m.node.position as Vector3).distance_to(a)
-		if d < bd:
+		var at: Vector3 = m.node.position + Vector3(0, float(m.get("oy", 1.0)), 0)
+		var d := at.distance_to(a)
+		if d < bd and sees(w.grid, a, at):
 			bd = d
 			best = m
+			p = at
 	if best.is_empty():
+		s.cooldown = Config.SNIPER_LOS_RETRY  # nothing in sight: look again shortly, not every frame
 		return false
-	var p: Vector3 = best.node.position
 	_aim(s, p)
 	w.effects.beam(_fx(s), p, Color("e0f0ff"), 0.08, 0.05)
 	best.enemy.hit.call(s.def.power)

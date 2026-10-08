@@ -99,10 +99,12 @@ static func arm(b, s: Dictionary, label: String) -> void:
 	b.world.add_target(s.target)
 	var it := {
 		"pos": s.pos, "radius": Config.MORTAR_SABOTAGE_RANGE,
-		"prompt": func() -> String: return ("[%s] Sabotage the %s" % [Keybinds.short("use"), label]) if bool(s.alive) else "",
+		"prompt": func() -> String: return _prompt(s, label),
 		"use": func() -> void:
-			if bool(s.alive):
-				s.channel = Config.MORTAR_SABOTAGE_TIME,
+			if bool(s.alive) and float(s.channel) <= 0.0:
+				s.channel = Config.MORTAR_SABOTAGE_TIME
+				Sfx.play("lift")
+				Bus.say("Sabotaging the %s: stay close for %ds." % [label, ceili(Config.MORTAR_SABOTAGE_TIME)], "info"),
 	}
 	s["interact"] = it
 	b.world.interactables.append(it)
@@ -112,6 +114,14 @@ static func arm(b, s: Dictionary, label: String) -> void:
 	}
 	s["marker"] = marker
 	b.world.markers.append(marker)
+
+
+static func _prompt(s: Dictionary, label: String) -> String:
+	if not bool(s.alive):
+		return ""
+	if float(s.channel) > 0.0:
+		return "Sabotaging the %s... %.1fs" % [label, float(s.channel)]
+	return "[%s] Sabotage the %s" % [Keybinds.short("use"), label]
 
 
 static func onsite(b, s: Dictionary) -> bool:

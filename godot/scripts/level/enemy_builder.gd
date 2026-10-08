@@ -239,6 +239,7 @@ func apply_channel(s: Dictionary, feet: Vector3, dt: float) -> bool:
 		return false
 	if Vector2(feet.x - s.pos.x, feet.z - s.pos.z).length() > Config.MORTAR_SABOTAGE_RANGE:
 		s.channel = 0.0
+		Bus.say("Sabotage interrupted: you moved away from the %s." % EnemyStructures.DEFS[s.kind].label, "warn")
 		return false
 	s.channel = float(s.channel) - dt
 	if float(s.channel) > 0.0:

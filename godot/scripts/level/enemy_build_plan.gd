@@ -195,7 +195,7 @@ static func _open(b, cell: Vector2i, field: bool) -> bool:
 	if not grid.in_bounds(cell.x, cell.y):
 		return false
 	var i := grid.idx(cell.x, cell.y)
-	if grid.material[i] == Grid.Mat.SPIRE:
+	if grid.material[i] == Grid.Mat.SPIRE or grid.roof[i] > 0.0:  # never under a castle roof
 		return false
 	if field and grid.blocked[i] != 0:
 		return false
