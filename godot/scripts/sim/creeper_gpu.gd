@@ -11,7 +11,6 @@ extends CreeperSim
 
 const READBACK_TICKS := 4
 const MAX_DELTAS := 8192
-const DRY := 0.0005  # same dry cut-off as CreeperSim._flow()
 
 var rd: RenderingDevice
 var depth_tex := Texture2DRD.new()
@@ -100,7 +99,7 @@ func update(dt: float) -> void:
 		_readback()
 
 
-## One sim tick: queued changes, then outflow and apply.
+## One sim tick: queued changes, then the edge exchange and apply.
 func _tick() -> void:
 	var keys := _queue.keys()
 	var start := 0
@@ -129,7 +128,7 @@ func _run(passes: Array, count := 0) -> void:
 		if k > 0:
 			rd.compute_list_add_barrier(cl)
 		var pc := PackedInt32Array([grid.w, grid.h, passes[k], count]).to_byte_array()
-		pc.append_array(PackedFloat32Array([Config.FLOW_RATE, Config.MAX_DEPTH, Config.MIN_DEPTH, DRY,
+		pc.append_array(PackedFloat32Array([Config.FLOW_RATE, Config.MAX_DEPTH, Config.MIN_DEPTH, Config.CREEPER_DRY,
 			CreeperMesh.MIN_VIS, CreeperMesh.SHORE_DIP, CreeperMesh.HIDDEN, 0.0]).to_byte_array())
 		rd.compute_list_set_push_constant(cl, pc, pc.size())
 		if passes[k] == 0:
@@ -175,19 +174,35 @@ func _take(data: PackedByteArray, changes: Dictionary) -> void:
 	depth = data.to_float32_array()
 	for i in changes:
 		var e: Array = changes[i]
-		depth[i] = clampf(e[1] if e[0] == 1 else depth[i] + e[1], 0.0, Config.MAX_DEPTH)
+		depth[i] = clampf(_apply(e, depth[i]), 0.0, Config.MAX_DEPTH)
+
+
+static func _apply(e: Array, v: float) -> float:
+	match e[0]:
+		1: return e[1]
+		2: return maxf(v, e[1])
+	return v + e[1]
 
 
 func _change(i: int, mode: int, amount: float) -> void:
-	_merge(_queue, i, mode, amount)
+	_merge(_queue, i, mode, amount, depth[i])
 	if _rb_busy:
-		_merge(_log, i, mode, amount)
+		_merge(_log, i, mode, amount, depth[i])
 
 
-static func _merge(d: Dictionary, i: int, mode: int, amount: float) -> void:
+## Queued change per cell (mode 0 add, 1 set, 2 raise to). `now` is the CPU copy after this
+## change, used when a raise lands on a queued add: that pair becomes a set.
+static func _merge(d: Dictionary, i: int, mode: int, amount: float, now := 0.0) -> void:
 	var e = d.get(i)
 	if e == null or mode == 1:
 		d[i] = [mode, amount]
+	elif mode == 2:
+		if e[0] == 0:
+			d[i] = [1, now]
+		else:
+			e[1] = maxf(e[1], amount)
+	elif e[0] == 2:
+		d[i] = [1, maxf(now, 0.0)]  # an add after a raise: fold into a set
 	else:
 		e[1] += amount  # adding onto a queued add or set
 
@@ -196,6 +211,12 @@ func add(x: int, z: int, amount: float) -> void:
 	super(x, z, amount)
 	if grid.in_bounds(x, z):
 		_change(z * grid.w + x, 0, amount)
+
+
+func raise(x: int, z: int, v: float) -> void:
+	super(x, z, v)
+	if grid.in_bounds(x, z):
+		_change(z * grid.w + x, 2, minf(v, Config.MAX_DEPTH))
 
 
 ## Returns what the CPU copy held (an estimate); the GPU removes up to the full amount.

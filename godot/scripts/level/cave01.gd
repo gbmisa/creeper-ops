@@ -63,6 +63,7 @@ static func build() -> Dictionary:
 			elif ch == "K":
 				cave.pylons.append(Vector2i(x, z))
 			g.set_height(x, z, hh)
-	# The Core floods its pit; the cap rises over time so waiting makes the dive harder.
-	cave["core_source"] = { "amount": 1.0, "interval": 1.5, "base_cap": 1.4, "cap_growth": 1.0 / 900.0 }
+	# The Core floods its pit: each burst tops it up to base_cap depth, which rises over time so
+	# waiting makes the dive harder (CW3 emitter rule).
+	cave["core_source"] = { "interval": 0.5, "base_cap": 3.0, "cap_growth": 1.0 / 900.0 }
 	return cave
