@@ -14,8 +14,15 @@ static func cell_pos(x: int, z: int, level: float) -> Vector3:
 	return Vector3((x + 0.5) * Config.CELL, level * Config.LEVEL_H, (z + 0.5) * Config.CELL)
 
 
+static var _energy_cache := {}
+
+
 static func _energy(c: Color, alpha := 0.38) -> StandardMaterial3D:
-	var m := StructureMeshes.mat(c, 0.0, 0.2, c, 1.6)
+	var key := "%s%s" % [c.to_html(), alpha]
+	if _energy_cache.has(key):
+		return _energy_cache[key]
+	var m := StructureMeshes.mat_new(c, 0.0, 0.2, c, 1.6)
+	_energy_cache[key] = m
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.albedo_color.a = alpha
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED
@@ -38,9 +45,9 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 	var root := Node3D.new()
 	root.name = "Castle"
 	world.add_child(root)
-	var v := { "root": root, "segs": [], "gates": [] }
+	var v := { "root": root, "segs": [], "gates": [], "banners": CastleDecor.build(root, lay) }
 	var top: float = lay.wall_top
-	var stone := StructureMeshes.mat(STONE, 0.1, 0.9)
+	var stone := StructureMeshes.mat(STONE, 0.0, 0.92)
 	var outward := { "n": Vector3(0, 0, -1), "s": Vector3(0, 0, 1), "w": Vector3(-1, 0, 0), "e": Vector3(1, 0, 0) }
 	for seg in lay.segments:
 		var b := _bounds(seg.cells, top)
@@ -112,6 +119,8 @@ static func refresh(v: Dictionary, c: Dictionary) -> void:
 		(v.winch_glow as MeshInstance3D).material_override = _energy(OPEN if open else col, 0.9)
 		(v.winch_glow as Node3D).visible = not open
 	(v.crown as Node3D).visible = c.state == "hostile"
+	for b in v.banners:
+		(b as MeshInstance3D).material_override = CastleDecor.cloth(c.owner)
 
 
 static func animate(v: Dictionary, c: Dictionary, t: float) -> void:

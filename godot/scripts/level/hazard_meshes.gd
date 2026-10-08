@@ -10,7 +10,13 @@ static func _glow(c: Color, e := 2.5) -> StandardMaterial3D:
 
 static func emitter() -> Node3D:
 	var r := Node3D.new()
-	StructureMeshes.cyl(r, 1.0, 1.5, 0.6, StructureMeshes.mat(Color("1d2a52"), 0.3, 0.5))
+	ShapeKit.lathe(r, PackedVector2Array([Vector2(1.7, 0.0), Vector2(1.3, 0.5), Vector2(0.9, 0.8), Vector2(1.0, 1.0),
+		Vector2(0.0, 1.0)]), RaiderMeshes.chitin(), Vector3.ZERO, 7)
+	for i in 5:  # bone ribs curling up round the orb
+		var a := i * TAU / 5.0
+		var d := Vector3(cos(a), 0, sin(a))
+		ShapeKit.strut(r, d * 1.2 + Vector3(0, 0.6, 0), d * 1.0 + Vector3(0, 2.0, 0), 0.16, RaiderMeshes.bone())
+		ShapeKit.strut(r, d * 1.0 + Vector3(0, 2.0, 0), d * 0.5 + Vector3(0, 2.5, 0), 0.12, RaiderMeshes.bone())
 	var orb := Node3D.new()
 	orb.name = "Orb"
 	orb.position.y = 1.4
@@ -63,8 +69,14 @@ static func vent() -> Node3D:
 
 static func spire() -> Node3D:
 	var r := Node3D.new()
-	var shell := StructureMeshes.mat(Color("3a4a2a"), 0.3, 0.6)
-	StructureMeshes.cyl(r, 0.9, 2.2, 7.0, shell, 0.0, 8)
+	ShapeKit.lathe(r, PackedVector2Array([Vector2(2.3, 0.0), Vector2(1.6, 1.0), Vector2(1.1, 3.0), Vector2(0.8, 5.5),
+		Vector2(1.05, 6.4), Vector2(0.6, 7.0), Vector2(0.0, 7.1)]), StructureMeshes.mat(Color("3a3324"), 0.2, 0.5), Vector3.ZERO, 7)
+	for i in 4:  # bone thorns
+		var a := i * TAU / 4.0 + 0.4
+		var d := Vector3(cos(a), 0, sin(a))
+		ShapeKit.strut(r, d * 1.1 + Vector3(0, 2.0 + i * 1.0, 0), d * 2.2 + Vector3(0, 3.2 + i * 1.0, 0), 0.18, RaiderMeshes.bone())
+	for y in [1.6, 4.2]:
+		StructureMeshes.ball(r, 0.35, _glow(Color("88ff55"), 1.6), Vector3(1.05, y, 0.6), 8)
 	var sac := Node3D.new()
 	sac.name = "Sac"
 	sac.position.y = 7.6
@@ -89,10 +101,18 @@ static func rift() -> Node3D:
 
 static func nest() -> Node3D:
 	var r := Node3D.new()
-	StructureMeshes.cyl(r, 0.9, 1.6, 0.8, StructureMeshes.mat(Color("3a3020"), 0.1, 0.8), 0.0, 9)
+	ShapeKit.lathe(r, PackedVector2Array([Vector2(2.0, 0.0), Vector2(1.7, 0.5), Vector2(1.1, 1.0), Vector2(0.9, 1.3),
+		Vector2(0.0, 1.35)]), StructureMeshes.mat(Color("4a3a26"), 0.1, 0.75), Vector3.ZERO, 9)
+	for i in 6:  # bone tusks round the mound
+		var a := i * TAU / 6.0
+		var d := Vector3(cos(a), 0, sin(a))
+		ShapeKit.strut(r, d * 1.4 + Vector3(0, 0.4, 0), d * 1.9 + Vector3(0, 1.6, 0), 0.16, RaiderMeshes.bone())
+	for i in 3:  # fungal caps
+		var a := i * TAU / 3.0 + 0.5
+		StructureMeshes.ball(r, 0.3, _glow(Color("c060ff"), 1.2), Vector3(cos(a) * 1.4, 0.55, sin(a) * 1.4), 8)
 	var sac := Node3D.new()
 	sac.name = "Sac"
-	sac.position.y = 1.2
+	sac.position.y = 1.5
 	r.add_child(sac)
 	StructureMeshes.ball(sac, 0.85, _glow(Color("a8ff5a"), 1.5))
 	return r
@@ -139,19 +159,6 @@ static func mite(color := Color("a8ff5a")) -> MeshInstance3D:
 	return mi
 
 
-## Six-legged bug facing +X, scaled by tier size, glowing in the tier colour.
+## Raider by tier (RaiderMeshes dispatches on tier.name), facing +X.
 static func raider(tier: Dictionary) -> Node3D:
-	var root := Node3D.new()
-	var s: float = tier.size
-	var shell := StructureMeshes.mat(Color("1e2414"), 0.2, 0.6)
-	var glow := StructureMeshes.mat(tier.color, 0.0, 0.3, tier.color, 2.0)
-	var body := StructureMeshes.ball(root, s * 0.55, shell, Vector3(0, s * 0.6, 0))
-	body.scale = Vector3(1.5, 0.8, 1.0)
-	StructureMeshes.ball(root, s * 0.32, glow, Vector3(s * 0.75, s * 0.65, 0))
-	StructureMeshes.ball(root, s * 0.3, glow, Vector3(-s * 0.55, s * 0.85, 0))
-	for i in 3:
-		for side in [-1.0, 1.0]:
-			var leg := StructureMeshes.box(root, Vector3(s * 0.12, s * 0.12, s * 0.9), shell,
-				Vector3((i - 1) * s * 0.45, s * 0.35, side * s * 0.55))
-			leg.rotation.x = side * 0.7
-	return root
+	return RaiderMeshes.make(tier)

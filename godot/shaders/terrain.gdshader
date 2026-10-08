@@ -44,6 +44,9 @@ float ring(vec2 p, vec4 r) {
 
 void fragment() {
 	vec3 col = COLOR.rgb * (0.8 + 0.35 * texture(grain, wpos.xz / 7.0).r);
+	// Palette grade (fantasy dusk): richer, slightly warmer greens and earth. Overlays below are untouched.
+	float lum = dot(col, vec3(0.3, 0.59, 0.11));
+	col = mix(vec3(lum), col, 1.2) * vec3(0.92, 1.04, 0.95);
 	vec2 p = wpos.xz;
 	vec2 uv = p / map_size;
 	bool inside = uv.x >= 0.0 && uv.y >= 0.0 && uv.x <= 1.0 && uv.y <= 1.0;
