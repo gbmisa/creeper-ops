@@ -44,12 +44,13 @@ Same pattern as Grok. Every task has a brief in `docs/tasks/` and its own worktr
 | Audits, running sims, small tuning, docs | **Claude Haiku** or Muse | Mechanical |
 
 ## 5. Task queue (as of 2026-10-08)
-**Running now (Claude, background):** Stage 21 Castles 2.0 (Opus, worktree `stage21`), Stage 23 first-person feel (Sonnet, `stage23`), Stage 9b Salvage Engines + ammo + placement + tuning (Sonnet, `stage9b`), Stage 19 flyers (Sonnet, `stage19`). Don't start Muse in those four worktrees.
+**Running now (Claude, background):** Stage 21 Castles 2.0 (Opus, worktree `stage21`), Stage 9b Salvage Engines + ammo + placement + tuning (Sonnet, `stage9b`), Stage 19 flyers (Sonnet, `stage19`). Don't start Muse in those three worktrees. (Stage 23 first-person feel is done and merged: recoil, spray, arms, Pulse Rifle + a reloading Crossbow on **Y**.)
 
 **Ready for Muse now:**
 | Worktree | Brief | Notes |
 |---|---|---|
 | `stage20` | `STAGE20_art2_long.md` | Art pass 2. **Skip its first-person recoil part** (Stage 23 does that); keep weapon effects on *network* weapons, hits, deaths, walk cycles, the cave |
+| `stage23b` | `STAGE23b_viewmodel_polish.md` | Short. Arms that look like arms, a real Pulse Rifle silhouette, the sprayer not blinding you, a reload hand. Good first Muse task to see how it does |
 | `bench512` | `BENCH512_long.md` | Measures a 512×512 map. Needs your real display for the GPU numbers, so run it when you're at the PC |
 
 **Coming next (Opus writes the brief first):**
