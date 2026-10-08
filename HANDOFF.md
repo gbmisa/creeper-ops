@@ -1,30 +1,26 @@
-# Handoff: 2026-10-08 (session 14: Stages 19, 21, 24 merged)
+# Handoff: 2026-10-08 (session 14: 19, 21, 24, 9b merged; playtest 1 fixes)
 
 ## State
-Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Rules: [docs/CREEPER_SPEC.md](docs/CREEPER_SPEC.md); castles: [docs/CASTLES2_DESIGN.md](docs/CASTLES2_DESIGN.md).
-**Roles:** Opus orchestrates and merges; delegated agents follow [AGENTS.md](AGENTS.md). Token rules: CLAUDE.md "Token budget rules" (`feature-dev`/`balance-tester`/`level-builder`, not general-purpose; no `stage-runner`/`auditor` agent types exist in this setup, use `feature-dev` / `balance-tester`).
+Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Castles: [docs/CASTLES2_DESIGN.md](docs/CASTLES2_DESIGN.md). Playtest feedback + plan: [docs/tasks/PLAYTEST1_plan.md](docs/tasks/PLAYTEST1_plan.md).
+**Roles:** Opus orchestrates and merges; delegated agents follow [AGENTS.md](AGENTS.md). Agent types available here: `feature-dev`, `level-builder` (Sonnet), `balance-tester` (Haiku). No `stage-runner`/`auditor`. **Muse Code** is joining over SSH: [Muse.md](Muse.md) §3b says how its first task is scored.
+**User rule:** playtest feedback gets logged + planned for cheaper agents, not fixed inline (memory `playtest-feedback-workflow`).
 
 ## Merged to main this session
-- **19 flyers** (Sonnet): Spore Bat, Gasbag, Wyvern, Roost at pressure 0.30 (`Config.FLYER_ROOST_P`). Hit by Beams, castle Flak (block at end of `CastleTurretFire._flak`, survived the 21 merge), Lance, Operative. Hooks `--flyers=T,N`, `--t0=S`, `--noflyers`.
-- **21 Castles 2.0** (Opus): concentric castles, Operative-only roof layer (`Grid.roof`), capture gate → bailey → keep, trebuchets, held perks, tunables in `level/castle_defs.gd`. L1 has one compact castle (Ashmoat, SW); High Bastion is still Stage 7 style.
-- **24 Play metrics** (Sonnet, Opus review): `PlayMetrics` records events, 10 s samples and a summary per mission to `user://metrics/*.json`. Report: `godot --headless --path godot -- --metrics-report[=N] [--metrics-dir=D]`. Sims write only with `--metrics=PATH`. Opus fix: surface→cave is one incursion. Post-merge hooks: `castle_held/hostile/siege`, `flyer_killed`.
-- Conflicts were only registration lines (smoke_test.gd) and docs rows; resolved keep-both.
+- **19 flyers**, **21 Castles 2.0**, **24 play metrics** (`user://metrics/*.json`, `--metrics-report`), **9b** Salvage Engines + ammo grades + Sniper ranged-first targeting.
+- 9b merge fixes (Opus): FPS feel effects kept alongside ammo grades; L1 `DEMO` keeps the Ashmoat-safe chain + 9b's extra weapons; L2 engines e3 e4 e5 e7 e8 e9 moved clear of Castles 2.0 footprints; `smoke_placement` now names offending engines.
+- **Playtest 1:** Sniper line of sight (`WeaponLogic.sees`, terrain + roofs block); enemy builder never builds under a castle roof (the "underground" Spitter Towers); sabotage shows a countdown, start/interrupt messages, reach 3 m; **Sniper ammo halved** (per_packet 2: 2.5 packets a shot); **hive cores 30 + 15×pressure HP** (was 150 + 100). Metrics hooks: castle held/hostile/siege, flyer kills.
 
-## Verified (merged main)
-- Parse clean. Smoke OK, 0 failures (612+ checks).
-- Sims: L1 `--autostart` Node dies 337 s (unchanged); L1 `--demo --units --sim=900` dies 704 s (36 flyers spawned, 12 killed); L2 `--level=2 --demo` dies 395 s.
-- `--metrics-report` prints per-mission lines and per-level averages.
+## Verified
+- Parse clean, smoke OK (0 failures) after every merge.
+- Sims (after 19/21/24, before 9b): L1 undefended 337 s; L1 demo 704 s; L2 demo 395 s. Post-9b/playtest sims: see the last chat or re-run.
 
 ## NOT verified / needs the user
-- **Nothing played by a human:** castles 2.0 interiors and capture, flyers, metrics files from real play.
-- Demo sim is not deterministic (no fixed seed), so before/after comparisons are noisy.
-- Ground raiders kill the L1/L2 demo bases before flyers matter; that's 9b's balance job.
-
-## Open branches
-- `stage/9b-content` (Salvage Engines, level placement, tuning): 1 commit ahead, **not reviewed**. Will conflict with 21 in `level01.gd`/`level02.gd` (castles moved hives and Thornwall).
+- Nobody has played since the fixes: replay L1 and say whether raiders are still "insane". Raider pressure was deliberately left alone (user believes Sniper ammo was the cause).
+- The crossbow has no ammo grades (9b graded the Pulse Rifle); castle Repeater turrets have no grades.
+- Demo sims aren't seeded, so they're noisy.
 
 ## Next
-1. **User: play a few missions** on L1 and L2, then run `--metrics-report`; tune difficulty from that (a `balance-tester` can read the JSON).
-2. Review + merge 9b (resolve level placement against Castles 2.0).
-3. 21b castles detail brief is ready (`docs/tasks/STAGE21b_castles_detail_long.md`, worktree not created).
-4. Small: seed the RNG for `--sim` runs; count weapon move orders in metrics APM.
+1. **Muse:** run `PLAYTEST1_C_hive_sites.md` in worktree `playtest1c` (branch `fix/playtest1-hive-sites`); Opus reviews/scores it (Muse.md §3b). Fallback: Sonnet `level-builder`.
+2. Then D: Haiku screenshot check of every enemy structure (visible + reachable).
+3. User replays → `--metrics-report` → Haiku `balance-tester` tunes raider pressure if still needed.
+4. 21b castles detail brief is ready (worktree not created).
