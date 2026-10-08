@@ -13,6 +13,7 @@ class_name Debug
 ##   --sim=N       fast-forward N seconds, print a [sim] report
 ##   --smoke       run scripted mechanics checks (smoke_test.gd)
 ##   --tool=T      hold a build tool (screenshots of the ghost/overlays)
+##   --drag=T,x0,z0,x1,z1  drag-build preview of T from one cell to another
 ##   --salvage=N   set the Salvage stockpile
 ##   --landing     dismiss the briefing and stop at the landing-site choice
 ##   --hover=x,z   put the (fake) cursor over a cell
@@ -129,6 +130,11 @@ static func apply(g) -> void:
 		SmokeTest.run(g)
 	if args.has("sim"):
 		_fast_forward(g, float(args.sim))
+	if args.has("drag"):  # --drag=T,x0,z0,x1,z1: drag-build preview (DragBuild screenshots)
+		var d: PackedStringArray = args.drag.split(",")
+		g.command.set_tool(d[0])
+		g.command.drag_plan = DragBuild.plan(g.command, Vector2i(int(d[1]), int(d[2])), Vector2i(int(d[3]), int(d[4])))
+		g.command.overlay.show_plan(g.command.drag_plan, d[0])
 	if args.select == "all-weapons" if args.has("select") else false:
 		var all: Array[Structure] = []
 		all.assign(g.structures.list.filter(func(x): return x.def.get("movable", false) and x.type != "node"))

@@ -40,7 +40,14 @@ static func _ground_rules(mgr, type: String, x: int, z: int, ignore: Structure) 
 	return ""
 
 
-static func can_place(mgr, type: String, x: int, z: int) -> Dictionary:
+## Ground-only rules (bounds, Blight, occupied, slope, creeper); "" when fine. DragBuild snaps with it.
+static func ground_reason(mgr, type: String, x: int, z: int) -> String:
+	return _ground_rules(mgr, type, x, z, null)
+
+
+## `planned`: pieces of a drag-build chain not placed yet, Vector3(x, z, link); they count as
+## network nodes so the preview matches what commit() will manage.
+static func can_place(mgr, type: String, x: int, z: int, planned: Array[Vector3] = []) -> Dictionary:
 	var def: Dictionary = StructureDefs.DEFS[type]
 	var why := _ground_rules(mgr, type, x, z, null)
 	if why != "":
@@ -49,7 +56,8 @@ static func can_place(mgr, type: String, x: int, z: int) -> Dictionary:
 		return { "ok": false, "reason": "Only one %s per mission" % def.label }
 	if def.get("drop_pod", false) and mgr.economy.energy < def.cost:
 		return { "ok": false, "reason": "Drop pod needs %d energy up front" % def.cost }
-	if def.get("needs_network", true) and not mgr.network.in_range(mgr.list, x, z, def.link, null):
+	if def.get("needs_network", true) and not mgr.network.in_range(mgr.list, x, z, def.link, null) \
+			and not planned.any(func(p: Vector3): return Vector2(p.x - x, p.y - z).length() <= maxf(p.z, def.link)):
 		return { "ok": false, "reason": "Out of network range: build a Relay or Collector closer" }
 	if type == "nullifier":
 		var e = mgr.hazards.emitter_near(x, z, WeaponLogic.nullify_range()) if mgr.hazards else null
