@@ -9,7 +9,13 @@ var current := "rifle"
 var cooldown := 0.0
 var tank := Config.TANK_MAX
 var spraying := false
+var debug_trigger := false  # --fire: hold the trigger for a screenshot
 var hit_marker := 0.0
+var feel := HitFeel.new()
+var motion: ViewmodelMotion
+var xbow: CrossbowFx
+var spray_fx: SprayFx
+var muzzle: MuzzleFlash
 var gun: Node3D
 var coil: MeshInstance3D
 var cone: MeshInstance3D
@@ -29,19 +35,28 @@ func _init(cam: Camera3D) -> void:
 	coil = WeaponModels.crossbow(models["rifle"])
 	WeaponModels.sprayer(models["sprayer"])
 	WeaponModels.launcher(models["rocket"])
+	xbow = CrossbowFx.new(models["rifle"], coil)
+	spray_fx = SprayFx.new(models["sprayer"])
+	muzzle = MuzzleFlash.new(gun, Vector3(0, 0.03, -0.45))
+	feel.camera = cam
+	launcher.report = confirm
 	_show_model()
 	gun.scale = Vector3.ONE * 0.4
-	gun.position = Vector3(0.18, -0.16, -0.5)
+	gun.position = ViewmodelMotion.BASE
+	motion = ViewmodelMotion.new(gun)
 	cam.add_child(gun)
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.05
-	cm.bottom_radius = 1.8
+	var cm := CylinderMesh.new()  # +Y of the mesh points down -Z: narrow at the nozzle, wide at the reach
+	cm.top_radius = tan(deg_to_rad(SprayFx.SPREAD_DEG)) * Config.SPRAYER.range * 0.8
+	cm.bottom_radius = 0.03
 	cm.height = Config.SPRAYER.range * 0.8
 	cone = MeshInstance3D.new()
 	cone.mesh = cm
-	cone.material_override = Effects.glow_mat(Color(0.62, 0.96, 1.0), 0.16)
+	cm.cap_top = false
+	cm.cap_bottom = false
+	cone.material_override = Effects.glow_mat(Color(0.62, 0.96, 1.0), 0.09)
+	(cone.material_override as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
 	cone.rotation.x = -PI / 2.0
-	cone.position = Vector3(0, -0.2, -Config.SPRAYER.range * 0.4 - 0.3)
+	cone.position = Vector3(0.19, -0.14, -Config.SPRAYER.range * 0.4 - 0.66)
 	cone.visible = false
 	cam.add_child(cone)
 	advanced = AdvancedWeapons.new(self)
@@ -73,19 +88,23 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 	m.emission = { "rifle": Color("2a9fd0"), "sprayer": Color("3faa22"), "rocket": Color("ff8a1a"),
 		"railgun": Color("d7f6ff"), "plasma": Color("c45bff"), "demo": Color("ff8844") }.get(current, Color("2a9fd0"))
 	var cone_mat := cone.material_override as StandardMaterial3D
-	cone_mat.albedo_color = Color(0.75, 0.35, 1.0, 0.28) if current == "plasma" else Color(0.62, 0.96, 1.0, 0.16)
+	cone_mat.albedo_color = Color(0.75, 0.35, 1.0, 0.28) if current == "plasma" else Color(0.62, 0.96, 1.0, 0.09)
 	launcher.update(dt, world)
 	cooldown -= dt
 	hit_marker = maxf(0.0, hit_marker - dt)
-	gun.position.z = lerpf(gun.position.z, -0.5, minf(1.0, dt * 18.0))  # recoil recovery
+	feel.update(dt)
+	xbow.update(dt)
+	muzzle.update(dt)
 	if advanced.handles(current):
 		spraying = false
 		cone.visible = current == "plasma" and advanced.firing
+		spray_fx.set_active(false)
 		tank = minf(Config.TANK_MAX, tank + Config.TANK_REGEN * dt)
 		return
-	var trigger := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	var trigger := debug_trigger or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	spraying = current == "sprayer" and trigger and tank > 0.0
 	cone.visible = spraying
+	spray_fx.set_active(spraying)
 	if spraying:
 		_spray(dt, world, feet)
 	else:
@@ -97,7 +116,9 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 		cooldown = 0.6
 		var d := -camera.global_transform.basis.z
 		if launcher.fire(world, gun.global_position + d * 0.4, d):
-			gun.position.z = -0.38  # heavy recoil
+			kick(2.4)  # heavy recoil
+			muzzle.flash(Color("ffb347"), 0.26, 0.12, 5.0)
+			Sfx.play("launch")
 		else:
 			Sfx.play("deny")
 
@@ -136,14 +157,26 @@ func _fire(world: World) -> void:
 	if not best.is_empty() and bt < gd:
 		end = o + d * bt
 		best.on_hit.call(Config.RIFLE.damage * OperativeUpgrades.mult("firepower"), end)
-		hit_marker = 0.15
-		Sfx.play("hit")
+		confirm(not best.alive.call())
 	elif ground != null:
 		end = ground
 		world.effects.burst(end, Color("ffffaa"), 0.3, 0.12)
-	world.effects.beam(start, end, Color("9ff6ff"), 0.06, 0.025)
-	Sfx.play("rifle")
-	gun.position.z = -0.45  # recoil kick
+	world.effects.beam(start, end, Color("9ff6ff"), 0.12, 0.035)
+	world.effects.tracer(start, end, Color("e8fdff"), Config.VM_TRACER_SPEED, 6.0, 0.11)
+	Sfx.play("crossbow")
+	xbow.shoot()
+	kick(1.0)
+
+
+## Recoil for any weapon (1.0 = crossbow shot): gun, string and camera all react.
+func kick(strength: float) -> void:
+	motion.kick(strength)
+
+
+## An enemy was hit by something the Operative fired. Marker + tick, or red cross + crunch.
+func confirm(killed: bool) -> void:
+	hit_marker = Config.HIT_MARKER_TIME
+	feel.confirm(killed)
 
 
 func _spray(dt: float, world: World, feet: Vector3) -> void:
@@ -156,6 +189,7 @@ func _spray(dt: float, world: World, feet: Vector3) -> void:
 	var here := g.world_to_cell(feet.x, feet.z)
 	var range_cells: float = Config.SPRAYER.range / Config.CELL
 	var cos_a := cos(Config.SPRAYER.half_angle)
+	var steamed: Array[Vector2i] = []
 	for c in g.cells_in_radius(here.x, here.y, range_cells):
 		var p := g.cell_center(c.x, c.y)
 		var dx := p.x - feet.x
@@ -163,4 +197,6 @@ func _spray(dt: float, world: World, feet: Vector3) -> void:
 		var len := Vector2(dx, dz).length()
 		if len < Config.CELL * 0.9 or (dx * fwd.x + dz * fwd.z) / len >= cos_a:
 			var dist := Vector2(c.x - here.x, c.y - here.y).length()
-			world.creeper.remove(c.x, c.y, Config.SPRAYER.remove_per_sec * dt * (1.0 - 0.5 * dist / range_cells))
+			if world.creeper.remove(c.x, c.y, Config.SPRAYER.remove_per_sec * dt * (1.0 - 0.5 * dist / range_cells)) > 0.0:
+				steamed.append(c)
+	spray_fx.fizz(world, steamed, dt)

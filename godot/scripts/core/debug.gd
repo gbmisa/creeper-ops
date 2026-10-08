@@ -39,6 +39,7 @@ class_name Debug
 ##   --gallery     one of every structure, unit and raider tier in rows (art screenshots)
 ##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
 ##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
+##   --fire=rifle|sprayer|rocket  (with --surface) hold the trigger so --shot catches the weapon firing
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -185,6 +186,8 @@ static func apply(g) -> void:
 			w.current = "rocket"
 			var d: Vector3 = -w.camera.global_transform.basis.z
 			w.launcher.fire(g.fps.world, w.gun.global_position + d * 0.4, (d + Vector3(0, -0.12, 0)).normalized()))
+	if args.has("fire"):  # --autostart --fire=rifle|sprayer|rocket: trigger held for the --shot
+		DebugFire.run(g, str(args.fire))
 	if args.has("keys"):
 		g.hud.keys.open()
 	if args.has("shot"):

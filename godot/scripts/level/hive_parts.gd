@@ -142,6 +142,8 @@ static func _spitter(host, part: Dictionary, dt: float, prey: Array) -> void:
 					continue
 				var p: Vector3 = (q.node as Node3D).position
 				if Vector2(p.x - aim.x, p.z - aim.z).length() <= splash:
+					if str(q.get("kind", "")) == "operative":
+						HitFeel.note_source(from)
 					(q.hit as Callable).call(dmg),
 	})
 
