@@ -94,7 +94,7 @@ static func _work(g) -> void:
 	var grid: Grid = g.surface.grid
 	var paint: TerpPaint = g.surface.get_meta("terp_tint")
 	g.economy.energy = 1000000.0
-	var pad := _pad(g)
+	var pad := SmokeTerpJobs._pad(g)
 	if pad.x < 0:
 		SmokeTest._check("terp: found a flat pad", false, "no 7x7")
 		return
@@ -104,24 +104,24 @@ static func _work(g) -> void:
 	for o in [Vector2i(-3, 0), Vector2i(3, 0), Vector2i(0, -3), Vector2i(3, -3)]:
 		var at: Vector2i = pad + o
 		terps.append(sm.place("terp", at.x, at.y, true))
-		_link(g, at.x, at.y, avoid)
+		SmokeTerpJobs._link(g, at.x, at.y, avoid)
 	for _i in 5:
 		_tick(g)
 	var linked := true
 	for s in terps:
 		linked = linked and s.connected and not s.dead
-	SmokeTest._check("terp: built terps connect", linked, _state(terps))
+	SmokeTest._check("terp: built terps connect", linked, SmokeTerpJobs._state(terps))
 	if not linked:
-		_wipe(grid, paint, terps)
+		SmokeTerpJobs._wipe(grid, paint, terps)
 		_dry = Vector2i(-1, -1)
 		return
-	_step(g, grid, paint, terps, pad + Vector2i(-2, -2), 2)
-	_step(g, grid, paint, terps, pad + Vector2i(-1, -2), -1)
-	_occupied(g, sm, grid, paint, terps, pad)
-	_share(g, grid, paint, terps, pad + Vector2i(1, -2))
-	_ring(g, grid, paint, terps, pad)
-	_wipe(grid, paint, terps)
-	_idle(g, terps)
+	SmokeTerpJobs._step(g, grid, paint, terps, pad + Vector2i(-2, -2), 2)
+	SmokeTerpJobs._step(g, grid, paint, terps, pad + Vector2i(-1, -2), -1)
+	SmokeTerpJobs._occupied(g, sm, grid, paint, terps, pad)
+	SmokeTerpJobs._share(g, grid, paint, terps, pad + Vector2i(1, -2))
+	SmokeTerpRing._ring(g, grid, paint, terps, pad)
+	SmokeTerpJobs._wipe(grid, paint, terps)
+	SmokeTerpJobs._idle(g, terps)
 	_dry = Vector2i(-1, -1)
 
 
@@ -136,182 +136,6 @@ static func _tick(g) -> void:
 	g.economy.max_energy = 1000000.0
 	g.economy.energy = 1000000.0
 	g.update(0.05)
-
-
-## `by` is the signed level change the paint asks for (+2 checks the halfway level).
-static func _step(g, grid: Grid, paint: TerpPaint, terps: Array[Structure], c: Vector2i, by: int) -> void:
-	_settle(g, grid, paint, terps)
-	var h0 := grid.height_at(c.x, c.y)
-	_paint_cell(paint, g.command, c, int(round(h0)) + by)
-	var i := grid.idx(c.x, c.y)
-	var goal := h0 + float(by)
-	var asked := false
-	var saw_mid := false
-	var t := 0.0
-	while t < 30.0 and not (absf(grid.height_at(c.x, c.y) - goal) < 0.01 and grid.terp_target[i] < 0.0):
-		if _needs(g, terps):
-			asked = true
-		if by > 1 and absf(grid.height_at(c.x, c.y) - (h0 + 1.0)) < 0.01 and grid.terp_target[i] >= 0.0:
-			saw_mid = true
-		_tick(g)
-		t += 0.05
-	var done := absf(grid.height_at(c.x, c.y) - goal) < 0.01 and grid.terp_target[i] < 0.0 and grid.material[i] == Grid.Mat.EARTH
-	if by > 0:
-		SmokeTest._check("terp: requests terp packets", asked)
-	var name := "terp: raises one level, then finishes" if by > 1 else "terp: lowers and clears paint"
-	SmokeTest._check(name, done and (saw_mid or by < 0), "h %.2f paint %.2f" % [grid.height_at(c.x, c.y), grid.terp_target[i]])
-
-
-static func _occupied(g, sm: StructureManager, grid: Grid, paint: TerpPaint, terps: Array[Structure], pad: Vector2i) -> void:
-	_settle(g, grid, paint, terps)
-	var near := pad + Vector2i(0, -2)
-	var far := pad + Vector2i(2, -2)
-	var hn := grid.height_at(near.x, near.y)
-	var hf := grid.height_at(far.x, far.y)
-	_paint_cell(paint, g.command, near, int(round(hn)) + 1)
-	_paint_cell(paint, g.command, far, int(round(hf)) + 1)
-	var blocker := sm.place("relay", near.x, near.y, true)
-	for s in terps:
-		s.job = {}
-	var stole := false
-	var t := 0.0
-	while t < 25.0 and absf(grid.height_at(far.x, far.y) - (hf + 1.0)) > 0.01:
-		_tick(g)
-		t += 0.05
-		for s in terps:
-			if int(s.job.get("x", -1)) == near.x and int(s.job.get("z", -1)) == near.y:
-				stole = true
-	var skipped := not stole and absf(grid.height_at(near.x, near.y) - hn) < 0.01 and absf(grid.height_at(far.x, far.y) - (hf + 1.0)) < 0.01
-	SmokeTest._check("terp: skips an occupied cell", skipped, "near %.2f far %.2f %s" % [grid.height_at(near.x, near.y), grid.height_at(far.x, far.y), _state(terps)])
-	if blocker:
-		sm.remove(blocker, "recycled")
-
-
-static func _share(g, grid: Grid, paint: TerpPaint, terps: Array[Structure], c: Vector2i) -> void:
-	_settle(g, grid, paint, terps)
-	var h0 := grid.height_at(c.x, c.y)
-	_paint_cell(paint, g.command, c, int(round(h0)) + 1)
-	var dup := false
-	var saw := false
-	var t := 0.0
-	var i := grid.idx(c.x, c.y)
-	while t < 25.0 and grid.terp_target[i] >= 0.0:
-		_tick(g)
-		t += 0.05
-		var seen := {}
-		for s in terps:
-			var x := int(s.job.get("x", -1))
-			var z := int(s.job.get("z", -1))
-			if s.job.is_empty() or x < 0:
-				continue
-			var key := grid.idx(x, z)
-			if seen.has(key):
-				dup = true
-			seen[key] = true
-			if float(s.job.get("timer", 0.0)) > 0.0:
-				saw = true
-	SmokeTest._check("terp: two terps never share a cell", not dup and saw, _state(terps))
-
-
-static func _ring(g, grid: Grid, paint: TerpPaint, terps: Array[Structure], pad: Vector2i) -> void:
-	_settle(g, grid, paint, terps)
-	var h0 := grid.height_at(pad.x, pad.y)
-	var field: RaiderField = g.hazards.nests.raiders.field
-	var probe := pad + Vector2i(0, 2)
-	field.rebuild([pad])
-	SmokeTest._check("terp: open pool is reachable", field.dist[grid.idx(probe.x, probe.y)] >= 0, str(field.dist[grid.idx(probe.x, probe.y)]))
-	for dz in range(-1, 2):
-		for dx in range(-1, 2):
-			if dx != 0 or dz != 0:
-				_paint_cell(paint, g.command, pad + Vector2i(dx, dz), int(round(h0)) + 2)
-	var t := 0.0
-	while t < 55.0 and not _ring_done(grid, pad, h0):
-		_tick(g)
-		t += 0.05
-	SmokeTest._check("terp: ring reaches its target", _ring_done(grid, pad, h0), _ring_detail(grid, pad, terps))
-	var wall := pad + Vector2i(0, 1)
-	SmokeTest._check("terp: raiders cannot step onto the wall", not field.step_ok(probe.x, probe.y, wall.x, wall.y))
-	field.rebuild([pad])
-	var after := field.dist[grid.idx(probe.x, probe.y)]
-	SmokeTest._check("terp: sealed pool has no raider route", after < 0, str(after))
-	var sim := CreeperSim.new(grid)
-	sim.set_depth(pad.x, pad.y, 1.0)
-	for _n in 40:
-		sim.update(Config.CREEPER_TICK)
-	var held := sim.depth_at(wall.x, wall.y) < Config.MIN_DEPTH and sim.depth_at(probe.x, probe.y) < Config.MIN_DEPTH and sim.depth_at(pad.x, pad.y) > Config.MIN_DEPTH
-	SmokeTest._check("terp: ring holds creeper", held, "pool %.3f wall %.3f" % [sim.depth_at(pad.x, pad.y), sim.depth_at(wall.x, wall.y)])
-	field.invalidate()
-
-
-static func _ring_done(grid: Grid, pad: Vector2i, h0: float) -> bool:
-	for dz in range(-1, 2):
-		for dx in range(-1, 2):
-			if dx == 0 and dz == 0:
-				continue
-			var c := pad + Vector2i(dx, dz)
-			if absf(grid.height_at(c.x, c.y) - (h0 + 2.0)) > 0.01 or grid.terp_target[grid.idx(c.x, c.y)] >= 0.0:
-				return false
-	return true
-
-
-static func _ring_detail(grid: Grid, pad: Vector2i, terps: Array[Structure]) -> String:
-	var bits := []
-	for dz in range(-1, 2):
-		for dx in range(-1, 2):
-			if dx == 0 and dz == 0:
-				continue
-			var c := pad + Vector2i(dx, dz)
-			bits.append("%.0f/%.0f" % [grid.height_at(c.x, c.y), grid.terp_target[grid.idx(c.x, c.y)]])
-	return " ".join(bits) + " " + _state(terps)
-
-
-static func _needs(g, terps: Array[Structure]) -> bool:
-	for s in terps:
-		if PacketRequests.need(g.structures.network, s) == "terp":
-			return true
-	return false
-
-
-static func _paint_cell(paint: TerpPaint, cm: CommandMode, c: Vector2i, level: int) -> void:
-	paint.level = clampi(level, 0, Config.MAX_LEVEL)
-	paint.pinned = true
-	paint.anchor = c
-	paint.commit(cm, c, false)
-
-
-static func _settle(g, grid: Grid, paint: TerpPaint, terps: Array[Structure]) -> void:
-	_wipe(grid, paint, terps)
-	_idle(g, terps)
-
-
-static func _wipe(grid: Grid, paint: TerpPaint, terps: Array[Structure]) -> void:
-	for i in grid.terp_target.size():
-		grid.terp_target[i] = -1.0
-		grid.terp_mat[i] = 0
-	for s in terps:
-		s.job = {}
-	paint.sync()
-
-
-static func _idle(g, terps: Array[Structure]) -> void:
-	var t := 0.0
-	while t < 15.0:
-		var fly := false
-		for s in terps:
-			s.job = {}
-			if s.in_flight > 0:
-				fly = true
-		if not fly:
-			return
-		_tick(g)
-		t += 0.05
-
-
-static func _state(terps: Array[Structure]) -> String:
-	var bits := []
-	for s in terps:
-		bits.append("%d,%d c%d d%d f%d %s" % [s.x, s.z, 1 if s.connected else 0, 1 if s.dead else 0, s.in_flight, str(s.job)])
-	return " ".join(bits)
 
 
 static func _special(grid: Grid) -> Dictionary:
@@ -355,82 +179,3 @@ static func _free_near(g) -> Vector2i:
 	return Vector2i(-1, -1)
 
 
-static func _pad(g) -> Vector2i:
-	var grid: Grid = g.surface.grid
-	var node: Structure = g.structures.command_node()
-	var max_r := maxi(maxi(node.x, node.z), maxi(grid.w - node.x, grid.h - node.z))
-	for r in max_r + 1:
-		for dz in range(-r, r + 1):
-			for dx in range(-r, r + 1):
-				if maxi(absi(dx), absi(dz)) != r:
-					continue
-				var x: int = node.x + dx
-				var z: int = node.z + dz
-				if x >= 3 and z >= 3 and x < grid.w - 3 and z < grid.h - 3 and _flat(g, x, z):
-					return Vector2i(x, z)
-	return Vector2i(-1, -1)
-
-
-static func _flat(g, x: int, z: int) -> bool:
-	var grid: Grid = g.surface.grid
-	var h := grid.height_at(x, z)
-	if h < 1.0 or h > float(Config.MAX_LEVEL) - 2.0:
-		return false
-	for dz in range(-3, 4):
-		for dx in range(-3, 4):
-			var i := grid.idx(x + dx, z + dz)
-			if absf(grid.height[i] - h) > 0.01 or grid.blocked[i] or grid.zone[i] != Grid.Zone.NONE:
-				return false
-			if grid.gate[i] != Grid.Faction.NONE or grid.material[i] >= Grid.Mat.STONE or grid.deck_owner[i] != Grid.Faction.NONE:
-				return false
-			if g.structures.structure_at(x + dx, z + dz) != null or g.surface.creeper.depth_at(x + dx, z + dz) > Config.MIN_DEPTH:
-				return false
-	return true
-
-
-static func _link(g, x: int, z: int, avoid: Rect2i) -> void:
-	var sm: StructureManager = g.structures
-	var guard := 0
-	while not sm.network.in_range(sm.list, x, z, 6.0, null) and guard < 8:
-		guard += 1
-		var from := _anchor(sm, x, z)
-		var dir := Vector2(x - from.x, z - from.y)
-		var dist := dir.length()
-		if dist < 1.0:
-			return
-		dir /= dist
-		var step := minf(12.0, dist)
-		var c := _dry_free(g, int(round(from.x + dir.x * step)), int(round(from.y + dir.y * step)), avoid)
-		if c.x < 0:
-			return
-		sm.place("relay", c.x, c.y, true)
-		_tick(g)
-
-
-static func _anchor(sm: StructureManager, x: int, z: int) -> Vector2i:
-	var best := sm.command_node()
-	var bd := Vector2(best.x - x, best.z - z).length()
-	for s in sm.list:
-		if s.connected and s.def.get("relays", false):
-			var d := Vector2(s.x - x, s.z - z).length()
-			if d < bd:
-				bd = d
-				best = s
-	return Vector2i(best.x, best.z)
-
-
-static func _dry_free(g, x: int, z: int, avoid: Rect2i) -> Vector2i:
-	var grid: Grid = g.surface.grid
-	for r in 8:
-		for dz in range(-r, r + 1):
-			for dx in range(-r, r + 1):
-				if maxi(absi(dx), absi(dz)) != r:
-					continue
-				var cx := x + dx
-				var cz := z + dz
-				if not grid.in_bounds(cx, cz) or avoid.has_point(Vector2i(cx, cz)):
-					continue
-				if g.surface.creeper.depth_at(cx, cz) > Config.MIN_DEPTH or g.structures.structure_at(cx, cz) != null:
-					continue
-				return Vector2i(cx, cz)
-	return Vector2i(-1, -1)
