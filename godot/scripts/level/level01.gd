@@ -110,6 +110,7 @@ static func _routes(g: Grid) -> void:
 	LevelRamps.cover_rect(keep, g, 10, 51, 34, 53)
 	LevelRamps.uncover_rect(keep, g, 27, 51, 29, 53)
 	LevelRamps.cover_disc(keep, g, 14, 12, 7.0)
+	LevelRamps.cover_disc(keep, g, 14, 42, 11.0)  # Rift hollow + cave-mouth rim
 	LevelRamps.cover_rect(keep, g, 54, 3, 73, 19)
 	LevelRamps.cover_disc(keep, g, 40, 24, 6.0)
 	LevelRamps.cover_disc(keep, g, 68, 50, 6.0)
@@ -123,7 +124,7 @@ static func _routes(g: Grid) -> void:
 	LevelRamps.stairs(g, Vector2i(24, 66), Vector2i(24, 74), 5, 2)
 	LevelRamps.stairs(g, Vector2i(57, 64), Vector2i(57, 76), 5, 2)
 	LevelRamps.stairs(g, Vector2i(40, 24), Vector2i(40, 30), 5, 1)
-	LevelRamps.stairs(g, Vector2i(61, 14), Vector2i(61, 34), 5, 2)
+	LevelRamps.stairs(g, Vector2i(72, 11), Vector2i(79, 11), 3, 2)  # Spire Heights: east face, away from the mesa
 	LevelRamps.stairs(g, Vector2i(18, 52), Vector2i(18, 36), 5, 2)
 	LevelRamps.stairs(g, Vector2i(32, 52), Vector2i(32, 36), 3, 2)
 	LevelRamps.stairs(g, Vector2i(26, 26), Vector2i(26, 32), 3, 1)
@@ -160,19 +161,29 @@ static func build() -> Dictionary:
 	_bowl(g, 14, 42, 3.5, 8, 2.0)
 	_disc(g, 14, 42, 1.6, func(x, z, _d): g.set_height(x, z, 3.0))
 	_blight(g, 12, 41, 7)
-	# NE "Spire Heights": sheer level-10 plateau, Blight on top, stair ramp heading south.
+	# Cave-mouth rim (Playtest 1C): a level-5 ring with an east and a north gap, the only
+	# ways in or out of the hollow. Kept out of smooth_lowland via the keep mask in _routes.
+	_disc(g, 14, 42, 10.5, func(x, z, d):
+		if d < 8.5:
+			return
+		if absf(float(z - 42)) <= 1.0 and x > 14:
+			return  # east gap
+		if absf(float(x - 14)) <= 1.0 and z < 42:
+			return  # north gap
+		if g.height_at(x, z) < 5.0:
+			g.set_height(x, z, 5.0))
+	# NE "Spire Heights": sheer level-10 plateau, Blight on top. The single stair is on the
+	# east side (see _routes), facing away from the southern landing mesa.
 	_rect(g, 54, 3, 73, 19, func(x, z):
 		var edge := mini(mini(x - 54, 73 - x), mini(z - 3, 19 - z))
 		g.set_height(x, z, 8.0 if edge < 1 else 10.0))
-	for z in range(20, 35):
-		var hz := 10.0 - (z - 19) * 0.5
-		_rect(g, 60, z, 62, z, func(x, zz): g.set_height(x, zz, maxf(hz, g.height_at(x, zz))))
-		for x in [59, 63]:
-			g.set_height(x, z, minf(g.height_at(x, z), maxf(1.0, hz - 3.0)))
 	_rect(g, 54, 3, 73, 19, func(x, z): g.zone[g.idx(x, z)] = Grid.Zone.BLIGHT)
 	# Central Blight knoll with a nest: the units' first real fight.
 	_mesa(g, 40, 24, 3, 6, 5.0)
 	_blight(g, 40, 24, 5)
+	# Playtest 1C: Blight band across the southern approach. The walk to the knoll
+	# crosses Blight (nothing can be built there); the network routes around either end.
+	_rect(g, 32, 31, 48, 34, func(x, z): g.zone[g.idx(x, z)] = Grid.Zone.BLIGHT)
 	# East emitter shelf (level 5) and a few lowland buttes for line-of-fire and choke points.
 	_mesa(g, 68, 50, 4, 6, 5.0)
 	_mesa(g, 26, 26, 2, 4, 4.0)
@@ -202,9 +213,9 @@ static func build() -> Dictionary:
 			{ "x": 20, "z": 45, "amount": 1.4, "interval": 1.0 },  # pours into Ashmoat's north moat
 		],
 		"hives": [
-			{ "name": "Rift", "x": 9, "z": 38 },
-			{ "name": "Spire Heights", "x": 59, "z": 13 },
-			{ "name": "Central knoll", "x": 40, "z": 23 },
+			{ "name": "Rift", "x": 9, "z": 38, "access": "cavemouth" },
+			{ "name": "Spire Heights", "x": 59, "z": 13, "access": "plateau" },
+			{ "name": "Central knoll", "x": 40, "z": 23, "access": "blight" },
 		],
 		"raid_schedule": RAID_SCHEDULE,
 		"pressure": PRESSURE,
