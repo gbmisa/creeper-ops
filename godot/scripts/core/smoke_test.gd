@@ -142,6 +142,7 @@ static func run(g) -> void:
 	SmokeCw3.run(g)
 	SmokeLevel02.run(g)
 	SmokeKeeps.run(g)
+	SmokeDragbuild.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

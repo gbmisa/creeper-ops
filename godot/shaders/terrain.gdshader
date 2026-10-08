@@ -19,6 +19,8 @@ uniform float show_overlay = 1.0;
 uniform float show_cover = 0.0;
 
 uniform vec4 field_preview = vec4(0.0); // xy = centre, z = half-size m, w = on (placing a collector)
+uniform int field_plan_count = 0;
+uniform vec4 field_plans[48]; // drag-build: xy centre, z = half-size m, one 7x7 outline per planned collector
 uniform int node_count = 0;
 uniform vec4 nodes[96];        // xy = world xz, z = link radius m
 
@@ -96,6 +98,14 @@ void fragment() {
 		float outline = 1.0 - smoothstep(0.0, 0.12 + fwidth(m), abs(m - field_preview.z));
 		col = mix(col, vec3(0.4, 1.0, 0.55), inside * 0.16 + outline * 0.7);
 		emit += outline * 0.2;
+	}
+	for (int i = 0; i < field_plan_count; i++) {
+		vec2 fq = abs(p - field_plans[i].xy);
+		float fm = max(fq.x, fq.y);
+		float fill = 1.0 - step(field_plans[i].z, fm);
+		float edge = 1.0 - smoothstep(0.0, 0.12 + fwidth(fm), abs(fm - field_plans[i].z));
+		col = mix(col, vec3(0.4, 1.0, 0.55), fill * 0.16 + edge * 0.7);
+		emit += edge * 0.2;
 	}
 	if (ghost.w > 0.5) {
 		float g = disc(p, ghost.xy, ghost.z, 0.35);

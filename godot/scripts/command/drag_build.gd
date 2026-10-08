@@ -13,16 +13,20 @@ static func is_chain(type: String) -> bool:
 	return type == "collector" or type == "relay"
 
 
-## [{ cell: Vector2i, ok: bool }] from cell a (press) toward cell b (cursor).
+## [{ cell: Vector2i, ok: bool, cost: int }] from cell a (press) toward cell b (cursor).
 static func plan(cm: CommandMode, a: Vector2i, b: Vector2i) -> Array[Dictionary]:
-	var type := cm.tool
+	return plan_at(cm.structures, cm.tool, a, b)
+
+
+## Same plan, for the Operative's build mode (it has no CommandMode).
+static func plan_at(structures, type: String, a: Vector2i, b: Vector2i) -> Array[Dictionary]:
 	var def: Dictionary = StructureDefs.DEFS[type]
-	var cells := _chain(cm, type, a, b) if is_chain(type) else _row(type, a, b)
+	var cells := _chain(structures, type, a, b) if is_chain(type) else _row(type, a, b)
 	var out: Array[Dictionary] = []
 	var planned: Array[Vector3] = []  # earlier ok pieces that will relay: (x, z, link)
 	for c in cells:
-		var ok: bool = Placement.can_place(cm.structures, type, c.x, c.y, planned).ok
-		out.append({ "cell": c, "ok": ok })
+		var ok: bool = Placement.can_place(structures, type, c.x, c.y, planned).ok
+		out.append({ "cell": c, "ok": ok, "cost": int(def.get("cost", 0)) })
 		if ok and def.get("relays", false):
 			planned.append(Vector3(c.x, c.y, def.link))
 	return out
@@ -30,13 +34,17 @@ static func plan(cm: CommandMode, a: Vector2i, b: Vector2i) -> Array[Dictionary]
 
 ## Places every ok piece in order. Returns how many were placed.
 static func commit(cm: CommandMode, items: Array[Dictionary]) -> int:
+	return commit_at(cm.structures, cm.tool, items)
+
+
+static func commit_at(structures, type: String, items: Array[Dictionary]) -> int:
 	var n := 0
 	var why := ""
 	for it in items:
 		var c: Vector2i = it.cell
-		var res := Placement.can_place(cm.structures, cm.tool, c.x, c.y)
+		var res := Placement.can_place(structures, type, c.x, c.y)
 		if res.ok:
-			cm.structures.place(cm.tool, c.x, c.y)
+			structures.place(type, c.x, c.y)
 			n += 1
 		elif why == "":
 			why = res.reason
@@ -49,15 +57,24 @@ static func commit(cm: CommandMode, items: Array[Dictionary]) -> int:
 	return n
 
 
+## HUD line. Cost is the sum of def.cost over pieces that can actually be placed.
 static func summary(items: Array[Dictionary]) -> String:
-	var ok := items.filter(func(it): return it.ok).size()
-	return "Release to place %d" % ok + ("" if ok == items.size() else " (%d blocked)" % (items.size() - ok))
+	var ok := 0
+	var cost := 0
+	for it in items:
+		if it.ok:
+			ok += 1
+			cost += int(it.get("cost", 0))
+	var line := "Release to place %d: %d energy total" % [ok, cost]
+	if ok != items.size():
+		line += " (%d blocked)" % (items.size() - ok)
+	return line
 
 
 ## Chain: walk the press->cursor line; each step takes the farthest cell on the line that is
 ## within link of the previous piece and has buildable ground. A short last hop to the cursor
 ## is only added when it covers at least half a link.
-static func _chain(cm: CommandMode, type: String, a: Vector2i, b: Vector2i) -> Array[Vector2i]:
+static func _chain(structures, type: String, a: Vector2i, b: Vector2i) -> Array[Vector2i]:
 	var out: Array[Vector2i] = [a]
 	var d := Vector2(b - a)
 	var length := d.length()
@@ -73,7 +90,7 @@ static func _chain(cm: CommandMode, type: String, a: Vector2i, b: Vector2i) -> A
 		while s >= along + 1.0:
 			var p := Vector2(a) + dir * s
 			var c := Vector2i(roundi(p.x), roundi(p.y))
-			if c != prev and Vector2(c - prev).length() <= link and Placement.ground_reason(cm.structures, type, c.x, c.y) == "":
+			if c != prev and Vector2(c - prev).length() <= link and Placement.ground_reason(structures, type, c.x, c.y) == "":
 				out.append(c)
 				prev = c
 				along = s
