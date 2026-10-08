@@ -14,6 +14,8 @@ var active := false
 var tab := 0
 var tool := ""
 var status := ""  # HUD line: what is armed, where, and why it can't go there
+var drag_from := Vector2i(-1, -1)
+var drag_plan: Array[Dictionary] = []
 
 
 func _init(sm: StructureManager, ov: CommandOverlay) -> void:
@@ -23,6 +25,7 @@ func _init(sm: StructureManager, ov: CommandOverlay) -> void:
 
 func toggle(on: bool) -> void:
 	active = on
+	_end_drag()
 	if not on:
 		overlay.hide_ghost()
 		status = ""
@@ -30,41 +33,71 @@ func toggle(on: bool) -> void:
 		_pick_slot(0)
 
 
+func _end_drag() -> void:
+	drag_from = Vector2i(-1, -1)
+	drag_plan.clear()
+	overlay.hide_plan()
+
+
 ## Returns true while building (the caller then skips weapons).
+## A click places one structure on release. Holding the button and aiming at another cell
+## drags a chain or row, same rules as command mode; release places it.
 func update(input: InputState, world: World, camera: Camera3D) -> bool:
 	if input.act("op_build"):
 		toggle(not active)
 		Sfx.play("click")
 	if not active:
 		return false
-	_keys(input)
-	if input.right_clicked:
-		toggle(false)
+	if _keys(input):
+		_end_drag()
+	if input.right_clicked or input.was_pressed(KEY_ESCAPE):
+		_end_drag()
+		if input.right_clicked:
+			toggle(false)
 		return true
-	var o := camera.global_position
-	var hit = world.grid.raycast(o, -camera.global_transform.basis.z, REACH)
+	var hit = world.grid.raycast(camera.global_position, -camera.global_transform.basis.z, REACH)
 	if hit == null:
 		overlay.hide_ghost()
+		if input.left_released:
+			_end_drag()
 		status = "BUILD %s: aim at the ground" % _label()
 		return true
 	var c := world.grid.world_to_cell(hit.x, hit.z)
-	var res := Placement.can_place(structures, tool, c.x, c.y)
-	var def: Dictionary = StructureDefs.DEFS[tool]
-	var r: float = (WeaponLogic.def_range(def) if def.has("range") else def.link) * Config.CELL
-	var cover: Array[Vector4] = structures.network.cover_discs(structures.list) if def.get("needs_network", true) else []
-	overlay.show_ghost(tool, world.grid.cell_ground(c.x, c.y), res.ok, StructureDefs.radius_m(tool), r, cover)
-	status = "BUILD %s (%d)  ·  %s" % [_label(), def.get("cost", 0), "click to place" if res.ok else res.reason]
 	if input.left_pressed:
-		if res.ok:
-			structures.place(tool, c.x, c.y)
-			Sfx.play("click")
-		else:
-			Bus.say(res.reason, "warn")
-			Sfx.play("deny")
+		drag_from = c
+	var dragging := drag_from.x >= 0 and (input.left or input.left_released) and c != drag_from
+	if dragging:
+		drag_plan = DragBuild.plan_at(structures, tool, drag_from, c)
+		overlay.show_plan(drag_plan, tool)
+		status = "BUILD %s  ·  %s" % [_label(), DragBuild.summary(drag_plan)]
+	else:
+		if not drag_plan.is_empty():
+			drag_plan.clear()
+			overlay.hide_plan()
+		var res := Placement.can_place(structures, tool, c.x, c.y)
+		var def: Dictionary = StructureDefs.DEFS[tool]
+		var reach: float = (WeaponLogic.def_range(def) if def.has("range") else def.link) * Config.CELL
+		var cover: Array[Vector4] = structures.network.cover_discs(structures.list) if def.get("needs_network", true) else []
+		overlay.show_ghost(tool, world.grid.cell_ground(c.x, c.y), res.ok, StructureDefs.radius_m(tool), reach, cover)
+		status = "BUILD %s (%d)  ·  %s" % [_label(), def.get("cost", 0), "click to place" if res.ok else res.reason]
+	if input.left_released:
+		if not drag_plan.is_empty():
+			DragBuild.commit_at(structures, tool, drag_plan)
+		elif drag_from == c:
+			var placed := Placement.can_place(structures, tool, c.x, c.y)
+			if placed.ok:
+				structures.place(tool, c.x, c.y)
+				Sfx.play("click")
+			else:
+				Bus.say(placed.reason, "warn")
+				Sfx.play("deny")
+		_end_drag()
 	return true
 
 
-func _keys(input: InputState) -> void:
+## True when the armed structure changed, so a drag in progress is dropped.
+func _keys(input: InputState) -> bool:
+	var before := tool
 	for i in StructureDefs.TABS.size():
 		if input.act("tab_%d" % (i + 1)):
 			tab = i
@@ -75,6 +108,7 @@ func _keys(input: InputState) -> void:
 	for n in 9:
 		if input.act("build_%d" % (n + 1)):
 			_pick_slot(n)
+	return tool != before
 
 
 ## Picks slot n of the current tab (same numbers as the command-mode menu). "@" actions

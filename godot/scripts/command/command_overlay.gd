@@ -11,6 +11,9 @@ var paint: TerpPaint = null   # hatched target tint; Game attaches it before set
 var ghost_node: Node3D = null
 var ghost_type := ""
 var ghost_mat: StandardMaterial3D = null
+var plan_ghosts: Array[Node3D] = []
+var plan_mats: Array = []
+var plan_type := ""
 
 
 func _init(w: World) -> void:
@@ -66,24 +69,67 @@ func hide_ghost() -> void:
 	mat.set_shader_parameter("show_cover", 0.0)
 
 
-## DragBuild preview: one footprint disc per planned piece (green ok, red blocked), joined by
-## link lines when it is a chain.
+## DragBuild preview: one footprint disc and one 3D ghost per planned piece (green ok, red
+## blocked), joined by link lines when it is a chain. Collector chains also draw each 7x7 field.
 func show_plan(items: Array[Dictionary], type: String) -> void:
+	hide_ghost()
 	var g := world.grid
+	var shown: Array = items.slice(0, DragBuild.MAX)
+	if type != plan_type:
+		for n in plan_ghosts:
+			n.queue_free()
+		plan_ghosts.clear()
+		plan_mats.clear()
+		plan_type = type
+	while plan_ghosts.size() < shown.size():
+		_add_plan_ghost(type)
 	var pv := PackedVector4Array()
-	for it in items.slice(0, DragBuild.MAX):
+	var fv := PackedVector4Array()
+	var half := (Config.COLLECT_RADIUS + 0.5) * Config.CELL
+	var hover := Mover.HOVER if type != "" and StructureDefs.DEFS[type].get("flying", false) else 0.0
+	for i in plan_ghosts.size():
+		var node := plan_ghosts[i]
+		if i >= shown.size():
+			node.visible = false
+			continue
+		var it: Dictionary = shown[i]
 		var c: Vector2i = it.cell
 		var p := g.cell_center(c.x, c.y)
 		pv.append(Vector4(p.x, p.z, StructureDefs.radius_m(type), 1.0 if it.ok else 0.0))
+		if type == "collector":
+			fv.append(Vector4(p.x, p.z, half, 1.0))
+		node.visible = true
+		node.position = g.cell_ground(c.x, c.y) + Vector3(0, 0.05 + hover, 0)
+		if plan_mats[i]:
+			plan_mats[i].albedo_color = Color(0.45, 1.0, 0.8, 0.7) if it.ok else Color(1.0, 0.35, 0.35, 0.7)
 	var n := pv.size()
 	pv.resize(DragBuild.MAX)
 	mat.set_shader_parameter("plans", pv)
 	mat.set_shader_parameter("plan_count", n)
 	mat.set_shader_parameter("plan_lines", 1.0 if DragBuild.is_chain(type) else 0.0)
+	var fn := fv.size()
+	fv.resize(DragBuild.MAX)
+	mat.set_shader_parameter("field_plans", fv)
+	mat.set_shader_parameter("field_plan_count", fn)
+
+
+func _add_plan_ghost(type: String) -> void:
+	var node := StructureMeshes.ghost(type, true)
+	world.add_child(node)
+	node.visible = false
+	plan_ghosts.append(node)
+	var found: StandardMaterial3D = null
+	for mi in node.find_children("*", "MeshInstance3D", true, false):
+		found = (mi as MeshInstance3D).material_override
+		break
+	plan_mats.append(found)
 
 
 func hide_plan() -> void:
 	mat.set_shader_parameter("plan_count", 0)
+	mat.set_shader_parameter("field_plan_count", 0)
+	for n in plan_ghosts:
+		n.visible = false
 
 
 ## Selection ring + (for weapons) its firing range, drawn as ring_b / ring_a.
@@ -114,5 +160,6 @@ func set_overlay_visible(on: bool) -> void:
 	mat.set_shader_parameter("show_overlay", 1.0 if on else 0.0)
 	if not on:
 		hide_ghost()
+		hide_plan()
 		mat.set_shader_parameter("ring_b", Vector4.ZERO)
 		mat.set_shader_parameter("sel_count", 0)
