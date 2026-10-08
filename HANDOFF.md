@@ -16,6 +16,9 @@ Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Ru
 - **Long runs out** (rules: `docs/tasks/LONG_RUN_RULES.md`): `stage9b` (9b extractors, improved ammo, level placement, tuning), `stage19` (flyers), `stage20` (art pass 2). Each keeps `docs/tasks/<STAGE>_progress.md`.
 - User asked about map size: current maps 80²/160² cells; ~256² fits today, 512²-1024² needs the Phase B "large-map performance" stage (creeper mesh is one whole-map mesh, full readback, whole-grid flow field). Waiting for the user's target size.
 
+## Running when this was written (2026-10-08 evening)
+Background Claude agents: Stage 21 castles (Opus, `stage21`), 9b Salvage Engines (Sonnet, `stage9b`), 19 flyers (Sonnet, `stage19`). Stage 23 FPS feel is merged. Queue for Muse: see [Muse.md](Muse.md). New token rules: CLAUDE.md "Token budget rules" (use `stage-runner`/`auditor`, not general-purpose).
+
 ## Verified
 - Smoke **382/382 PASS**, three runs. Parse clean.
 - Sims (merged): L1 demo 900 s Node 500/500; L1 undefended dies 336 s; L2 undefended 226 s; L2 demo dies 652 s. All four tiers + Spitter/Lancer/Warden seen in the L1 demo.
