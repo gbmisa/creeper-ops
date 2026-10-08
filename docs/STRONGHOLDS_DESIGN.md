@@ -236,7 +236,7 @@ Sniper: range 26 cells, 4 damage per shot. Operative rifle and rockets as in con
 
 **Prey for ranged enemies:** structures, units, the Operative, castle turrets, wall segments.
 
-*As built (Stage 8):* ordinary spawns weight `2^order` toward the newest unlock. The Spotter is not in that pool; it arrives with a mortar. Loot is data only (§4.4). Groups start at pressure 0.60, not 0.35, and Burrowers and Spotters stay out of them. Skitter melee is 6 dps and one raider stays home as a guard, so an undefended Node still dies inside the old window. A Spitter's range is 2 cells (HP 4), so the lob comes from the melee line where a Sniper can answer it. Lancers unlock at 0.55 and Burrowers at 0.65. Brute, Ravager and Behemoth stats are unchanged.
+*As built (Stage 8):* ordinary spawns weight `2^order` toward the newest unlock. The Spotter is not in that pool; it arrives with a mortar. Loot is data only (§4.4). Groups start at pressure 0.60, not 0.35, and Burrowers and Spotters stay out of them. Skitter melee is 6 dps and one raider stays home as a guard, so an undefended Node still dies inside the old window. The Spitter matches the table above: 10 HP and a 20-cell lob. Lancers unlock at 0.55 and Burrowers at 0.65. Brute, Ravager and Behemoth stats are unchanged.
 
 ### 4.3 Enemy mortars
 - **Range** 36 cells, **minimum range 6**. Fires every 6 s. Blast radius 2.5 cells.

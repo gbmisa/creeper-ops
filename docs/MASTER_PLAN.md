@@ -2,7 +2,7 @@
 
 The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
 
-**Status (2026-10-08):** everything through Stage 18 and Stage 8 (8a + 8b) is merged to `main` (⚠ = not human-verified). Open: 8c enemy construction, 9a/9b economy, 12 level placement, 13 tuning, 14 review. Waiting on the user: a playtest of the merged build and the Spitter decision (see HANDOFF).
+**Status (2026-10-08):** everything through Stage 18 and Stage 8 (8a + 8b) is merged to `main` (⚠ = not human-verified). Open: 8c enemy construction, 9a/9b economy, 12 level placement, 13 tuning, 14 review. Waiting on the user: a playtest of the merged build (see HANDOFF). The Spitter is restored to the §4.2 table (HP 10, range 20).
 **Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
 
 ---
@@ -112,7 +112,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 7 | Strongholds, castles, spire climb | **Opus 5.5** (built) | ⚠ verified headless + screenshots |
 | 7b | **Castle stakes:** reprisal raid on capture, recurring sieges, aggression that stacks with castles held, hostile castles buff nests, prep window. **Castle turrets pulled in (done ⚠)** | **Opus 5.5** | ⚠ done, verified headless + screenshot |
 | 7c | Traversable terrain on Level 1 (stairs, no isolated shelves) | Sonnet 5.5 (Grok), Opus review | ⚠ merged 2026-10-08 (Grok, Opus review) |
-| 8a | Nest bases and enemy mortars | Grok Build (long run with 8b) | ⚠ merged 2026-10-08 (Grok long run; Spitter retuned to melee range: needs user call) |
+| 8a | Nest bases and enemy mortars | Grok Build (long run with 8b) | ⚠ merged 2026-10-08 (Grok long run; Spitter restored to HP 10, range 20) |
 | 8b | Enemy roster (incl. Burrower, Weaver) | Grok Build (long run, before 8a) | ⚠ merged 2026-10-08 (Grok long run) |
 | 8c | **Enemy construction:** hubs in enemy castles, Weavers, Leeches, build planner, enemy structures (design §4.5) | Sonnet 5.5, Opus review | ☐ |
 | 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ☐ |
@@ -218,6 +218,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix. First-pass Aether Towers (Stage 7 replaces them). First-pass nest raiders with tier escalation (Stages 2 and 8 rework them). 49/49 smoke tests pass.
 
 ## 6. Changelog
+- 2026-10-08: Spitter restored to the §4.2 spec (HP 10, range 20) after the user rejected the melee-range balance pass. Skitter dps, guard count and later unlocks are unchanged. Smoke 383/383. L1 `--demo --units --sim=900` loses the Node at 622 s (was 500/500).
 - 2026-10-08: Opus merged 7c, 11a, 10a, 18b, 18c, 18d and Stage 8 (8b roster + 8a hives/mortars, 8 phases, log in tasks/STAGE8_progress.md). Smoke 382/382 x3. Merge fixes: raider separation can't add speed (groups march together), Armoury weapons show the crossbow model, Lancer smoke isolated from leftover raiders, command view uses 1/4 fog (18b haze washed the map out). Sims: L1 demo 900 s Node 500; L1 undefended dies 336 s; L2 undefended 226 s; L2 demo 652 s.
 - 2026-10-07: Stage 11a Terp (Earth only, ⚠): paint a target level; a Terp spends 4 packets and 3s per level via TerrainEdit. Metal, mortar-by-material, and the seal warning wait for 11b.
 - 2026-10-07: Long overnight brief for Grok: Stage 8 (8b roster, then 8a hives + enemy mortars) in 8 committed phases with a progress log.
