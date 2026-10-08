@@ -1,4 +1,4 @@
-# AGENTS.md: rules for delegated agents (Grok Build and any other non-orchestrator)
+# AGENTS.md: rules for delegated agents (Grok Build, Muse Code, Claude Sonnet/Haiku and any other non-orchestrator)
 
 **Claude (Opus) is the orchestrator.** It writes the task briefs, reviews every branch and is the **only** agent that merges. The user decides what gets done. You do **one brief** and nothing else.
 
