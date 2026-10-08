@@ -149,3 +149,30 @@ Commit message: `Stage 8 P4: Warden aura and Burrower`.
 ### Not finished
 
 - Phase 5 onward. Mixed groups, hives, mortars, balance.
+
+## Phase 5: mixed groups — done
+
+Commit message: `Stage 8 P5: mixed raid groups`.
+
+### What changed
+
+- `level/raider_groups.gd`. From pressure 0.35 a marching spawn is a group, not one raider. Size is `round(lerp(4, 8, pressure))`. The nest waits `interval * size` so the headcount rate stays close to the old one. Guards, the overrun wave, and castle garrisons stay single spawns.
+- Shares are 50% front (Skitter, Brute, Ravager, Behemoth), 35% ranged (Spitter, Lancer), 15% support (Warden). Burrowers and Spotters are not in those pools. An empty pool falls back to the front line, which is what happens before the Warden unlocks at 0.50.
+- The group mills at the nest for 10 s, then every living member moves at the slowest member's speed.
+- Castle reprisals and the stronghold counterattack use the same `compose`.
+- The sim report now includes `raider_seen`, a count of every tier that spawned.
+
+### Decisions where the spec was silent
+
+- `compose(n, p, salt)` does not touch the global RNG. Salt 0 spaces the role rolls evenly, so 20 raiders are exactly 10 / 7 / 3. A non-zero salt shifts which rows fill those shares. Inside a role the weight is still `2^order`.
+- Between pressure 0.35 and 0.50 the support roll becomes a front-line raider, because no support row is unlocked yet.
+
+### Tests
+
+- Parse clean. Smoke **266 PASS / 0 FAIL** (263 previous + 3). The group of 20 was 10 / 7 / 3 with no Burrower and no Spotter. After 4 s every member was still at the nest. With the gather cleared they moved at 2.6 m/s (the Lancer), between 1.9 m and 3.2 m in one second.
+- `--autostart --sim=1800`: L1 Node dies at t=380. `raider_seen` is Skitter 20. Pressure is still under 0.10, so nothing else has unlocked.
+- `--level=2 --autostart --sim=1800`: Node dies at t=252. `raider_seen` is Skitter 44. The label already says Spitter (pressure about 0.12) but no Spitter had spawned in that last 12 s. Both deaths are before pressure 0.35, so an undefended start never meets a mixed group. Logs: `/tmp/stage8-p5/auto-l1.log`, `auto-l2.log`.
+
+### Not finished
+
+- Phase 6 onward. Hives, mortars, balance. The defended sims in phase 8 are where the later roster shows up.

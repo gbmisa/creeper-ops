@@ -133,10 +133,18 @@ func update(dt: float) -> void:
 		var sac := n.node.get_node("Sac") as Node3D
 		sac.scale = sac.scale.lerp(Vector3.ONE * growth * (1.0 + 0.08 * sin(time * 3.0 + n.x)), 0.2)
 		n.timer += dt
-		if n.timer >= interval / n.get("rate", 1.0) and n.count < cap and raiders.list.size() < Config.RAIDER_MAX_TOTAL:
+		var guard: bool = not raiding or _guards(n) < Config.NEST_GUARDS
+		var batch := 1
+		if not guard and pressure() >= Config.GROUP_PRESSURE:
+			var room: int = mini(cap - n.count, Config.RAIDER_MAX_TOTAL - raiders.list.size())
+			batch = maxi(1, mini(RaiderGroups.size_for(pressure()), room))
+		var wait: float = interval / float(n.get("rate", 1.0)) * float(batch if batch > 1 else 1)
+		if n.timer >= wait and n.count < cap and raiders.list.size() < Config.RAIDER_MAX_TOTAL:
 			n.timer = 0.0
-			var guard: bool = not raiding or _guards(n) < Config.NEST_GUARDS
-			raiders.spawn(n, pick_tier(), guard)
+			if batch > 1:
+				RaiderGroups.spawn(raiders, n, RaiderGroups.compose(batch, pressure(), n.x + int(time)))
+			else:
+				raiders.spawn(n, pick_tier(), guard)
 	raiders.update(dt, prey.call(), goal_cells.call())
 
 

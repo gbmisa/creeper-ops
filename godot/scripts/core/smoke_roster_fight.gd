@@ -8,6 +8,7 @@ static func run(g) -> void:
 	_warden_halves(g)
 	_burrow_cliff(g)
 	_burrow_only_while_up(g)
+	_group(g)
 
 
 static func _ranged(g) -> void:
@@ -175,3 +176,72 @@ static func _burrow_only_while_up(g) -> void:
 	SmokeTest._check("burrower is hittable only while surfacing", ignored and is_equal_approx(r.hp, hp0 - 9.0),
 		"(hp %.1f)" % r.hp)
 	g.hazards.nests.raiders.kill(r)
+
+
+static func _group(g) -> void:
+	var tiers: Array = RaiderGroups.compose(20, 0.5, 0)
+	var front := 0
+	var ranged := 0
+	var support := 0
+	var odd := false
+	for row in tiers:
+		var d: Dictionary = row
+		var special := str(d.get("special", ""))
+		if special == "burrow" or special == "spotter":
+			odd = true
+		match str(d.role):
+			"front": front += 1
+			"ranged": ranged += 1
+			"support": support += 1
+	SmokeTest._check("a group of 20 at pressure 0.5 has the role shares",
+		not odd and front == 10 and ranged == 7 and support == 3, "(%d/%d/%d)" % [front, ranged, support])
+	_pad(g, 18, 72, 55, 76)
+	var grid: Grid = g.surface.grid
+	var home: Vector3 = grid.cell_ground(22, 74)
+	var nest := { "name": "test", "pos": home, "count": 0, "x": 22, "z": 74 }
+	var host: Raiders = g.hazards.nests.raiders
+	var gid := RaiderGroups.spawn(host, nest, tiers)
+	var members: Array = []
+	for r in host.list:
+		if int(r.get("group", -1)) == gid:
+			members.append(r)
+	host.field.invalidate()
+	for _i in 80:  # 4 s of gathering; a march would already have left the nest
+		host.update(0.05, [], [Vector2i(50, 74)])
+	var stayed := true
+	for r in members:
+		if not r.alive:
+			continue
+		var p: Vector3 = (r.node as Node3D).position
+		if Vector2(p.x - home.x, p.z - home.z).length() > 8.0:
+			stayed = false
+	SmokeTest._check("a group gathers at the nest", stayed and members.size() == 20, "(%d)" % members.size())
+	var slow := INF
+	for r in members:
+		r["gather"] = 0.0
+		slow = minf(slow, float((r.tier as Dictionary).speed))
+	var same := true
+	for r in members:
+		if absf(RaiderGroups.speed(host, r) - slow) > 0.01:
+			same = false
+	var starts: Array = []
+	for r in members:
+		var p: Vector3 = (r.node as Node3D).position
+		starts.append(Vector2(p.x, p.z))
+	host.field.invalidate()
+	for _i in 20:  # 1 s of marching
+		host.update(0.05, [], [Vector2i(50, 74)])
+	var near := INF
+	var far := 0.0
+	for i in members.size():
+		if not members[i].alive:
+			continue
+		var p: Vector3 = (members[i].node as Node3D).position
+		var moved: float = Vector2(p.x, p.z).distance_to(starts[i])
+		near = minf(near, moved)
+		far = maxf(far, moved)
+	SmokeTest._check("a group marches at one speed", same and far - near < 1.5 and near > slow * 0.45,
+		"(slow %.1f, moved %.1f..%.1f)" % [slow, near, far])
+	for r in members:
+		if r.alive:
+			host.kill(r)

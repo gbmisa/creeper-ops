@@ -116,11 +116,7 @@ func _counterattack(c: Dictionary) -> void:
 		return
 	live.sort_custom(func(a, b): return centre.distance_to(Vector2(a.x, a.z)) < centre.distance_to(Vector2(b.x, b.z)))
 	var count: int = Config.CASTLE_COUNTER_BASE + Config.CASTLE_COUNTER_PER_TIER * nests.tier
-	for i in count:
-		if nests.raiders.list.size() >= Config.RAIDER_MAX_TOTAL:
-			break
-		nests.raiders.spawn(live[0], nests.pick_tier(), false)
-		nests.raiders.list.back()["mission"] = "castle"
+	RaiderGroups.spawn(nests.raiders, live[0], RaiderGroups.compose(count, nests.pressure(), int(c.get("x", 0))), "castle")
 	Sfx.play("alarm")
 	Bus.say("Counterattack: %d raiders from the %s nest are coming for %s." % [count, live[0].name, c.name], "bad")
 

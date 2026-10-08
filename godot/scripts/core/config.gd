@@ -170,6 +170,13 @@ const RAIDER_SHOT_SPEED := 18.0 # m/s, acid lobs. A 40 m shot takes about 2 s an
 const RAIDER_BEAM_SPEED := 32.0 # m/s, Lancer bolts. Still a travel time, so a moving target is missed
 const RAIDER_BEAM_RADIUS := 1.2 # metres around the aim point. No splash
 const RAIDER_LANCER_GAP := 1.5  # seconds after a Lancer bolt before the next charge (the charge itself is the row interval)
+## Mixed groups (§4.2). Below this pressure, nests spawn one weighted raider at a time.
+const GROUP_PRESSURE := 0.35
+const GROUP_GATHER := 10.0    # seconds the group mills at the nest before it marches
+const GROUP_FRONT := 0.50     # share of a group that rolls front line
+const GROUP_RANGED := 0.35    # then ranged; the rest are support
+const GROUP_MIN := 4
+const GROUP_MAX := 8
 const MORTAR_RAIDER_DMG := 1.2 # mortar/Bertha splash vs one raider; 30% of a Sniper shot (power 4)
 ## Fallback tier unlock times (seconds) when a level has no RAID_SCHEDULE.
 const RAIDER_TIER_TIMES := [0.0, 480.0, 900.0, 1320.0]

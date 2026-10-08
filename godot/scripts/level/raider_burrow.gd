@@ -55,7 +55,7 @@ static func step(host: Raiders, r: Dictionary, dt: float, prey: Array) -> void:
 		node.visible = true
 		node.position = Vector3(p.x, host.world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY), p.z)
 		return
-	var step_m: float = minf(dist, float(tier.speed) * dt)
+	var step_m: float = minf(dist, RaiderGroups.speed(host, r) * dt)
 	var dir := to / dist
 	var nx := p.x + dir.x * step_m
 	var nz := p.z + dir.y * step_m

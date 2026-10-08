@@ -17,6 +17,8 @@ var castle_field: RaiderField
 var castle_goals := func() -> Array: return []
 var on_march := func(_r: Dictionary) -> void: pass  # injected: may give a marcher a mission
 var time := 0.0
+var next_group := 1
+var seen := {}  # tier name -> how many have spawned this mission
 
 
 func _init(w: World) -> void:
@@ -51,6 +53,7 @@ func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
 	world.add_target(r.target)
 	list.append(r)
 	nest.count += 1
+	seen[tier.name] = int(seen.get(tier.name, 0)) + 1
 	if not guard:
 		on_march.call(r)
 
@@ -99,6 +102,10 @@ func _nearest(from: Vector3, prey: Array, max_d: float, leash_home = null) -> Di
 
 
 func _think(r: Dictionary, dt: float, prey: Array) -> void:
+	if float(r.get("gather", 0.0)) > 0.0:
+		r["gather"] = float(r.gather) - dt
+		_walk(r, _patrol(r.nest.pos, r), dt)
+		return
 	var tier := r.tier as Dictionary
 	var attack := str(tier.get("attack", "melee"))
 	if attack == "burrow":
@@ -175,7 +182,7 @@ func _walk(r: Dictionary, goal: Vector2, dt: float) -> bool:
 		var mn: float = r.size + o.size
 		if d.length() > 0.001 and d.length() < mn:
 			v += d.normalized() * (mn - d.length())
-	var step: float = r.tier.speed * dt
+	var step: float = RaiderGroups.speed(self, r) * dt
 	var nx := p.x + v.x * step
 	var nz := p.z + v.y * step
 	var ws := world.grid.world_size()
