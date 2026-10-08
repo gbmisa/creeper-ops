@@ -19,6 +19,7 @@ var _recall: ProgressBar
 var _recall_note: Label
 var _flash: ColorRect
 var _tint: ColorRect
+var _hit: HitOverlay
 
 
 func _init() -> void:
@@ -26,6 +27,8 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_tint = _rect(Color(0.1, 0.3, 1.0, 0.0))
 	_flash = _rect(Color(1.0, 0.1, 0.05, 0.0))
+	_hit = HitOverlay.new()
+	add_child(_hit)
 	_cross = UiKit.label("+", 26)
 	_cross.set_anchors_preset(Control.PRESET_CENTER)
 	_cross.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -106,7 +109,10 @@ func refresh(fps: FpsMode, spotted := false) -> void:
 	_shield.visible = smax > 0.0
 	if smax > 0.0:
 		_shield.value = clampf(fps.shield / smax, 0.0, 1.0)
+	_hit.feel = fps.weapons.feel
 	_tank.value = fps.weapons.tank / Config.TANK_MAX
+	var low := fps.weapons.tank < Config.TANK_MAX * 0.2
+	UiKit.set_bar_color(_tank, UiKit.BAD if low else (Color("5fffd0") if fps.weapons.spraying else Color("9ff6ff")))
 	_weapon.text = fps.weapons.label()
 	_salvage.text = fps.weapons.advanced.salvage_line()
 	_salvage.visible = _salvage.text != ""
@@ -127,5 +133,5 @@ func refresh(fps: FpsMode, spotted := false) -> void:
 	_recall.value = fps.recall_hold / Config.RECALL_HOLD
 	_recall_note.visible = holding
 	_recall_note.text = "Free recall" if fps.recall_cd <= 0.0 else "Teleporter cooldown %ds" % ceili(fps.recall_cd)
-	_flash.color.a = 0.3 if fps.hurt_flash > 0.0 else (0.12 if fps.in_creeper else 0.0)
+	_flash.color.a = 0.12 if fps.hurt_flash > 0.0 else (0.12 if fps.in_creeper else 0.0)
 	_tint.color.a = minf(0.45, 0.15 + fps.creeper_depth * 0.15) if fps.in_creeper else 0.0

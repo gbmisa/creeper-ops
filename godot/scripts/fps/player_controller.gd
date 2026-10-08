@@ -13,6 +13,7 @@ var yaw := 0.0
 var pitch := 0.0
 var on_ground := false
 var bob := 0.0
+var kick_pitch := 0.0   # recoil camera kick (rad); set each frame by FpsMode, never accumulates
 var moving := false
 var _air_left := 0
 var _jet_left := 0.0
@@ -130,7 +131,7 @@ func _hop() -> void:
 func _sync() -> void:
 	var b := sin(bob) * 0.05 if moving and on_ground else 0.0
 	camera.position = pos + Vector3(0, Config.EYE + b, 0)
-	camera.rotation = Vector3(pitch, yaw, 0)
+	camera.rotation = Vector3(pitch + kick_pitch, yaw, 0)
 
 
 func forward() -> Vector3:

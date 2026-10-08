@@ -18,3 +18,7 @@ Read [LONG_RUN_RULES.md](LONG_RUN_RULES.md) first. Runs alongside 9b (Salvage En
 - Parse clean, full smoke all PASS. Add `core/smoke_fps_feel.gd`: kick offsets return to rest within 0.4 s; camera pitch never drifts after 30 shots; spraying over creeper spawns fizz and lowers depth; nothing allocates unbounded particles (counts capped by config).
 - Xvfb screenshots mid-action (add a debug hook like `--fire=rifle|sprayer|rocket` that fires on the screenshot frame): crossbow at peak kick with tracer, sprayer cone over creeper with fizz, rocket launch. **Look at them**; iterate until the spray is obvious and the kick is visible in a still.
 - Report what still can't be judged from stills (feel in motion) so the user can playtest it.
+
+## Added by the user (items 6-7)
+6. Visible arm: forearm + gloved hand per weapon, parented to the viewmodel (`fps/arm_models.gd`); off hand on the foregrip if cheap.
+7. Slot 1 `rifle` = **Pulse Rifle** (hitscan, energy-weapon model, no limbs/string; label "Pulse Rifle" everywhere). The current crossbow model becomes a **new Crossbow** weapon (new action id `crossbow`): physical bolt with travel time and drop, must reload (~1.2 s), high damage (`Config.CROSSBOW`). Smoke + screenshots: arm with rifle, crossbow mid-reload, bolt in flight.

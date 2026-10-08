@@ -87,10 +87,38 @@ const RESPAWN_ENERGY := 100.0
 const RESPAWN_SALVAGE := 25.0
 const RESPAWN_TIME := 45.0
 const RESPAWN_GROWTH := 1.5      # each further death this level multiplies both respawn costs
-const RIFLE := { "name": "Crossbow", "damage": 1.0, "cooldown": 0.14, "range": 90.0 }
+const RIFLE := { "name": "Pulse Rifle", "damage": 1.0, "cooldown": 0.14, "range": 90.0 }
 const ROCKET := { "name": "Rocket Launcher", "speed": 30.0, "range": 90.0, "blast": 3.0, "power": 6.0,
 	"damage": 5.0, "mag": 4, "reload": 6.0 }  # blast in cells; power = creeper removed at the centre
+const CROSSBOW := { "name": "Crossbow", "damage": 4.0, "speed": 75.0, "gravity": 14.0, "reload": 1.2,
+	"range": 120.0, "stick_time": 5.0 }  # one physical bolt per shot, 4x a rifle pulse; stuck bolts stay stick_time s
 const SPRAYER := { "name": "Null Sprayer", "range": 10.0, "half_angle": 0.45, "remove_per_sec": 5.0, "tank_per_sec": 20.0 }
+
+# ---- First-person feel (Stage 23): viewmodel motion, spray, hit feedback --------
+const VM_KICK_BACK := 0.075       # m the weapon snaps back per unit of kick
+const VM_KICK_PITCH := 0.12       # rad the muzzle flips up per unit of kick (~7 deg)
+const VM_CAM_KICK := 0.016        # rad of camera pitch per unit of kick (~0.9 deg, always returns)
+const VM_KICK_MAX := 1.7          # stacked kick cap (rapid fire)
+const VM_SPRING_K := 1300.0       # recoil spring stiffness; damping below gives a slight overshoot
+const VM_SPRING_DAMP := 34.0
+const VM_STRING_SNAP := 0.07      # m the crossbow string jumps forward on a shot
+const VM_BREATH := 0.0035         # idle sway amplitude (m)
+const VM_BOB := 0.014             # walk bob amplitude (m), scaled by speed
+const VM_SPRINT_DROP := 0.06      # m the weapon lowers when sprinting
+const VM_SPRINT_TILT := 0.32      # rad of roll/pitch when sprinting
+const VM_LAND_DIP := 0.012        # m of weapon dip per m/s of landing speed
+const VM_LAG := 0.55              # rad of weapon trail per unit of mouse delta (px * 0.001)
+const VM_TRACER_SPEED := 220.0
+const SPRAY_MIST := 150           # mist puffs alive at once (hard cap)
+const SPRAY_DROPLETS := 60
+const FIZZ_POOL := 8              # fizz bursts at once
+const FIZZ_PER_BURST := 12
+const FIZZ_INTERVAL := 0.05       # s between fizz bursts while spraying
+const HIT_MARKER_TIME := 0.18
+const KILL_MARKER_TIME := 0.4
+const HURT_ARC_TIME := 0.9
+const BIG_HIT := 12.0             # damage that earns the screen-edge red vignette
+const VIGNETTE_TIME := 0.7
 
 # ---- HUD ------------------------------------------------------------------------
 const HUD_OBJ_FLASH := 5.0    # seconds a new or just-completed objective shows its hint

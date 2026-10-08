@@ -153,6 +153,8 @@ static func run(g) -> void:
 	SmokeEconomy.run(g)
 	SmokeEnemyBuild.run(g)
 	SmokeLoot.run(g)
+	SmokeFpsFeel.run(g)
+	SmokeFpsArms.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

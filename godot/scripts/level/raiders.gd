@@ -145,6 +145,8 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 			var dmg: float = float(tier.dps) * dt
 			if target.get("wall", false):
 				dmg *= float(tier.get("wall_mult", 1.0))
+			if target.get("kind", "") == "operative":
+				HitFeel.note_source(p)
 			target.hit.call(dmg)
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
 			r.node.position.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY) + absf(sin(time * 12.0 + r.phase)) * 0.2

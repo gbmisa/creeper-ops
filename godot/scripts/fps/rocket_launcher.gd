@@ -6,6 +6,7 @@ extends RefCounted
 
 var rockets: Array[Dictionary] = []
 var loaded: int = Config.ROCKET.mag
+var report: Callable = Callable()  # (killed: bool) when a blast hits a target (hit marker)
 var _reload := 0.0
 var _cap := Config.ROCKET.mag
 static var _mesh: SphereMesh
@@ -47,7 +48,8 @@ func fire(world: World, from: Vector3, dir: Vector3) -> bool:
 	mi.material_override = Effects.glow_mat(Color("ffb347"))
 	mi.position = from
 	world.add_child(mi)
-	rockets.append({ "node": mi, "pos": from, "dir": dir.normalized(), "dist": 0.0, "world": world })
+	rockets.append({ "node": mi, "pos": from, "dir": dir.normalized(), "dist": 0.0, "world": world, "puff": 0.0 })
+	world.effects.burst(from + dir.normalized() * 1.5, Color("ffcc66"), 0.35, 0.1)  # launch flash ahead of the muzzle
 	Sfx.play("mortar")
 	return true
 
@@ -78,6 +80,11 @@ func _step(r: Dictionary, dt: float) -> bool:
 			return true
 	(r.node as Node3D).position = r.pos
 	w.effects.beam(prev, r.pos, Color("ffcc66"), 0.25, 0.05)
+	r.puff += prev.distance_to(r.pos)
+	if r.puff >= 0.9 and r.dist > 2.5:  # smoke trail: one puff a metre or so
+		r.puff = 0.0
+		w.effects.smoke(prev, 0.7, 0.8)
+		w.effects.burst(prev, Color("ff9a30"), 0.45, 0.12)
 	return false
 
 
@@ -86,11 +93,18 @@ func _explode(w: World, p: Vector3) -> void:
 	var blast: float = Config.ROCKET.blast
 	w.creeper.remove_radius(c.x, c.y, blast, Config.ROCKET.power)
 	var reach := blast * Config.CELL
+	var hit_any := false
+	var killed := false
 	for t in w.targets:
 		if t.alive.call():
 			var tc: Vector3 = (t.node as Node3D).global_position + Vector3(0, t.get("oy", 0.0), 0)
 			var d: float = tc.distance_to(p) - t.radius
 			if d <= reach:
 				t.on_hit.call(Config.ROCKET.damage * (1.0 - 0.5 * maxf(0.0, d) / reach), p)
+				hit_any = true
+				killed = killed or not t.alive.call()
+	if hit_any and report.is_valid():
+		report.call(killed)
+	w.effects.smoke(p, reach * 0.8, 1.2)
 	w.effects.burst(p, Color("ffaa33"), reach * 0.9, 0.45)
 	Sfx.play("boom", p)

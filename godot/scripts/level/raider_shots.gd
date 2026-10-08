@@ -113,12 +113,12 @@ static func _launch(world: World, r: Dictionary, target: Dictionary, prey: Array
 	world.effects.lob(from, aim, {
 		"color": color, "size": size, "time": maxf(dist / speed, 0.35),
 		"arc": clampf(dist * arc_k, 1.2, 8.0),
-		"on_arrive": func(): _impact(world, aim, radius, dmg, color, prey),
+		"on_arrive": func(): _impact(world, aim, radius, dmg, color, prey, from),
 	})
 	Sfx.play("mortar", from)
 
 
-static func _impact(world: World, at: Vector3, radius: float, dmg: float, color: Color, prey: Array) -> void:
+static func _impact(world: World, at: Vector3, radius: float, dmg: float, color: Color, prey: Array, from := Vector3.INF) -> void:
 	world.effects.burst(at + Vector3.UP * 0.3, color, maxf(radius, 1.2), 0.35)
 	Sfx.play("boom", at)
 	for q in prey:
@@ -127,6 +127,8 @@ static func _impact(world: World, at: Vector3, radius: float, dmg: float, color:
 		var p: Vector3 = (q.node as Node3D).position
 		if Vector2(p.x - at.x, p.z - at.z).length() > radius or absf(p.y - at.y) > 4.0:
 			continue
+		if from != Vector3.INF and str(q.get("kind", "")) == "operative":
+			HitFeel.note_source(from)
 		(q.hit as Callable).call(dmg)
 
 

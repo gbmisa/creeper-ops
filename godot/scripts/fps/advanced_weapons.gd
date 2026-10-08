@@ -129,7 +129,9 @@ func _rail(dt: float, trigger: bool, world: World) -> void:
 	if not _pay("railgun"):
 		return
 	_pierce(world, float(WEAPONS.railgun.damage))
-	weapons.gun.position.z = -0.32
+	weapons.kick(1.9)
+	weapons.muzzle.flash(Color("e8fbff"), 0.4, 0.1, 4.0)
+	Sfx.play("railshot")
 
 
 ## Every target sphere on the ray, out to the rifle's range or the first ground hit.
@@ -157,9 +159,10 @@ func _pierce(world: World, dmg: float) -> void:
 		end = at
 		any = true
 	if any:
-		weapons.hit_marker = 0.15
+		weapons.confirm(hits.any(func(h): return not (h.t as Dictionary).alive.call()))
 	world.effects.beam(weapons.gun.global_position, end, Color("e8fbff"), 0.08, 0.045)
-	Sfx.play("hit" if any else "beam")
+	if not any:
+		Sfx.play("beam")
 
 
 func _plasma(dt: float, trigger: bool, world: World, feet: Vector3) -> void:
@@ -172,6 +175,9 @@ func _plasma(dt: float, trigger: bool, world: World, feet: Vector3) -> void:
 	stockpile.spend("salvage", bill)
 	firing = true
 	_plasma_cone(dt, world, feet)
+	weapons.kick(0.16)  # buzzes the gun while it burns
+	if not weapons.muzzle.active():
+		weapons.muzzle.flash(Color("c45bff"), 0.32, 0.08, 2.5)
 	Sfx.play("spray")
 
 
@@ -212,3 +218,5 @@ func _throw(world: World) -> void:
 	if _pay("demo"):
 		var dir := -weapons.camera.global_transform.basis.z
 		demo.launch(world, weapons.gun.global_position, dir)
+		weapons.kick(1.2)
+		weapons.muzzle.flash(Color("ff8844"), 0.3, 0.08, 2.0)

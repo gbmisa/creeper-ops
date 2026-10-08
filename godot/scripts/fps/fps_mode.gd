@@ -85,6 +85,7 @@ func absorb(amount: float) -> void:
 
 func damage(amount: float) -> void:
 	absorb(amount)
+	weapons.feel.hurt(amount)
 	hurt_flash = 0.3
 	since_hurt = 0.0
 	Sfx.play("hurt")
@@ -101,12 +102,14 @@ func update(dt: float, input: InputState) -> void:
 		prompt = ""
 		_vitals(dt, depth)
 		return
+	controller.kick_pitch = weapons.motion.cam_pitch()
 	controller.update(dt, input, g, Config.CREEPER_SLOW if in_creeper else 1.0)
 	body.position = controller.pos
 	var building := builder != null and world == builder.structures.world and builder.update(input, world, camera)
 	weapons.gun.visible = not building
 	if not building:
 		weapons.update(dt, input, world, controller.pos)
+	weapons.motion.update(dt, controller, input)
 	Sfx.listener = camera.global_position
 	_vitals(dt, depth)
 	if suit <= 0.0:

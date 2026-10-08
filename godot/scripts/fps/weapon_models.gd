@@ -25,6 +25,13 @@ static func _iron() -> StandardMaterial3D:
 	return StructureMeshes.mat(IRON, 0.8, 0.35)
 
 
+static func _named(g: Node3D, id: String) -> Node3D:
+	var n := Node3D.new()
+	n.name = id
+	g.add_child(n)
+	return n
+
+
 static func _cyl(g: Node3D, r: float, h: float, m: Material, at: Vector3) -> MeshInstance3D:
 	var mi := StructureMeshes.cyl(g, r, r, h, m, 0.0, 10)
 	mi.position = at
@@ -59,14 +66,17 @@ static func crossbow(g: Node3D) -> MeshInstance3D:
 	var tip_r := _limb(g, 1.0, bronze)
 	var tip_l := _limb(g, -1.0, bronze)
 	var nut := Vector3(0, 0.04, -0.05)
-	ShapeKit.rod(g, tip_r, nut, 0.008, iron, 4)
-	ShapeKit.rod(g, tip_l, nut, 0.008, iron, 4)
+	var string := _named(g, "string")  # moves forward on a shot (OperativeFeel)
+	var cord := StructureMeshes.mat_new(Color("c9b88f"), 0.0, 0.7, Color("c9b88f"), 0.12)
+	ShapeKit.rod(string, tip_r, nut, 0.005, cord, 4)
+	ShapeKit.rod(string, tip_l, nut, 0.005, cord, 4)
 	StructureMeshes.box(g, Vector3(0.022, 0.016, 0.02), iron, nut)
 	# Loaded bolt: shaft, iron head, two vanes at the nock.
-	ShapeKit.taper(g, Vector3(0, 0.048, -0.07), Vector3(0, 0.048, -0.34), 0.012, 0.007, wood, 5)
-	ShapeKit.taper(g, Vector3(0, 0.048, -0.32), Vector3(0, 0.048, -0.44), 0.016, 0.0, iron, 4)
+	var bolt := _named(g, "bolt")  # hidden for a moment after each shot
+	ShapeKit.taper(bolt, Vector3(0, 0.048, -0.07), Vector3(0, 0.048, -0.34), 0.012, 0.007, wood, 5)
+	ShapeKit.taper(bolt, Vector3(0, 0.048, -0.32), Vector3(0, 0.048, -0.44), 0.016, 0.0, iron, 4)
 	for sx in [-1.0, 1.0]:
-		var vane := StructureMeshes.box(g, Vector3(0.01, 0.04, 0.06), dark, Vector3(sx * 0.016, 0.06, -0.1))
+		var vane := StructureMeshes.box(bolt, Vector3(0.01, 0.04, 0.06), dark, Vector3(sx * 0.016, 0.06, -0.1))
 		vane.rotation.z = sx * 0.5
 	var coil := StructureMeshes.crystal(g, 0.026, 0.11, StructureMeshes.mat_new(Color("3fb8f0"), 0.0, 0.3, Color("2a9fd0"), 0.9), Vector3(0, 0.09, -0.02))
 	coil.rotation.x = PI / 2.0

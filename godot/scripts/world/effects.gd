@@ -45,6 +45,38 @@ func beam(a: Vector3, b: Vector3, color: Color, life := 0.08, width := 0.06) -> 
 	_items.append({ "node": mi, "t": 0.0, "life": life, "kind": "beam" })
 
 
+## A puff of grey smoke that swells and fades (normal blending, so it shows against bright ground).
+func smoke(p: Vector3, size := 1.0, life := 1.0) -> void:
+	var mi := MeshInstance3D.new()
+	mi.mesh = _sphere
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.42, 0.4, 0.4, 0.6)
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = p
+	mi.scale = Vector3.ONE * size * 0.3
+	add_child(mi)
+	_items.append({ "node": mi, "t": 0.0, "life": life, "kind": "smoke", "size": size })
+
+
+## A bright streak that flies from a to b at `speed` (a bolt or tracer round).
+func tracer(a: Vector3, b: Vector3, color: Color, speed := 220.0, length := 3.0, width := 0.05) -> void:
+	var total := a.distance_to(b)
+	if total < 0.05:
+		return
+	var mi := MeshInstance3D.new()
+	mi.mesh = _box
+	mi.material_override = glow_mat(color, 0.95)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mi)
+	mi.look_at_from_position(a, b, Vector3.UP if absf((b - a).normalized().y) < 0.99 else Vector3.RIGHT)
+	mi.scale = Vector3(width, width, 0.01)
+	_items.append({ "node": mi, "t": 0.0, "life": maxf(total / speed, 0.05), "kind": "tracer",
+		"a": a, "dir": (b - a) / total, "total": total, "len": length })
+
+
 func burst(p: Vector3, color: Color, size := 1.5, life := 0.35) -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = _sphere
@@ -80,6 +112,15 @@ func update(dt: float) -> void:
 		match it.kind:
 			"beam":
 				(node.material_override as StandardMaterial3D).albedo_color.a = 0.9 * (1.0 - k)
+			"tracer":
+				var head: float = k * it.total
+				var tail := maxf(0.0, head - float(it.len))
+				node.position = it.a + it.dir * ((head + tail) * 0.5)
+				node.scale.z = maxf(head - tail, 0.01)
+			"smoke":
+				node.scale = Vector3.ONE * lerpf(it.size * 0.3, it.size, sqrt(k))
+				node.position.y += dt * 0.6
+				(node.material_override as StandardMaterial3D).albedo_color.a = 0.6 * (1.0 - k)
 			"burst":
 				node.scale = Vector3.ONE * lerpf(0.1, it.size, sqrt(k))
 				(node.material_override as StandardMaterial3D).albedo_color.a = 0.8 * (1.0 - k)

@@ -19,6 +19,7 @@ static func detonate(host, at: Vector3) -> void:
 		var dmg := Config.MORTAR_STRUCT * fall
 		if kind == "operative":
 			dmg = Config.SUIT_MAX * Config.MORTAR_OPERATIVE * fall
+			HitFeel.note_source(at)
 		elif kind == "unit":
 			dmg = Config.MORTAR_UNIT * fall
 		prey.hit.call(dmg)
