@@ -8,6 +8,9 @@ const ENEMY := Color("ff3a6a")
 const PLAYER := Color("5fd4ff")
 const OPEN := Color("ffb347")
 const STONE := Color("8a8478")
+## Decor stone graded like terrain.gdshader grades the terrain walls, so merlons and towers
+## match the wall tone under the dusk sun.
+const DECOR_STONE := Color("808a70")
 
 
 static func cell_pos(x: int, z: int, level: float) -> Vector3:
@@ -47,7 +50,7 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 	world.add_child(root)
 	var v := { "root": root, "segs": [], "gates": [], "banners": CastleDecor.build(root, lay), "gate_trim": [] }
 	var top: float = lay.wall_top
-	var stone := StructureMeshes.mat(STONE, 0.0, 0.92)
+	var stone := StructureMeshes.mat(DECOR_STONE, 0.0, 0.92)
 	var outward := { "n": Vector3(0, 0, -1), "s": Vector3(0, 0, 1), "w": Vector3(-1, 0, 0), "e": Vector3(1, 0, 0) }
 	for seg in lay.segments:
 		var b := _bounds(seg.cells, top)
@@ -107,11 +110,11 @@ static func refresh(v: Dictionary, c: Dictionary) -> void:
 	for i in v.gates.size():
 		(v.gates[i] as Node3D).visible = c.gates[i].hp > 0.0
 		for t in v.gate_trim[i]:
-			(t as MeshInstance3D).material_override = StructureMeshes.glow(col, 1.0)
+			(t as MeshInstance3D).material_override = CastleDecor.trim(col)
 	if v.has("deck"):
 		var open: bool = c.winch.hp <= 0.0
 		for t in v.deck_trim:
-			(t as MeshInstance3D).material_override = StructureMeshes.glow(OPEN if open else col, 1.0)
+			(t as MeshInstance3D).material_override = CastleDecor.trim(OPEN if open else col)
 		(v.winch_glow as MeshInstance3D).material_override = _energy(OPEN if open else col, 0.9)
 		(v.winch_glow as Node3D).visible = not open
 	(v.crown as Node3D).visible = c.state == "hostile"

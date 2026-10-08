@@ -98,24 +98,30 @@ static func cannon(root: Node3D) -> void:
 	muzzle(h, Vector3(1.5, 0, 0))
 
 
-## Mortar: a fat, squat iron mortar bowl, mouth to the sky, on a short heavy arm.
+## Mortar: a wide, squat iron bowl, mouth to the sky, lifted on a forked cradle at the end
+## of a short heavy arm. Verdigris (green-copper) trim sets it apart from the bronze cannon.
 static func mortar(root: Node3D) -> void:
-	tower(root, 0.72, 1.4)
+	tower(root, 0.74, 1.3)
+	var verd := StructureMeshes.mat(Color("4f9a80"), 0.6, 0.5)
 	for i in 4:  # merlons round the tower top
 		var a := i * TAU / 4.0 + PI / 4.0
-		StructureMeshes.box(root, Vector3(0.34, 0.4, 0.34), StructureMeshes.pal("stone"), Vector3(cos(a) * 0.74, 1.6, sin(a) * 0.74))
-	var tur := yaw(root, 1.4, 0.66)
-	var h := arm(tur, { "at": Vector2(-0.4, 0.3), "up": 0.9, "up_a": 1.2, "fore": 0.35, "fore_a": 0.6, "t": 0.32 })
+		StructureMeshes.box(root, Vector3(0.34, 0.4, 0.34), StructureMeshes.pal("stone"), Vector3(cos(a) * 0.76, 1.5, sin(a) * 0.76))
+	var tur := yaw(root, 1.3, 0.66)
+	var h := arm(tur, { "at": Vector2(-0.45, 0.3), "up": 1.2, "up_a": 1.3, "fore": 0.55, "fore_a": 0.35, "t": 0.3 })
+	for sz in [-1.0, 1.0]:  # cradle fork lifting the bowl clear of the arm
+		ShapeKit.strut(h, Vector3.ZERO, Vector3(0.1, 0.45, sz * 0.95), 0.16, StructureMeshes.pal("bronze_dark"))
+		StructureMeshes.ball(h, 0.13, verd, Vector3(0.1, 0.45, sz * 0.95), 8)
 	var bowl := Node3D.new()
-	bowl.rotation.z = -0.3  # mouth up, a little forward
+	bowl.position = Vector3(0.1, 0.45, 0)
+	bowl.rotation.z = -0.25  # mouth up, a little forward
 	h.add_child(bowl)
-	ShapeKit.lathe(bowl, PackedVector2Array([Vector2(0.0, -0.45), Vector2(0.55, -0.42), Vector2(0.72, -0.1),
-		Vector2(0.76, 0.3), Vector2(0.66, 0.62), Vector2(0.8, 0.72), Vector2(0.8, 0.95), Vector2(0.52, 0.95),
-		Vector2(0.45, 0.4)]), StructureMeshes.pal("iron"), Vector3.ZERO, 12)
-	StructureMeshes.torus(bowl, 0.7, 0.84, StructureMeshes.pal("bronze"), Vector3(0, 0.1, 0))
-	StructureMeshes.ball(bowl, 0.38, StructureMeshes.glow(Color("ff8a1a"), 1.6), Vector3(0, 0.5, 0), 10)
-	ShapeKit.axle(h, Vector3.ZERO, 0.14, 1.75, StructureMeshes.pal("bronze"))
-	muzzle(bowl, Vector3(0, 0.95, 0))
+	ShapeKit.lathe(bowl, PackedVector2Array([Vector2(0.0, -0.32), Vector2(0.62, -0.3), Vector2(0.88, -0.05),
+		Vector2(0.92, 0.18), Vector2(0.84, 0.36), Vector2(0.98, 0.42), Vector2(0.98, 0.58), Vector2(0.66, 0.58),
+		Vector2(0.58, 0.2)]), StructureMeshes.pal("iron"), Vector3.ZERO, 14)
+	StructureMeshes.torus(bowl, 0.86, 1.0, verd, Vector3(0, 0.05, 0))
+	StructureMeshes.ball(bowl, 0.45, StructureMeshes.glow(Color("ff7a10"), 1.0), Vector3(0, 0.25, 0), 10)
+	ShapeKit.axle(bowl, Vector3.ZERO, 0.12, 2.0, verd)
+	muzzle(bowl, Vector3(0, 0.6, 0))
 
 
 ## Beam: a large cyan lens ring round a ruby focus, held high on a staff arm.

@@ -12,7 +12,7 @@ static func chitin() -> StandardMaterial3D:
 
 ## Sickly Blight green: every tier carries it (eyes, fungus), the tier colour marks the rank.
 static func sick() -> StandardMaterial3D:
-	return StructureMeshes.glow(Color("8fe03a"), 1.1)
+	return StructureMeshes.glow(Color("6fd820"), 1.0)
 
 
 static func plate() -> StandardMaterial3D:
@@ -26,13 +26,13 @@ static func bone() -> StandardMaterial3D:
 static func make(tier: Dictionary) -> Node3D:
 	var root := Node3D.new()
 	var s: float = tier.size
-	var glow := StructureMeshes.glow(tier.color, 1.4)
+	var glow := StructureMeshes.glow(tier.color, 1.0)
 	match tier.get("name", ""):
 		"Skitter": _skitter(root, s * 2.0, glow)
 		"Brute": _brute(root, s * 1.8, glow)
 		"Ravager": _ravager(root, s * 1.8, glow)
 		"Behemoth": _behemoth(root, s * 1.7, glow)
-		"Sentinel": _sentinel(root, 0.92, glow)  # 2.4 m whatever its hit size
+		"Sentinel": _sentinel(root, glow)  # fixed 2.4 m design height, whatever its hit size
 		_: _bug(root, s, glow)
 	return root
 
@@ -52,51 +52,51 @@ static func _leg(root: Node3D, hip: Vector3, foot: Vector3, lift: float, t: floa
 
 
 static func _skitter(r: Node3D, u: float, glow: Material) -> void:
-	var abd := StructureMeshes.ball(r, 0.3 * u, chitin(), Vector3(-0.22, 0.36, 0) * u, 10)
+	var abd := StructureMeshes.ball(r, 0.3 * u, chitin(), Vector3(-0.22, 0.36, 0) * u, 7)
 	abd.scale = Vector3(1.35, 0.7, 1.0)
-	StructureMeshes.ball(r, 0.12 * u, glow, Vector3(-0.3, 0.52, 0) * u, 8)
-	StructureMeshes.ball(r, 0.15 * u, chitin(), Vector3(0.18, 0.3, 0) * u, 8)
-	StructureMeshes.ball(r, 0.07 * u, glow, Vector3(0.3, 0.34, 0) * u, 6)
+	StructureMeshes.ball(r, 0.11 * u, glow, Vector3(-0.32, 0.52, 0) * u, 6)  # tier spore gland
+	for sz in [-1.0, 1.0]:  # green pustules on the abdomen flanks
+		StructureMeshes.ball(r, 0.08 * u, sick(), Vector3(-0.15, 0.45, sz * 0.2) * u, 5)
+	StructureMeshes.ball(r, 0.15 * u, chitin(), Vector3(0.18, 0.3, 0) * u, 6)
+	StructureMeshes.ball(r, 0.07 * u, sick(), Vector3(0.3, 0.34, 0) * u, 5)
 	for sz in [-1.0, 1.0]:
 		for x in [0.15, -0.12]:
 			_leg(r, Vector3(x, 0.32, sz * 0.1) * u, Vector3(x * 3.2, 0.0, sz * 0.6) * u, 0.5 * u, 0.04 * u, chitin())
-		ShapeKit.strut(r, Vector3(0.28, 0.25, sz * 0.06) * u, Vector3(0.45, 0.12, sz * 0.02) * u, 0.035 * u, bone())
+		ShapeKit.taper(r, Vector3(0.28, 0.27, sz * 0.06) * u, Vector3(0.48, 0.12, sz * 0.02) * u, 0.03 * u, 0.005, bone(), 4)
 
 
 static func _brute(r: Node3D, u: float, glow: Material) -> void:
-	StructureMeshes.ball(r, 0.3 * u, glow, Vector3(0, 0.38, 0) * u, 8)  # glowing belly under the shell
+	StructureMeshes.ball(r, 0.3 * u, glow, Vector3(0, 0.38, 0) * u, 6)  # glowing belly under the shell
 	var shell := ShapeKit.lathe(r, _p([Vector2(0.52, 0.0), Vector2(0.5, 0.18), Vector2(0.38, 0.38),
 		Vector2(0.16, 0.5), Vector2(0.0, 0.52)], u), chitin(), Vector3(-0.05, 0.32, 0) * u, 7)
 	shell.scale = Vector3(1.3, 1.0, 1.0)
-	StructureMeshes.ball(r, 0.2 * u, chitin(), Vector3(0.55, 0.42, 0) * u, 7)
-	ShapeKit.cone(r, 0.1 * u, 0.5 * u, bone(), Vector3(0.62, 0.5, 0) * u, 6).rotation.z = -1.0
-	StructureMeshes.ball(r, 0.07 * u, sick(), Vector3(0.7, 0.45, 0.1) * u, 6)
-	for x in [-0.3, 0.1]:  # bone plates along the shell ridge, a fungal bloom behind
-		ShapeKit.cone(r, 0.14 * u, 0.32 * u, plate(), Vector3(x, 0.8, 0) * u, 4).rotation.z = 0.4
-	StructureMeshes.ball(r, 0.14 * u, sick(), Vector3(-0.5, 0.62, 0.22) * u, 6)
+	for x in [-0.35, 0.05]:  # bone plates along the ridge
+		ShapeKit.taper(r, Vector3(x, 0.78, 0) * u, Vector3(x - 0.15, 1.05, 0) * u, 0.16 * u, 0.02, plate(), 4)
+	StructureMeshes.ball(r, 0.2 * u, sick(), Vector3(-0.45, 0.62, 0.25) * u, 5)  # fungal blooms
+	StructureMeshes.ball(r, 0.14 * u, sick(), Vector3(-0.2, 0.7, -0.32) * u, 5)
+	StructureMeshes.ball(r, 0.2 * u, chitin(), Vector3(0.55, 0.42, 0) * u, 6)
+	ShapeKit.horn(r, Vector3(0.62, 0.5, 0) * u, Vector3(0.82, 0.62, 0) * u, Vector3(0.9, 0.9, 0) * u, 0.09 * u, bone())
+	StructureMeshes.ball(r, 0.07 * u, sick(), Vector3(0.7, 0.45, 0.12) * u, 5)
 	for sz in [-1.0, 1.0]:
 		for x in [0.3, -0.35]:
-			_leg(r, Vector3(x, 0.38, sz * 0.35) * u, Vector3(x * 1.4, 0.0, sz * 0.75) * u, 0.15 * u, 0.12 * u, chitin())
+			ShapeKit.taper(r, Vector3(x, 0.4, sz * 0.38) * u, Vector3(x * 1.4, 0.0, sz * 0.75) * u, 0.09 * u, 0.04 * u, chitin())
 
 
 static func _ravager(r: Node3D, u: float, glow: Material) -> void:
-	var abd := StructureMeshes.ball(r, 0.42 * u, chitin(), Vector3(-0.5, 0.6, 0) * u, 8)
+	var abd := StructureMeshes.ball(r, 0.42 * u, chitin(), Vector3(-0.5, 0.6, 0) * u, 7)
 	abd.scale = Vector3(1.6, 0.85, 1.0)
-	ShapeKit.strut(r, Vector3(-0.2, 0.55, 0) * u, Vector3(0.2, 1.1, 0) * u, 0.28 * u, chitin())
-	ShapeKit.cone(r, 0.15 * u, 0.4 * u, chitin(), Vector3(0.22, 1.12, 0) * u, 6).rotation.z = -1.3
-	StructureMeshes.ball(r, 0.1 * u, sick(), Vector3(0.36, 1.18, 0) * u, 6)
 	var cara := ShapeKit.lathe(r, _p([Vector2(0.5, 0.0), Vector2(0.42, 0.25), Vector2(0.2, 0.42), Vector2(0.0, 0.46)], u),
 		plate(), Vector3(-0.4, 0.72, 0) * u, 6)  # armoured carapace over the back
 	cara.scale = Vector3(1.5, 1.0, 1.1)
-	for sz in [-1.0, 1.0]:
-		var sh := Vector3(0.18, 1.0, sz * 0.15) * u
-		var el := Vector3(0.55, 1.25, sz * 0.3) * u
-		ShapeKit.strut(r, sh, el, 0.08 * u, chitin())
-		var mid := Vector3(0.9, 1.0, sz * 0.3) * u  # hooked bone scythe
-		ShapeKit.strut(r, el, mid, 0.07 * u, bone(), 0.16 * u)
-		ShapeKit.strut(r, mid, Vector3(0.95, 0.45, sz * 0.25) * u, 0.06 * u, bone(), 0.14 * u)
-		ShapeKit.strut(r, Vector3(-0.1, 0.55, sz * 0.12) * u, Vector3(0.2, 0.0, sz * 0.6) * u, 0.06 * u, chitin())
-		ShapeKit.strut(r, Vector3(-0.35, 0.5, sz * 0.12) * u, Vector3(-0.75, 0.0, sz * 0.6) * u, 0.06 * u, chitin())
+	StructureMeshes.ball(r, 0.13 * u, sick(), Vector3(-0.85, 0.85, 0) * u, 5)  # pustule at the tail
+	StructureMeshes.ball(r, 0.1 * u, glow, Vector3(-0.2, 1.05, 0) * u, 5)  # tier gland on the hump
+	ShapeKit.strut(r, Vector3(-0.2, 0.55, 0) * u, Vector3(0.2, 1.1, 0) * u, 0.28 * u, chitin())
+	ShapeKit.cone(r, 0.15 * u, 0.4 * u, chitin(), Vector3(0.22, 1.12, 0) * u, 6).rotation.z = -1.3
+	StructureMeshes.ball(r, 0.1 * u, sick(), Vector3(0.36, 1.18, 0) * u, 5)
+	for sz in [-1.0, 1.0]:  # hooked bone scythes and two walking legs a side
+		ShapeKit.horn(r, Vector3(0.18, 1.0, sz * 0.15) * u, Vector3(0.6, 1.3, sz * 0.32) * u, Vector3(0.95, 0.5, sz * 0.25) * u, 0.09 * u, bone())
+		ShapeKit.taper(r, Vector3(-0.1, 0.55, sz * 0.12) * u, Vector3(0.2, 0.0, sz * 0.6) * u, 0.06 * u, 0.02 * u, chitin())
+		ShapeKit.taper(r, Vector3(-0.35, 0.5, sz * 0.12) * u, Vector3(-0.75, 0.0, sz * 0.6) * u, 0.06 * u, 0.02 * u, chitin())
 
 
 static func _behemoth(r: Node3D, u: float, glow: Material) -> void:
@@ -114,21 +114,30 @@ static func _behemoth(r: Node3D, u: float, glow: Material) -> void:
 	StructureMeshes.ball(r, 0.22 * u, glow, Vector3(-0.85, 1.0, 0) * u, 7)  # tier-coloured spore gland
 
 
-static func _sentinel(r: Node3D, u: float, glow: Material) -> void:
-	var robe := StructureMeshes.mat(Color("5a2c62"), 0.0, 0.85)
-	ShapeKit.lathe(r, _p([Vector2(0.55, 0.0), Vector2(0.42, 0.5), Vector2(0.26, 1.5),
-		Vector2(0.3, 1.9), Vector2(0.18, 2.05), Vector2(0.0, 2.1)], u), robe, Vector3.ZERO, 7)
-	ShapeKit.lathe(r, _p([Vector2(0.2, 1.95), Vector2(0.22, 2.2), Vector2(0.1, 2.45),
-		Vector2(0.0, 2.6)], u), chitin(), Vector3.ZERO, 6)
-	StructureMeshes.box(r, Vector3(0.05, 0.05, 0.18) * u, sick(), Vector3(0.19, 2.2, 0) * u)
-	for sz in [-1.0, 1.0]:
-		ShapeKit.cone(r, 0.08 * u, 0.45 * u, bone(), Vector3(0, 1.9, sz * 0.28) * u, 5).rotation.x = sz * 0.6
-	ShapeKit.strut(r, Vector3(0.0, 1.8, -0.25) * u, Vector3(0.25, 1.55, -0.75) * u, 0.1 * u, robe)  # bow arm out to the side
-	var bow := Vector3(0.3, 1.55, -0.8) * u
-	var pts := [Vector3(-0.12, -0.7, 0), Vector3(0.1, -0.35, 0), Vector3(0.16, 0.0, 0), Vector3(0.1, 0.35, 0), Vector3(-0.12, 0.7, 0)]
-	for i in 4:  # spine-bow of bone, string of glow
-		ShapeKit.strut(r, bow + pts[i] * u, bow + pts[i + 1] * u, 0.06 * u, bone())
-	ShapeKit.rod(r, bow + pts[0] * u, bow + pts[4] * u, 0.02 * u, glow, 4)
+## Sentinel: a tall (2.4 m to the brow) upright robed archer. Its spine-bow is held out from
+## the body on the left, strung with green glow, a glowing bolt nocked. Fixed size: the
+## tier's hit size never scales the design.
+static func _sentinel(r: Node3D, glow: Material) -> void:
+	var robe := StructureMeshes.mat(Color("6e3a7c"), 0.0, 0.85)
+	ShapeKit.lathe(r, PackedVector2Array([Vector2(0.58, 0.0), Vector2(0.42, 0.5), Vector2(0.28, 1.3), Vector2(0.4, 1.72),
+		Vector2(0.44, 1.84), Vector2(0.18, 2.0), Vector2(0.0, 2.02)]), robe, Vector3.ZERO, 7)
+	StructureMeshes.cyl(r, 0.5, 0.56, 0.1, sick(), 0.12, 7)  # glowing hem
+	ShapeKit.horn(r, Vector3(-0.3, 1.7, 0), Vector3(-0.45, 2.5, 0), Vector3(-0.35, 3.3, 0), 0.1, bone())  # spine crest
+	ShapeKit.lathe(r, PackedVector2Array([Vector2(0.16, 1.95), Vector2(0.18, 2.25), Vector2(0.1, 2.5),
+		Vector2(0.0, 2.7)]), chitin(), Vector3.ZERO, 6)  # pointed chitin hood
+	StructureMeshes.box(r, Vector3(0.05, 0.05, 0.2), sick(), Vector3(0.16, 2.3, 0))  # eye slit
+	StructureMeshes.ball(r, 0.11, sick(), Vector3(-0.22, 1.6, 0.12), 5)  # pustule on the back
+	for sz in [-1.0, 1.0]:  # bone horns rising off the shoulders
+		ShapeKit.horn(r, Vector3(0, 1.82, sz * 0.26), Vector3(-0.05, 2.25, sz * 0.4), Vector3(-0.15, 2.65, sz * 0.36), 0.07, bone())
+	var hand := Vector3(0.35, 1.55, -1.05)
+	ShapeKit.strut(r, Vector3(0.0, 1.78, -0.28), hand, 0.1, robe)  # bow arm, straight out to the side
+	ShapeKit.strut(r, Vector3(0.0, 1.78, 0.28), Vector3(0.0, 1.55, -1.05), 0.09, robe)  # draw hand at the string
+	var top := hand + Vector3(-0.2, 1.2, 0)
+	var bot := hand + Vector3(-0.2, -1.2, 0)
+	ShapeKit.horn(r, hand, hand + Vector3(0.12, 0.7, 0), top, 0.08, bone())  # spine-bow limbs
+	ShapeKit.horn(r, hand, hand + Vector3(0.12, -0.7, 0), bot, 0.08, bone())
+	ShapeKit.rod(r, top, bot, 0.02, sick(), 4)  # bow string
+	ShapeKit.rod(r, Vector3(-0.1, 1.55, -1.05), hand + Vector3(0.7, 0, 0), 0.04, glow, 4)  # nocked bolt in the tier glow
 
 
 ## Fallback: the original six-legged bug.

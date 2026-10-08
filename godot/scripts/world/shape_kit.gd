@@ -64,6 +64,23 @@ static func rod(parent: Node3D, a: Vector3, b: Vector3, r: float, m: Material, s
 	return mi
 
 
+## Tapered horn/rib from a (radius r0) to b (radius r1): bone spikes, ribs, bow limbs.
+static func taper(parent: Node3D, a: Vector3, b: Vector3, r0: float, r1: float, m: Material, sides := 6) -> MeshInstance3D:
+	var l := a.distance_to(b)
+	var mi := StructureMeshes._add(parent, lathe_mesh(PackedVector2Array([Vector2(r0, 0.0), Vector2(r1, l), Vector2(0.0, l)]), sides), m, a)
+	var up := (b - a).normalized()
+	var side := Vector3.FORWARD if absf(up.dot(Vector3.FORWARD)) < 0.95 else Vector3.RIGHT
+	var x := up.cross(side).normalized()
+	mi.basis = Basis(x, up, x.cross(up)).orthonormalized()
+	return mi
+
+
+## Curved horn: two tapered segments a -> bend -> b.
+static func horn(parent: Node3D, a: Vector3, bend: Vector3, b: Vector3, r: float, m: Material) -> void:
+	taper(parent, a, bend, r, r * 0.6, m)
+	taper(parent, bend, b, r * 0.6, r * 0.12, m)
+
+
 ## Hinge pin along Z (the joint axis of a pitching arm).
 static func axle(parent: Node3D, at: Vector3, r: float, length: float, m: Material) -> MeshInstance3D:
 	return rod(parent, at - Vector3(0, 0, length * 0.5), at + Vector3(0, 0, length * 0.5), r, m, 10)

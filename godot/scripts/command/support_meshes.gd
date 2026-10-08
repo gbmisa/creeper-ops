@@ -43,7 +43,7 @@ static func node(root: Node3D) -> void:
 		ShapeKit.strut(spin, Vector3(cos(a) * 0.5, 0.2, sin(a) * 0.5), tip, 0.16, StructureMeshes.pal("bronze"))
 		StructureMeshes.crystal(spin, 0.14, 0.5, StructureMeshes.pal("rune"), tip + Vector3(0, 0.25, 0))
 	StructureMeshes.torus(spin, 1.0, 1.15, StructureMeshes.pal("bronze_dark"), Vector3(0, 1.2, 0))
-	StructureMeshes.crystal(spin, 0.6, 2.4, StructureMeshes.pal("rune"), Vector3(0, 2.5, 0))
+	StructureMeshes.crystal(spin, 0.6, 2.4, StructureMeshes.pal("rune_deep"), Vector3(0, 2.5, 0))
 
 
 ## Collector: a rune-well obelisk with three turning bronze vanes round a green crystal.
@@ -82,7 +82,7 @@ static func outpost(root: Node3D) -> void:
 	for i in 3:  # bronze cradle holding the outpost crystal
 		var a := i * TAU / 3.0
 		ShapeKit.strut(root, Vector3(cos(a) * 0.9, 3.9, sin(a) * 0.9), Vector3(cos(a) * 0.35, 5.0, sin(a) * 0.35), 0.12, StructureMeshes.pal("bronze"))
-	StructureMeshes.crystal(root, 0.42, 1.5, StructureMeshes.pal("rune"), Vector3(0, 5.0, 0))
+	StructureMeshes.crystal(root, 0.42, 1.5, StructureMeshes.pal("rune_deep"), Vector3(0, 5.0, 0))
 	for i in 4:
 		var a := i * TAU / 4.0
 		StructureMeshes.box(root, Vector3(0.12, 0.5, 0.12), StructureMeshes.pal("rune"), Vector3(cos(a) * 1.22, 2.7, sin(a) * 1.22))

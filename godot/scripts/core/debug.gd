@@ -8,7 +8,7 @@ class_name Debug
 ##   --surface / --spire   drop the Operative near the Rift / at the Spire ramp
 ##   --cave        go straight into the cave       --killcore  destroy pylons + Core
 ##   --fast        8x sim speed                    --nocapture don't capture the mouse
-##   --look=x,z[,d] point the command camera at a cell (d = zoom distance)   --rocket  Operative fires a rocket
+##   --look=x,z[,d[,p]] point the command camera at a cell (d = zoom distance, p = pitch rad)   --rocket  Operative fires a rocket
 ##                 just before --shot
 ##   --sim=N       fast-forward N seconds, print a [sim] report
 ##   --smoke       run scripted mechanics checks (smoke_test.gd)
@@ -106,6 +106,8 @@ static func apply(g) -> void:
 		var xz: PackedStringArray = args.look.split(",")
 		g.command.cam.focus(g.level.grid.cell_ground(int(xz[0]), int(xz[1])))
 		g.command.cam.dist = float(xz[2]) if xz.size() > 2 else 55.0
+		if xz.size() > 3:
+			g.command.cam.pitch = float(xz[3])
 	if args.has("gpu-parity") or args.has("perf-sim"):
 		SimBench.run(g, args)
 		return

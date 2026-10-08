@@ -97,7 +97,7 @@ static func rift() -> Node3D:
 	mk.name = "Marker"
 	mk.position.y = 1.6
 	r.add_child(mk)
-	StructureMeshes.torus(mk, 0.9, 1.1, _glow(Color("b48cff"), 1.2)).rotation.x = PI / 2.0
+	StructureMeshes.torus(mk, 0.9, 1.1, _glow(Color("7a3ad0"), 0.6)).rotation.x = PI / 2.0
 	return r
 
 

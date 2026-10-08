@@ -22,6 +22,7 @@ const PALETTE := {
 	"slate": [Color("3a4656"), 0.1, 0.65, 0.0],
 	"rune": [Color("19b4ff"), 0.0, 0.3, 1.0],
 	"rune_soft": [Color("19b4ff"), 0.0, 0.3, 0.6],
+	"rune_deep": [Color("0c86d8"), 0.0, 0.25, 0.55],  # big crystals: lower energy keeps the hue
 }
 
 static var _mats := {}

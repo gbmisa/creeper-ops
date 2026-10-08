@@ -37,7 +37,7 @@ static func refresh(v: Dictionary, c: Dictionary) -> void:
 ## Stone pedestal, bronze yoke and a ballista head (looks along -Z, aimed via "Head").
 static func _model(n: Node3D, col: Color, k: float) -> void:
 	ShapeKit.lathe(n, PackedVector2Array([Vector2(0.8, 0.0), Vector2(0.65, 0.2), Vector2(0.55, 0.6),
-		Vector2(0.7, 0.75), Vector2(0.0, 0.75)]) , StructureMeshes.mat(StrongholdMeshes.STONE, 0.0, 0.9), Vector3.ZERO, 8).scale = Vector3.ONE * k
+		Vector2(0.7, 0.75), Vector2(0.0, 0.75)]) , StructureMeshes.mat(StrongholdMeshes.DECOR_STONE, 0.0, 0.9), Vector3.ZERO, 8).scale = Vector3.ONE * k
 	var head := Node3D.new()
 	head.name = "Head"
 	head.position.y = 0.95 * k

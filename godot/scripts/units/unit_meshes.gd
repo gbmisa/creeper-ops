@@ -19,7 +19,7 @@ static func _soldier(root: Node3D) -> void:
 	var mail := StructureMeshes.mat(Color("6c717c"), 0.6, 0.5)
 	var dark := StructureMeshes.mat(Color("2e2c2a"), 0.2, 0.8)
 	for sz in [-1.0, 1.0]:
-		StructureMeshes.box(root, Vector3(0.17, 0.86, 0.17), dark, Vector3(0, 0.43, sz * 0.11))
+		ShapeKit.taper(root, Vector3(0, 0.0, sz * 0.11), Vector3(0, 0.88, sz * 0.11), 0.07, 0.1, dark, 6)  # legs
 		StructureMeshes.ball(root, 0.13, StructureMeshes.pal("bronze"), Vector3(0, 1.43, sz * 0.25), 8)
 		ShapeKit.strut(root, Vector3(0, 1.38, sz * 0.25), Vector3(0.3, 1.08, sz * 0.12), 0.1, mail)
 	ShapeKit.lathe(root, PackedVector2Array([Vector2(0.2, 0.82), Vector2(0.26, 1.2), Vector2(0.24, 1.45),
@@ -30,6 +30,12 @@ static func _soldier(root: Node3D) -> void:
 	ShapeKit.lathe(root, PackedVector2Array([Vector2(0.15, 1.56), Vector2(0.14, 1.7), Vector2(0.08, 1.78),
 		Vector2(0.0, 1.8)]), StructureMeshes.pal("bronze"), Vector3.ZERO, 8)
 	StructureMeshes.box(root, Vector3(0.24, 0.1, 0.03), StructureMeshes.pal("cloth"), Vector3(-0.02, 1.82, 0))
+	var cloak := StructureMeshes.box(root, Vector3(0.05, 1.0, 0.5), StructureMeshes.pal("cloth"), Vector3(-0.2, 0.95, 0))
+	cloak.rotation.z = -0.12
+	var shield := StructureMeshes.cyl(root, 0.26, 0.26, 0.05, StructureMeshes.pal("bronze"), 0.0, 12)  # round shield on the left arm
+	shield.rotation.x = PI / 2.0
+	shield.position = Vector3(0.12, 1.05, -0.3)
+	StructureMeshes.ball(root, 0.06, StructureMeshes.pal("rune"), Vector3(0.12, 1.05, -0.34), 6)
 	StructureMeshes.box(root, Vector3(0.62, 0.08, 0.08), StructureMeshes.pal("oak"), Vector3(0.42, 1.08, 0))
 	StructureMeshes.box(root, Vector3(0.06, 0.05, 0.56), StructureMeshes.pal("bronze_dark"), Vector3(0.68, 1.1, 0))
 
