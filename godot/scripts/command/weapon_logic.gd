@@ -147,7 +147,10 @@ static func _snipe(s: Structure, mgr) -> bool:
 	var reach: float = range_cells(s) * Config.CELL
 	var best: Dictionary = {}
 	var bd := reach
-	for m in mgr.hazards.nests.raiders.list:
+	var foes: Array = mgr.hazards.nests.raiders.list.duplicate()
+	if mgr.hazards.guards:
+		foes.append_array(mgr.hazards.guards.foes())  # Sentinels, if the range allows
+	for m in foes:
 		var d := (m.node.position as Vector3).distance_to(a)
 		if d < bd:
 			bd = d

@@ -116,6 +116,18 @@ const CASTLE_RULES := {
 }
 const CASTLE_SIEGE_MIN := 90.0    # sieges never come faster than this (seconds)
 
+## Castle guards (castle_guards.gd): Sentinels on tower tops and the wall walk of hostile castles.
+const GUARD_RANGE := 32.0         # cells; longer than a Sniper (26) on purpose
+const GUARD_CHARGE := 0.8         # seconds of visible glow before each bolt
+const GUARD_INTERVAL := 4.5       # seconds from one bolt to the next, per Sentinel
+const GUARD_BOLT_SPEED := 16.0    # metres/s; a 64 m shot takes 4 s, so walking sideways dodges it
+const GUARD_BOLT_RADIUS := 2.0    # metres from the impact point that still gets hurt
+const GUARD_DMG_OPERATIVE := 14.0 # suit damage (SUIT_MAX is 100)
+const GUARD_DMG_UNIT := 18.0
+const GUARD_DMG_STRUCT := 20.0
+const GUARD_RESPAWN := 90.0       # seconds for a dead Sentinel to regrow from the crown nest
+const SENTINEL := { "name": "Sentinel", "hp": 30.0, "dps": 0.0, "speed": 0.0, "size": 1.1, "color": Color("ff4a5a") }
+
 # ---- threats -------------------------------------------------------------------
 const SPIRE_INTERVAL := 60.0
 const SPIRE_MIN_INTERVAL := 20.0
