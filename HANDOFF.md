@@ -2,7 +2,7 @@
 
 ## State
 Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Castles: [docs/CASTLES2_DESIGN.md](docs/CASTLES2_DESIGN.md). Playtest feedback + plan: [docs/tasks/PLAYTEST1_plan.md](docs/tasks/PLAYTEST1_plan.md).
-**Roles:** Opus orchestrates and merges; delegated agents follow [AGENTS.md](AGENTS.md). Agent types available here: `feature-dev`, `level-builder` (Sonnet), `balance-tester` (Haiku). No `stage-runner`/`auditor`. **Muse Code** is joining over SSH: [Muse.md](Muse.md) §3b says how its first task is scored.
+**Roles:** Opus orchestrates and merges; delegated agents follow [AGENTS.md](AGENTS.md). Agent types available here: `feature-dev`, `level-builder` (Sonnet), `balance-tester` (Haiku). No `stage-runner`/`auditor`. **Muse Code** is joining over SSH: works from GitHub (no SSH); task prompts in [muse1.md](muse1.md).
 **User rule:** playtest feedback gets logged + planned for cheaper agents, not fixed inline (memory `playtest-feedback-workflow`).
 
 ## Merged to main this session
