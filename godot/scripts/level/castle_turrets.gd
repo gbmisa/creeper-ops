@@ -20,14 +20,15 @@ const DEFS := {
 const ORDER := ["repeater", "lobber", "flak"]
 
 
-## 4 wall corners plus the wall cell beside each gate, all on the wall walk.
+## 4 wall corners plus the wall cell beside each gate, all on the wall walk (concentric castles:
+## the corner tower tops and a gatehouse tower of each gate, inner gate included).
 static func socket_cells(lay: Dictionary) -> Array[Vector2i]:
 	var r: Rect2i = lay.rect
 	var out: Array[Vector2i] = [Vector2i(r.position.x, r.position.y), Vector2i(r.end.x - 1, r.position.y),
 		Vector2i(r.position.x, r.end.y - 1), Vector2i(r.end.x - 1, r.end.y - 1)]
-	var n := r.size.x
 	for gt in lay.gates:
-		out.append(CastleShape._at(r, gt.side, n / 2 - 2, 0))
+		var gr: Rect2i = lay.inner_rect if gt.get("ring", "outer") == "inner" else r
+		out.append(CastleShape._at(gr, gt.side, gr.size.x / 2 - 2, 0))
 	return out
 
 

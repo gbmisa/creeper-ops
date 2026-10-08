@@ -22,7 +22,8 @@ static func new_state(row: Dictionary, lay: Dictionary) -> Dictionary:
 		"crown": { "hp": Config.CROWN_HP, "max_hp": Config.CROWN_HP },
 		"capture": { "progress": 0.0, "away": 0.0, "retake": 0.0 },
 		"pump": { "material": 0.0, "intake": 0.0, "jam": 0.0 }, "garrison_timer": 0.0,
-		"sockets": CastleTurrets.new_sockets(lay) }
+		"sockets": CastleTurrets.new_sockets(lay), "stage": 0, "ring": CastleStages.new_state(),
+		"engines": CastleEngines.new_state(row, lay) }
 
 
 static func faction(owner: String) -> int:
@@ -42,18 +43,24 @@ static func set_owner(world: World, c: Dictionary, lay: Dictionary, owner: Strin
 ## Writes gate and deck ownership into the grid from the state (also used after loading).
 static func sync_grid(world: World, c: Dictionary, lay: Dictionary) -> void:
 	var g := world.grid
-	var f := faction(c.owner)
 	var cells: Array[Vector2i] = []
-	for i in lay.gates.size():
+	for i in lay.gates.size():  # concentric: the outer ring is yours from the gate stage on
+		var f := faction(CastleStages.ring_owner(c, lay, lay.gates[i].get("ring", "outer")))
 		for cell in lay.gates[i].cells:
 			g.gate[g.idx(cell.x, cell.y)] = f if c.gates[i].hp > 0.0 else Grid.Faction.NONE
 			cells.append(cell)
+	var fb := faction(CastleStages.ring_owner(c, lay, "outer"))
 	for cell in lay.bridge:
-		g.deck_owner[g.idx(cell.x, cell.y)] = f if c.winch.hp > 0.0 else Grid.Faction.ALL
+		g.deck_owner[g.idx(cell.x, cell.y)] = fb if c.winch.hp > 0.0 else Grid.Faction.ALL
 		cells.append(cell)
-	for cell in lay.courtyard:  # you build in the courtyard of a castle you hold
+	var bailey := {}
+	for cell in lay.get("bailey", []):
+		bailey[cell] = true
+	var open_bailey := CastleStages.bailey_open(c, lay)
+	for cell in lay.courtyard:  # you build in the courtyard of a castle you hold (and a bailey you took)
 		if g.material[g.idx(cell.x, cell.y)] == Grid.Mat.NATURAL:
-			g.blocked[g.idx(cell.x, cell.y)] = 0 if c.owner == "player" else 1
+			var mine: bool = c.owner == "player" or (open_bailey and bailey.has(cell))
+			g.blocked[g.idx(cell.x, cell.y)] = 0 if mine else 1
 	if not cells.is_empty():
 		world.terrain_changed(cells)  # walkers re-plan; heights are unchanged
 
@@ -82,11 +89,22 @@ static func damage(world: World, c: Dictionary, lay: Dictionary, part: String, i
 	return true
 
 
-## Is the courtyard sealed to raiders, so they must break something to get in?
-static func sealed(c: Dictionary, lay: Dictionary) -> bool:
-	if c.owner != "player" or c.gates.any(func(gt): return gt.hp <= 0.0):
+## Is a ring (outer / inner; Stage 7 castles have only "outer") sealed to raiders, so they
+## must break one of its gates or walls to get through? "" = any ring of the castle.
+static func sealed(c: Dictionary, lay: Dictionary, ring := "") -> bool:
+	if ring == "":
+		return sealed(c, lay, "outer") or (lay.get("plan", "") == "concentric" and sealed(c, lay, "inner"))
+	if CastleStages.ring_owner(c, lay, ring) != "player":
 		return false
-	return lay.raised or c.walls.all(func(wl): return wl.hp > 0.0)
+	for i in lay.gates.size():
+		if lay.gates[i].get("ring", "outer") == ring and c.gates[i].hp <= 0.0:
+			return false
+	if lay.raised and ring == "outer":
+		return true
+	for i in lay.segments.size():
+		if lay.segments[i].get("ring", "outer") == ring and c.walls[i].hp <= 0.0:
+			return false
+	return true
 
 
 static func to_hostile(world: World, c: Dictionary, lay: Dictionary, regrow: float) -> void:
@@ -94,6 +112,8 @@ static func to_hostile(world: World, c: Dictionary, lay: Dictionary, regrow: flo
 	c.crown.hp = c.crown.max_hp * regrow
 	c.capture = { "progress": 0.0, "away": 0.0, "retake": 0.0 }
 	c.garrison_timer = 0.0
+	c["stage"] = 0
+	c["ring"] = CastleStages.new_state()
 	CastleTurrets.clear(c)
 	set_owner(world, c, lay, "enemy")
 
@@ -101,19 +121,29 @@ static func to_hostile(world: World, c: Dictionary, lay: Dictionary, regrow: flo
 static func to_held(world: World, c: Dictionary, lay: Dictionary) -> void:
 	c.state = "held"
 	c.capture.retake = 0.0
+	c["stage"] = lay.stages.size()
 	set_owner(world, c, lay, "player")
 
 
-## Operative in the capture zone: on the column top.
-static func in_zone(lay: Dictionary, p: Variant) -> bool:
-	if p == null:
+## Operative in the final capture zone: the spire column top (Stage 7) or the keep hall.
+static func in_zone(lay: Dictionary, p: Variant, zone := "keep") -> bool:
+	if p == null or not lay.zones.has(zone):
 		return false
+	var z: Dictionary = lay.zones[zone]
 	var cell := Vector2i(floori(p.x / Config.CELL), floori(p.z / Config.CELL))
-	return cell in lay.spire.column and p.y >= (lay.spire.top - 0.5) * Config.LEVEL_H
+	return cell in z.cells and p.y >= (z.y - 0.5) * Config.LEVEL_H and p.y < (z.y_max - 1.0) * Config.LEVEL_H
 
 
 static func in_courtyard(lay: Dictionary, p: Vector3) -> bool:
 	var r: Rect2i = lay.rect.grow(-2)
+	return r.has_point(Vector2i(floori(p.x / Config.CELL), floori(p.z / Config.CELL)))
+
+
+## Inside the inner ring (concentric) or the courtyard (Stage 7): where a siege retakes the castle.
+static func in_ward(lay: Dictionary, p: Vector3) -> bool:
+	if not lay.has("inner_rect"):
+		return in_courtyard(lay, p)
+	var r: Rect2i = lay.inner_rect.grow(-2)
 	return r.has_point(Vector2i(floori(p.x / Config.CELL), floori(p.z / Config.CELL)))
 
 

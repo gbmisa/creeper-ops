@@ -34,10 +34,10 @@ static func _solid_towers(g, sm: StructureManager) -> void:
 	var grid: Grid = g.surface.grid
 	var wall: Array = []
 	for dz in range(-1, 2):
-		wall.append(sm.place("relay", 37, 74 + dz, true))
-	var path := Pathfind.find(grid, g.surface.creeper, Vector2i(34, 74), Vector2i(40, 74), UnitDefs.DEFS.soldier, 6000, g.surface.occupied)
+		wall.append(sm.place("relay", 38, 74 + dz, true))  # on the mesa (Ashmoat's apron took x 31-34)
+	var path := Pathfind.find(grid, g.surface.creeper, Vector2i(35, 74), Vector2i(41, 74), UnitDefs.DEFS.soldier, 6000, g.surface.occupied)
 	var through := false
-	var prev := Vector2(34.5, 74.5) * Config.CELL
+	var prev := Vector2(35.5, 74.5) * Config.CELL
 	for p in path:
 		for k in 10:
 			var q: Vector2 = prev.lerp(p, k / 10.0)

@@ -39,7 +39,7 @@ func can_occupy(g: Grid, x: float, z: float) -> bool:
 	var reach := maxf(pos.y, g.ground_y(pos.x, pos.z)) / Config.LEVEL_H + Config.CLIMB  # in levels
 	for o in [Vector2(-r, -r), Vector2(r, -r), Vector2(-r, r), Vector2(r, r)]:
 		var c := g.world_to_cell(x + o.x, z + o.y)
-		if not g.in_bounds(c.x, c.y) or g.walk_height(c.x, c.y, Grid.Faction.PLAYER) > reach:
+		if not g.in_bounds(c.x, c.y) or GridRoofs.op_height(g, c.x, c.y, pos.y) > reach:  # castle roofs: GridRoofs
 			return false
 	return true
 
@@ -80,9 +80,14 @@ func update(dt: float, input: InputState, g: Grid, speed_factor := 1.0) -> void:
 		var lift := minf(_jet_left, OperativeUpgrades.jet_rate() * dt)
 		pos.y += lift  # jump jet: one terrace of extra lift, then it is spent
 		_jet_left -= lift
+	var feet0 := pos.y
 	vel_y -= Config.GRAVITY * dt
 	pos.y += vel_y * dt
-	var ground := g.stand_y(pos.x, pos.z, Grid.Faction.PLAYER)  # drawbridge decks count
+	var lid := GridRoofs.ceiling(g, pos.x, pos.z, feet0)  # under a castle roof the head stops
+	if pos.y + GridRoofs.HEAD > lid:
+		pos.y = lid - GridRoofs.HEAD
+		vel_y = minf(vel_y, 0.0)
+	var ground := GridRoofs.stand_y(g, pos.x, pos.z, feet0)  # drawbridge decks and roofs count
 	if pos.y <= ground:
 		pos.y = ground
 		vel_y = 0.0
@@ -105,7 +110,7 @@ func _push_out(g: Grid) -> void:
 	var reach := maxf(pos.y, g.ground_y(pos.x, pos.z)) / Config.LEVEL_H + Config.CLIMB
 	for o in [Vector2(-r, -r), Vector2(r, -r), Vector2(-r, r), Vector2(r, r)]:
 		var c := g.world_to_cell(pos.x + o.x, pos.z + o.y)
-		if g.walk_height(c.x, c.y, Grid.Faction.PLAYER) <= reach:
+		if GridRoofs.op_height(g, c.x, c.y, pos.y) <= reach:
 			continue
 		var x0 := c.x * Config.CELL
 		var z0 := c.y * Config.CELL

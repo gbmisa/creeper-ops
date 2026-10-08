@@ -1,0 +1,80 @@
+class_name CastleInteriorMeshes
+## Roof slabs over castle interiors (lay.interiors, Grid.roof) and the warm light inside them.
+## One merged mesh per interior: a top face at the roof level, an underside GridRoofs.ROOF_THICK
+## lower, and edge faces where the roof ends. Decoration only: walkers read Grid.roof.
+
+const LIGHT := Color("ffb46b")
+const UNDERSIDE := Color("4a4038")
+
+
+static func build(root: Node3D, g: Grid, lay: Dictionary) -> Array:
+	var out := []
+	var top_mat := StructureMeshes.mat(StrongholdMeshes.DECOR_STONE, 0.0, 0.92)
+	var under_mat := StructureMeshes.mat(UNDERSIDE, 0.0, 0.95)
+	for it in lay.get("interiors", []):
+		var node := Node3D.new()
+		node.name = "Interior_%s" % it.kind
+		root.add_child(node)
+		var mi := MeshInstance3D.new()
+		mi.mesh = _slab(it.cells, float(it.roof) * Config.LEVEL_H)
+		mi.set_surface_override_material(0, top_mat)
+		mi.set_surface_override_material(1, under_mat)
+		node.add_child(mi)
+		_light(node, g, it)
+		out.append(node)
+	return out
+
+
+## Brazier glow at the interior's light cell, standing on its floor.
+static func _light(node: Node3D, g: Grid, it: Dictionary) -> void:
+	var c: Vector2i = it.light
+	if it.kind == "tower" or not g.in_bounds(c.x, c.y):
+		c = it.cells[it.cells.size() / 2]
+	var floor_y := g.height_at(c.x, c.y) * Config.LEVEL_H
+	var l := OmniLight3D.new()
+	l.light_color = LIGHT
+	l.light_energy = 1.6 if it.kind == "hall" else 1.0
+	l.omni_range = 9.0 if it.kind == "hall" else 5.0
+	l.shadow_enabled = false
+	l.position = Vector3((c.x + 0.5) * Config.CELL, floor_y + 1.9, (c.y + 0.5) * Config.CELL)
+	node.add_child(l)
+
+
+## Surface 0: top faces and edges; surface 1: the underside (seen from inside).
+static func _slab(cells: Array, top: float) -> ArrayMesh:
+	var set := {}
+	for c in cells:
+		set[c] = true
+	var cs := Config.CELL
+	var bot := top - GridRoofs.ROOF_THICK
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var su := SurfaceTool.new()
+	su.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for c in cells:
+		var x0: float = c.x * cs
+		var z0: float = c.y * cs
+		_quad(st, Vector3(x0, top, z0), Vector3(x0 + cs, top, z0), Vector3(x0 + cs, top, z0 + cs), Vector3(x0, top, z0 + cs), Vector3.UP)
+		_quad(su, Vector3(x0, bot, z0 + cs), Vector3(x0 + cs, bot, z0 + cs), Vector3(x0 + cs, bot, z0), Vector3(x0, bot, z0), Vector3.DOWN)
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if set.has(c + d):
+				continue
+			var n := Vector3(d.x, 0, d.y)
+			var mid := Vector3(x0 + cs * 0.5, 0, z0 + cs * 0.5) + n * cs * 0.5
+			var t := Vector3(-d.y, 0, d.x) * cs * 0.5
+			_quad(st, mid - t + Vector3(0, top, 0), mid + t + Vector3(0, top, 0), mid + t + Vector3(0, bot, 0), mid - t + Vector3(0, bot, 0), n)
+	var mesh := st.commit()
+	su.commit(mesh)
+	return mesh
+
+
+## Two triangles a-b-c, a-c-d, wound so the face looks along `n` (Godot culls by winding).
+static func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, n: Vector3) -> void:
+	var face := (b - a).cross(c - a)
+	if face.dot(n) > 0.0:  # Godot's front faces are clockwise seen from outside
+		var t := b
+		b = d
+		d = t
+	for v in [a, b, c, a, c, d]:
+		st.set_normal(n)
+		st.add_vertex(v)

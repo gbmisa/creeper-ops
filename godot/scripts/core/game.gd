@@ -102,6 +102,8 @@ func _ready() -> void:
 		return n.pos
 	hazards.nests.prey = surface_prey
 	guards.prey = surface_prey
+	castles.engine_prey = surface_prey  # Stage 21 trebuchets
+	CastlePerks.attach(castles)  # Stage 21: weapons reach further near held castles
 	hazards.nests.goal_cells = raider_goals
 	hazards.nests.node_pos = func() -> Vector3:
 		var n := structures.command_node()

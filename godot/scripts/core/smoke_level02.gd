@@ -21,7 +21,7 @@ static func run(g) -> void:
 	var want := 0
 	for c in lvl.castles:
 		want += c.guards
-	SmokeTest._check("guards: all posted at t=0", guards.list.size() == want and guards.foes().size() == want, "(%d)" % want)
+	SmokeTest._check("guards: all posted at t=0", guards.list.size() == want and guards.list.filter(func(x): return x.alive).size() == want, "(%d)" % want)
 	SmokeTest._check("guards: range beats a Sniper", Config.GUARD_RANGE > StructureDefs.DEFS.sniper.range)
 	_fire(w, guards, grid)
 	_capture(w, castles, guards)
@@ -30,8 +30,9 @@ static func run(g) -> void:
 
 static func _level1_unchanged() -> void:
 	var l1 := Level01.build()
-	var plain: bool = l1.castles.all(func(c): return c.layout.towers.is_empty() and c.layout.keep.is_empty())
-	SmokeTest._check("L1: castle layouts have no towers or keep", plain)
+	var old: Array = l1.castles.filter(func(c): return c.layout.get("plan", "") != "concentric")  # Stage 21: Ashmoat is concentric
+	var plain: bool = old.all(func(c): return c.layout.towers.is_empty() and c.layout.keep.is_empty())
+	SmokeTest._check("L1: Stage 7 castle layouts have no towers or keep", not old.is_empty() and plain)
 
 
 static func _reach(lvl: Dictionary) -> void:
@@ -60,9 +61,16 @@ static func _towers(lvl: Dictionary) -> void:
 	var grid: Grid = lvl.grid
 	for c in lvl.castles:
 		var lay: Dictionary = c.layout
-		var seen := LevelShape.walkable_from(grid, lay.courtyard[0])
-		var bad: Array = lay.towers.filter(func(t): return not seen.has(t.centre))
-		SmokeTest._check("L2: %s towers (%d) climbable from the courtyard" % [c.id, lay.towers.size()], not lay.towers.is_empty() and bad.is_empty())
+		var bad: Array
+		if lay.get("plan", "") == "concentric":  # roofs are Operative ground: flood both rings
+			var a := GridRoofs.walkable(grid, lay.bailey[0])
+			var b := GridRoofs.walkable(grid, lay.ward[0])
+			bad = lay.towers.filter(func(t): return not GridRoofs.reached(a, t.centre, t.top) and not GridRoofs.reached(b, t.centre, t.top))
+		else:
+			var seen := LevelShape.walkable_from(grid, lay.courtyard[0])
+			bad = lay.towers.filter(func(t): return not seen.has(t.centre))
+		SmokeTest._check("L2: %s towers (%d) climbable from the courtyard" % [c.id, lay.towers.size()], not lay.towers.is_empty() and bad.is_empty(),
+			str(bad.map(func(t): return t.centre)))
 
 
 class Dummy:

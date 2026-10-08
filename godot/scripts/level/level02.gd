@@ -19,20 +19,22 @@ const PRESSURE_POINTS := [
 	{ "t": 900.0, "p": 0.85 },
 	{ "t": 1800.0, "p": 1.0 },
 ]
-## Ground castles keep a moat; raised ones a drawbridge. Sizes >= 19 get gatehouses.
-## `guards`: Sentinels posted on tower tops, then along the walls. `yield` scales Aether/Salvage.
+## Stage 21: every castle is concentric (outer wall + bailey + inner wall + keep; CastleShape2).
+## Ground castles keep a moat; raised ones a drawbridge. `guards`: Sentinels on gatehouse towers,
+## then the keep roof, then the walls. Trebuchets (2 each) sit on the corner towers.
+## `yield` scales Aether/Salvage.
 const CASTLES := [
-	{ "id": "ashgate", "name": "Ashgate Hold", "x": 14, "z": 104, "size": 19, "floor": 2, "variant": "ground",
-		"moat": true, "gates": ["e"], "climbs": ["s"], "spire_h": 20, "towers": true, "gatehouse": true, "guards": 5 },
-	{ "id": "thornwall", "name": "Thornwall", "x": 126, "z": 108, "size": 19, "floor": 3, "variant": "raised",
-		"bridge": true, "gates": ["w"], "climbs": ["s"], "spire_h": 20, "towers": true, "gatehouse": true, "guards": 5 },
-	{ "id": "crown", "name": "Crown Keep", "x": 68, "z": 68, "size": 23, "floor": 3, "variant": "ground",
-		"moat": true, "gates": ["s", "n"], "climbs": ["e"], "spire_h": 24, "towers": true, "gatehouse": true,
-		"keep": true, "guards": 8, "yield": 2.0 },
-	{ "id": "northreach", "name": "Northreach", "x": 16, "z": 20, "size": 21, "floor": 4, "variant": "raised",
-		"bridge": true, "gates": ["s"], "climbs": ["e"], "spire_h": 20, "towers": true, "gatehouse": true, "guards": 6 },
-	{ "id": "stormcrown", "name": "Stormcrown", "x": 122, "z": 22, "size": 17, "floor": 3, "variant": "ground",
-		"moat": true, "gates": ["w"], "climbs": ["s"], "spire_h": 20, "towers": true, "guards": 5 },
+	{ "id": "ashgate", "name": "Ashgate Hold", "x": 6, "z": 104, "size": 35, "floor": 2, "variant": "ground", "plan": "concentric",
+		"moat": true, "gates": ["e"], "inner_gate": "n", "climbs": ["s"], "spire_h": 20, "guards": 5 },
+	{ "id": "thornwall", "name": "Thornwall", "x": 121, "z": 121, "size": 35, "floor": 3, "variant": "raised", "plan": "concentric",
+		"bridge": true, "gates": ["w"], "inner_gate": "n", "climbs": ["n"], "spire_h": 20, "guards": 5 },
+	{ "id": "crown", "name": "Crown Keep", "x": 61, "z": 61, "size": 39, "floor": 3, "variant": "ground", "plan": "concentric",
+		"bailey": 7, "moat": true, "gates": ["s", "n"], "inner_gate": "e", "climbs": ["e"], "inner_climbs": ["w"], "spire_h": 24,
+		"guards": 8, "yield": 2.0 },
+	{ "id": "northreach", "name": "Northreach", "x": 8, "z": 8, "size": 35, "floor": 4, "variant": "raised", "plan": "concentric",
+		"bridge": true, "gates": ["s"], "inner_gate": "e", "climbs": ["e"], "spire_h": 20, "guards": 6 },
+	{ "id": "stormcrown", "name": "Stormcrown", "x": 117, "z": 8, "size": 35, "floor": 3, "variant": "ground", "plan": "concentric",
+		"moat": true, "gates": ["w"], "inner_gate": "s", "climbs": ["s"], "spire_h": 20, "guards": 5 },
 ]
 const CASTLE_RULES := { "aggression": 1.1, "reprisal_warn": 60.0, "nest_buff": 0.2 }
 const SHIELD_HINT := "Its shield is powered from underground: send the Operative into the Rift and destroy the Deep Core."
@@ -85,8 +87,8 @@ static func build() -> Dictionary:
 			{ "name": "Spire Heights", "x": 133, "z": 64 },
 			{ "name": "North Knoll", "x": 82, "z": 40 },
 			{ "name": "West Moor", "x": 44, "z": 66 },
-			{ "name": "East Moor", "x": 104, "z": 100 },
-			{ "name": "Southern Barrows", "x": 30, "z": 146 },
+			{ "name": "East Moor", "x": 112, "z": 104 },
+			{ "name": "Southern Barrows", "x": 34, "z": 151 },
 		],
 		"raid_schedule": RAID_SCHEDULE,
 		"pressure": PRESSURE,
@@ -102,13 +104,13 @@ static func build() -> Dictionary:
 		"rift": { "x": 20, "z": 64 },
 		"objectives": OBJECTIVES,
 		"demo": DEMO,
-		"demo_target": Vector2i(104, 100),
+		"demo_target": Vector2i(112, 104),
 		"spire_totem": Vector2i(137, 108),
 		"intro": [
 			["Ops: Choose where the Command Node lands. The southern mesa is dry, high and far from every emitter.", "radio"],
 			["Ops: Five castles hold this country. Each is garrisoned by Sentinels that see 32 cells: further than a Sniper.", "radio"],
 			["Ops: A Sentinel glows for under a second, then lobs a slow bolt at where you stand. Keep moving and it lands behind you.", "radio"],
-			["Ops: Walls and hills block their line of sight. Approach under cover, climb the spire, kill the crown nest, and the garrison dies with it.", "radio"],
+			["Ops: Walls and hills block their line of sight. Castles fall in rings: hold the gatehouse, wreck the trebuchets and raise the bailey standard, then kill the crown nest in the keep hall.", "radio"],
 			["Ops: Raids start in three minutes. The nests will not wait.", "radio"],
 		],
 	}

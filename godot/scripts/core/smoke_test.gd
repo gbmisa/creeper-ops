@@ -110,7 +110,7 @@ static func run(g) -> void:
 	_check("node landed + producing", not node.is_flying() and g.economy.income >= Config.NODE_INCOME)
 
 	# Barracks population cap.
-	var b: Structure = sm.place("barracks", 33, 70, true)
+	var b: Structure = sm.place("barracks", 37, 72, true)  # on the mesa (Ashmoat's apron took x 31-34)
 	var queued := 0
 	for i in 6:
 		if StructureBehaviors.queue_unit(b, "soldier", g.units.living_for(b)):
@@ -157,6 +157,11 @@ static func run(g) -> void:
 	SmokeFpsArms.run(g)
 	SmokeFlyers.run(g)
 	SmokeFlyers2.run(g)
+	SmokeCastles2Shape.run(g)
+	SmokeCastles2Walk.run(g)
+	SmokeCastles2Capture.run(g)
+	SmokeCastles2Engines.run(g)
+	SmokeCastles2Perks.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

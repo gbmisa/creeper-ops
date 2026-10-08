@@ -38,7 +38,8 @@ static func build(root: Node3D, lay: Dictionary) -> Array:
 			root.add_child(t)
 			_round_tower(t, base, top + 2.6, 2.1, banners, (p - centre).normalized())
 	for gt in lay.gates:
-		_gatehouse(root, gt, lay, banners)
+		if lay.get("plan", "") != "concentric":  # concentric gatehouses are terrain towers
+			_gatehouse(root, gt, lay, banners)
 	_spire_trim(root, lay)
 	return banners
 

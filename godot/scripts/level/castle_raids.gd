@@ -6,7 +6,8 @@ extends RefCounted
 ##  - Sieges: every held castle draws a smaller raid each siege interval, with `siege_warn`
 ##    seconds of warning. The interval shrinks with aggression and the number held.
 ##  - Hostile castles feed nests: each nest within `nest_buff_range` cells of an enemy-owned
-##    castle spawns `nest_buff` faster per castle (SporeNests reads nest.rate).
+##    castle spawns `nest_buff` faster per castle (SporeNests reads nest.rate); a castle you
+##    hold slows the hives near it (CastlePerks.hive_factor).
 ## Size = (base + per_tier * tier) * aggression * stack, stack = 1 + held_stack * (held - 1).
 ## Rules: Config.CASTLE_RULES merged with the level's CASTLE_RULES. Per-castle state lives in
 ## c.raid (plain data, saved with Strongholds.state()). Tier stands in for 8a's pressure.
@@ -75,7 +76,7 @@ func _warn(c: Dictionary, kind: String, secs: float) -> void:
 	if src.is_empty():
 		return
 	Sfx.play("alarm")
-	Bus.say("%s: the %s nest is gathering a %s (~%d raiders). It marches in %ds. Buy turrets (Castle tab), move Snipers and units, or hold the spire top." \
+	Bus.say("%s: the %s nest is gathering a %s (~%d raiders). It marches in %ds. Buy turrets (Castle tab), move Snipers and units, or hold the capture point." \
 		% [c.name, src.name, KIND_LABEL[kind].to_lower(), size(kind), ceili(secs)], "bad")
 
 
@@ -119,7 +120,7 @@ func _buff_nests() -> void:
 			var centre := Vector2(castles.lays[c.id].spire.centre)
 			if c.owner == "enemy" and centre.distance_to(Vector2(n.x, n.z)) <= rules.nest_buff_range:
 				k += 1
-		n["rate"] = 1.0 + rules.nest_buff * k
+		n["rate"] = (1.0 + rules.nest_buff * k) * CastlePerks.hive_factor(castles, Vector2(n.x, n.z))  # held castles ward nearby hives
 
 
 func _add_markers(c: Dictionary) -> void:

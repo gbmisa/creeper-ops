@@ -36,8 +36,12 @@ static func fire_interval(s: Structure) -> float:
 	return s.def.fire_rate / Upgrades.mult("fire_rate")
 
 
+## Held castles reach (Stage 21 CastlePerks.attach sets this for the live game).
+static var range_bonus := func(_s: Structure) -> float: return 1.0
+
+
 static func range_cells(s: Structure) -> float:
-	return def_range(s.def)
+	return def_range(s.def) * range_bonus.call(s)
 
 
 ## Range in cells for a def (placement previews, before the structure exists).

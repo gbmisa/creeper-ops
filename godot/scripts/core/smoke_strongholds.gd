@@ -28,7 +28,7 @@ static func _shape(grid: Grid, lay: Dictionary, raised: Dictionary) -> void:
 	var wall: Vector2i = lay.segments[0].cells[0]
 	SmokeTest._check("castle: stone walls stand WALL_UP over the courtyard",
 		grid.height_at(wall.x, wall.y) == lay.yard + CastleShape.WALL_UP and grid.material[grid.idx(wall.x, wall.y)] == Grid.Mat.STONE)
-	var sp: Dictionary = lay.spire
+	var sp: Dictionary = raised.spire  # Stage 7 spire (Ashmoat's keep has no column since Stage 21)
 	SmokeTest._check("castle: spire rises past MAX_LEVEL", grid.height_at(sp.centre.x, sp.centre.y) == sp.top
 		and sp.top > Config.MAX_LEVEL and sp.top <= Config.SPIRE_MAX_LEVEL)
 	var moat: Vector2i = lay.pump_cells[0]
@@ -56,6 +56,7 @@ static func _capture(g, castles: Strongholds, c: Dictionary, lay: Dictionary) ->
 	var raiders: Raiders = castles.nests.raiders
 	var before := raiders.list.filter(func(r): return r.get("mission", "") == "castle").size()
 	var t := _crown_target(castles, c)
+	CastleStages.set_stage(castles, c, lay.stages.size() - 1)  # concentric: gate and bailey taken first
 	SmokeTest._check("castle: crown nest is an Operative target", t.alive.call())
 	t.on_hit.call(1e6)
 	SmokeTest._check("castle: crown dies -> capturing", c.state == "capturing" and not t.alive.call())
@@ -78,7 +79,8 @@ static func _capture(g, castles: Strongholds, c: Dictionary, lay: Dictionary) ->
 
 static func _siege(g, castles: Strongholds, c: Dictionary, lay: Dictionary) -> void:
 	var raiders: Raiders = castles.nests.raiders
-	var camp := { "name": "test", "pos": g.surface.grid.cell_ground(lay.home.x, lay.home.y), "count": 0 }
+	var ward: Vector2i = lay.get("ward", lay.courtyard)[0]  # concentric: only the ward retakes
+	var camp := { "name": "test", "pos": g.surface.grid.cell_ground(ward.x, ward.y), "count": 0 }
 	raiders.spawn(camp, RaiderDefs.named("Skitter"), true)
 	var r: Dictionary = raiders.list.back()
 	r.node.position = camp.pos
@@ -111,8 +113,9 @@ static func _assault(g, castles: Strongholds, c: Dictionary, lay: Dictionary) ->
 static func _breach(g, castles: Strongholds, c: Dictionary, lay: Dictionary) -> void:
 	var grid: Grid = g.surface.grid
 	StrongholdRules.to_held(g.surface, c, lay)
+	var ward_n: int = lay.get("ward", lay.courtyard).size()
 	SmokeTest._check("castle: sealed castle sends raiders to breach points", StrongholdRules.sealed(c, lay)
-		and castles.castle_goals().size() > lay.courtyard.size())
+		and castles.castle_goals().size() > ward_n)
 	var i := 1
 	var seg: Dictionary = lay.segments[i]
 	var prey: Array = castles.views[c.id].prey.filter(func(p): return p.node == castles.views[c.id].segs[i])
@@ -120,8 +123,9 @@ static func _breach(g, castles: Strongholds, c: Dictionary, lay: Dictionary) -> 
 	StrongholdRules.damage(g.surface, c, lay, "walls", i, Config.CASTLE_WALL_HP + 1.0)
 	var cell: Vector2i = seg.cells[0]
 	SmokeTest._check("castle: a broken wall segment is breached terrain", c.walls[i].hp <= 0.0
-		and grid.height_at(cell.x, cell.y) == lay.yard and not StrongholdRules.sealed(c, lay))
-	SmokeTest._check("castle: breached castle isn't sealed", castles.castle_goals().size() == lay.courtyard.size())
+		and grid.height_at(cell.x, cell.y) == lay.yard and not StrongholdRules.sealed(c, lay, "outer"))
+	var inner := StrongholdHooks.breach_cells(c, lay, "inner").size() if lay.has("inner_rect") and StrongholdRules.sealed(c, lay, "inner") else 0
+	SmokeTest._check("castle: breached castle isn't sealed", castles.castle_goals().size() == ward_n + inner)
 	var edits := []  # rebuild it for the later checks (Stage 9a: Salvage repairs)
 	for e in seg.cells:
 		edits.append({ "x": e.x, "z": e.y, "height": lay.wall_top, "material": Grid.Mat.STONE })

@@ -4,6 +4,9 @@ class_name EnemyMortarFire
 ## The operative HUD shows SPOTTED while a mortar has them. The log line stays too.
 
 
+static var extra: Array = []  # other telegraph rings this frame (castle trebuchets), Vector4(x, z, r, 1)
+
+
 static func volley(host, hive: Dictionary, dt: float) -> void:
 	for item in hive.get("mortars", []):
 		var m: Dictionary = item
@@ -141,6 +144,10 @@ static func shells(host) -> void:
 		var hat: Vector3 = hub_shot.at
 		packed[i] = Vector4(hat.x, hat.z, lerpf(0.6, blast, hk), 1.0)
 		i += 1
+	for v in extra:
+		if i < 8:
+			packed[i] = v
+			i += 1
 	mat.set_shader_parameter("shells", packed)
 
 
