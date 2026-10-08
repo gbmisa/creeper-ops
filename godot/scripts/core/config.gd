@@ -259,7 +259,9 @@ const MORTAR_SEAL := 60.0         # no walking route to the Node
 const MORTAR_SEAL_BUILD := 60.0   # then a mortar is up within this long
 const MORTAR_SIGHT := 25.0        # metres, Spotter line of sight
 const MORTAR_SABOTAGE_TIME := 3.0
-const MORTAR_SABOTAGE_RANGE := 2.0
+const MORTAR_SABOTAGE_RANGE := 3.0  # metres from an enemy mortar/structure centre to sabotage it (was 2.0: too tight to hit)
+const SNIPER_LOS_SLACK := 1.0   # metres: a ray hit this close to the target still counts as a clear shot
+const SNIPER_LOS_RETRY := 0.25  # seconds a Sniper waits before looking again when no foe is in sight
 const MORTAR_SALVAGE := 5.0
 const MORTAR_SPOTTER_RESPAWN := 30.0
 ## Overrun (§4.1): at pressure 1, every OVERRUN_INTERVAL each active nest sends this many

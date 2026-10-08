@@ -172,6 +172,7 @@ static func run(g) -> void:
 	SmokeAmmo.run(g)
 	SmokePlacement.run(g)
 	SmokeTuning.run(g)
+	SmokeSniperLos.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

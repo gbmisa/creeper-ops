@@ -166,6 +166,15 @@ static func _splash_builds(mgr, at: Vector3, splash: float, big: bool) -> void:
 	mgr.enemy_build.splash(at, splash * Config.CELL, dmg)
 
 
+## Line of sight over terrain and castle roofs: true when nothing solid sits between a and b.
+static func sees(grid: Grid, a: Vector3, b: Vector3) -> bool:
+	var d := a.distance_to(b)
+	if d < 0.01:
+		return true
+	var hit: Variant = grid.raycast(a, (b - a) / d, d)
+	return hit == null or (hit as Vector3).distance_to(a) >= d - Config.SNIPER_LOS_SLACK
+
+
 static func _snipe(s: Structure, mgr) -> bool:
 	if mgr.hazards == null:
 		return false
@@ -180,6 +189,7 @@ static func _snipe(s: Structure, mgr) -> bool:
 	if mgr.enemy_build != null:
 		foes.append_array(mgr.enemy_build.snipe_foes())
 	var best_ranged := false
+	var p := Vector3.ZERO
 	for m in foes:
 		# Stage 9b rule change: range is measured on the ground, like the enemy ranged weapons it answers
 		# (a Spitter on the flat used to out-reach a Sniper standing a mesa above it).
@@ -190,13 +200,19 @@ static func _snipe(s: Structure, mgr) -> bool:
 		# Stage 9b rule change: a Sniper shoots ranged raiders (Spitter, Lancer) in range before nearer
 		# melee ones; otherwise it is the nearest foe as before.
 		var ranged: bool = str((m.get("tier", {}) as Dictionary).get("role", "")) == "ranged"
-		if best.is_empty() or (ranged and not best_ranged) or (ranged == best_ranged and d < bd):
-			bd = d
-			best = m
-			best_ranged = ranged
+		if not (best.is_empty() or (ranged and not best_ranged) or (ranged == best_ranged and d < bd)):
+			continue
+		# Playtest 1: only what it can see. Terrain, castle walls and roofs block the shot.
+		var at: Vector3 = mp + Vector3(0, float(m.get("oy", 1.0)), 0)
+		if not sees(w.grid, a, at):
+			continue
+		bd = d
+		best = m
+		best_ranged = ranged
+		p = at
 	if best.is_empty():
+		s.cooldown = Config.SNIPER_LOS_RETRY  # nothing in sight: look again shortly, not every frame
 		return false
-	var p: Vector3 = best.node.position
 	_aim(s, p)
 	w.effects.beam(_fx(s), p, Color("e0f0ff"), 0.08, 0.05)
 	var grade := AmmoGrades.take_shot(s)

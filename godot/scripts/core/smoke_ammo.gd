@@ -143,10 +143,11 @@ static func _structures(g) -> void:
 	SmokeTest._check("ammo: command mode selects AP on a Sniper", sn.grade == "ap")
 	SmokeTest._sim(g, 6.0)
 	var spent: float = 10.0 - g.stockpile.salvage
+	var pp: float = sn.def.ammo.per_packet  # rounds per packet: the surcharge is per packet, not per round
 	SmokeTest._check("ammo: the surcharge is charged per packet", sn.grade_ammo > 0.0 and spent > 0.0
-		and absf(spent - 0.5 * sn.grade_ammo) < 0.01, "(%.1f Salvage for %.0f graded rounds)" % [spent, sn.grade_ammo])
+		and absf(spent - 0.5 * sn.grade_ammo / pp) < 0.01, "(%.1f Salvage for %.0f graded rounds)" % [spent, sn.grade_ammo])
 	var taken := AmmoGrades.take_shot(sn)
-	SmokeTest._check("ammo: a shot fires the graded round and uses it up", taken == "ap" and sn.grade_ammo < spent * 2.0)
+	SmokeTest._check("ammo: a shot fires the graded round and uses it up", taken == "ap" and sn.grade_ammo < spent * 2.0 * pp)
 	AmmoGrades.cycle_structure(sn, 1)
 	SmokeTest._check("ammo: a magazine holds one grade (switching drops the rest)", sn.grade == "inc" and sn.grade_ammo == 0.0)
 	AmmoGrades.cycle_structure(sn, 1)

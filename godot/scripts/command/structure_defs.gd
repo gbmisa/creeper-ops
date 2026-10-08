@@ -67,8 +67,8 @@ static var DEFS := {
 		"desc": "Surface-to-air laser: burns flying enemies within range 23 (spore volleys and flyers). Ignores creeper and ground raiders. Fragile: dies after 1.6 s in creeper. Movable." },
 	"sniper": { "tab": "Weapons", "label": "Sniper", "cost": 75, "hp": 40.0, "link": 4.0, "link_y": 1.8,
 		"movable": true, "move_speed": 6.0, "range": 20.0, "fire_rate": 1.5, "power": 4.0, "weapon": true, "grades": true,
-		"ammo": { "max": 60.0, "per_packet": 1.0, "per_shot": 5.0 }, "targets": "raiders",
-		"desc": "Long-range rifle that picks off nest raiders within range 20 (Skitters die in one shot; later tiers take several). 5 packets per shot, holds 12. Can't hurt nests: those still need units or the Operative. Movable." },
+		"ammo": { "max": 60.0, "per_packet": 2.0, "per_shot": 5.0 }, "targets": "raiders",  # playtest 1: 2.5 packets a shot (was 5)
+		"desc": "Long-range rifle that picks off nest raiders within range 20 (Skitters die in one shot; later tiers take several). 2.5 packets per shot, holds 12. Can't hurt nests: those still need units or the Operative. Movable." },
 	"bertha": { "tab": "Titans", "label": "Big Bertha", "cost": 250, "hp": 220.0, "link": 5.0, "link_y": 2.6, "footprint": 1,
 		"movable": true, "move_speed": 3.0, "range": 200.0, "min_range": 5, "fire_rate": 10.0, "power": 100.0, "splash": 10.0,
 		"weapon": true, "wet_time": 160.0,
