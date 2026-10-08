@@ -129,6 +129,8 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 18d | **Drag-build polish:** ghosts per piece, field outlines, cost line, Operative drag-build, smoke | Grok Build | ⚠ merged 2026-10-08 (Grok, Opus review) |
 | 19 | **Flying enemies:** Spore Bat, Gasbag (drops creeper), Wyvern; roost hive part; Beams/Flak/Operative/Lance counter them | Grok Build (long) | ☐ brief: [tasks/STAGE19_flyers_long.md](tasks/STAGE19_flyers_long.md) |
 | 20 | **Art pass 2, motion and feedback:** recoil, muzzle flash, hit flash, deaths, walk cycles, cave look | Grok Build (long, self-judged with the rubric) | ☐ brief: [tasks/STAGE20_art2_long.md](tasks/STAGE20_art2_long.md) |
+| 22 | **Auto-advance (user request 2026-10-08):** weapons creep forward on their own as the ground in front is cleared, so the player doesn't hand-move towers toward the creeper (CW3 tedium). Needs design: opt-in per weapon/group, how far, network/packet rules, never into unreachable or wet cells | Opus design, Sonnet build | ☐ |
+| 23 | **First-person feel (user, 2026-10-08):** "still feels like shit": crossbow has no recoil, Null Sprayer shows no spray. Viewmodel kick/sway, visible spray cone with particles hitting creeper, hit feedback | Sonnet | ☐ (was in Grok's Stage 20 P3; Grok out of budget) |
 | 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ☐ in the 9b long brief |
 | 13 | Tuning | Haiku 4.5 (`balance-tester`) | ☐ in the 9b long brief |
 | 14 | Review and screenshots | **Opus 5.5** | ☐ |
