@@ -15,6 +15,7 @@ static func build(m: PlayMetrics, cause: String) -> Dictionary:
 	var actions := 0
 	var first_loss := -1.0
 	var node_wet := false
+	var prev_mode := "command"
 	for e in m.events:
 		match e.kind:
 			"built":
@@ -31,9 +32,10 @@ static func build(m: PlayMetrics, cause: String) -> Dictionary:
 					node_wet = e.wet
 			"operative_down":
 				deaths += 1
-			"mode":
-				if e.mode != "command":
+			"mode":  # surface -> cave is the same incursion
+				if prev_mode == "command" and e.mode != "command":
 					incursions += 1
+				prev_mode = e.mode
 		if ACTIONS.has(e.kind):
 			actions += 1
 	var modes: Dictionary = m.acc.modes
