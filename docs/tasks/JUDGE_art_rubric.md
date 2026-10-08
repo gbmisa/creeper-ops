@@ -9,7 +9,7 @@ Inputs: the brief [STAGE15_fantasy_art.md](STAGE15_fantasy_art.md) and the PNGs 
 |---|---|---|
 | 1 | **Fantasy coherence** | Stone, bronze, wood, rune crystals; nothing reads as sci-fi. Player and Blight look like two different worlds. |
 | 2 | **Weapon arms** | Every weapon has a visible base → yaw ring → jointed arm → weapon head. Arm reads as mechanical, not a stick. |
-| 3 | **Weapon readability** | From the command camera you can tell cannon, mortar, beam, sniper, nullifier, bertha, thor apart by silhouette alone. |
+| 3 | **Weapon readability** | From the command camera you can tell cannon, mortar, beam, sniper, nullifier, bertha, thor, terp apart by silhouette alone. |
 | 4 | **Scale** | In first person, every structure is taller than the Operative; a soldier's head is at the Operative's eye height (±15%). |
 | 5 | **Enemies** | Organic, menacing; four tiers clearly ranked by size/shape; the Sentinel reads as a ranged guard. |
 | 6 | **Castles** | Reads as a castle at a glance: crenellations, towers, gatehouse, banners; faction colour visible. |

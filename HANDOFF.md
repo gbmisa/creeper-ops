@@ -16,6 +16,9 @@ Done on `main` this session (all committed):
 | 7c traversable terrain | `stage7c` / `stage/7c-traversal` | docs/tasks/STAGE7c_traversal.md |
 | 10a Armoury | `stage10a` / `stage/10a-armoury` | docs/tasks/STAGE10a_armoury.md |
 | 11a Terp (Earth) | `stage11a` / `stage/11a-terp` | docs/tasks/STAGE11a_terp_earth.md |
+| 15 Fantasy art (Claude subagent, rounds scored by a judge agent) | `stage15` / `stage/15-fantasy-art` | docs/tasks/STAGE15_fantasy_art.md + JUDGE_art_rubric.md |
+| 16 Level 2, 160x160, 5 castles, ranged Sentinels (Claude subagent) | `stage16` / `stage/16-level02` | docs/tasks/STAGE16_level02.md |
+Stage 15/16 merge notes: 15 splits `structure_meshes.gd` (11a adds a Terp case: port it). 16 adds `lay.towers` in `castle_shape.gd`; 15 decorates the old layout, so crown the towers at merge. 16 swaps `Level01.build()` for `Levels.build(n)` in `game.gd`.
 Merge notes: 7c edits `level01.gd` `build()`; 7b added `CASTLE_RULES` at the top and `"castle_rules"` in the level dict, so expect a small conflict there. 11a edits the Titans MENU line next to the Nullifier move. All three add a line to `smoke_test.gd`/`debug.gd`/`Keybinds` and the plan changelog. 10a exposes an Armoury API for castles: wire it into held castles (stronghold_hooks) at merge.
 
 ## Verified (headless + Xvfb)

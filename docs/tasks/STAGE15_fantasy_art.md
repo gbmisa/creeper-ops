@@ -20,6 +20,7 @@ The game looks like **high fantasy**, not sci-fi. Everything stays procedural (G
 
 ## Weapons get arms
 Every weapon (cannon, mortar, beam, sniper, nullifier where it makes sense, bertha, thor) is: **tower base → yaw ring (`Turret`, already aimed by `weapon_logic.gd:56`) → articulated arm (shoulder joint, upper arm, elbow, forearm/cradle) → weapon head held at the end.** Ideas: cannon = bronze bombard; mortar = squat stone mortar cradle; beam = crystal focus lens on a staff arm; sniper = long arbalest/ballista; bertha = great bombard on a crane arm; thor = storm crystal on a twin arm. Each must be recognisable from the command camera.
+- **Terp tower** (id `terp`, from Stage 11a, not on your branch yet): titan scale (6–8 m), a carved stone/bronze geomancer tower with a jointed crane arm on `Spin` holding a rune-hammer/plough head, amber earth crystals, a `Glow` child. Add a `"terp"` mesh case; the gallery draws it from the mesh factory directly.
 - Keep every named animated part (`Spin`, `Turret`, `Core`, `Glow`) with the same meaning. You may add an `Arm` node that pitches toward the target; if you do, aim it in `weapon_logic.gd` next to the existing `Turret` code (visual only, no rule changes).
 
 ## Files
