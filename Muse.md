@@ -36,6 +36,14 @@ Same pattern as Grok. Every task has a brief in `docs/tasks/` and its own worktr
 
 **Run at most 3-4 agents at once** (Claude + Muse combined). Each one runs Godot tests and screenshots, and too many at once slow the machine and make timing-sensitive smoke checks flaky.
 
+## 3b. Testing what Muse can do (calibration)
+We don't know where Muse sits between Haiku and Sonnet, so its first task has **objective pass/fail checks** and a known-good fallback: `PLAYTEST1_C_hive_sites.md` (worktree `playtest1c`). Opus scores the result on:
+1. **Rules:** stayed in its worktree and branch, didn't merge, didn't edit HANDOFF, reported in the AGENTS.md format.
+2. **Correctness:** parse clean, smoke 0 failures, its own new smoke checks actually test the claim (Opus reads them).
+3. **Judgement:** how many review fixes Opus needs. 0-2 small = Sonnet level, give it briefs freely. Several, or it skipped a constraint = Haiku level, give it only mechanical work.
+4. **Long-horizon:** did it finish all 3 phases unattended and keep the progress log?
+Run it headless with `muse exec` (section 3). Its strength is long runs without approvals, so give it the long briefs once it passes.
+
 ## 4. Who does what
 | Work | Who | Why |
 |---|---|---|
