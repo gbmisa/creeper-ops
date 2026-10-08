@@ -29,3 +29,4 @@ One file per task. Start a **fresh** agent session in the task's worktree and gi
 | [STAGE18c_hud_declutter.md](STAGE18c_hud_declutter.md) | `creeper fps td-worktrees/stage18c` | `stage/18c-hud-declutter` |
 | [STAGE18d_dragbuild_polish.md](STAGE18d_dragbuild_polish.md) | `creeper fps td-worktrees/stage18d` | `stage/18d-dragbuild-polish` |
 | [SYNC_grok_branches.md](SYNC_grok_branches.md) (one session each) | `stage7c`, `stage10a`, `stage11a` | their own branches |
+| [STAGE8_enemies_long.md](STAGE8_enemies_long.md) (**long, overnight**) | `creeper fps td-worktrees/stage8` | `stage/8-enemies` |

@@ -16,6 +16,7 @@ Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Ru
 | STAGE18c_hud_declutter (compact objectives J, fading log, banner, "Crossbow") | `stage18c` / `stage/18c-hud-declutter` |
 | STAGE18d_dragbuild_polish (ghosts, field outlines, cost, Operative, smoke) | `stage18d` / `stage/18d-dragbuild-polish` |
 | SYNC_grok_branches (merge main into 7c, 10a, 11a; one session each) | `stage7c`, `stage10a`, `stage11a` |
+| **STAGE8_enemies_long** (overnight: pressure, roster, ranged, hives, enemy mortars; progress in `docs/tasks/STAGE8_progress.md`) | `stage8` / `stage/8-enemies` |
 
 ## Verified
 - Smoke **235/235 PASS** after 18a. Xvfb screenshots of ground (L1 top/FPS, L2 castle), creeper, and drag previews (collector chain, relay chain, cannon row with cliff cells red).
