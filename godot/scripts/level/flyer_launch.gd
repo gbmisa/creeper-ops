@@ -62,6 +62,7 @@ static func launch(host, hive: Dictionary, roost: Dictionary, at_node: bool, row
 			"cd": 1.0 + randf() * 1.5 })
 	if n > 0:
 		Sfx.play("screech", base)
+		Sfx.play("flap", base)
 		Bus.say("%s%s launch from %s." % ["%d " % n if n > 1 else "A ", row.name + ("s" if n > 1 else ""), hive.name], "warn")
 	return n
 
@@ -77,8 +78,14 @@ static func demo(g, spec: String) -> void:
 			row = r
 	var node: Structure = g.structures.command_node()
 	var base: Vector3 = node.pos if node != null else Vector3(80, 0, 80)
+	var ctl = g.fps.controller if g.fps.world != null else null
 	for i in n:
 		var a := float(i) / maxf(1.0, float(n)) * TAU
 		var p := base + Vector3(cos(a) * 14.0, 0, sin(a) * 14.0)
-		p.y = g.surface.grid.smooth_y(p.x, p.z) + float(row.alt)
+		if ctl != null:  # first person: a ring ahead of the Operative, so a shot shows them
+			var ahead := Vector3(-sin(ctl.yaw), 0, -cos(ctl.yaw))
+			p = ctl.pos + ahead * 18.0 + ahead.cross(Vector3.UP) * (float(i) - float(n - 1) * 0.5) * 6.0
+			p.y = g.surface.grid.smooth_y(p.x, p.z) + float(row.alt) * 0.6
+		if ctl == null:
+			p.y = g.surface.grid.smooth_y(p.x, p.z) + float(row.alt)
 		g.hazards.nests.flyers.spawn(row, p, { "home": base })

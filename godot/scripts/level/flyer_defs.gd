@@ -7,10 +7,10 @@ extends RefCounted
 ## Loot is the Salvage pickup chance `loot_p` for `loot` (RaiderDefs convention).
 
 const ROWS := [
-	{ "name": "Spore Bat", "hp": 5.0, "speed": 7.0, "alt": 6.0, "size": 0.5, "color": Color("a8ff5a"),
+	{ "name": "Spore Bat", "hp": 5.0, "speed": 7.0, "alt": 6.0, "size": 0.85, "color": Color("a8ff5a"),
 		"unlock": 0.30, "loot": 1, "loot_p": 0.1, "flock": [4, 8], "weight": 4.0,
 		"dive_dmg": 4.0, "dive_every": 2.5 },
-	{ "name": "Gasbag", "hp": 45.0, "speed": 2.0, "alt": 10.0, "size": 1.3, "color": Color("c4e05a"),
+	{ "name": "Gasbag", "hp": 45.0, "speed": 2.0, "alt": 10.0, "size": 1.7, "color": Color("c4e05a"),
 		"unlock": 0.50, "loot": 3, "loot_p": 1.0, "flock": [1, 2], "weight": 2.0,
 		"drop_every": 8.0, "drop_amount": 3.0 },
 	{ "name": "Wyvern", "hp": 90.0, "speed": 5.0, "alt": 8.0, "size": 1.6, "color": Color("ff7a3a"),

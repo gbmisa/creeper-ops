@@ -20,8 +20,7 @@ static func _wing(root: Node3D, side: float, span: float, chord: float, m: Mater
 	pivot.name = "WingL" if side > 0.0 else "WingR"
 	root.add_child(pivot)
 	ShapeKit.strut(pivot, Vector3(0, 0, side * 0.05), Vector3(-0.1 * chord, 0, side * span), 0.03 * span, bone)
-	ShapeKit.strut(pivot, Vector3(-0.35 * chord, 0, side * span * 0.5), Vector3(-0.5 * chord, 0, side * span * 0.5),
-		chord * 0.7, m, span * 0.9)
+	StructureMeshes.box(pivot, Vector3(chord * 0.9, 0.02 * span, span * 0.95), m, Vector3(-0.45 * chord, 0, side * span * 0.5))
 	ShapeKit.taper(pivot, Vector3(0, 0, side * span), Vector3(-0.2 * chord, 0, side * span * 1.12), 0.02 * span, 0.004, bone, 4)
 
 
@@ -34,7 +33,7 @@ static func _bat(r: Node3D, s: float, glow: Material) -> void:
 	for z in [-0.08, 0.08]:
 		StructureMeshes.ball(r, 0.04 * s, RaiderMeshes.sick(), Vector3(0.52, 0.1, z) * s, 4)
 		ShapeKit.taper(r, Vector3(0.38, 0.2, z * 1.6) * s, Vector3(0.42, 0.42, z * 2.4) * s, 0.05 * s, 0.01, RaiderMeshes.bone(), 4)
-	var wing := StructureMeshes.mat(Color("5a3f54"), 0.0, 0.9)
+	var wing := StructureMeshes.mat(Color("8a5aa0"), 0.0, 0.9)
 	for side in [1.0, -1.0]:
 		_wing(r, side, 1.1 * s, 0.8 * s, wing, RaiderMeshes.bone())
 
