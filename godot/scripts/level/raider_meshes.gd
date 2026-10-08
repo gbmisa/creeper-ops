@@ -85,10 +85,13 @@ static func _brute(r: Node3D, u: float, glow: Material) -> void:
 static func _ravager(r: Node3D, u: float, glow: Material) -> void:
 	var abd := StructureMeshes.ball(r, 0.42 * u, chitin(), Vector3(-0.5, 0.6, 0) * u, 7)
 	abd.scale = Vector3(1.6, 0.85, 1.0)
-	var cara := ShapeKit.lathe(r, _p([Vector2(0.5, 0.0), Vector2(0.42, 0.25), Vector2(0.2, 0.42), Vector2(0.0, 0.46)], u),
-		plate(), Vector3(-0.4, 0.72, 0) * u, 6)  # armoured carapace over the back
-	cara.scale = Vector3(1.5, 1.0, 1.1)
-	StructureMeshes.ball(r, 0.13 * u, sick(), Vector3(-0.85, 0.85, 0) * u, 5)  # pustule at the tail
+	var cara := ShapeKit.lathe(r, _p([Vector2(0.72, 0.0), Vector2(0.62, 0.22), Vector2(0.3, 0.4), Vector2(0.0, 0.44)], u),
+		plate(), Vector3(-0.4, 0.78, 0) * u, 7)  # broad armoured carapace over the back
+	cara.scale = Vector3(1.45, 1.0, 1.3)
+	for sz in [-1.0, 1.0]:  # bone flank plates splaying out from under the carapace
+		ShapeKit.taper(r, Vector3(-0.4, 0.85, sz * 0.6) * u, Vector3(-0.55, 0.75, sz * 1.15) * u, 0.2 * u, 0.03, bone(), 4)
+	for p in [Vector3(-0.85, 1.12, 0), Vector3(-0.45, 1.2, 0.3), Vector3(-0.45, 1.2, -0.3)]:  # green pustules along the back
+		StructureMeshes.ball(r, 0.13 * u, sick(), p * u, 5)
 	StructureMeshes.ball(r, 0.1 * u, glow, Vector3(-0.2, 1.05, 0) * u, 5)  # tier gland on the hump
 	ShapeKit.strut(r, Vector3(-0.2, 0.55, 0) * u, Vector3(0.2, 1.1, 0) * u, 0.28 * u, chitin())
 	ShapeKit.cone(r, 0.15 * u, 0.4 * u, chitin(), Vector3(0.22, 1.12, 0) * u, 6).rotation.z = -1.3

@@ -109,8 +109,9 @@ static func mortar(root: Node3D) -> void:
 	var tur := yaw(root, 1.3, 0.66)
 	var h := arm(tur, { "at": Vector2(-0.45, 0.3), "up": 1.2, "up_a": 1.3, "fore": 0.55, "fore_a": 0.35, "t": 0.3 })
 	for sz in [-1.0, 1.0]:  # cradle fork lifting the bowl clear of the arm
-		ShapeKit.strut(h, Vector3.ZERO, Vector3(0.1, 0.45, sz * 0.95), 0.16, StructureMeshes.pal("bronze_dark"))
-		StructureMeshes.ball(h, 0.13, verd, Vector3(0.1, 0.45, sz * 0.95), 8)
+		ShapeKit.strut(h, Vector3.ZERO, Vector3(0.1, 0.45, sz * 1.25), 0.2, StructureMeshes.pal("bronze_dark"))
+		ShapeKit.strut(h, Vector3(0.1, 0.45, sz * 1.25), Vector3(0.1, 0.75, sz * 1.25), 0.18, StructureMeshes.pal("bronze_dark"))
+		StructureMeshes.ball(h, 0.17, verd, Vector3(0.1, 0.78, sz * 1.25), 8)
 	var bowl := Node3D.new()
 	bowl.position = Vector3(0.1, 0.45, 0)
 	bowl.rotation.z = -0.25  # mouth up, a little forward
@@ -119,8 +120,8 @@ static func mortar(root: Node3D) -> void:
 		Vector2(0.92, 0.18), Vector2(0.84, 0.36), Vector2(0.98, 0.42), Vector2(0.98, 0.58), Vector2(0.66, 0.58),
 		Vector2(0.58, 0.2)]), StructureMeshes.pal("iron"), Vector3.ZERO, 14)
 	StructureMeshes.torus(bowl, 0.86, 1.0, verd, Vector3(0, 0.05, 0))
-	StructureMeshes.ball(bowl, 0.45, StructureMeshes.glow(Color("ff7a10"), 1.0), Vector3(0, 0.25, 0), 10)
-	ShapeKit.axle(bowl, Vector3.ZERO, 0.12, 2.0, verd)
+	StructureMeshes.ball(bowl, 0.45, StructureMeshes.glow(Color("b84a0c"), 0.5), Vector3(0, 0.25, 0), 10)
+	ShapeKit.axle(bowl, Vector3.ZERO, 0.12, 2.5, verd)
 	muzzle(bowl, Vector3(0, 0.6, 0))
 
 
