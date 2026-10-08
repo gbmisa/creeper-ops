@@ -45,9 +45,15 @@ func _unhandled_input(e: InputEvent) -> void:
 				if e.pressed:
 					right_clicked = true
 			MOUSE_BUTTON_WHEEL_UP:
-				wheel -= 1.0
+				if e.ctrl_pressed:  # Ctrl + wheel switches ammo; it does not also zoom or scroll
+					_pressed[Keybinds.CTRL_WHEEL_UP] = true
+				else:
+					wheel -= 1.0
 			MOUSE_BUTTON_WHEEL_DOWN:
-				wheel += 1.0
+				if e.ctrl_pressed:
+					_pressed[Keybinds.CTRL_WHEEL_DOWN] = true
+				else:
+					wheel += 1.0
 
 
 func was_pressed(key: Key) -> bool:
