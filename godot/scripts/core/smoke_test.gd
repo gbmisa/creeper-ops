@@ -161,6 +161,7 @@ static func run(g) -> void:
 	SmokeEnginesShip.run(g)
 	SmokeAmmo.run(g)
 	SmokePlacement.run(g)
+	SmokeTuning.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 
@@ -174,6 +175,8 @@ static func _run_only(g) -> void:
 				SmokeAmmo.run(g)
 			"placement":
 				SmokePlacement.run(g)
+			"tuning":
+				SmokeTuning.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

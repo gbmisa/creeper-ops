@@ -35,6 +35,8 @@ var landing := true         # Command Node still in orbit
 var fps_paused := false     # Esc in Operative mode
 var over := false
 var time := 0.0
+var win_time := -1.0         # game seconds when the last required objective completed
+var objective_times := {}    # objective id -> game seconds it completed (sim report)
 var teleport_cooldown := 0.0
 var speed := 1
 var time_scale := 1.0       # debug multiplier on top of speed
@@ -132,6 +134,8 @@ func _ready() -> void:
 				structures.remove(s, "destroyed")
 
 	AmmoGrades.reset(level)
+	Bus.objective_done.connect(func(id: String): objective_times[id] = roundi(time))
+	Bus.victory.connect(func(): win_time = time if win_time < 0.0 else win_time)
 	hud = Hud.new()
 	add_child(hud)
 	hud.setup(command, units)

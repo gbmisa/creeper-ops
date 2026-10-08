@@ -116,8 +116,8 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 8b | Enemy roster (incl. Burrower, Weaver) | Grok Build (long run, before 8a) | ⚠ merged 2026-10-08 (Grok long run) |
 | 8c | **Enemy construction:** hubs in enemy castles, Weavers, Leeches, build planner, enemy structures (design §4.5) | Sonnet 5.5, Opus review | ⚠ merged 2026-10-08 (Grok) |
 | 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ⚠ merged 2026-10-08 (Grok) |
-| 9b | Extractors and supply points | Sonnet 5.5 | ☐ long brief: [tasks/STAGE9b_content_long.md](tasks/STAGE9b_content_long.md) |
-| 10 | Armoury (incl. Ctrl + wheel ammo switching). **10a** = upgrades + advanced weapons; 10b-ammo later | Sonnet 5.5 (Grok) | ⚠ merged 2026-10-08 (Grok, Opus review) |
+| 9b | Extractors and supply points (**Salvage Engines replace extractors**) | Sonnet 5.5 | ⚠ branch `stage/9b-content`, headless only; log [tasks/STAGE9b_progress.md](tasks/STAGE9b_progress.md) |
+| 10 | Armoury (incl. Ctrl + wheel ammo switching). **10a** = upgrades + advanced weapons; 10b-ammo done in 9b (Repeater turrets still open) | Sonnet 5.5 (Grok) | ⚠ merged 2026-10-08 (Grok, Opus review); ammo ⚠ on `stage/9b-content` |
 | 10b | **Operative deployment:** Totems, drop anywhere, recall cooldown, Shield Domes block drops, expensive respawn (design §5.4) | Sonnet 5.5 (Grok), Opus review | ⚠ merged, verified headless |
 | 11 | Terp. **11a** = Earth only; Metal (11b) after 9a's Ore | Sonnet 5.5 (Grok) | ⚠ merged 2026-10-08 (Grok, Opus review) |
 | 15 | **Fantasy art pass:** structures redesigned, weapons on jointed arms, soldiers at Operative height, structures taller than the Operative, Blight enemies, castle decor, dusk lighting. Judged by an art-judge agent each round | Opus 5.5 subagent + Opus judge | ⚠ round 4 on `stage/15-fantasy-art` (awaiting judge); brief: [tasks/STAGE15_fantasy_art.md](tasks/STAGE15_fantasy_art.md) |
@@ -131,8 +131,8 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 20 | **Art pass 2, motion and feedback:** recoil, muzzle flash, hit flash, deaths, walk cycles, cave look | Grok Build (long, self-judged with the rubric) | ☐ brief: [tasks/STAGE20_art2_long.md](tasks/STAGE20_art2_long.md) |
 | 22 | **Auto-advance (user request 2026-10-08):** weapons creep forward on their own as the ground in front is cleared, so the player doesn't hand-move towers toward the creeper (CW3 tedium). Needs design: opt-in per weapon/group, how far, network/packet rules, never into unreachable or wet cells | Opus design, Sonnet build | ☐ |
 | 23 | **First-person feel (user, 2026-10-08):** "still feels like shit": crossbow has no recoil, Null Sprayer shows no spray. Viewmodel kick/sway, visible spray cone with particles hitting creeper, hit feedback | Sonnet | ☐ (was in Grok's Stage 20 P3; Grok out of budget) |
-| 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ☐ in the 9b long brief |
-| 13 | Tuning | Haiku 4.5 (`balance-tester`) | ☐ in the 9b long brief |
+| 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ⚠ engines on L1/L2/cave in the 9b branch (ramp chokes skipped) |
+| 13 | Tuning | Haiku 4.5 (`balance-tester`) | ⚠ done in the 9b branch: sim fields, Sniper rule changes, better L1 demo |
 | 14 | Review and screenshots | **Opus 5.5** | ☐ |
 
 ### Stage details
@@ -253,3 +253,4 @@ Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix
 - 2026-10-07: Stage 1 ⚠. Built `weapon` structures take creeper HP damage; a weapon with `charge > 0` takes none. New `WEAPON_CREEPER_BASE_DPS` 5.5 / `WEAPON_CREEPER_DPS` 2.5: a 40 HP cannon lasts 5 s at depth 1, about 3 s at depth 3. (Opus review: the Node keeps `STRUCT_*` 6/14; Grok's first version had changed those too.)
 - 2026-10-07: Stage 2 done headless (⚠, no human playtest). Beams are surface-to-air and burn flying enemies, mortar splash deals `MORTAR_RAIDER_DMG`, raiders step one terrace, and raid timing comes from each level's `RAID_SCHEDULE`.
 - 2026-10-08: Opus merged 9a (return packets, Ore, Miner), 8c (Weavers build in enemy castles), loot pickups + SPOTTED. Smoke OK x2. L1 demo loses the Node at 603 s (expected after the Spitter restore). Long briefs out: 9b content, 19 flyers, 20 art pass 2 ([LONG_RUN_RULES](tasks/LONG_RUN_RULES.md)).
+- 2026-10-08: Stage 9b/12/13 + 10 ammo ⚠ (branch `stage/9b-content`, Sonnet, headless only). Salvage Engines (hold-E hooking, return packets, hive/castle guards, cave cash-in), improved ammo on Ctrl+wheel, engines on L1/L2/cave, `[sim]` fields, Sniper priority + ground-range rules; L1 demo now holds 900 s (6/6). See [tasks/STAGE9b_progress.md](tasks/STAGE9b_progress.md).

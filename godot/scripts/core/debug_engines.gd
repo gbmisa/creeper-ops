@@ -6,6 +6,60 @@ class_name DebugEngines
 ##   top        the Operative stands on top of the engine (the stair climbed)
 
 
+const DEMO_HOOK_AT := 120.0  # game seconds into a --demo run
+
+
+## --demo: the Operative is not simulated; this hooks the nearest untagged engine for him.
+static func demo(g) -> void:
+	var n: Structure = g.structures.command_node()
+	var best: Dictionary = {}
+	var bd := INF
+	for e in g.engines.list:
+		if e.row.has("hive") or e.row.has("castle"):
+			continue
+		var d := Vector2(e.row.x - n.x, e.row.z - n.z).length()
+		if d < bd:
+			bd = d
+			best = e
+	if best.is_empty():
+		return
+	var state := { "t": 0.0, "done": false, "spend": 0.0 }
+	g.surface.updaters.append(func(dt: float) -> void:
+		state.t += dt
+		spend(g, state, dt)
+		if state.done or state.t < DEMO_HOOK_AT:
+			return
+		state.done = true
+		var s: Dictionary = best.sockets[best.sockets.size() - 1]
+		chain(g, s.cell)
+		for sock in best.sockets:
+			g.engines.hook(best, sock))
+
+
+## --demo also plays the Salvage sinks a base has. Snipers load armour-piercing rounds (surcharge per ammo
+## packet) while the stockpile holds more than DEMO_RAILGUN_FUND; the rest is the fund the Lancer needs: its
+## 32-cell beam out-ranges every Sniper, so at DEMO_RAILGUN_AT s (just before it unlocks, pressure 0.55) the
+## Operative's railgun is bought. Aether is not spent here.
+const DEMO_RAILGUN_FUND := 60.0
+const DEMO_RAILGUN_AT := 840.0
+
+
+static func spend(g, state: Dictionary, dt: float) -> void:
+	state.spend += dt
+	if state.spend < 5.0 or not AmmoGrades.unlocked:
+		return
+	state.spend = 0.0
+	var want := "ap" if g.stockpile.salvage > DEMO_RAILGUN_FUND + 5.0 else "std"
+	if state.t >= DEMO_RAILGUN_AT:
+		want = "std"
+		if not OperativeUpgrades.unlocked("railgun"):
+			OperativeUpgrades.buy("unlock_railgun", g.stockpile)
+	for s in g.structures.list:
+		if s.type == "sniper" and s.grade != want:
+			s.grade = want
+			s.grade_ammo = 0.0 if want == "std" else s.grade_ammo
+
+
 static func apply(g, spec: String) -> void:
 	var p := spec.split(",")
 	var e: Dictionary = g.engines.list[int(p[0])]

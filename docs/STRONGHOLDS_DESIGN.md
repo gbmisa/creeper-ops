@@ -288,6 +288,8 @@ Every enemy structure can be **sabotaged** by the Operative (hold E for 3 s with
 - **Planting:** stand on a Salvage deposit (not inside an active hive) and hold E for 3 s. It becomes a player structure and links to the network as a leaf. A deposit inside an *active* hive can be planted too, and ships nothing until the hive is razed. That's high risk, but it's where Salvage is.
 - Ships return packets while connected; otherwise stores up to 15.
 
+*As built (Stage 9b):* extractors, the carry limit and the Supply Depot were **replaced by Salvage Engines** (the user wanted objects the Operative hooks into from first person). Level rows `engines` `{ id, x, z, kind, reserve?, hive?, castle? }`; kinds `wreck` (5x3, 2 sockets, 120), `bore` (3x3, 1 socket, 60), `forge` (5x5, 3 sockets, 250). The body is stamped into the heightfield (`EngineShape`, stone, whole levels, never buildable) with a one-level stair up the south face. Sockets sit on the wall ramp; one per multi-socket engine is on top. Hold E 2.5 s within 1.5 m of a socket (a connected relaying structure must be within 8 cells, else the prompt says to build a Relay); a cable runs socket to relay and a pulse travels it. Each hooked socket launches 1 Salvage return packet per 6 s from the reserve. Wet sockets pause; a live `hive` or an unheld `castle` ships nothing; raiders and Weavers cut a hooked socket (30 HP). The cave has no network, so a cave engine pays 40% of its reserve at once. Files: `engine_defs/shape/meshes/hook.gd`, `salvage_engines.gd`.
+
 ### 5.2 Upgrades and advanced weapons (`fps/operative_upgrades.gd`, static, like `upgrades.gd`; reset each level)
 | Upgrade | Per tier | Tiers | Cost |
 |---|---|---|---|
@@ -314,6 +316,8 @@ Bought at the **Armoury** (the Command Node or any held castle's spire platform,
 - **Switching:** **Ctrl + mouse wheel** cycles ammo types for the Operative's current weapon (new actions `ammo_next` and `ammo_prev`). `keybinds.gd` doesn't support the mouse wheel or modifiers yet, so Stage 10 adds both. A selected network weapon or unit uses the same binding in command mode.
 - **Unlock:** level data `"ammo_unlock": "<objective id>"` (Level 1: when the Deep Core objective becomes available). It's milestone-based, not time-based.
 - Applies to the Operative, Snipers, Repeater turrets and units. For units, the barracks stock becomes the selected grade, and each resupply costs the surcharge.
+
+*As built (Stage 9b):* `AmmoGrades` / `AmmoDefs`. Ctrl + wheel are pseudo keycodes on two new Global actions (`ammo_next`, `ammo_prev`). Unlock is the completion of the level's `ammo_unlock` objective (L1 and L2: `e1`), because the Deep Core objective has no "available" event. A structure's magazine holds one grade (switching drops graded rounds); the surcharge is paid per ammo packet, the barracks' graded stock rides along with docking units. **Repeater turrets are not done** (castle files are Opus's).
 
 ---
 

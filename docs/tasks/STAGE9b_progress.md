@@ -46,3 +46,36 @@ Agent: Claude Sonnet 5.5 (delegated). Branch `stage/9b-content`. Brief: [STAGE9b
 - **Ramp choke points: skipped.** The engine stairs add chokes by themselves; extra `LevelRamps` stairs would shift the L2 raider paths and the tuned sim baselines. Suggestion: revisit with the P6 numbers in hand.
 - Screenshots: `p4_l1.png`, `p4_l2a.png`, `p4_l2b.png` (command view at 105-108 m so the minor markers show).
 - Smoke: 531 PASS, 0 FAIL (full run).
+
+## P5 Sim report fields (done)
+- `[sim]` report now carries `salvage`, `salvage_earned`, `salvage_left`, `ore_mined`, `pressure`, `sockets_hooked`, `win_time` (-1 until the last required objective completes), `objective_times` and `mix` (structure counts). `Stockpile.earned_salvage/earned_ore`, `Game.win_time/objective_times`.
+- `--demo` now hooks the nearest safe engine at 120 s (every socket, free relay chain, no Operative walking): `DebugEngines.demo`. Documented in the `debug.gd` header.
+
+## P6 Tuning (done; numbers below are headless sims, 900 s)
+| Run | P0 | Now |
+|---|---|---|
+| L1 `--demo --units` | Node dies 615 s | **900 s, Node 500/500, 6 of 6 runs** (was 642-785 s before the rules below) |
+| L1 `--autostart` | 336 s | 336, 337, 337 s (inside the noise of P0; not tuned) |
+| L2 `--demo --units` | 390 s | 434, 643, 638 s (floor P0 - 60 = 330 s) |
+| L2 `--autostart` | 227 s | 226 s |
+- **Rule changes (player side; Spitter untouched at HP 10 / range 20):**
+  1. A Sniper picks ranged raiders (`tier.role == "ranged"`: Spitter, Lancer) in range before nearer melee ones (`WeaponLogic._snipe`).
+  2. Sniper range is measured on the ground (xz), like the enemy ranged weapons. Before, a Spitter on the flat out-reached a Sniper standing a mesa above it (3D distance), which is why the demo's Snipers lost the stand-off. This was the big fix: 2 of 6 runs survived before it, 6 of 6 after.
+  3. Better scripted `DEMO_BUILD` (debug.gd): 5 more Snipers, 3 more Beams, 4 more Cannons, 5 Reactors, 1 Storage. Spore volleys killed the forward Cannons and then the creeper took the Node, so the extra Cannons and Beams matter.
+  4. The demo spends Salvage on armour-piercing Snipers while the stockpile holds more than 60 and buys the railgun (60) at 840 s (`DebugEngines.spend`).
+- **Ranged counters at unlock (L1 demo):** Spitter unlocks at pressure 0.10 (390 s): 7 Snipers, energy 1/120 (demand 8.7/s vs income 4.4/s: tight but nothing dry), Salvage 88 earned and spent on AP. Lancer unlocks at 0.55 (about 850 s): its 32-cell beam out-ranges every Sniper (20, max 28 with Fire Range), so the counter is the Operative's railgun, bought for 60 Salvage from the fund the demo keeps; at 850 s the demo base has fallen to 1 Sniper and 2 Beams but the Node holds to 900 s. Spotter (support) 0.70 and Warden (support, AP ignores its aura) have no separate counter need.
+- **Leftover Salvage:** at 900 s the demo holds 1-5 of 120 earned (1-4%); one run held 55 (the railgun purchase missed by 5). Target 20%: met.
+- **Pressure cap vs objective time:** L1 cap is 2400 s; the demo completes only `e1` (at 2 s), so the cap is later than any objective it completes. A real winning time needs a human run (the demo cannot dive or climb).
+- L2 demo engine: the bore ships only ~8 Salvage in 180 s (the demo relay chain is often wet); left as is.
+- New: `core/smoke_tuning.gd` (6 checks). Full smoke: 537 PASS, 0 FAIL.
+
+## Not done / needs Opus
+- Repeater turret ammo grades (castle file; hook given under P3).
+- Ramp choke points (P4).
+- Nothing played by a human: hooking feel, cable look, marker text overlap on long guard notes, Forward+ look.
+
+## Suggestions
+- The marker label for a guarded engine is long ("... ships nothing until the Rift hive is razed"); shorten or move the guard note to the info panel.
+- The forge at the Rift (L1 e5) sits right at the Operative's usual drop point; fine now (debug drop moved 3 cells), but a Totem near it is a natural first hook.
+- Consider `Sentinel`-style snipe_foes ordering and Spotter handling when flyers land (Stage 19 owns `level/flyer*`).
+- A keybind-menu capture for Ctrl + wheel so players can rebind the ammo chord.
