@@ -66,7 +66,7 @@ static func label(c: Dictionary) -> String:
 		"hostile": return "%s: climb the spire, kill the crown nest" % c.name
 		"capturing": return "%s: hold the spire top %d%%" % [c.name, roundi(c.capture.progress * 100.0)]
 		"siege": return "%s UNDER SIEGE %ds" % [c.name, ceili(Config.RETAKE_TIME - c.capture.retake)]
-	return "%s (yours) +%.0f Æ/min" % [c.name, Config.CASTLE_AETHER_RATE * 60.0]
+	return "%s (yours) +%.0f Æ/min" % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)]
 
 
 ## Where raiders gather to break into a sealed castle you hold.

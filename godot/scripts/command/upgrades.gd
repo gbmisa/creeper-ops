@@ -24,7 +24,7 @@ const DEFS := {
 const ORDER := ["energy", "build", "packet", "storage", "fire_rate", "range", "move"]
 
 ## Aether rewards (objective ids from Objectives.LIST, plus per nest).
-const REWARDS := { "e1": 25, "e2": 25, "spire": 30, "core": 40, "nest": 10 }
+const REWARDS := { "e1": 25, "e2": 25, "e3": 25, "e4": 25, "e5": 25, "spire": 30, "core": 40, "nest": 10 }
 
 static var aether := 0
 static var levels := {}

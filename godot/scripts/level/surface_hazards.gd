@@ -13,6 +13,7 @@ var emitters: Array[Dictionary] = []
 var vents: Array[Dictionary] = []
 var spire: Dictionary
 var nests: SporeNests
+var guards: CastleGuards = null  # injected by Game: Sentinels are foes for Snipers and the Lance
 
 
 func _init(w: World, level: Dictionary, sm: StructureManager) -> void:

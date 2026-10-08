@@ -53,7 +53,7 @@ func spawn(type: String, x: float, z: float) -> Unit:
 	u.node.add_child(u.ammo_bar)
 	add_child(u.node)
 	u.pos = Vector3(x, world.grid.stand_y(x, z, Grid.Faction.PLAYER), z)
-	u.prey = { "node": u.node, "radius": u.def.radius, "alive": func(): return u.alive, "hit": func(d): damage(u, d) }
+	u.prey = { "kind": "unit", "node": u.node, "radius": u.def.radius, "alive": func(): return u.alive, "hit": func(d): damage(u, d) }
 	list.append(u)
 	return u
 

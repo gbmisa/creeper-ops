@@ -19,6 +19,7 @@ var cave: World
 var cave_hazards: CaveHazards
 var castles: Strongholds
 var castle_raids: CastleRaids
+var guards: CastleGuards
 var orbital: Orbital
 var command: CommandMode
 var fps: FpsMode
@@ -41,7 +42,7 @@ func _ready() -> void:
 	add_child(input)
 	economy = Economy.new()
 	stockpile = Stockpile.new()
-	level = Level01.build()
+	level = Levels.build(Levels.current())
 	surface = World.new()
 	surface.setup("Surface", level.grid, false)
 	add_child(surface)
@@ -54,13 +55,15 @@ func _ready() -> void:
 	units.setup(surface, structures)
 	surface.add_child(units)
 
-	cave_data = Cave01.build()
+	cave_data = Levels.cave(Levels.current())
 	cave = World.new()
 	cave.setup("Cave", cave_data.grid, true)
 	add_child(cave)
 	cave_hazards = CaveHazards.new(cave, cave_data)
 	castles = Strongholds.new(surface, level.castles, hazards.nests)
 	castle_raids = CastleRaids.new(castles, level.get("castle_rules", {}))
+	guards = CastleGuards.new(surface, castles, level.castles)
+	hazards.guards = guards
 
 	orbital = Orbital.new(surface, economy)
 	orbital.hazards = hazards
@@ -78,6 +81,7 @@ func _ready() -> void:
 	fps.commit_recall = deploy.commit_recall
 	fps.preview_recall = deploy.preview_recall
 	hazards.nests.prey = surface_prey
+	guards.prey = surface_prey
 	hazards.nests.goal_cells = raider_goals
 	castles.op = func(): return fps.controller if fps.world == surface else null
 	castles.stockpile = stockpile
@@ -146,7 +150,7 @@ func update(dt: float) -> void:
 	surface.update(dt)
 	cave.update(dt)
 	structures.update(dt, time)
-	units.update(dt, hazards.nests.enemies() + castles.enemies())
+	units.update(dt, hazards.nests.enemies() + castles.enemies() + guards.enemies())
 	orbital.update(dt)
 
 

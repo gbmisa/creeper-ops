@@ -20,12 +20,14 @@ class_name Debug
 ##   --keys        open the Controls (keybind) menu
 ##   --gpu-parity / --perf-sim=N   GPU creeper sim checks (SimBench; need a display)
 ##   --cpu-sim     force the CPU creeper sim
+##   --level=N     play Level N (1 Hollow Ridge, 2 The Crown Marches); see Levels
 ##   --raise=x,z,r,by   raise (negative: lower) a disc of terrain through TerrainEdit
 ##   --fpsbuild=T  Operative near the base in first-person build mode holding structure T
 ##   --turrets=I   castle I held with a Repeater, Lobber and Flak on its first sockets
 ##   --raid=I[,S]  castle I held; its reprisal raid marches in S seconds (default 20)
 ##   --castle=I[,spot]  drop the Operative at castle I: climb (pillar route, default), pad
 ##                 (spire jump pad), top (spire top), gate (outside the gate)
+##   --guardsfire  every Sentinel is ready to fire now (screenshots of a bolt in flight)
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -58,24 +60,27 @@ static func apply(g) -> void:
 	if args.has("fast"):
 		g.time_scale = 8.0
 	if args.has("demo"):
-		for b in DEMO_BUILD:  # --demo=slow: unbuilt, so every packet must really be delivered
+		for b in g.level.get("demo", DEMO_BUILD):  # --demo=slow: unbuilt, so every packet must really be delivered
 			g.structures.place(b[0], b[1], b[2], args.demo != "slow")
 	if args.has("units"):
 		var p: Vector3 = g.structures.command_node().pos
 		var squad := []
 		for i in 6:
-			var b: Structure = g.structures.nearest_to(40, 66, func(s): return s.type == "barracks")
+			var hint: Vector2i = g.level.landing_hint
+			var b: Structure = g.structures.nearest_to(hint.x, hint.y, func(s): return s.type == "barracks")
 			var u: Unit = g.units.spawn("soldier" if i < 4 else "crawler", p.x - 6 + i * 2.4, p.z - 12)
 			u.home = b
 			squad.append(u)
-		var c: Vector3 = g.level.grid.cell_ground(40, 27)
+		var tgt: Vector2i = g.level.get("demo_target", Vector2i(40, 27))
+		var c: Vector3 = g.level.grid.cell_ground(tgt.x, tgt.y)
 		g.units.order(squad, Vector2(c.x, c.z), true)
 	if args.has("surface"):
 		_drop(g, g.level.rift.x + 9, g.level.rift.z, PI / 2.0)
 	if args.has("spire"):
-		_drop(g, 61, 37, 0.0)
+		var st: Vector2i = g.level.get("spire_totem", Vector2i(61, 37))
+		_drop(g, st.x, st.y, 0.0)
 	if args.has("fpsbuild"):  # --fpsbuild=T: Operative near the base in build mode holding T
-		_drop(g, 40, 62, 0.0)
+		_drop(g, g.level.landing_hint.x, g.level.landing_hint.y - 4, 0.0)
 		g.fps.controller.pitch = -0.45
 		g.fps.builder.toggle(true)
 		g.fps.builder.tool = args.fpsbuild
@@ -95,6 +100,9 @@ static func apply(g) -> void:
 		StrongholdMeshes.refresh(g.castles.views[rc.id], rc)
 		g.castle_raids.update(0.0)
 		rc.raid.warn = float(p[1]) if p.size() > 1 else 20.0
+	if args.has("guardsfire"):
+		for s in g.guards.list:
+			s.cd = 0.0
 	if args.has("cave"):
 		Bus.enter_cave.emit()
 	if args.has("killcore"):
@@ -165,10 +173,10 @@ static func _castle(g, p: PackedStringArray) -> void:
 	var at: Vector2i = { "pad": lay.spire.pad[0] if not lay.spire.pad.is_empty() else lay.spire.entry,
 		"top": centre + Vector2i(1, 1), "gate": lay.gates[0].outer.back() + (lay.gates[0].outer.back() - centre).sign() * 4,
 		"climb": lay.climbs[0][0] + (lay.climbs[0][0] - centre).sign() * Vector2i(1, 0) if not lay.climbs.is_empty() else centre }[spot]
-	_drop(g, 40, 62, 0.0)
+	_drop(g, g.level.landing_hint.x, g.level.landing_hint.y - 4, 0.0)
 	var target: Vector2i = lay.climbs[0].back() if spot == "climb" and not lay.climbs.is_empty() else centre
 	g.fps.controller.spawn(g.level.grid, at.x, at.y, atan2(-(target.x - at.x), -(target.y - at.y)))
-	g.fps.controller.pitch = 0.25 if spot == "climb" else -0.1
+	g.fps.controller.pitch = 0.25 if spot == "climb" else (0.4 if spot == "gate" else -0.1)
 
 
 static func _fast_forward(g, seconds: float) -> void:

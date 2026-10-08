@@ -16,7 +16,7 @@ var items: Array[Dictionary] = []
 var _text: RichTextLabel
 
 
-func _init() -> void:
+func _init(rows: Array = LIST) -> void:
 	add_theme_stylebox_override("panel", UiKit.style())
 	position = Vector2(10, 64)
 	custom_minimum_size.x = 330
@@ -27,7 +27,7 @@ func _init() -> void:
 	_text = UiKit.rich(13)
 	_text.custom_minimum_size.x = 310
 	v.add_child(_text)
-	for o in LIST:
+	for o in rows:
 		var it: Dictionary = o.duplicate()
 		it["done"] = false
 		items.append(it)
