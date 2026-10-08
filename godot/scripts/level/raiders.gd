@@ -6,8 +6,8 @@ extends RefCounted
 ##    within RAIDER_AGGRO on the way (units, the Operative, a structure) is attacked first
 ## They only step one terrace at a time. With no walking route they attack the nearest prey
 ## they can reach on foot, or else return to the nest and guard it. Melee still reaches
-## across a cliff edge. Tiers (Config.RAIDER_TIERS) get tougher as the level's schedule
-## unlocks them. Snipers, units, the Operative and the Lance kill them. Mortar splash only nicks them.
+## across a cliff edge. Tiers (RaiderDefs) unlock with pressure. Brutes and Behemoths hit
+## walls three times harder. Snipers, units, the Operative and the Lance kill them. Mortar splash only nicks them.
 
 var world: World
 var list: Array[Dictionary] = []
@@ -114,7 +114,11 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 		var tp: Vector3 = target.node.position
 		var reach: float = target.radius + r.size + 0.5
 		if Vector2(tp.x - p.x, tp.z - p.z).length() <= reach and absf(tp.y - p.y) <= reach + 2.5:
-			target.hit.call(r.tier.dps * dt)
+			var tier := r.tier as Dictionary
+			var dmg: float = float(tier.dps) * dt
+			if target.get("wall", false):
+				dmg *= float(tier.get("wall_mult", 1.0))
+			target.hit.call(dmg)
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
 			r.node.position.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY) + absf(sin(time * 12.0 + r.phase)) * 0.2
 			return

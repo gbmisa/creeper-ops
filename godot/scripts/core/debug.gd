@@ -214,7 +214,7 @@ static func _fast_forward(g, seconds: float) -> void:
 		"units": " ".join(g.units.list.map(func(u): return "%s:%d hp/%d ammo/%s" % [u.type, u.hp, u.ammo, u.state])),
 		"nests_alive": g.hazards.nests.alive_count(),
 		"raiders": g.hazards.nests.raiders.list.map(func(r): return r.tier.name.left(2) + ("g" if r.guard else "")),
-		"raider_tier": Config.RAIDER_TIERS[g.hazards.nests.tier].name,
+		"raider_tier": RaiderDefs.newest(g.hazards.nests.pressure()).name,
 		"aether": Upgrades.aether, "castles": g.castles.list.map(func(c): return "%s:%s" % [c.id, c.state]),
 		"castle_raids": g.castle_raids.launched,
 		"coverage": snappedf(g.surface.creeper.coverage(), 0.01),

@@ -168,13 +168,8 @@ const RAIDER_FIELD_INTERVAL := 2.0
 const MORTAR_RAIDER_DMG := 1.2 # mortar/Bertha splash vs one raider; 30% of a Sniper shot (power 4)
 ## Fallback tier unlock times (seconds) when a level has no RAID_SCHEDULE.
 const RAIDER_TIER_TIMES := [0.0, 480.0, 900.0, 1320.0]
-## Raider tier stats. When each tier unlocks lives on the level (RAID_SCHEDULE.tier_times).
-const RAIDER_TIERS := [
-	{ "name": "Skitter", "hp": 4.0, "dps": 3.0, "speed": 4.2, "size": 0.45, "color": Color("a8ff5a") },
-	{ "name": "Brute", "hp": 16.0, "dps": 8.0, "speed": 3.4, "size": 0.75, "color": Color("ffd24a") },
-	{ "name": "Ravager", "hp": 40.0, "dps": 16.0, "speed": 4.0, "size": 0.9, "color": Color("ff7a3a") },
-	{ "name": "Behemoth", "hp": 120.0, "dps": 35.0, "speed": 2.6, "size": 1.4, "color": Color("ff3355") },
-]
+## Raider stats live in RaiderDefs (pressure unlocks). RAID_SCHEDULE.tier_times still advances
+## the legacy 0..3 index that castle-raid size and the old escalate smoke read.
 
 # ---- units (barracks) --------------------------------------------------------------
 const UNITS_PER_BARRACKS := 4  # population cap: more barracks, more (dependent) units

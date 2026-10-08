@@ -6,6 +6,7 @@ static func run(g) -> void:
 	_pressure(g)
 	_spawn_curve(g)
 	_overrun(g)
+	_roster(g)
 
 
 static func _pressure(g) -> void:
@@ -80,3 +81,47 @@ static func _overrun(g) -> void:
 	for i in nests.nests.size():
 		nests.nests[i].timer = timers[i]
 		nests.nests[i].hp = hps[i]
+
+
+static func _same(who: String, hp: float, dps: float, speed: float, size: float, hex: String) -> bool:
+	var d := RaiderDefs.named(who)
+	return not d.is_empty() and is_equal_approx(float(d.hp), hp) and is_equal_approx(float(d.dps), dps) \
+		and is_equal_approx(float(d.speed), speed) and is_equal_approx(float(d.size), size) and d.color == Color(hex)
+
+
+static func _roster(g) -> void:
+	var kept := _same("Skitter", 4.0, 3.0, 4.2, 0.45, "a8ff5a") \
+		and _same("Brute", 16.0, 8.0, 3.4, 0.75, "ffd24a") \
+		and _same("Ravager", 40.0, 16.0, 4.0, 0.9, "ff7a3a") \
+		and _same("Behemoth", 120.0, 35.0, 2.6, 1.4, "ff3355")
+	SmokeTest._check("roster keeps the old four", kept)
+	SmokeTest._check("roster unlocks skitter only at 0", _names(0.0) == ["Skitter"])
+	SmokeTest._check("roster unlocks spitter at 0.10", _has(0.10, "Spitter") and not _has(0.10, "Brute"))
+	SmokeTest._check("roster unlocks brute at 0.20", _has(0.20, "Brute") and not _has(0.20, "Lancer"))
+	SmokeTest._check("roster holds spotter until 0.70", not _has(0.69, "Spotter") and _has(0.70, "Spotter"))
+	SmokeTest._check("roster unlocks behemoth at 0.85", _has(0.85, "Behemoth"))
+	SmokeTest._check("roster weight favours the newest", RaiderDefs.pick(0.20, 0.0).name == "Skitter"
+		and RaiderDefs.pick(0.20, 0.99).name == "Brute")
+	var nests: SporeNests = g.hazards.nests
+	var nest: Dictionary = nests.nests.filter(func(n): return n.alive)[0]
+	var spawned := true
+	for row in RaiderDefs.ROWS:
+		var tier: Dictionary = row
+		nests.raiders.spawn(nest, tier, true)
+		var r: Dictionary = nests.raiders.list.back()
+		if not is_equal_approx(float(r.hp), float(tier.hp)) or r.tier.name != tier.name:
+			spawned = false
+		nests.raiders.kill(r)
+	SmokeTest._check("roster every row spawns", spawned, "(%d rows)" % RaiderDefs.ROWS.size())
+
+
+static func _names(p: float) -> Array:
+	var out: Array = []
+	for row in RaiderDefs.unlocked(p):
+		var d: Dictionary = row
+		out.append(d.name)
+	return out
+
+
+static func _has(p: float, who: String) -> bool:
+	return who in _names(p)

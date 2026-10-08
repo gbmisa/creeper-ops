@@ -2,7 +2,7 @@ class_name SporeNests
 extends RefCounted
 ## Spore Nests: surface spawners in Blight zones (where turrets can't be built). They breed
 ## ground Raiders (raiders.gd) and grow stronger the longer the mission runs: they spawn
-## faster, hold more, toughen up, and breed higher Config.RAIDER_TIERS over time. The first
+## faster, hold more, and breed higher RaiderDefs rows as pressure rises. The first
 ## NEST_GUARDS of each nest stay home; after the level's raid_delay the rest march.
 ## That is the clock: kill the nests early or face Behemoths later.
 ## Nests die to unit fire or the Operative. Snipers kill raiders. Beams are surface-to-air and burn flying enemies.
@@ -75,7 +75,7 @@ func _make_nest(d: Dictionary) -> Dictionary:
 	nest["target"] = { "node": node, "radius": 1.6, "oy": 1.0, "alive": func(): return nest.alive, "on_hit": hit }
 	world.add_target(nest.target)
 	world.markers.append({ "pos": pos + Vector3(0, 2.5, 0), "color": Color("a8ff5a"), "minor": true,
-		"label": func(): return "Spore Nest (breeding %ss)" % Config.RAIDER_TIERS[tier].name,
+		"label": func(): return "Spore Nest (breeding %ss)" % RaiderDefs.newest(pressure()).name,
 		"visible": func(): return nest.alive })
 	return nest
 
@@ -98,10 +98,9 @@ func _hit_nest(nest: Dictionary, dmg: float) -> void:
 		Bus.objective_done.emit("nests")
 
 
-## Newest unlocked tier half the time, otherwise any lower one.
+## Weighted toward the newest row unlocked at the current pressure (RaiderDefs.pick).
 func pick_tier() -> Dictionary:
-	var i := tier if randf() < 0.5 else randi_range(0, tier)
-	return Config.RAIDER_TIERS[i]
+	return RaiderDefs.pick(pressure())
 
 
 func _escalate() -> void:
@@ -114,11 +113,10 @@ func _escalate() -> void:
 			for i in range(Config.NEST_GUARDS, g.size()):
 				g[i].guard = false
 		Bus.say("Spore Nests are sending raiders at your base. Snipers and units can stop them.", "bad")
-	var tiers: Array = Config.RAIDER_TIERS
-	if tier + 1 < tiers.size() and time >= _tier_time(tier + 1):
-		tier += 1
+	if time >= _tier_time(tier + 1):
+		tier += 1  # legacy 0..3 band; castle-raid size and the old smoke still read it
 		Sfx.play("alarm")
-		Bus.say("The nests have grown: they now breed %ss. Kill them before it gets worse." % tiers[tier].name, "bad")
+		Bus.say("The nests have grown: they now breed %ss. Kill them before it gets worse." % RaiderDefs.newest(pressure()).name, "bad")
 
 
 func update(dt: float) -> void:

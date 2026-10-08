@@ -21,7 +21,18 @@ L1 `--autostart --sim=900` (undefended), wall 22 s:
 - nests_alive 3, raider_tier Skitter, about 23 Skitters
 - coverage 0.33, no structures left
 
-L2 `--autostart --sim=900` and L2 `--demo --sim=900` are still running from a `git archive` of `8312c03` (`/tmp/stage8-base`, `XDG_DATA_HOME=/tmp/stage8-userdata` so the player's keybinds file is left alone). Logs: `/tmp/stage8-p0/auto-l2.log`, `demo-l2.log`. Numbers land in the next phase note.
+L2 `--autostart --sim=900` (undefended), wall 51 s. Log `/tmp/stage8-p0/auto-l2.log`:
+
+- time 235, over true, node_hp 0
+- nests_alive 6, raider_tier Skitter, about 44 Skitters
+- coverage 0.13, no structures left
+
+L2 `--demo --sim=900`, wall 168 s. Log `/tmp/stage8-p0/demo-l2.log`:
+
+- time 668, over true, node_hp 0 (the Node dies at 11:08, before the 900 s mark)
+- nests_alive 6, raider_tier Ravager, a mix of Skitter, Brute and Ravager
+- structures 18, coverage 0.26, energy 1, income 0.77
+- Phase 8 floor for this run is baseline minus 120 s, so 548 s.
 
 ## Phase 1: pressure (§4.1) — done
 
@@ -51,4 +62,35 @@ Commit message: `Stage 8 P1: pressure curve, spawn rates and overrun waves`.
 ### Not finished
 
 - Phase 2 onward.
-- The three remaining Phase 0 sims (see above).
+
+## Phase 2: roster (§4.2) — done
+
+Commit message: `Stage 8 P2: enemy roster and silhouettes`.
+
+### What changed
+
+- `level/raider_defs.gd` is the roster. `Config.RAIDER_TIERS` is gone. Callers use `RaiderDefs.named`, `unlocked`, `newest`, or `pick`.
+- Skitter, Brute, Ravager and Behemoth keep hp, dps, speed, size and colour. New rows: Spitter, Lancer, Burrower, Warden, Spotter. Their attacks are not live yet (dps 0), so they march and do not chew.
+- Spawn picks among ordinary unlocked rows with weight `1 << order` (oldest 1). Spotter is unlocked at 0.70 but `pick` skips it until a mortar brings one (phase 7).
+- `RaiderMeshesRanged` draws Spitter, Lancer, Warden, Spotter and Burrower. The gallery packs ten figures at `24 + i * 4`.
+- Brute and Behemoth `wall_mult` 3 applies only when the prey dict has `wall: true` (castle wall segments).
+- The threat line names `RaiderDefs.newest(pressure)`, not the schedule index. The schedule index still advances for castle-raid size.
+
+### Decisions where the spec was silent
+
+- New colours: Spitter `d6ff3a`, Lancer `e6d2ff`, Burrower `c4a06a`, Spotter `7ee0ff`, Warden `ffb03a`. Sizes: 0.6, 0.85, 0.7, 0.5, 1.0.
+- Spotter unlock 0.70 matches hive stage 3 (the first mortar). `special: "spotter"` keeps it out of natural spawns. `unlocked()` still lists it.
+- Burrower `special: "burrow"` so phase 5 can leave it out of the front-line pool. It is in the weighted pick from pressure 0.40.
+- Loot is stored on the row and not spawned. Skitter loot is a 10% chance of 1 (`loot_p` 0.1). Everyone else is `loot_p` 1.0.
+- Weight at pressure 0.20 is Skitter 1, Spitter 2, Brute 4 (total 7). Roll 0 is Skitter. Roll 0.99 is Brute.
+- Non-melee `dps` stays 0 until phases 3 and 4. Stored `range` is cells, matching the spec table. Melee reach is unchanged.
+
+### Tests
+
+- Parse: `--import` clean after typing the wall-damage product as `float`.
+- Smoke **254 PASS / 0 FAIL** (246 previous + 8 roster checks).
+- Screenshot `/tmp/stage8-shots/p2-roster.png` (`--gallery`, Xvfb 1600x900). The ten figures stand on the south strip: the original four, the five new silhouettes, and the Sentinel. They are small at the existing gallery distance.
+
+### Not finished
+
+- Phase 3 onward. Ranged shots, Warden aura, Burrower, groups, hives, mortars, balance.

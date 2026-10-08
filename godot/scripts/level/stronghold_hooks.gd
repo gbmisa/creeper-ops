@@ -27,7 +27,10 @@ static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 		var state := func() -> Dictionary: return c.winch if part == "winch" else c[part][i]
 		var hit := func(d, _pt = null): s._hit(c, lay, part, i, d)
 		var reach := func(): return part != "gates" or not lay.raised or c.winch.hp <= 0.0  # raised gate: winch first
-		v.prey.append({ "node": p[2], "radius": p[3], "alive": func(): return ours_sealed.call(state.call()) and reach.call(), "hit": hit })
+		var prey_row := { "node": p[2], "radius": p[3], "alive": func(): return ours_sealed.call(state.call()) and reach.call(), "hit": hit }
+		if part == "walls":
+			prey_row["wall"] = true  # Brute / Behemoth wall_mult
+		v.prey.append(prey_row)
 		if part != "walls":
 			var e := { "node": p[2], "oy": 0.5, "radius": p[3] * 0.6, "alive": func(): return enemy_owned.call(state.call()), "hit": hit }
 			v.enemies.append(e)

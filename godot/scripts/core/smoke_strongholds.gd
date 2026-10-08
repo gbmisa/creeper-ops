@@ -79,7 +79,7 @@ static func _capture(g, castles: Strongholds, c: Dictionary, lay: Dictionary) ->
 static func _siege(g, castles: Strongholds, c: Dictionary, lay: Dictionary) -> void:
 	var raiders: Raiders = castles.nests.raiders
 	var camp := { "name": "test", "pos": g.surface.grid.cell_ground(lay.home.x, lay.home.y), "count": 0 }
-	raiders.spawn(camp, Config.RAIDER_TIERS[0], true)
+	raiders.spawn(camp, RaiderDefs.named("Skitter"), true)
 	var r: Dictionary = raiders.list.back()
 	r.node.position = camp.pos
 	SmokeTest._sim(g, 0.2)
@@ -99,7 +99,7 @@ static func _assault(g, castles: Strongholds, c: Dictionary, lay: Dictionary) ->
 	var front: Vector2i = lay.gates[0].outer.back() + (lay.gates[0].outer.back() - lay.gates[0].cells[0]).sign() * 3
 	var camp := { "name": "test", "pos": g.surface.grid.cell_ground(front.x, front.y), "count": 0 }
 	for i in 3:
-		raiders.spawn(camp, Config.RAIDER_TIERS[1], false)
+		raiders.spawn(camp, RaiderDefs.named("Brute"), false)
 		raiders.list.back()["mission"] = "castle"
 	SmokeTest._sim(g, 20.0)
 	SmokeTest._check("castle: raiders break a held castle's gate", c.gates[0].hp <= 0.0 and c.state == "siege",
