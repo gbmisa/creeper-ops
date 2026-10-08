@@ -1,4 +1,4 @@
-# Handoff: 2026-10-08 (session 13: overnight Grok work reviewed and merged)
+# Handoff: 2026-10-08 (session 13: Grok work merged; three long runs out)
 
 ## State
 Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Rules: [docs/CREEPER_SPEC.md](docs/CREEPER_SPEC.md); enemies: [docs/STRONGHOLDS_DESIGN.md](docs/STRONGHOLDS_DESIGN.md) (§3.3, §4 have "As built (Stage 8)" notes). `docs/CW4_SPEC.md` (user's, untracked) still unread.
@@ -9,6 +9,11 @@ Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Ru
 - **18b** viewmodels (`WeaponModels`), `dusk_sky.gdshader` with clouds, haze, SSAO · **18c** compact objectives (J), fading log, small banner, "Crossbow" · **18d** drag-build ghosts, field outlines, cost line, Operative drag-build
 - **Stage 8** (overnight, 8 phases, log `docs/tasks/STAGE8_progress.md`): `Pressure` curve + overrun, `RaiderDefs` roster (Spitter, Lancer, Warden, Spotter, Burrower), ranged shots, mixed groups, **hives** replace nests (Core: Operative/Lance only, raze, Outpost, rebuild), **enemy mortars** with telegraph ring, Spotter, sabotage, sealed-Node rule.
 - **Opus merge fixes:** raider separation clamped (packed groups outran their slowest member); Armoury weapons fall back to the crossbow model; Lancer smoke kills leftover raiders first; command view uses 1/4 fog (`WorldLook.set_command_view`; 18b's haze washed the whole top-down map beige/lavender); creeper roughness 0.32 / specular 0.25.
+
+## Later the same session
+- Merged **9a** economy, **8c** enemy construction, **loot + SPOTTED** (Grok did these from HANDOFF's next steps without briefs; all green alone and merged). Spitter restored to spec on main. Smoke OK x2 merged. L1 demo now loses the Node at 603 s (Snipers ignore Spitters): handed to the 9b run.
+- **Long runs out** (rules: `docs/tasks/LONG_RUN_RULES.md`): `stage9b` (9b extractors, improved ammo, level placement, tuning), `stage19` (flyers), `stage20` (art pass 2). Each keeps `docs/tasks/<STAGE>_progress.md`.
+- User asked about map size: current maps 80²/160² cells; ~256² fits today, 512²-1024² needs the Phase B "large-map performance" stage (creeper mesh is one whole-map mesh, full readback, whole-grid flow field). Waiting for the user's target size.
 
 ## Verified
 - Smoke **382/382 PASS**, three runs. Parse clean.
