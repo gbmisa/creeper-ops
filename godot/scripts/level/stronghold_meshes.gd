@@ -45,7 +45,7 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 	var root := Node3D.new()
 	root.name = "Castle"
 	world.add_child(root)
-	var v := { "root": root, "segs": [], "gates": [], "banners": CastleDecor.build(root, lay) }
+	var v := { "root": root, "segs": [], "gates": [], "banners": CastleDecor.build(root, lay), "gate_trim": [] }
 	var top: float = lay.wall_top
 	var stone := StructureMeshes.mat(STONE, 0.0, 0.92)
 	var outward := { "n": Vector3(0, 0, -1), "s": Vector3(0, 0, 1), "w": Vector3(-1, 0, 0), "e": Vector3(1, 0, 0) }
@@ -61,32 +61,27 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 		v.segs.append(a)
 	for gt in lay.gates:
 		var b := _bounds(gt.cells, lay.yard)
-		var curtain := StructureMeshes.box(root, Vector3(b[1].x, Grid.GATE_H * Config.LEVEL_H, b[1].y), _energy(ENEMY))
-		curtain.position = b[0] + Vector3(0, Grid.GATE_H * Config.LEVEL_H * 0.5, 0)
-		v.gates.append(curtain)
+		var pc: Array = CastleDecor.portcullis(root, b[0], b[1])
+		v.gates.append(pc[0])
+		v.gate_trim.append(pc[1])
 	if not lay.bridge.is_empty():
 		var b := _bounds(lay.bridge, lay.yard)
 		var along: Vector2 = b[1] + (Vector2(0, 2) if b[1].y < b[1].x else Vector2(2, 0))  # cover the end slopes
-		v["deck"] = StructureMeshes.box(root, Vector3(along.x, 0.3, along.y), _energy(ENEMY, 0.55))
-		v.deck.position = b[0] - Vector3(0, 0.15, 0)
+		var dk: Array = CastleDecor.drawbridge(root, b[0] - Vector3(0, 0.15, 0), along)
+		v["deck"] = dk[0]
+		v["deck_trim"] = dk[1]
 		var w := Node3D.new()
 		w.position = cell_pos(lay.winch.x, lay.winch.y, lay.yard)
 		root.add_child(w)
-		StructureMeshes.cyl(w, 0.5, 0.8, 1.6, StructureMeshes.mat(Color("2a2a36"), 0.6, 0.4), 0.0, 8)
-		v["winch_glow"] = StructureMeshes.ball(w, 0.45, _energy(ENEMY, 0.9), Vector3(0, 2.0, 0))
+		CastleDecor.winch(w)
+		v["winch_glow"] = StructureMeshes.crystal(w, 0.3, 0.8, _energy(ENEMY, 0.9), Vector3(0, 2.3, 0))
 		v["winch"] = w
 	for route in lay.climbs:  # stone caps show where the pillars can be landed on
 		for c in route:
 			var cap := StructureMeshes.box(root, Vector3(1.2, 0.3, 1.2), stone)
 			cap.position = cell_pos(c.x, c.y, world.grid.height_at(c.x, c.y)) - Vector3(0, 0.12, 0)
 	var sp: Dictionary = lay.spire
-	var crown := Node3D.new()  # crown nest: a dark husk round a pulsing red sac
-	StructureMeshes.cyl(crown, 1.2, 2.0, 1.2, StructureMeshes.mat(Color("2a1420"), 0.1, 0.8), 0.0, 9)
-	var sac := Node3D.new()
-	sac.name = "Sac"
-	sac.position.y = 1.9
-	crown.add_child(sac)
-	StructureMeshes.ball(sac, 1.2, StructureMeshes.mat(Color("ff3a6a"), 0.0, 0.4, Color("ff3a6a"), 0.7))
+	var crown := CastleDecor.crown_nest()  # fungal husk round a pulsing red "Sac"
 	crown.position = cell_pos(sp.centre.x, sp.centre.y, sp.top)
 	root.add_child(crown)
 	v["crown"] = crown
@@ -110,12 +105,13 @@ static func refresh(v: Dictionary, c: Dictionary) -> void:
 	for i in v.segs.size():
 		(v.segs[i] as Node3D).visible = c.walls[i].hp > 0.0
 	for i in v.gates.size():
-		var g: MeshInstance3D = v.gates[i]
-		g.visible = c.gates[i].hp > 0.0
-		g.material_override = _energy(col)
+		(v.gates[i] as Node3D).visible = c.gates[i].hp > 0.0
+		for t in v.gate_trim[i]:
+			(t as MeshInstance3D).material_override = StructureMeshes.glow(col, 1.0)
 	if v.has("deck"):
 		var open: bool = c.winch.hp <= 0.0
-		(v.deck as MeshInstance3D).material_override = _energy(OPEN if open else col, 0.55)
+		for t in v.deck_trim:
+			(t as MeshInstance3D).material_override = StructureMeshes.glow(OPEN if open else col, 1.0)
 		(v.winch_glow as MeshInstance3D).material_override = _energy(OPEN if open else col, 0.9)
 		(v.winch_glow as Node3D).visible = not open
 	(v.crown as Node3D).visible = c.state == "hostile"

@@ -29,7 +29,10 @@ static func run(g, mode: String) -> void:
 			edits.append({ "x": x, "z": z, "height": level })
 	TerrainEdit.apply(w, edits)
 	for row in WEAPONS:
-		g.structures.place(row[0], row[1], WEAPON_Z, true)
+		var s: Structure = g.structures.place(row[0], row[1], WEAPON_Z, true)
+		var tur := s.body.find_child("Turret", true, false) as Node3D
+		if tur:
+			tur.rotation.y = -0.6  # three-quarter view: heads swing toward the camera
 	for row in SUPPORT:
 		g.structures.place(row[0], row[1], SUPPORT_Z, true)
 	var terp := StructureMeshes.make("terp")
@@ -44,8 +47,8 @@ static func run(g, mode: String) -> void:
 		r.position = w.grid.cell_ground(34 + i * 5, RAIDER_Z)
 		r.rotation.y = -PI / 2.0 + 0.7  # three-quarter view toward the command camera
 		w.add_child(r)
-	g.command.cam.focus(w.grid.cell_ground(44, 73))
-	g.command.cam.dist = 78.0
+	g.command.cam.focus(w.grid.cell_ground(43, 73))
+	g.command.cam.dist = 70.0
 	if mode == "fps":  # the Operative 6 m behind the soldier, looking at the cannon
 		Debug._drop(g, 40, 62, 0.0)
 		g.fps.controller.spawn(w.grid, 25, 76, 0.12)

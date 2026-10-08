@@ -72,17 +72,21 @@ static func relay(root: Node3D) -> void:
 	StructureMeshes.crystal(spin, 0.16, 0.6, StructureMeshes.pal("rune"), Vector3(0, 0.45, 0))
 
 
-## Outpost: a round watchtower with a slate cone roof, banner and a rune ring at its foot.
+## Outpost: a crenellated stone watchtower with a banner and a cradled rune crystal on top.
 static func outpost(root: Node3D) -> void:
 	ShapeKit.lathe(root, PackedVector2Array([Vector2(2.0, 0.0), Vector2(2.0, 0.4), Vector2(1.4, 0.6),
 		Vector2(1.2, 3.4), Vector2(1.5, 3.7), Vector2(1.5, 3.9), Vector2(0.0, 3.9)]), StructureMeshes.pal("stone"), Vector3.ZERO, 10)
-	ShapeKit.cone(root, 1.75, 1.6, StructureMeshes.pal("slate"), Vector3(0, 3.9, 0), 10)
-	StructureMeshes.torus(root, 1.55, 1.75, StructureMeshes.pal("rune_soft"), Vector3(0, 0.62, 0))
+	for i in 8:  # crenellated top
+		var a := i * TAU / 8.0
+		StructureMeshes.box(root, Vector3(0.5, 0.55, 0.4), StructureMeshes.pal("stone"), Vector3(cos(a) * 1.35, 4.15, sin(a) * 1.35)).rotation.y = -a
+	for i in 3:  # bronze cradle holding the outpost crystal
+		var a := i * TAU / 3.0
+		ShapeKit.strut(root, Vector3(cos(a) * 0.9, 3.9, sin(a) * 0.9), Vector3(cos(a) * 0.35, 5.0, sin(a) * 0.35), 0.12, StructureMeshes.pal("bronze"))
+	StructureMeshes.crystal(root, 0.42, 1.5, StructureMeshes.pal("rune"), Vector3(0, 5.0, 0))
 	for i in 4:
 		var a := i * TAU / 4.0
 		StructureMeshes.box(root, Vector3(0.12, 0.5, 0.12), StructureMeshes.pal("rune"), Vector3(cos(a) * 1.22, 2.7, sin(a) * 1.22))
-	ShapeKit.rod(root, Vector3(0, 5.3, 0), Vector3(0, 6.3, 0), 0.04, StructureMeshes.pal("bronze"), 6)
-	ShapeKit.banner(root, 0.6, 0.7, StructureMeshes.pal("cloth"), Vector3(0.32, 6.25, 0)).rotation.y = PI / 2.0
+	ShapeKit.banner(root, 0.9, 1.6, StructureMeshes.pal("cloth"), Vector3(0, 3.7, 1.32))
 
 
 ## Reactor: an alchemist's kiln with a fire mouth, a chimney and a turning amber ring.
@@ -148,7 +152,7 @@ static func forge(root: Node3D) -> void:
 		ShapeKit.strut(root, p * 0.85 + Vector3(0, 5.0, 0), p * 0.2 + Vector3(0, 6.6, 0), 0.2, StructureMeshes.pal("bronze"))
 	var spin := StructureMeshes._part(root, "Spin", 6.9)
 	StructureMeshes.torus(spin, 1.2, 1.45, aether)
-	StructureMeshes.ball(root, 0.75, StructureMeshes.glow(Color("c890ff"), 1.6), Vector3(0, 6.9, 0), 16)
+	StructureMeshes.ball(root, 0.75, StructureMeshes.glow(Color("9a50e0"), 0.9), Vector3(0, 6.9, 0), 16)
 	StructureMeshes.box(root, Vector3(1.2, 0.6, 0.6), StructureMeshes.pal("iron"), Vector3(2.2, 3.4, 2.2))  # anvil
 
 

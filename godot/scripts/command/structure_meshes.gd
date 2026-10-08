@@ -20,8 +20,8 @@ const PALETTE := {
 	"oak": [Color("5b3c22"), 0.0, 0.8, 0.0],
 	"cloth": [Color("1f5f86"), 0.0, 0.95, 0.0],
 	"slate": [Color("3a4656"), 0.1, 0.65, 0.0],
-	"rune": [Color("3fc8ff"), 0.0, 0.3, 1.5],
-	"rune_soft": [Color("3fc8ff"), 0.0, 0.3, 0.8],
+	"rune": [Color("19b4ff"), 0.0, 0.3, 1.0],
+	"rune_soft": [Color("19b4ff"), 0.0, 0.3, 0.6],
 }
 
 static var _mats := {}
@@ -53,9 +53,13 @@ static func pal(name: String) -> StandardMaterial3D:
 	return mat(p[0], p[1], p[2], p[0] if p[3] > 0.0 else Color.BLACK, p[3])
 
 
-## Glowing material in any colour (crystals, eyes, embers).
+## Glowing material in any colour (crystals, eyes, embers). Energy is capped so crystals
+## keep their hue under bloom instead of washing out white.
+const GLOW_CAP := 1.2
+
+
 static func glow(c: Color, e := 2.0) -> StandardMaterial3D:
-	return mat(c, 0.0, 0.3, c, e)
+	return mat(c, 0.0, 0.3, c, minf(e, GLOW_CAP))
 
 
 static func cyl(parent: Node3D, top: float, bottom: float, h: float, m: Material, y := 0.0, sides := 16) -> MeshInstance3D:
@@ -126,8 +130,8 @@ static func make(type: String) -> Node3D:
 ## Height of the model's top (metres above its cell), for the HP/ammo bars.
 static func top_y(type: String) -> float:
 	return { "node": 11.5, "collector": 2.6, "relay": 3.7, "outpost": 5.6, "reactor": 3.0, "storage": 2.6,
-		"barracks": 5.0, "nullifier": 4.4, "cannon": 4.1, "mortar": 3.8, "beam": 5.0, "sniper": 4.8,
-		"bertha": 8.6, "thor": 3.2, "forge": 8.6, "beacon": 2.7 }.get(type, 3.0)
+		"barracks": 5.0, "nullifier": 4.4, "cannon": 4.0, "mortar": 4.1, "beam": 5.4, "sniper": 4.2,
+		"bertha": 8.6, "thor": 5.0, "forge": 8.6, "beacon": 2.7 }.get(type, 3.0)
 
 
 ## Translucent copy used as the placement / move ghost.

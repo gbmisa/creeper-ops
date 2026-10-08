@@ -7,7 +7,16 @@ class_name RaiderMeshes
 
 
 static func chitin() -> StandardMaterial3D:
-	return StructureMeshes.mat(Color("4a3242"), 0.3, 0.38)
+	return StructureMeshes.mat(Color("4a3242"), 0.05, 0.85)
+
+
+## Sickly Blight green: every tier carries it (eyes, fungus), the tier colour marks the rank.
+static func sick() -> StandardMaterial3D:
+	return StructureMeshes.glow(Color("8fe03a"), 1.1)
+
+
+static func plate() -> StandardMaterial3D:
+	return StructureMeshes.mat(Color("6a5a48"), 0.0, 0.95)
 
 
 static func bone() -> StandardMaterial3D:
@@ -23,7 +32,7 @@ static func make(tier: Dictionary) -> Node3D:
 		"Brute": _brute(root, s * 1.8, glow)
 		"Ravager": _ravager(root, s * 1.8, glow)
 		"Behemoth": _behemoth(root, s * 1.7, glow)
-		"Sentinel": _sentinel(root, s * 1.6, glow)
+		"Sentinel": _sentinel(root, 0.92, glow)  # 2.4 m whatever its hit size
 		_: _bug(root, s, glow)
 	return root
 
@@ -57,23 +66,28 @@ static func _skitter(r: Node3D, u: float, glow: Material) -> void:
 static func _brute(r: Node3D, u: float, glow: Material) -> void:
 	StructureMeshes.ball(r, 0.3 * u, glow, Vector3(0, 0.38, 0) * u, 8)  # glowing belly under the shell
 	var shell := ShapeKit.lathe(r, _p([Vector2(0.52, 0.0), Vector2(0.5, 0.18), Vector2(0.38, 0.38),
-		Vector2(0.16, 0.5), Vector2(0.0, 0.52)], u), chitin(), Vector3(-0.05, 0.32, 0) * u, 9)
+		Vector2(0.16, 0.5), Vector2(0.0, 0.52)], u), chitin(), Vector3(-0.05, 0.32, 0) * u, 7)
 	shell.scale = Vector3(1.3, 1.0, 1.0)
-	StructureMeshes.ball(r, 0.2 * u, chitin(), Vector3(0.55, 0.42, 0) * u, 8)
+	StructureMeshes.ball(r, 0.2 * u, chitin(), Vector3(0.55, 0.42, 0) * u, 7)
 	ShapeKit.cone(r, 0.1 * u, 0.5 * u, bone(), Vector3(0.62, 0.5, 0) * u, 6).rotation.z = -1.0
-	StructureMeshes.ball(r, 0.06 * u, glow, Vector3(0.7, 0.45, 0.1) * u, 6)
+	StructureMeshes.ball(r, 0.07 * u, sick(), Vector3(0.7, 0.45, 0.1) * u, 6)
+	for x in [-0.3, 0.1]:  # bone plates along the shell ridge, a fungal bloom behind
+		ShapeKit.cone(r, 0.14 * u, 0.32 * u, plate(), Vector3(x, 0.8, 0) * u, 4).rotation.z = 0.4
+	StructureMeshes.ball(r, 0.14 * u, sick(), Vector3(-0.5, 0.62, 0.22) * u, 6)
 	for sz in [-1.0, 1.0]:
 		for x in [0.3, -0.35]:
 			_leg(r, Vector3(x, 0.38, sz * 0.35) * u, Vector3(x * 1.4, 0.0, sz * 0.75) * u, 0.15 * u, 0.12 * u, chitin())
 
 
 static func _ravager(r: Node3D, u: float, glow: Material) -> void:
-	var abd := StructureMeshes.ball(r, 0.34 * u, chitin(), Vector3(-0.5, 0.6, 0) * u, 10)
-	abd.scale = Vector3(1.6, 0.8, 0.9)
+	var abd := StructureMeshes.ball(r, 0.42 * u, chitin(), Vector3(-0.5, 0.6, 0) * u, 8)
+	abd.scale = Vector3(1.6, 0.85, 1.0)
 	ShapeKit.strut(r, Vector3(-0.2, 0.55, 0) * u, Vector3(0.2, 1.1, 0) * u, 0.28 * u, chitin())
 	ShapeKit.cone(r, 0.15 * u, 0.4 * u, chitin(), Vector3(0.22, 1.12, 0) * u, 6).rotation.z = -1.3
-	StructureMeshes.ball(r, 0.09 * u, glow, Vector3(0.36, 1.18, 0) * u, 6)
-	ShapeKit.cone(r, 0.08 * u, 0.45 * u, bone(), Vector3(-0.55, 0.72, 0) * u, 5).rotation.z = 0.5  # dorsal spine
+	StructureMeshes.ball(r, 0.1 * u, sick(), Vector3(0.36, 1.18, 0) * u, 6)
+	var cara := ShapeKit.lathe(r, _p([Vector2(0.5, 0.0), Vector2(0.42, 0.25), Vector2(0.2, 0.42), Vector2(0.0, 0.46)], u),
+		plate(), Vector3(-0.4, 0.72, 0) * u, 6)  # armoured carapace over the back
+	cara.scale = Vector3(1.5, 1.0, 1.1)
 	for sz in [-1.0, 1.0]:
 		var sh := Vector3(0.18, 1.0, sz * 0.15) * u
 		var el := Vector3(0.55, 1.25, sz * 0.3) * u
@@ -86,30 +100,31 @@ static func _ravager(r: Node3D, u: float, glow: Material) -> void:
 
 
 static func _behemoth(r: Node3D, u: float, glow: Material) -> void:
-	var body := StructureMeshes.ball(r, 0.6 * u, chitin(), Vector3(-0.1, 0.85, 0) * u, 12)
+	var body := StructureMeshes.ball(r, 0.6 * u, chitin(), Vector3(-0.1, 0.85, 0) * u, 8)
 	body.scale = Vector3(1.4, 0.9, 1.1)
 	StructureMeshes.ball(r, 0.3 * u, chitin(), Vector3(0.78, 0.62, 0) * u, 10)
 	for i in 3:  # bone plates down the hump
-		ShapeKit.cone(r, 0.16 * u, 0.5 * u, bone(), Vector3(-0.5 + i * 0.4, 1.32 - absf(i - 1) * 0.08, 0) * u, 5).rotation.z = 0.35
+		ShapeKit.cone(r, 0.2 * u, 0.55 * u, plate(), Vector3(-0.5 + i * 0.4, 1.3 - absf(i - 1) * 0.08, 0) * u, 4).rotation.z = 0.35
 	for sz in [-1.0, 1.0]:
-		StructureMeshes.ball(r, 0.17 * u, glow, Vector3(-0.35, 1.18, sz * 0.38) * u, 8)  # fungal sacs
+		StructureMeshes.ball(r, 0.2 * u, sick(), Vector3(-0.35, 1.15, sz * 0.42) * u, 7)  # fungal sacs
 		ShapeKit.strut(r, Vector3(0.9, 0.5, sz * 0.15) * u, Vector3(1.25, 0.8, sz * 0.32) * u, 0.07 * u, bone())
 		for x in [0.4, -0.6]:
 			ShapeKit.rod(r, Vector3(x, 0.7, sz * 0.45) * u, Vector3(x * 1.1, 0.0, sz * 0.55) * u, 0.13 * u, chitin(), 6)
-	StructureMeshes.ball(r, 0.07 * u, glow, Vector3(1.04, 0.7, 0) * u, 6)
+	StructureMeshes.ball(r, 0.1 * u, glow, Vector3(1.04, 0.7, 0) * u, 6)
+	StructureMeshes.ball(r, 0.22 * u, glow, Vector3(-0.85, 1.0, 0) * u, 7)  # tier-coloured spore gland
 
 
 static func _sentinel(r: Node3D, u: float, glow: Material) -> void:
-	var robe := StructureMeshes.mat(Color("2a1630"), 0.0, 0.85)
+	var robe := StructureMeshes.mat(Color("5a2c62"), 0.0, 0.85)
 	ShapeKit.lathe(r, _p([Vector2(0.55, 0.0), Vector2(0.42, 0.5), Vector2(0.26, 1.5),
 		Vector2(0.3, 1.9), Vector2(0.18, 2.05), Vector2(0.0, 2.1)], u), robe, Vector3.ZERO, 7)
 	ShapeKit.lathe(r, _p([Vector2(0.2, 1.95), Vector2(0.22, 2.2), Vector2(0.1, 2.45),
 		Vector2(0.0, 2.6)], u), chitin(), Vector3.ZERO, 6)
-	StructureMeshes.box(r, Vector3(0.05, 0.05, 0.18) * u, glow, Vector3(0.19, 2.2, 0) * u)
+	StructureMeshes.box(r, Vector3(0.05, 0.05, 0.18) * u, sick(), Vector3(0.19, 2.2, 0) * u)
 	for sz in [-1.0, 1.0]:
 		ShapeKit.cone(r, 0.08 * u, 0.45 * u, bone(), Vector3(0, 1.9, sz * 0.28) * u, 5).rotation.x = sz * 0.6
-	ShapeKit.strut(r, Vector3(0.05, 1.8, -0.25) * u, Vector3(0.55, 1.55, -0.1) * u, 0.09 * u, robe)
-	var bow := Vector3(0.6, 1.55, 0) * u
+	ShapeKit.strut(r, Vector3(0.0, 1.8, -0.25) * u, Vector3(0.25, 1.55, -0.75) * u, 0.1 * u, robe)  # bow arm out to the side
+	var bow := Vector3(0.3, 1.55, -0.8) * u
 	var pts := [Vector3(-0.12, -0.7, 0), Vector3(0.1, -0.35, 0), Vector3(0.16, 0.0, 0), Vector3(0.1, 0.35, 0), Vector3(-0.12, 0.7, 0)]
 	for i in 4:  # spine-bow of bone, string of glow
 		ShapeKit.strut(r, bow + pts[i] * u, bow + pts[i + 1] * u, 0.06 * u, bone())

@@ -38,32 +38,35 @@ static func yaw(root: Node3D, y: float, r: float) -> Node3D:
 
 
 ## Jointed arm on `tur`. o: at (shoulder, Vector2 x/y), up/up_a (upper length/angle from +X),
-## fore/fore_a, w (half gap of the twin beams), t (beam thickness). Returns the wrist node.
+## fore/fore_a, w (half gap of the twin oak beams), t (beam thickness). Bronze knuckles at
+## shoulder, elbow and wrist; a bronze piston braces the upper arm. Returns the wrist node.
 static func arm(tur: Node3D, o: Dictionary, named := true) -> Node3D:
+	var K := StructureMeshes
 	var at: Vector2 = o.at
-	var w: float = o.get("w", 0.2)
-	var t: float = o.get("t", 0.18)
+	var t: float = o.get("t", 0.28)
+	var w: float = o.get("w", t * 0.45)
 	for sz in [-1.0, 1.0]:  # shoulder bracket: two bronze cheek plates
-		StructureMeshes.box(tur, Vector3(t * 3.2, at.y + t * 1.5, 0.07), StructureMeshes.pal("bronze_dark"), Vector3(at.x, (at.y + t * 1.5) * 0.5, sz * (w + t)))
+		K.box(tur, Vector3(t * 2.4, at.y + t, 0.08), K.pal("bronze_dark"), Vector3(at.x, (at.y + t) * 0.5, sz * (w + t * 0.7)))
 	var a := Node3D.new()
 	a.name = "Arm" if named else "ArmB"
 	a.position = Vector3(at.x, at.y, 0)
 	tur.add_child(a)
 	var e := Vector3(cos(o.up_a), sin(o.up_a), 0) * float(o.up)
 	var wr := e + Vector3(cos(o.fore_a), sin(o.fore_a), 0) * float(o.fore)
-	ShapeKit.axle(a, Vector3.ZERO, t * 0.75, (w + t) * 2.0 + 0.1, StructureMeshes.pal("bronze"))
+	ShapeKit.axle(a, Vector3.ZERO, t * 0.4, (w + t) * 2.0 + 0.12, K.pal("bronze"))
+	K.ball(a, t * 0.75, K.pal("bronze"), Vector3.ZERO, 10)
 	for sz in [-1.0, 1.0]:
-		ShapeKit.strut(a, Vector3(0, 0, sz * w), e + Vector3(0, 0, sz * w), t, StructureMeshes.pal("iron"), t * 0.8)
-	ShapeKit.axle(a, e, t * 0.85, w * 2.0 + t * 1.6, StructureMeshes.pal("bronze"))
-	ShapeKit.strut(a, e, wr, t * 1.3, StructureMeshes.pal("bronze_dark"))
-	var p0 := Vector3(-at.y * 0.35, -at.y * 0.75, 0)  # piston brace from the turntable
+		ShapeKit.strut(a, Vector3(0, 0, sz * w), e + Vector3(0, 0, sz * w), t * 0.8, K.pal("oak"), t * 0.7)
+	K.ball(a, t * 0.7, K.pal("bronze"), e, 10)
+	ShapeKit.strut(a, e, wr, t, K.pal("bronze_dark"), t * 0.9)
+	var p0 := Vector3(-at.y * 0.4, -at.y * 0.8, 0)  # piston brace from the turntable
 	var mid := e * 0.55
-	ShapeKit.rod(a, p0, p0.lerp(mid, 0.55), t * 0.55, StructureMeshes.pal("bronze"))
-	ShapeKit.rod(a, p0.lerp(mid, 0.5), mid, t * 0.32, StructureMeshes.pal("iron"))
+	ShapeKit.rod(a, p0, p0.lerp(mid, 0.55), t * 0.32, K.pal("bronze"))
+	ShapeKit.rod(a, p0.lerp(mid, 0.5), mid, t * 0.18, K.pal("iron"))
 	var head := Node3D.new()
 	head.position = wr
 	a.add_child(head)
-	StructureMeshes.ball(head, t * 0.9, StructureMeshes.pal("bronze"), Vector3.ZERO, 8)
+	K.ball(head, t * 0.6, K.pal("bronze"), Vector3.ZERO, 8)
 	return head
 
 
@@ -81,70 +84,71 @@ static func barrel(head: Node3D, profile: PackedVector2Array, m: Material, at :=
 	return mi
 
 
-## Pulse Cannon: a bronze bombard with a rune crystal in its breech.
+## Pulse Cannon: a thick bronze bombard held level, a rune crystal in its breech.
 static func cannon(root: Node3D) -> void:
-	tower(root, 0.55, 1.7)
-	var tur := yaw(root, 1.7, 0.62)
-	var h := arm(tur, { "at": Vector2(-0.25, 0.4), "up": 1.3, "up_a": 1.4, "fore": 0.45, "fore_a": 0.0 })
-	barrel(h, PackedVector2Array([Vector2(0.0, -0.62), Vector2(0.2, -0.56), Vector2(0.27, -0.4), Vector2(0.27, -0.24),
-		Vector2(0.19, -0.18), Vector2(0.17, 0.42), Vector2(0.25, 0.48), Vector2(0.25, 0.64), Vector2(0.13, 0.64),
-		Vector2(0.11, 0.4)]), StructureMeshes.pal("bronze"))
+	tower(root, 0.62, 1.6)
+	var tur := yaw(root, 1.6, 0.7)
+	var h := arm(tur, { "at": Vector2(-0.35, 0.35), "up": 1.25, "up_a": 1.45, "fore": 0.55, "fore_a": 0.15 })
+	barrel(h, PackedVector2Array([Vector2(0.0, -0.8), Vector2(0.32, -0.75), Vector2(0.44, -0.55), Vector2(0.44, -0.3),
+		Vector2(0.33, -0.22), Vector2(0.3, 0.3), Vector2(0.37, 0.34), Vector2(0.37, 0.46), Vector2(0.29, 0.5),
+		Vector2(0.27, 1.0), Vector2(0.43, 1.1), Vector2(0.43, 1.28), Vector2(0.2, 1.28), Vector2(0.17, 0.9)]), StructureMeshes.pal("bronze"), Vector3(0.2, 0, 0), 14)
 	for sz in [-1.0, 1.0]:
-		StructureMeshes.box(h, Vector3(0.3, 0.26, 0.05), StructureMeshes.pal("iron"), Vector3(0, 0, sz * 0.26))
-	StructureMeshes.crystal(h, 0.14, 0.42, StructureMeshes.pal("rune"), Vector3(-0.72, 0, 0)).rotation.z = PI / 2.0
-	muzzle(h, Vector3(0.66, 0, 0))
+		StructureMeshes.box(h, Vector3(0.5, 0.4, 0.07), StructureMeshes.pal("iron"), Vector3(0.1, 0, sz * 0.4))
+	StructureMeshes.crystal(h, 0.2, 0.55, StructureMeshes.pal("rune"), Vector3(-0.85, 0, 0)).rotation.z = PI / 2.0
+	muzzle(h, Vector3(1.5, 0, 0))
 
 
-## Mortar: a squat stone mortar bowl in a cradle on a short, heavy arm.
+## Mortar: a fat, squat iron mortar bowl, mouth to the sky, on a short heavy arm.
 static func mortar(root: Node3D) -> void:
-	tower(root, 0.68, 1.3)
+	tower(root, 0.72, 1.4)
 	for i in 4:  # merlons round the tower top
 		var a := i * TAU / 4.0 + PI / 4.0
-		StructureMeshes.box(root, Vector3(0.3, 0.35, 0.3), StructureMeshes.pal("stone"), Vector3(cos(a) * 0.68, 1.47, sin(a) * 0.68))
-	var tur := yaw(root, 1.3, 0.6)
-	var h := arm(tur, { "at": Vector2(-0.3, 0.35), "up": 0.95, "up_a": 1.25, "fore": 0.3, "fore_a": 0.5, "w": 0.28, "t": 0.16 })
+		StructureMeshes.box(root, Vector3(0.34, 0.4, 0.34), StructureMeshes.pal("stone"), Vector3(cos(a) * 0.74, 1.6, sin(a) * 0.74))
+	var tur := yaw(root, 1.4, 0.66)
+	var h := arm(tur, { "at": Vector2(-0.4, 0.3), "up": 0.9, "up_a": 1.2, "fore": 0.35, "fore_a": 0.6, "t": 0.32 })
 	var bowl := Node3D.new()
-	bowl.rotation.z = -0.75  # mouth up and forward
+	bowl.rotation.z = -0.3  # mouth up, a little forward
 	h.add_child(bowl)
-	ShapeKit.lathe(bowl, PackedVector2Array([Vector2(0.0, -0.3), Vector2(0.33, -0.27), Vector2(0.44, -0.05),
-		Vector2(0.46, 0.2), Vector2(0.4, 0.42), Vector2(0.48, 0.48), Vector2(0.48, 0.6), Vector2(0.3, 0.6),
-		Vector2(0.26, 0.25)]), StructureMeshes.pal("iron"), Vector3.ZERO, 10)
-	StructureMeshes.torus(bowl, 0.4, 0.5, StructureMeshes.pal("bronze"), Vector3(0, 0.05, 0))
-	StructureMeshes.ball(bowl, 0.2, StructureMeshes.glow(Color("ffb347"), 2.2), Vector3(0, 0.32, 0), 8)
-	ShapeKit.axle(h, Vector3.ZERO, 0.1, 1.0, StructureMeshes.pal("bronze"))
-	muzzle(bowl, Vector3(0, 0.6, 0))
+	ShapeKit.lathe(bowl, PackedVector2Array([Vector2(0.0, -0.45), Vector2(0.55, -0.42), Vector2(0.72, -0.1),
+		Vector2(0.76, 0.3), Vector2(0.66, 0.62), Vector2(0.8, 0.72), Vector2(0.8, 0.95), Vector2(0.52, 0.95),
+		Vector2(0.45, 0.4)]), StructureMeshes.pal("iron"), Vector3.ZERO, 12)
+	StructureMeshes.torus(bowl, 0.7, 0.84, StructureMeshes.pal("bronze"), Vector3(0, 0.1, 0))
+	StructureMeshes.ball(bowl, 0.38, StructureMeshes.glow(Color("ff8a1a"), 1.6), Vector3(0, 0.5, 0), 10)
+	ShapeKit.axle(h, Vector3.ZERO, 0.14, 1.75, StructureMeshes.pal("bronze"))
+	muzzle(bowl, Vector3(0, 0.95, 0))
 
 
-## Beam: a ruby focus crystal held in a bronze claw on a tall staff arm.
+## Beam: a large cyan lens ring round a ruby focus, held high on a staff arm.
 static func beam(root: Node3D) -> void:
-	tower(root, 0.42, 2.4)
-	var tur := yaw(root, 2.4, 0.5)
-	var h := arm(tur, { "at": Vector2(-0.15, 0.3), "up": 1.4, "up_a": 1.5, "fore": 0.6, "fore_a": 0.3, "w": 0.13, "t": 0.1 })
-	var ruby := StructureMeshes.glow(Color("ff2a2a"), 1.3)
-	StructureMeshes.crystal(h, 0.2, 0.8, ruby, Vector3(0.45, 0, 0)).rotation.z = -PI / 2.0
-	StructureMeshes.torus(h, 0.24, 0.3, StructureMeshes.pal("bronze"), Vector3(0.38, 0, 0)).rotation.z = PI / 2.0
-	for i in 3:  # three claw prongs
-		var a := i * TAU / 3.0
-		var off := Vector3(0, cos(a), sin(a))
-		ShapeKit.strut(h, Vector3.ZERO, Vector3(0.3, 0, 0) + off * 0.32, 0.06, StructureMeshes.pal("bronze"))
-		ShapeKit.strut(h, Vector3(0.3, 0, 0) + off * 0.32, Vector3(0.62, 0, 0) + off * 0.16, 0.05, StructureMeshes.pal("bronze"))
-	muzzle(h, Vector3(0.85, 0, 0))
+	tower(root, 0.48, 2.4)
+	var tur := yaw(root, 2.4, 0.56)
+	var h := arm(tur, { "at": Vector2(-0.2, 0.3), "up": 1.3, "up_a": 1.4, "fore": 0.7, "fore_a": 0.2, "t": 0.26 })
+	var ring := StructureMeshes.torus(h, 0.92, 1.12, StructureMeshes.pal("bronze"), Vector3(0.6, 0, 0))
+	ring.rotation.z = PI / 2.0
+	var lens := StructureMeshes.torus(h, 0.72, 0.92, StructureMeshes.pal("rune"), Vector3(0.62, 0, 0))
+	lens.rotation.z = PI / 2.0
+	StructureMeshes.crystal(h, 0.2, 0.7, StructureMeshes.glow(Color("ff3030"), 1.2), Vector3(0.6, 0, 0)).rotation.z = -PI / 2.0
+	for i in 3:  # three bronze spokes from the wrist to the ring
+		var a := i * TAU / 3.0 + PI / 2.0
+		ShapeKit.strut(h, Vector3.ZERO, Vector3(0.6, cos(a) * 1.0, sin(a) * 1.0), 0.09, StructureMeshes.pal("bronze"))
+	muzzle(h, Vector3(0.95, 0, 0))
 
 
-## Sniper: a long arbalest (ballista) with spread bow limbs and a rune-tipped bolt.
+## Sniper: a long horizontal ballista with wide bow limbs and a rune-tipped bolt.
 static func sniper(root: Node3D) -> void:
-	tower(root, 0.42, 2.2, 6)
-	var tur := yaw(root, 2.2, 0.5)
-	var h := arm(tur, { "at": Vector2(-0.3, 0.3), "up": 1.35, "up_a": 1.3, "fore": 0.3, "fore_a": 0.0, "w": 0.16 })
-	StructureMeshes.box(h, Vector3(1.8, 0.14, 0.16), StructureMeshes.pal("oak"), Vector3(0.1, 0.05, 0))
-	StructureMeshes.box(h, Vector3(0.25, 0.22, 0.24), StructureMeshes.pal("bronze"), Vector3(-0.55, 0.05, 0))
+	tower(root, 0.5, 2.0, 6)
+	var tur := yaw(root, 2.0, 0.58)
+	var h := arm(tur, { "at": Vector2(-0.3, 0.3), "up": 1.3, "up_a": 1.35, "fore": 0.35, "fore_a": 0.0, "t": 0.26 })
+	StructureMeshes.box(h, Vector3(3.0, 0.22, 0.24), StructureMeshes.pal("oak"), Vector3(0.5, 0.08, 0))
+	StructureMeshes.box(h, Vector3(0.4, 0.32, 0.36), StructureMeshes.pal("bronze"), Vector3(-0.8, 0.08, 0))
+	StructureMeshes.box(h, Vector3(0.3, 0.36, 0.4), StructureMeshes.pal("bronze"), Vector3(1.75, 0.08, 0))
 	for sz in [-1.0, 1.0]:
-		var tip := Vector3(0.55, 0.1, sz * 0.75)
-		ShapeKit.strut(h, Vector3(0.85, 0.08, sz * 0.05), tip, 0.07, StructureMeshes.pal("bronze_dark"))
-		ShapeKit.rod(h, tip, Vector3(-0.2, 0.1, 0), 0.012, StructureMeshes.pal("iron"), 4)
-	ShapeKit.rod(h, Vector3(-0.2, 0.16, 0), Vector3(0.95, 0.16, 0), 0.03, StructureMeshes.pal("oak"), 6)
-	StructureMeshes.crystal(h, 0.06, 0.24, StructureMeshes.pal("rune"), Vector3(1.02, 0.16, 0)).rotation.z = -PI / 2.0
-	muzzle(h, Vector3(1.1, 0.16, 0))
+		var tip := Vector3(1.15, 0.12, sz * 1.4)
+		ShapeKit.strut(h, Vector3(1.75, 0.1, sz * 0.15), tip, 0.13, StructureMeshes.pal("bronze_dark"), 0.18)
+		ShapeKit.rod(h, tip, Vector3(-0.3, 0.2, 0), 0.02, StructureMeshes.pal("iron"), 4)
+	ShapeKit.rod(h, Vector3(-0.3, 0.24, 0), Vector3(2.0, 0.24, 0), 0.05, StructureMeshes.pal("oak"), 6)
+	StructureMeshes.crystal(h, 0.09, 0.35, StructureMeshes.pal("rune"), Vector3(2.12, 0.24, 0)).rotation.z = -PI / 2.0
+	muzzle(h, Vector3(2.25, 0.24, 0))
 
 
 ## Nullifier: three stone claw-arms on a rune plinth cradling the void crystal ("Core").
@@ -164,4 +168,4 @@ static func nullifier(root: Node3D) -> void:
 		StructureMeshes.crystal(root, 0.07, 0.3, StructureMeshes.pal("rune"), tip + Vector3(0, 0.15, 0))
 	var core := StructureMeshes._part(root, "Core", 2.75)
 	StructureMeshes.crystal(core, 0.42, 1.2, StructureMeshes.glow(Color("c070ff"), 2.6))
-	StructureMeshes.ball(core, 0.18, StructureMeshes.glow(Color("f0d0ff"), 3.0), Vector3.ZERO, 8)
+	StructureMeshes.ball(core, 0.18, StructureMeshes.glow(Color("d27aff"), 3.0), Vector3.ZERO, 8)

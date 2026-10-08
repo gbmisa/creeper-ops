@@ -58,9 +58,10 @@ static func add_lights(world: Node3D, g: Grid, cave: bool) -> void:
 	sun.light_color = Color("ffe2c0")
 	sun.light_energy = 1.25
 	sun.shadow_enabled = true
+	sun.shadow_opacity = 0.72  # dusk shadows must not hide the tile grid
 	sun.directional_shadow_max_distance = 260.0
 	sun.position = centre
-	sun.look_at_from_position(centre + Vector3(0.6, 0.55, -0.32) * 100.0, centre, Vector3.UP)
+	sun.look_at_from_position(centre + Vector3(0.45, 0.82, -0.3) * 100.0, centre, Vector3.UP)
 	world.add_child(sun)
 
 

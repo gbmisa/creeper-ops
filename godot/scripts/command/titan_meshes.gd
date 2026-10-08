@@ -39,7 +39,7 @@ static func thor(root: Node3D) -> void:
 	ShapeKit.lathe(hull, PackedVector2Array([Vector2(0.0, -2.4), Vector2(0.9, -1.6), Vector2(1.8, -0.7),
 		Vector2(2.4, -0.15), Vector2(2.5, 0.05), Vector2(2.3, 0.3), Vector2(0.0, 0.32)]), StructureMeshes.pal("stone_dark"), Vector3.ZERO, 7)
 	StructureMeshes.cyl(hull, 2.35, 2.45, 0.12, StructureMeshes.pal("bronze"), 0.0, 14)
-	var storm := StructureMeshes.glow(Color("5fd0ff"), 1.5)
+	var storm := StructureMeshes.glow(Color("2ab8ff"), 1.0)
 	for i in 3:
 		var a := i * TAU / 3.0 + PI / 3.0
 		var p := Vector3(cos(a) * 1.9, 0.3, sin(a) * 1.9)
@@ -47,9 +47,13 @@ static func thor(root: Node3D) -> void:
 		StructureMeshes.crystal(hull, 0.22, 0.8, storm, p + Vector3(0, 2.2, 0))
 	StructureMeshes.crystal(hull, 0.3, 1.0, storm, Vector3(0, -2.5, 0)).rotation.z = PI  # keel shard
 	var tur := WeaponMeshes.yaw(hull, 0.32, 1.0)
-	var h := WeaponMeshes.arm(tur, { "at": Vector2(-0.5, 0.3), "up": 2.0, "up_a": 1.25, "fore": 0.9, "fore_a": 0.2, "w": 0.55, "t": 0.2 })
+	ShapeKit.lathe(tur, PackedVector2Array([Vector2(0.4, 0.0), Vector2(0.3, 0.4), Vector2(0.2, 3.0),
+		Vector2(0.34, 3.2), Vector2(0.0, 3.3)]), StructureMeshes.pal("stone"), Vector3(-0.55, 0, 0), 6)  # crystal mast
+	StructureMeshes.cyl(tur, 0.26, 0.3, 0.16, StructureMeshes.pal("bronze"), 1.6, 6).position.x = -0.55
+	StructureMeshes.crystal(tur, 0.38, 1.5, storm, Vector3(-0.55, 4.05, 0))
+	var h := WeaponMeshes.arm(tur, { "at": Vector2(0.25, 0.3), "up": 2.0, "up_a": 1.25, "fore": 0.9, "fore_a": 0.2, "w": 0.5, "t": 0.24 })
 	for sz in [-1.0, 1.0]:  # second forearm from the far beam: the twin grip
-		ShapeKit.strut(h, Vector3(-0.8, -0.2, sz * 0.55), Vector3(0.15, 0, sz * 0.3), 0.12, StructureMeshes.pal("oak"))
+		ShapeKit.strut(h, Vector3(-0.8, -0.2, sz * 0.5), Vector3(0.15, 0, sz * 0.3), 0.16, StructureMeshes.pal("oak"))
 	StructureMeshes.crystal(h, 0.5, 1.9, storm, Vector3(0.75, 0, 0)).rotation.z = -PI / 2.0
 	for x in [0.35, 1.05]:
 		StructureMeshes.torus(h, 0.4, 0.5, StructureMeshes.pal("bronze"), Vector3(x, 0, 0)).rotation.z = PI / 2.0
@@ -69,8 +73,11 @@ static func terp(root: Node3D) -> void:
 		if i % 2 == 0:
 			StructureMeshes.box(root, Vector3(0.12, 1.2, 0.12), amber, d.rotated(Vector3.UP, PI / 6.0) * 1.22 + Vector3(0, 3.6, 0))
 	StructureMeshes.cyl(root, 1.32, 1.36, 0.18, StructureMeshes.pal("bronze"), 2.2, 6)
-	var glow := StructureMeshes._part(root, "Glow", 0.5)
-	StructureMeshes.crystal(glow, 0.5, 1.2, amber, Vector3(0, 0.3, 0))  # earth-heart in the plinth
+	var glow := StructureMeshes._part(root, "Glow", 4.3)
+	for i in 3:  # earth-heart shards jutting from the tower crown
+		var a := i * TAU / 3.0 + PI / 3.0
+		var shard := StructureMeshes.crystal(glow, 0.22, 1.0, amber, Vector3(cos(a) * 1.3, 0.2, sin(a) * 1.3))
+		shard.rotation = Vector3(sin(a) * 0.5, 0, -cos(a) * 0.5)
 	var spin := StructureMeshes._part(root, "Spin", 5.3)
 	StructureMeshes.cyl(spin, 1.1, 1.2, 0.2, StructureMeshes.pal("bronze"), 0.0, 12)
 	var h := WeaponMeshes.arm(spin, { "at": Vector2(-0.4, 0.4), "up": 1.6, "up_a": 0.8, "fore": 1.8, "fore_a": -0.9, "w": 0.3, "t": 0.18 }, false)
@@ -78,5 +85,5 @@ static func terp(root: Node3D) -> void:
 	StructureMeshes.box(h, Vector3(0.9, 0.5, 0.55), StructureMeshes.pal("stone_dark"), Vector3(0, -1.1, 0))
 	StructureMeshes.box(h, Vector3(0.95, 0.12, 0.6), StructureMeshes.pal("bronze"), Vector3(0, -0.9, 0))
 	StructureMeshes.box(h, Vector3(0.95, 0.12, 0.6), StructureMeshes.pal("bronze"), Vector3(0, -1.3, 0))
-	StructureMeshes.crystal(h, 0.12, 0.35, amber, Vector3(0, -1.1, 0.3)).rotation.x = PI / 2.0
+	StructureMeshes.crystal(h, 0.2, 0.55, amber, Vector3(0.3, -0.6, 0))
 	StructureMeshes.box(spin, Vector3(0.8, 0.8, 1.0), StructureMeshes.pal("stone_dark"), Vector3(-1.0, 0.6, 0))  # counterweight

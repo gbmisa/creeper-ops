@@ -5,7 +5,7 @@ class_name HazardMeshes
 
 
 static func _glow(c: Color, e := 2.5) -> StandardMaterial3D:
-	return StructureMeshes.mat(c, 0.0, 0.3, c, e)
+	return StructureMeshes.glow(c, e)
 
 
 static func emitter() -> Node3D:
@@ -86,16 +86,18 @@ static func spire() -> Node3D:
 
 
 static func rift() -> Node3D:
-	var r := Node3D.new()
-	StructureMeshes.cyl(r, 1.4, 1.8, 0.3, StructureMeshes.mat(Color("150a22"), 0.0, 0.9))
+	var r := Node3D.new()  # a dark pool ringed by leaning menhirs
+	StructureMeshes.cyl(r, 1.6, 1.9, 0.25, StructureMeshes.mat(Color("150a22"), 0.0, 0.4))
+	for i in 5:
+		var a := i * TAU / 5.0
+		var m := ShapeKit.lathe(r, PackedVector2Array([Vector2(0.35, 0.0), Vector2(0.25, 2.2), Vector2(0.0, 2.5)]),
+			StructureMeshes.mat(Color("4a4450"), 0.0, 0.9), Vector3(cos(a) * 2.3, 0, sin(a) * 2.3), 4)
+		m.rotation = Vector3(sin(a) * 0.15, a, -cos(a) * 0.15)
 	var mk := Node3D.new()
 	mk.name = "Marker"
 	mk.position.y = 1.6
 	r.add_child(mk)
-	var t := TorusMesh.new()
-	t.inner_radius = 0.9
-	t.outer_radius = 1.1
-	StructureMeshes._add(mk, t, _glow(Color("b48cff"), 2.5), Vector3.ZERO).rotation.x = PI / 2.0
+	StructureMeshes.torus(mk, 0.9, 1.1, _glow(Color("b48cff"), 1.2)).rotation.x = PI / 2.0
 	return r
 
 
@@ -119,31 +121,45 @@ static func nest() -> Node3D:
 
 
 static func core() -> Node3D:
-	var r := Node3D.new()
-	StructureMeshes.cyl(r, 1.2, 1.8, 1.0, StructureMeshes.mat(Color("301018"), 0.3, 0.6))
+	var r := Node3D.new()  # a flesh heart caged in bone ribs
+	ShapeKit.lathe(r, PackedVector2Array([Vector2(1.9, 0.0), Vector2(1.5, 0.6), Vector2(1.0, 1.0), Vector2(0.0, 1.1)]),
+		StructureMeshes.mat(Color("4a1a26"), 0.1, 0.7), Vector3.ZERO, 9)
+	for i in 6:
+		var a := i * TAU / 6.0
+		var d := Vector3(cos(a), 0, sin(a))
+		ShapeKit.strut(r, d * 1.4 + Vector3(0, 0.6, 0), d * 1.9 + Vector3(0, 2.6, 0), 0.22, RaiderMeshes.bone())
+		ShapeKit.strut(r, d * 1.9 + Vector3(0, 2.6, 0), d * 0.6 + Vector3(0, 4.2, 0), 0.18, RaiderMeshes.bone())
 	var heart := Node3D.new()
 	heart.name = "Heart"
 	heart.position.y = 2.6
 	r.add_child(heart)
-	StructureMeshes.ball(heart, 1.2, _glow(Color("ff3355"), 2.5))
+	StructureMeshes.ball(heart, 1.2, _glow(Color("ff3355"), 1.2))
 	return r
 
 
 static func pylon() -> Node3D:
-	var r := Node3D.new()
-	StructureMeshes.cyl(r, 0.3, 0.6, 2.2, StructureMeshes.mat(Color("2a2036"), 0.4, 0.5), 0.0, 6)
+	var r := Node3D.new()  # obsidian obelisk with a bone collar
+	ShapeKit.lathe(r, PackedVector2Array([Vector2(0.7, 0.0), Vector2(0.45, 0.3), Vector2(0.3, 2.2), Vector2(0.0, 2.5)]),
+		StructureMeshes.mat(Color("2a2730"), 0.2, 0.3), Vector3.ZERO, 4)
+	for i in 3:
+		var a := i * TAU / 3.0
+		ShapeKit.strut(r, Vector3(cos(a) * 0.3, 1.8, sin(a) * 0.3), Vector3(cos(a) * 0.7, 2.9, sin(a) * 0.7), 0.1, RaiderMeshes.bone())
 	var crystal := Node3D.new()
 	crystal.name = "Crystal"
 	crystal.position.y = 3.0
 	r.add_child(crystal)
-	StructureMeshes.box(crystal, Vector3(0.6, 1.2, 0.6), _glow(Color("c070ff"), 2.5)).rotation = Vector3(0.6, 0, 0.6)
+	StructureMeshes.crystal(crystal, 0.4, 1.3, _glow(Color("c070ff"), 1.2))
 	return r
 
 
 static func pad() -> Node3D:
-	var r := Node3D.new()
-	StructureMeshes.cyl(r, 1.4, 1.5, 0.2, StructureMeshes.mat(Color("2a3450"), 0.6, 0.4))
-	StructureMeshes.cyl(r, 1.0, 1.0, 0.05, _glow(Color("6688ff"), 2.0), 0.2)
+	var r := Node3D.new()  # rune circle: stone disc, bronze rim, glowing sigil ring, four rune stones
+	StructureMeshes.cyl(r, 1.4, 1.5, 0.2, StructureMeshes.pal("stone_dark"), 0.0, 12)
+	StructureMeshes.torus(r, 1.35, 1.5, StructureMeshes.pal("bronze"), Vector3(0, 0.2, 0))
+	StructureMeshes.torus(r, 0.8, 0.95, StructureMeshes.pal("rune"), Vector3(0, 0.22, 0)).scale.y = 0.3
+	for i in 4:
+		var a := i * TAU / 4.0 + PI / 4.0
+		StructureMeshes.box(r, Vector3(0.25, 0.5, 0.25), StructureMeshes.pal("stone"), Vector3(cos(a) * 1.25, 0.45, sin(a) * 1.25))
 	return r
 
 
