@@ -13,6 +13,7 @@ const GROUPS := ["Global", "Command", "Operative"]
 const DEFAULTS := {
 	"mute": ["Global", "Mute sound", [KEY_F9]],
 	"keybinds": ["Global", "Controls menu", [KEY_F10]],
+	"objectives_toggle": ["Global", "Expand objectives", [KEY_J]],
 	"test_recall": ["Global", "Test: recall now (no cooldown)", [KEY_F8]],
 	"cam_forward": ["Command", "Camera forward", [KEY_W, KEY_UP]],
 	"cam_back": ["Command", "Camera back", [KEY_S, KEY_DOWN]],
@@ -53,7 +54,7 @@ const DEFAULTS := {
 	"op_right": ["Operative", "Strafe right", [KEY_D]],
 	"sprint": ["Operative", "Sprint", [KEY_SHIFT]],
 	"jump": ["Operative", "Jump", [KEY_SPACE]],
-	"rifle": ["Operative", "Pulse Rifle", [KEY_1]],
+	"rifle": ["Operative", "Crossbow", [KEY_1]],
 	"sprayer": ["Operative", "Null Sprayer", [KEY_2]],
 	"rocket": ["Operative", "Rocket Launcher", [KEY_3]],
 	"use": ["Operative", "Use / capture", [KEY_E]],
