@@ -38,4 +38,5 @@ One file per task. Start a **fresh** agent session in the task's worktree and gi
 | [STAGE23_fps_feel.md](STAGE23_fps_feel.md) | `creeper fps td-worktrees/stage23` | `stage/23-fps-feel` |
 | [STAGE23b_viewmodel_polish.md](STAGE23b_viewmodel_polish.md) | `creeper fps td-worktrees/stage23b` | `stage/23b-viewmodel-polish` |
 | [STAGE24_metrics.md](STAGE24_metrics.md) | `creeper fps td-worktrees/stage24` | `stage/24-metrics` |
+| [PLAYTEST1_C_hive_sites.md](PLAYTEST1_C_hive_sites.md) (Muse calibration) | `creeper fps td-worktrees/playtest1c` | `fix/playtest1-hive-sites` |
 | [STAGE21b_castles_detail_long.md](STAGE21b_castles_detail_long.md) (after Stage 21 is merged) | `creeper fps td-worktrees/stage21b` | `stage/21b-castles-detail` |

@@ -1,6 +1,6 @@
 # Playtest 1 (2026-10-08): feedback log and plan
 
-User feedback, recorded as given. Nothing below is built yet except item 1, which is parked on a branch.
+User feedback, recorded as given. **Status 2026-10-08:** A merged (with 9b), Sniper ammo halved (user's call: 2.5 packets a shot, was 5; the Sniper costs 75, not 250 as first reported), hive cores 30+15p HP (Opus, 2 numbers). Raider pressure left alone until the user replays. C briefed for Muse: `PLAYTEST1_C_hive_sites.md`. D after C.
 
 ## Feedback
 1. Snipers shoot through castle walls and clear castles before the Operative gets in. Snipers must not shoot through terrain.
