@@ -123,3 +123,29 @@ Commit message: `Stage 8 P3: Spitter and Lancer shots`.
 ### Not finished
 
 - Phase 4 onward. Warden aura, Burrower, groups, hives, mortars, balance.
+
+## Phase 4: Warden and Burrower — done
+
+Commit message: `Stage 8 P4: Warden aura and Burrower`.
+
+### What changed
+
+- `level/raider_burrow.gd`. A Warden's hit reduction is applied in the raider hit callback: one living Warden within its row range (5 cells) halves the damage, once. The Warden itself is not an ally of its own aura. A second Warden does not halve it again.
+- The aura is a flat torus on the Warden node, 5 cells out. Not a ground overlay.
+- A Burrower walks a straight XZ line at its speed, ignoring `step_ok`, with the mesh hidden and a dust puff every 0.22 s. Hits while `burrow == "down"` are ignored. Within 1.6 m of the nearest weapon it surfaces for `surface` seconds (1.5), can be shot, then bursts `damage` (60) inside `splash` cells (1.5). It digs again if it lives.
+- With no weapon in the prey list it walks at the nearest other prey (the Node, once `surface_prey` has tagged it).
+
+### Decisions where the spec was silent
+
+- The burst is at the end of the 1.5 s on the surface, so that window is the chance to kill it before the explosion.
+- "Next to" is 1.6 m, inside the 3 m burst.
+- The aura radius is the Warden row's `range` in cells, times `Config.CELL`.
+
+### Tests
+
+- Parse clean. Smoke **263 PASS / 0 FAIL** (258 previous + 5). A Brute took 4 of an 8-damage hit beside one Warden, and still 4 beside two. Outside the rings it took the full 8. A Burrower crossed a 4-level wall (`step_ok` false) and left a cannon at -20 (40 − 60). Underground, 9 damage did nothing; on the surface the same hit landed.
+- Screenshot `/tmp/stage8-shots/p4-burrow.png` (`--burrow`, Xvfb 1600x900). The Warden's ring is a flat circle on the grass. The Burrower is underground; its dust puffs are small at this distance.
+
+### Not finished
+
+- Phase 5 onward. Mixed groups, hives, mortars, balance.

@@ -36,8 +36,14 @@ func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
 	world.add_child(node)
 	var r := { "tier": tier, "node": node, "hp": tier.hp, "alive": true, "nest": nest, "guard": guard,
 		"phase": randf() * TAU, "size": tier.size }
+	var attack := str(tier.get("attack", ""))
+	if attack == "aura" or attack == "burrow":
+		RaiderBurrow.setup(r)
 	var hit := func(dmg: float, _p = null):
-		r.hp -= dmg
+		var dealt: float = RaiderBurrow.filter(self, r, dmg)
+		if dealt < 0.0:
+			return
+		r.hp -= dealt
 		if r.hp <= 0.0:
 			kill(r)
 	r["enemy"] = { "node": node, "oy": tier.size * 0.6, "radius": tier.size, "alive": func(): return r.alive, "hit": hit }
@@ -95,6 +101,9 @@ func _nearest(from: Vector3, prey: Array, max_d: float, leash_home = null) -> Di
 func _think(r: Dictionary, dt: float, prey: Array) -> void:
 	var tier := r.tier as Dictionary
 	var attack := str(tier.get("attack", "melee"))
+	if attack == "burrow":
+		RaiderBurrow.step(self, r, dt, prey)
+		return
 	if attack == "acid" or attack == "beam":
 		RaiderShots.step(self, r, dt, prey)
 		return

@@ -7,7 +7,7 @@ static func run(g) -> void:
 	_spawn_curve(g)
 	_overrun(g)
 	_roster(g)
-	_ranged(g)
+	SmokeRosterFight.run(g)
 
 
 static func _pressure(g) -> void:
@@ -128,102 +128,3 @@ static func _has(p: float, who: String) -> bool:
 	return who in _names(p)
 
 
-static func _ranged(g) -> void:
-	_spitter_hits_cannon(g)
-	_lancer_picks_sniper(g)
-	_shot_can_miss(g)
-
-
-static func _pad(g, x0: int, z0: int, x1: int, z1: int) -> void:
-	var grid: Grid = g.surface.grid
-	var h: float = grid.height_at(x0, z0)
-	var edits := []
-	for z in range(z0, z1 + 1):
-		for x in range(x0, x1 + 1):
-			edits.append({ "x": x, "z": z, "height": h })
-	TerrainEdit.apply(g.surface, edits)
-
-
-static func _clear_shots(g) -> void:
-	for it in g.surface.effects.lobs():
-		it.dead = true
-	g.surface.effects.update(0.0)
-
-
-static func _spawn_at(g, who: String, cell: Vector2i) -> Dictionary:
-	var nests: SporeNests = g.hazards.nests
-	nests.raiders.spawn(nests.nests[0], RaiderDefs.named(who), true)
-	var r := nests.raiders.list.back() as Dictionary
-	r.guard = true
-	(r.node as Node3D).position = g.surface.grid.cell_ground(cell.x, cell.y)
-	return r
-
-
-static func _spitter_hits_cannon(g) -> void:
-	_pad(g, 4, 70, 28, 74)
-	_clear_shots(g)
-	var sm: StructureManager = g.structures
-	var cannon := sm.place("cannon", 21, 72, true)
-	var r := _spawn_at(g, "Spitter", Vector2i(6, 72))
-	var hp0: float = cannon.hp
-	for _i in 50:  # 2.5 s: the first lob lands, the next has not
-		g.hazards.nests.raiders.update(0.05, [cannon.prey], [])
-		g.surface.effects.update(0.05)
-	SmokeTest._check("spitter in range damages a cannon", cannon.hp < hp0 - 5.0 and cannon.hp > hp0 - 7.0,
-		"(hp %.1f of %.1f)" % [cannon.hp, hp0])
-	g.hazards.nests.raiders.kill(r)
-	sm.remove(cannon)
-	_clear_shots(g)
-
-
-static func _lancer_picks_sniper(g) -> void:
-	_pad(g, 2, 60, 36, 64)
-	_clear_shots(g)
-	var sm: StructureManager = g.structures
-	var cannon := sm.place("cannon", 12, 62, true)
-	var sniper := sm.place("sniper", 28, 62, true)
-	var r := _spawn_at(g, "Lancer", Vector2i(4, 62))
-	var prey: Array = [
-		{ "node": cannon.node, "radius": 1.0, "type": "cannon", "weapon": true,
-			"alive": func(): return not cannon.dead, "hit": func(d): sm.damage(cannon, d) },
-		{ "node": sniper.node, "radius": 1.0, "type": "sniper", "weapon": true,
-			"alive": func(): return not sniper.dead, "hit": func(d): sm.damage(sniper, d) },
-	]
-	var ch0: float = cannon.hp
-	var sh0: float = sniper.hp
-	for _i in 90:  # 4.5 s: one charge and one flight, not a second bolt
-		g.hazards.nests.raiders.update(0.05, prey, [])
-		g.surface.effects.update(0.05)
-	SmokeTest._check("lancer picks a sniper over a nearer cannon", sniper.hp < sh0 - 20.0 and is_equal_approx(cannon.hp, ch0),
-		"(sniper %.1f, cannon %.1f)" % [sniper.hp, cannon.hp])
-	g.hazards.nests.raiders.kill(r)
-	sm.remove(cannon)
-	sm.remove(sniper)
-	_clear_shots(g)
-
-
-static func _shot_can_miss(g) -> void:
-	_pad(g, 2, 50, 40, 54)
-	_clear_shots(g)
-	var sm: StructureManager = g.structures
-	var cannon := sm.place("cannon", 21, 52, true)
-	var r := _spawn_at(g, "Spitter", Vector2i(6, 52))
-	var raiders: Raiders = g.hazards.nests.raiders
-	var shot: Dictionary = {}
-	for _i in 4:
-		raiders.update(0.05, [cannon.prey], [])
-		if g.surface.effects.lobs().size() > 0:
-			shot = g.surface.effects.lobs()[0]
-			break
-	SmokeTest._check("spitter looses a lob", not shot.is_empty())
-	cannon.node.position += Vector3(40, 0, 0)
-	var hp0: float = cannon.hp
-	for _i in 80:
-		if not g.surface.effects.lobs().has(shot):
-			break
-		g.surface.effects.update(0.05)
-	SmokeTest._check("a shot in flight misses a cannon that moved", is_equal_approx(cannon.hp, hp0),
-		"(hp %.1f)" % cannon.hp)
-	raiders.kill(r)
-	sm.remove(cannon)
-	_clear_shots(g)
