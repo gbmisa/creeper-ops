@@ -15,6 +15,7 @@ var _s := 0.0
 var _sv := 0.0
 var _gone := 0.0
 var _glint_t := 0.0
+var _reload := -1.0   # reload progress 0..1, -1 = loaded
 
 
 func _init(model: Node3D, crystal: MeshInstance3D) -> void:
@@ -42,6 +43,12 @@ func shoot() -> void:
 	_glint_t = GLINT_TIME
 
 
+## Crossbow reload pose: the string stays slack and forward until it is drawn back, then the
+## bolt is set. k is 0..1 progress, -1 when loaded.
+func set_reload(k: float) -> void:
+	_reload = k
+
+
 func update(dt: float) -> void:
 	var left := dt
 	while left > 0.0:
@@ -50,10 +57,11 @@ func update(dt: float) -> void:
 		_sv += (-Config.VM_SPRING_K * 1.2 * _s - Config.VM_SPRING_DAMP * 0.8 * _sv) * h
 		_s += _sv * h
 	if _string:
-		_string.position.z = -_s * Config.VM_STRING_SNAP
+		var slack := 0.0 if _reload < 0.0 else -0.05 * (1.0 - smoothstep(0.0, 0.7, _reload))
+		_string.position.z = -_s * Config.VM_STRING_SNAP + slack
 	_gone = maxf(0.0, _gone - dt)
 	if _bolt:
-		_bolt.visible = _gone <= 0.0
+		_bolt.visible = _gone <= 0.0 and (_reload < 0.0 or _reload > 0.75)
 	_glint_t = maxf(0.0, _glint_t - dt)
 	_glint.visible = _glint_t > 0.0
 	if _glint.visible:

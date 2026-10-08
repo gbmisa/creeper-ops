@@ -87,9 +87,11 @@ const RESPAWN_ENERGY := 100.0
 const RESPAWN_SALVAGE := 25.0
 const RESPAWN_TIME := 45.0
 const RESPAWN_GROWTH := 1.5      # each further death this level multiplies both respawn costs
-const RIFLE := { "name": "Crossbow", "damage": 1.0, "cooldown": 0.14, "range": 90.0 }
+const RIFLE := { "name": "Pulse Rifle", "damage": 1.0, "cooldown": 0.14, "range": 90.0 }
 const ROCKET := { "name": "Rocket Launcher", "speed": 30.0, "range": 90.0, "blast": 3.0, "power": 6.0,
 	"damage": 5.0, "mag": 4, "reload": 6.0 }  # blast in cells; power = creeper removed at the centre
+const CROSSBOW := { "name": "Crossbow", "damage": 4.0, "speed": 75.0, "gravity": 14.0, "reload": 1.2,
+	"range": 120.0, "stick_time": 5.0 }  # one physical bolt per shot, 4x a rifle pulse; stuck bolts stay stick_time s
 const SPRAYER := { "name": "Null Sprayer", "range": 10.0, "half_angle": 0.45, "remove_per_sec": 5.0, "tank_per_sec": 20.0 }
 
 # ---- First-person feel (Stage 23): viewmodel motion, spray, hit feedback --------

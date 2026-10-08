@@ -1,5 +1,5 @@
 class_name DebugFire
-## --fire=rifle|sprayer|rocket[,lead]|hurt (with --autostart): holds the Operative's trigger from
+## --fire=rifle|crossbow|sprayer|rocket[,lead]|hurt (with --autostart): holds the Operative's trigger from
 ## 0.9 s so a --shot screenshot catches the weapon mid-action. Sprayer and rifle get a pool of
 ## creeper / a post to hit in front of the Operative.
 
@@ -22,11 +22,11 @@ static func run(g, spec: String) -> void:
 			w.feel.confirm(true)
 			return
 		var grid: Grid = g.fps.world.grid
-		if kind == "sprayer" or kind == "rifle":
+		if kind in ["sprayer", "rifle", "crossbow"]:
 			var ahead := ctrl.pos + fwd * (9.0 if kind == "sprayer" else 25.0)
 			var c := grid.world_to_cell(ahead.x, ahead.z)
 			for cell in grid.cells_in_radius(c.x, c.y, 1.6 if kind == "sprayer" else 1.0):
 				g.fps.world.creeper.set_depth(cell.x, cell.y, 2.5)
-		ctrl.pitch = -0.12 if kind != "rifle" else -0.03
+		ctrl.pitch = -0.03 if kind in ["rifle", "crossbow"] else -0.12
 		w.current = kind
 		w.debug_trigger = true)

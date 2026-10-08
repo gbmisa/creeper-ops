@@ -14,6 +14,8 @@ var hit_marker := 0.0
 var feel := HitFeel.new()
 var motion: ViewmodelMotion
 var xbow: CrossbowFx
+var crossbow := Crossbow.new()
+var _coil_flare := 0.0
 var spray_fx: SprayFx
 var muzzle: MuzzleFlash
 var gun: Node3D
@@ -27,15 +29,19 @@ var models := {}
 func _init(cam: Camera3D) -> void:
 	camera = cam
 	gun = Node3D.new()
-	for id in ["rifle", "sprayer", "rocket"]:
+	for id in ["rifle", "sprayer", "rocket", "crossbow"]:
 		var n := Node3D.new()
 		n.name = id
 		models[id] = n
 		gun.add_child(n)
-	coil = WeaponModels.crossbow(models["rifle"])
+	coil = RifleModel.build(models["rifle"])
+	var xcoil := WeaponModels.crossbow(models["crossbow"])
 	WeaponModels.sprayer(models["sprayer"])
 	WeaponModels.launcher(models["rocket"])
-	xbow = CrossbowFx.new(models["rifle"], coil)
+	for id in ["rifle", "sprayer", "rocket", "crossbow"]:
+		ArmModels.add(models[id], id)
+	xbow = CrossbowFx.new(models["crossbow"], xcoil)
+	crossbow.report = confirm
 	spray_fx = SprayFx.new(models["sprayer"])
 	muzzle = MuzzleFlash.new(gun, Vector3(0, 0.03, -0.45))
 	feel.camera = cam
@@ -68,10 +74,13 @@ func label() -> String:
 	match current:
 		"rifle": return "[%s] %s" % [Keybinds.short("rifle"), Config.RIFLE.name]
 		"sprayer": return "[%s] %s" % [Keybinds.short("sprayer"), Config.SPRAYER.name]
+		"crossbow":
+			var p := crossbow.reload_progress()
+			return "[%s] %s  %s" % [Keybinds.short("crossbow"), Config.CROSSBOW.name, "ready" if p < 0.0 else "reloading %d%%" % roundi(p * 100.0)]
 	return "[%s] %s  %d/%d" % [Keybinds.short("rocket"), Config.ROCKET.name, launcher.loaded, launcher.mag_size()]
 
 
-## Armoury weapons (railgun, plasma, demo) have no model of their own yet: they show the crossbow.
+## Armoury weapons (railgun, plasma, demo) have no model of their own yet: they show the Pulse Rifle.
 func _show_model() -> void:
 	var shown: String = current if models.has(current) else "rifle"
 	for id in models:
@@ -79,7 +88,7 @@ func _show_model() -> void:
 
 
 func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
-	for w in ["rifle", "sprayer", "rocket"]:
+	for w in ["rifle", "sprayer", "rocket", "crossbow"]:
 		if input.act(w):
 			current = w
 	advanced.update(dt, input, world, feet)
@@ -94,6 +103,10 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 	hit_marker = maxf(0.0, hit_marker - dt)
 	feel.update(dt)
 	xbow.update(dt)
+	crossbow.update(dt)
+	xbow.set_reload(crossbow.reload_progress())
+	_coil_flare = maxf(0.0, _coil_flare - dt * 9.0)
+	m.emission_energy_multiplier = 0.9 + 4.0 * _coil_flare
 	muzzle.update(dt)
 	if advanced.handles(current):
 		spraying = false
@@ -112,6 +125,14 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 	if current == "rifle" and trigger and cooldown <= 0.0:
 		cooldown = Config.RIFLE.cooldown
 		_fire(world)
+	elif current == "crossbow" and trigger and cooldown <= 0.0:
+		var d := -camera.global_transform.basis.z
+		if crossbow.fire(world, gun.global_position + d * 0.6, d):
+			xbow.shoot()
+			kick(2.0)
+			Sfx.play("crossbow")
+		else:
+			Sfx.play("deny")
 	elif current == "rocket" and trigger and cooldown <= 0.0:
 		cooldown = 0.6
 		var d := -camera.global_transform.basis.z
@@ -162,10 +183,11 @@ func _fire(world: World) -> void:
 		end = ground
 		world.effects.burst(end, Color("ffffaa"), 0.3, 0.12)
 	world.effects.beam(start, end, Color("9ff6ff"), 0.12, 0.035)
-	world.effects.tracer(start, end, Color("e8fdff"), Config.VM_TRACER_SPEED, 6.0, 0.11)
-	Sfx.play("crossbow")
-	xbow.shoot()
-	kick(1.0)
+	world.effects.tracer(start, end, Color("b8f8ff"), Config.VM_TRACER_SPEED * 1.6, 2.5, 0.08)
+	Sfx.play("rifle")
+	_coil_flare = 1.0
+	muzzle.flash(Color("9ff6ff"), 0.11, 0.06, 2.0)
+	kick(0.85)
 
 
 ## Recoil for any weapon (1.0 = crossbow shot): gun, string and camera all react.
