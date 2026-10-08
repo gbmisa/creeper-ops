@@ -133,12 +133,16 @@ static func run(g) -> void:
 	SmokeRaiders.run(g)
 	SmokeTerrain.run(g)
 	SmokeStrongholds.run(g)
+	SmokeCastleRaids.run(g)
 	SmokeSenders.run(g)
 	SmokeDeploy.run(g)
 	SmokeTraps.run(g)
 	SmokeGroupSelect.run(g)
 	SmokeSupplyRules.run(g)
 	SmokeTraversal.run(g)
+	SmokeCw3.run(g)
+	SmokeLevel02.run(g)
+	SmokeKeeps.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

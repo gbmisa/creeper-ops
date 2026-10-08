@@ -63,6 +63,26 @@ func hide_ghost() -> void:
 	mat.set_shader_parameter("show_cover", 0.0)
 
 
+## DragBuild preview: one footprint disc per planned piece (green ok, red blocked), joined by
+## link lines when it is a chain.
+func show_plan(items: Array[Dictionary], type: String) -> void:
+	var g := world.grid
+	var pv := PackedVector4Array()
+	for it in items.slice(0, DragBuild.MAX):
+		var c: Vector2i = it.cell
+		var p := g.cell_center(c.x, c.y)
+		pv.append(Vector4(p.x, p.z, StructureDefs.radius_m(type), 1.0 if it.ok else 0.0))
+	var n := pv.size()
+	pv.resize(DragBuild.MAX)
+	mat.set_shader_parameter("plans", pv)
+	mat.set_shader_parameter("plan_count", n)
+	mat.set_shader_parameter("plan_lines", 1.0 if DragBuild.is_chain(type) else 0.0)
+
+
+func hide_plan() -> void:
+	mat.set_shader_parameter("plan_count", 0)
+
+
 ## Selection ring + (for weapons) its firing range, drawn as ring_b / ring_a.
 func show_selection(s: Structure, group: Array[Structure], tool_active: bool) -> void:
 	var rings := PackedVector4Array()

@@ -3,6 +3,7 @@ extends Node3D
 ## Top-down commander. Tools: a structure type (build; stays armed until right-click/Esc,
 ## like CW3), "@move" (relocate the selected
 ## structure), "@lance" (orbital strike), "@drop" (Operative drop pod), "@land" (Command Node landing at mission start).
+## Dragging with a structure tool lays a chain or row (DragBuild).
 ## Selection: click / drag-box units, click structures. Orders: right-click moves units,
 ## relocates a selected movable structure, or sets a barracks rally point.
 ## Pointer and hotkeys: CommandInput. Selection orders: CommandSelect. Ghost preview: CommandHover.
@@ -23,6 +24,8 @@ var reason := ""
 var selected: Structure = null
 var group: Array[Structure] = []  # every selected structure (box select); selected is group[0]
 var drag_rect := Rect2()          # for the HUD selection box (size 0 = hidden)
+var drag_start := Vector2i(-1, -1)  # press cell while a build tool is armed (DragBuild)
+var drag_plan: Array[Dictionary] = []  # DragBuild preview while dragging
 var on_land := Callable()         # GameFlow: func(cell: Vector2i)
 
 
@@ -43,12 +46,19 @@ func set_tool(t: String) -> void:
 	if tool == "@land" and t != "@land":
 		return  # landing must finish first
 	tool = t
+	cancel_drag()
 	if t != "" and t != "@move":
 		select_structure(null)
 		units.select([])
 	if t == "":
 		overlay.hide_ghost()
 	Bus.tool_changed.emit(t)
+
+
+func cancel_drag() -> void:
+	drag_start = Vector2i(-1, -1)
+	drag_plan.clear()
+	overlay.hide_plan()
 
 
 func select_structure(s: Structure) -> void:

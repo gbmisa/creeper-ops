@@ -17,8 +17,8 @@ const PALETTES := {
 
 
 const STONE := Color("8a8478")
-const SPIRE := Color("1c1626")
-const SPIRE_VEIN := Color("7a3aa8")
+const SPIRE := Color("2a2730")  # obsidian
+const SPIRE_VEIN := Color("5a4a6a")  # dull violet glassy streaks
 
 static func sample_height(grid: Grid, wx: float, wz: float, noise: Noise2D, cave: bool) -> float:
 	var size := grid.world_size()
@@ -107,16 +107,21 @@ static func _colour(grid: Grid, p: Vector3, nrm: Vector3, pal: Dictionary, noise
 	var size := grid.world_size()
 	if p.x < 0.0 or p.z < 0.0 or p.x > size.x or p.z > size.y:  # decorative rim: bare rock
 		c = c.lerp(pal.rock * (0.75 + 0.4 * noise.fbm(p.x / 5.0, p.z / 5.0)), 0.8)
+	# Alpha = surface kind for terrain_look.gdshaderinc: 1 natural, 0.66 Blight, 0.33 stone, 0 spire.
+	var kind := 1.0
 	var cell := grid.world_to_cell(p.x, p.z)
 	if grid.in_bounds(cell.x, cell.y):  # castle stone and spire obsidian (CastleShape)
 		match grid.material[grid.idx(cell.x, cell.y)]:
 			Grid.Mat.STONE, Grid.Mat.PLATED:
 				c = STONE * (0.85 + 0.3 * noise.fbm(p.x / 1.5, p.y / 1.5 + p.z / 1.5))
+				kind = 0.33
 			Grid.Mat.SPIRE:
 				c = SPIRE.lerp(SPIRE_VEIN, clampf(noise.fbm(p.x / 3.0, p.y / 2.0 + p.z / 3.0) * 2.0 - 0.9, 0.0, 1.0))
+				kind = 0.0
 	if grid.zone_at(cell.x, cell.y) == Grid.Zone.BLIGHT:
 		c = c.lerp(pal.blight, 0.55)
-	c.a = 1.0
+		kind = minf(kind, 0.66)
+	c.a = kind
 	return c
 
 

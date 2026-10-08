@@ -6,6 +6,8 @@
 shader_type spatial;
 render_mode cull_disabled, specular_schlick_ggx;  // opaque: no see-through ground
 
+#include "res://shaders/noise.gdshaderinc"
+
 uniform sampler2D height_tex : filter_nearest, repeat_disable;
 uniform sampler2D surf_tex : filter_nearest, repeat_disable;
 uniform sampler2D depth_tex : filter_nearest, repeat_disable;
@@ -13,9 +15,10 @@ uniform vec2 cells = vec2(80.0);
 uniform float cell = 2.0;
 uniform float level_h = 1.0;
 uniform float band = 0.6667;
-uniform vec3 shallow : source_color = vec3(0.10, 0.32, 0.95);
-uniform vec3 deep : source_color = vec3(0.02, 0.05, 0.30);
+uniform vec3 shallow : source_color = vec3(0.07, 0.2, 0.52);
+uniform vec3 deep : source_color = vec3(0.008, 0.025, 0.11);
 uniform vec3 glow : source_color = vec3(0.12, 0.40, 1.0);
+uniform vec3 sheen : source_color = vec3(0.45, 0.6, 0.95);
 
 varying float vdepth;
 varying float vabove;
@@ -58,30 +61,32 @@ void vertex() {
 	wpos = VERTEX;
 }
 
-// Cheap value noise for a slow, organic surface shimmer (no checkerboard).
-float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float vnoise(vec2 p) {
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	f = f * f * (3.0 - 2.0 * f);
-	return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
-}
-
 void fragment() {
 	if (vabove < 0.0) discard;
 	float k = clamp(vdepth / 4.0, 0.0, 1.0);
-	float n = vnoise(wpos.xz * 0.35 + vec2(TIME * 0.25, -TIME * 0.18)) * 0.6
-		+ vnoise(wpos.xz * 0.9 - vec2(TIME * 0.4, TIME * 0.3)) * 0.4;
+	vec2 xz = wpos.xz;
+	// Slow churn: drifting cells plus two layers of ripples. The same field bumps the normal,
+	// so the low sun glints off the surface.
+	vec2 cv = voronoi(xz * 0.45 + vec2(TIME * 0.05, -TIME * 0.04));
+	float churn = smoothstep(0.0, 0.9, cv.x);
+	float rip = vnoise(xz * 0.6 + vec2(TIME * 0.35, -TIME * 0.22)) * 0.6
+		+ vnoise(xz * 1.7 - vec2(TIME * 0.5, TIME * 0.4)) * 0.4;
+	vec3 wn = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	wn = bumped(wn, wpos, rip * 0.7 + churn * 0.5, 0.08);
+	NORMAL = normalize((VIEW_MATRIX * vec4(wn, 0.0)).xyz);
 	vec3 col = mix(shallow, deep, sqrt(k));
+	col *= 0.8 + 0.35 * churn;
 	// CW3-style contour lines every creeper level make depth readable from above.
 	float lv = fract(vlevel);
 	float lw = fwidth(vlevel) * 1.2 + 0.015;
 	float contour = (1.0 - smoothstep(0.0, lw, lv)) * smoothstep(0.15, 0.6, vdepth);
-	// Bright rim where the creeper meets the ground.
-	float rim = 1.0 - smoothstep(0.0, 0.18, vabove);
-	ALBEDO = col * (0.85 + 0.3 * n) + vec3(0.2, 0.4, 0.9) * contour * 0.35;
-	EMISSION = glow * (0.08 + 0.10 * (1.0 - k) + 0.06 * n + 0.45 * rim + 0.25 * contour);
-	ROUGHNESS = 0.6;
-	SPECULAR = 0.15;
-	METALLIC = 0.1;
+	// Thin bright rim where the creeper meets the ground.
+	float rim = 1.0 - smoothstep(0.0, 0.12, vabove);
+	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);
+	ALBEDO = col + vec3(0.15, 0.3, 0.7) * contour * 0.3;
+	EMISSION = glow * (0.03 + 0.06 * (1.0 - k) + 0.05 * (1.0 - churn) + 0.35 * rim + 0.2 * contour)
+		+ sheen * fres * 0.12;
+	ROUGHNESS = 0.18;
+	SPECULAR = 0.4;
+	METALLIC = 0.0;
 }

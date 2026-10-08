@@ -1,42 +1,34 @@
-# Handoff: 2026-10-07 (session 9: playtest fixes, 7b/7c planned)
+# Handoff: 2026-10-07 (session 12: visual pass 1, drag-build, Grok briefs out)
 
 ## State
-Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md); spec: [docs/STRONGHOLDS_DESIGN.md](docs/STRONGHOLDS_DESIGN.md) (§3 has "As built (Stage 7)" notes). Git repo; parallel work in worktrees under `../creeper fps td-worktrees/`.
+Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Rules: [docs/CREEPER_SPEC.md](docs/CREEPER_SPEC.md). `docs/CW4_SPEC.md` (user's, untracked) still unread.
+**Roles:** Opus orchestrates and merges; Grok follows [AGENTS.md](AGENTS.md). The user is low on Opus/weekly budget: **give Grok everything a lesser model can do**; Opus does review, merges, and design calls.
 
-**Roles:** Opus orchestrates (briefs in `docs/tasks/`, reviews, only one who merges). Grok and other agents follow [AGENTS.md](AGENTS.md).
+## This session (Opus, on main, commit 797bf37 + docs commit)
+- User verdict on the merged build: graphics bad: ground, creeper, first person, UI clutter (all four).
+- **Stage 18a:** `shaders/terrain_look.gdshaderinc` (grass patches/dirt/pebbles, near-camera blade detail, rock strata with ledge cracks and dark wall feet, grass lip, castle ashlar walls + flagstone tops, Blight cracks, bump via `bumped()`), `shaders/noise.gdshaderinc` (shared noise/voronoi/bump). Surface kind rides in vertex colour ALPHA (`TerrainMesh._colour`: 1 natural, .66 Blight, .33 stone, 0 spire). Creeper: deep navy, ripple + churn normals, gloss, low fresnel, contours kept.
+- **DragBuild** (`command/drag_build.gd`, user request): with a structure tool, drag = Collector/Relay chain at max link along the line (backs off from bad cells) or a row of other structures edge to edge. Preview discs + link lines (`plans` uniform), "Release to place N". `Placement.can_place(..., planned)`. Debug `--drag=T,x0,z0,x1,z1` (after `--sim=3`).
 
-Merged to `main` this session:
-- **Stage 7 (Opus): castles replace Aether Towers.** `CastleShape`/`SpireShape` carve ground and raised castles at level build: 2-wide stone walls with corner stairs, faction gates, moat, drawbridge (`Grid.deck`, owner-only, open to all once the winch dies), pillar climb routes, and a 7x7 obsidian spire (16-step ramp + jump pad, top 20 levels up). `Strongholds` (+ `_rules`, `_hooks`, `_meshes`, `spire_pump`) runs hostile → capturing → held → siege, with garrison, counterattack, Aether, breaches through `TerrainEdit`, and the moat pump (`pump.material`, for 8c). Level 1: **Ashmoat Keep** (ground, moat, SW, vent-fed) and **High Bastion** (raised, N). Cave towers removed.
-- **Command-mode split** (Grok): `command_input/select/hover.gd`. Clean.
-- **Stage 6** (Grok, reviewed): packets launch from the nearest sender; `outpost` structure; shared bank.
-- **Stage 10b** (Grok, reviewed): Totems, `@drop` pods, recall cooldown, death and paid respawn, `Stockpile`. Fixed on merge: `@drop` ported into the split files, recall path uses `Grid.step_ok`, cave recall measures from the Rift.
+## Out to Grok (parallel; briefs in docs/tasks/, table in docs/tasks/README.md)
+| Brief | Worktree / branch |
+|---|---|
+| STAGE18b_fps_visuals (weapon models, sky, haze, SSAO) | `stage18b` / `stage/18b-fps-visuals` |
+| STAGE18c_hud_declutter (compact objectives J, fading log, banner, "Crossbow") | `stage18c` / `stage/18c-hud-declutter` |
+| STAGE18d_dragbuild_polish (ghosts, field outlines, cost, Operative, smoke) | `stage18d` / `stage/18d-dragbuild-polish` |
+| SYNC_grok_branches (merge main into 7c, 10a, 11a; one session each) | `stage7c`, `stage10a`, `stage11a` |
 
-**Session 9 (uncommitted on `main`):** playtest fixes. `PlayerController._push_out` (Operative stuck in the wall after the spire pad); `RaiderField.step_ok` blocks corner cutting; `Raiders._off_floor` keeps raiders off the sloped foot of tall walls; contact-death at `MIN_DEPTH`; darker claimed tint (`terrain.gdshader`); **F8 `test_recall`** (instant recall, no cooldown); `smoke_traps.gd`. Then castle fixes: point-blank rifle hits, solid crown (40 HP), **buildable courtyards in held castles** (`Grid.yard`; retake destroys them via `Strongholds.on_lost`), `smoke_castle_build.gd`. Smoke all PASS (0 failures), demo sim Node 500/500. Not yet checked by a human: the push-out in play, raiders at the Ashmoat moat wall.
+## Verified
+- Smoke **235/235 PASS** after 18a. Xvfb screenshots of ground (L1 top/FPS, L2 castle), creeper, and drag previews (collector chain, relay chain, cannon row with cliff cells red).
 
-**Batch 3 (also uncommitted):** round-robin packets, box-select weapons, solid structures for units, nearest-barracks restock + select-units buttons (U), first-person building (B, `--fpsbuild=T` hook), Nullifier range/soak, emitters 3.0, raider detour (Bastion gate). Smoke **159 PASS**, demo 900 s Node 500/500. **Not verified:** whether a Nullifier can now be finished next to an emitter in real play (the slow demo places it at t=0 into creeper, so it says nothing); feel of FPS building.
+## NOT verified
+- 18a on the real GPU (Forward+) or in motion: creeper glint strength, bump, near grass. Drag-build by a human (only debug hook + code path).
+- Commit path of drag-build ran only through smoke-less code review (18d adds the tests).
 
-**Turrets (session 9, committed):** castle turrets with Salvage (Castle tab F5, or E at a socket). Remaining 7b work: reprisal raid, recurring sieges, aggression stacking, hostile-castle nest buff.
+## Known issues
+- Creeper sparkles may be noisy in motion; tune `bumped(... 0.08)` and `SPECULAR` in creeper.gdshader.
+- At frame 0 after `--autostart` the Node isn't connected yet, so a drag preview is all red (not an issue in play).
 
-## Run / test
-`godot --path godot`. Tests: CLAUDE.md Testing. New hook: `--castle=I[,climb|pad|top|gate]` drops the Operative at castle I (0 Ashmoat, 1 Bastion). From 10b: `--salvage=N`, `--tool=@drop`.
-
-## Verified (headless + Xvfb)
-- Smoke **144/144 PASS** on merged `main` (Stage 7 adds 40 checks: a scripted first-person pillar climb and jump-pad landing, raider-proof walls, bridge rules, capture, counterattack, siege/retake, gate break by real raiders, breach, pump + jam, state round-trip).
-- `--demo --units --sim=900`: Node 500/500. Wall time 35 s vs 31 s before (castle flow field + garrisons).
-- Screenshots: climb route, spire top, Bastion gate and drawbridge, command views, Drop tool.
-
-## NOT verified (needs a human)
-- How the climb, jump pad, capture and siege feel in play. Whether 20 s capture / 15 s retake / 4-raider garrisons are fair. GPU parity wasn't rerun (Stage 7 didn't touch the sim; spires only raise heights).
-- Stages 1, 2, 4, 5, 6, 10b still lack a human playtest.
-
-## Known issues / decisions to remember
-- **Creeper ignores gates and decks** (decided in Stage 7). Ashmoat's moat fills from the SW vent and creeper can cross the gate causeway.
-- Castle walls are raider prey only where raiders can stand next to them; a moat castle is attacked through its gate, a raised one through its winch, then its gate.
-- Deferred to 9a: castle turrets, wall repair, Salvage trickle. Deferred to 8a: `pressure` (counterattack size uses nest tier for now).
-- Pre-existing: `RID ... Environment leaked at exit` at quit. Raiders with no route become guards permanently.
-- Merged worktrees (`stage5/6/7/10b`, `grok-command-mode`) are clean and can be removed.
-
-## Next steps
-1. Grok: start Stage 7c in worktree `../creeper fps td-worktrees/stage7c` (branch `stage/7c-traversal`), brief [docs/tasks/STAGE7c_traversal.md](docs/tasks/STAGE7c_traversal.md). Review + merge when it reports.
-2. Opus finishes **7b** (spec in MASTER_PLAN): reprisal raid, sieges, aggression stacking, hostile-castle nest buff. Turrets are done.
-3. Then briefs for 8a, 8b, 9a. Stage 12 places castles properly.
+## Next (Opus, morning)
+1. Ask the user how 18a looks on their GPU and how drag-build feels.
+2. Review + merge SYNCed 7c, 10a, 11a, then 18b/18c/18d (expect small conflicts: 18b and 10a both touch `operative_weapons.gd`; 18c and 10a touch `fps_hud.gd`/`hud.gd`).
+3. Later art: structures in motion, terrain far LOD, cave look.

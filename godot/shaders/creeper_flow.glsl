@@ -3,9 +3,10 @@
 // Creeper fluid automaton on the GPU (creeper_gpu.gd). Same rule as CreeperSim._flow() and
 // CreeperMesh._build_surface(); keep them in step. One shader, four passes picked by pc.dims.z:
 //   0 deltas   apply queued add/remove/set changes (one invocation per delta, unique cells)
-//   1 outflow  per cell: flow toward each lower neighbour, scaled so it never exceeds depth
-//   2 apply    depth -= own outflow, += neighbours' outflow toward this cell (in place: each
-//              invocation only touches its own depth texel)
+//   1 edges    per cell: the CW3 exchange across its east (x) and south (y) edges, clamped
+//              to FLOW_RATE x the giving side's own depth (docs/CREEPER_SPEC.md §1)
+//   2 apply    depth -= own east/south moves, += the west and north neighbours' moves (in
+//              place: each invocation only touches its own depth texel)
 //   3 surface  per-cell display level for the creeper mesh
 // No atomics, so the result is deterministic on a given GPU.
 
@@ -16,7 +17,7 @@ layout(set = 0, binding = 1, r32f) uniform restrict image2D depth_img;
 layout(set = 0, binding = 2, rgba32f) uniform restrict image2D out_img;
 layout(set = 0, binding = 3, r32f) uniform restrict writeonly image2D surf_img;
 
-struct Delta { int idx; float amt; int mode; int pad; };  // mode 0 add, 1 set
+struct Delta { int idx; float amt; int mode; int pad; };  // mode 0 add, 1 set, 2 raise to
 layout(set = 0, binding = 4, std430) restrict readonly buffer Deltas { Delta d[]; } deltas;
 
 layout(push_constant, std430) uniform Params {
@@ -34,37 +35,30 @@ void pass_deltas() {
 	if (i >= uint(pc.dims.w)) return;
 	Delta e = deltas.d[i];
 	ivec2 p = ivec2(e.idx % pc.dims.x, e.idx / pc.dims.x);
-	float v = e.mode == 1 ? e.amt : D(p) + e.amt;
+	float v = e.mode == 1 ? e.amt : (e.mode == 2 ? max(D(p), e.amt) : D(p) + e.amt);
 	imageStore(depth_img, p, vec4(clamp(v, 0.0, pc.flow.y)));
 }
 
-void pass_outflow(ivec2 p) {
-	int w = pc.dims.x;
-	int h = pc.dims.y;
+float edge(float d, float head, ivec2 q) {
+	float dq = D(q);
+	float mu = pc.flow.x;
+	return clamp(mu * (head - H(q) - dq), -mu * dq, mu * d);
+}
+
+void pass_edges(ivec2 p) {
 	float d = D(p);
+	float head = H(p) + d;
 	vec4 o = vec4(0.0);
-	if (d >= pc.flow.w) {
-		float head = H(p) + d;
-		float rate = pc.flow.x;
-		if (p.x + 1 < w) { ivec2 q = p + ivec2(1, 0); o.x = max(0.0, head - H(q) - D(q)) * rate; }
-		if (p.x > 0)     { ivec2 q = p - ivec2(1, 0); o.y = max(0.0, head - H(q) - D(q)) * rate; }
-		if (p.y + 1 < h) { ivec2 q = p + ivec2(0, 1); o.z = max(0.0, head - H(q) - D(q)) * rate; }
-		if (p.y > 0)     { ivec2 q = p - ivec2(0, 1); o.w = max(0.0, head - H(q) - D(q)) * rate; }
-		float total = o.x + o.y + o.z + o.w;
-		if (total > d) o *= d / total;
-	}
+	if (p.x + 1 < pc.dims.x) o.x = edge(d, head, p + ivec2(1, 0));
+	if (p.y + 1 < pc.dims.y) o.y = edge(d, head, p + ivec2(0, 1));
 	imageStore(out_img, p, o);
 }
 
 void pass_apply(ivec2 p) {
-	int w = pc.dims.x;
-	int h = pc.dims.y;
 	vec4 o = O(p);
-	float d = D(p) - (o.x + o.y + o.z + o.w);
-	if (p.x > 0)     d += O(p - ivec2(1, 0)).x;  // west neighbour flowing east
-	if (p.x + 1 < w) d += O(p + ivec2(1, 0)).y;  // east neighbour flowing west
-	if (p.y > 0)     d += O(p - ivec2(0, 1)).z;
-	if (p.y + 1 < h) d += O(p + ivec2(0, 1)).w;
+	float d = D(p) - o.x - o.y;
+	if (p.x > 0) d += O(p - ivec2(1, 0)).x;  // west neighbour's east edge
+	if (p.y > 0) d += O(p - ivec2(0, 1)).y;  // north neighbour's south edge
 	d = d < pc.flow.w ? 0.0 : min(d, pc.flow.y);
 	imageStore(depth_img, p, vec4(d));
 }
@@ -100,7 +94,7 @@ void main() {
 	if (pass_id == 0) { pass_deltas(); return; }
 	ivec2 p = ivec2(gl_GlobalInvocationID.xy);
 	if (p.x >= pc.dims.x || p.y >= pc.dims.y) return;
-	if (pass_id == 1) pass_outflow(p);
+	if (pass_id == 1) pass_edges(p);
 	else if (pass_id == 2) pass_apply(p);
 	else pass_surface(p);
 }
