@@ -26,9 +26,10 @@ static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
 		s.lost = minf(float(s.delivered), s.lost + s.def.cost * rate)
 
 
-## The Node and weapons can soak creeper for a while; everything else dies on contact.
+## The Node, weapons and `reserve` defs (castle keeps) soak creeper for a while; everything
+## else dies on contact.
 static func has_reserve(s: Structure) -> bool:
-	return s.type == "node" or s.def.get("weapon", false)
+	return s.type == "node" or s.def.get("weapon", false) or s.def.get("reserve", false)
 
 
 static func construction(mgr, s: Structure, dt: float) -> void:

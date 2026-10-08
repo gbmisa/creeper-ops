@@ -74,6 +74,9 @@ static var DEFS := {
 		"desc": "Titan gunship. Hovers, so creeper can't touch it. Fills its 80-shot magazine in the network, then fires from it wherever it goes, even in flight or out of network range. Rapid fire into the nearest creeper within range 12." },
 	"forge": { "tab": "Titans", "label": "Forge", "cost": 100, "hp": 260.0, "link": 5.0, "link_y": 2.4, "footprint": 2, "unique": true,
 		"desc": "Titan workshop (5x5, needs level ground). Spend Aether on permanent upgrades: energy, build speed, packet speed, storage, fire rate, range, move speed. Aether comes from objectives, nests and castles the Operative captures and holds." },
+	"keep": { "label": "Castle Keep", "cost": 0, "hp": 300.0, "link": 10.0, "relays": true, "sender": true, "link_y": 4.0,
+		"movable": false, "buildable": false, "reserve": true, "wet_time": 60.0,
+		"desc": "Your held castle's keep. A packet sender and relay (link 10): structures nearby take packets from it, like an Outpost. Comes with the castle and falls with it." },
 	"beacon": { "tab": "Orbital", "label": "Totem", "cost": 10, "hp": 40.0, "link": 0.0, "needs_network": false, "link_y": 1.0, "drop_pod": true,
 		"desc": "Operative arrival point, dropped from orbit: no network, paid up front, not in Blight. Deploying here (T) is free and instant. Recalling within %.0f m is free and does not cool the teleporter down." % Config.TOTEM_FREE_RADIUS },
 }

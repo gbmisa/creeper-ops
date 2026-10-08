@@ -130,7 +130,7 @@ static func make(type: String) -> Node3D:
 
 ## Height of the model's top (metres above its cell), for the HP/ammo bars.
 static func top_y(type: String) -> float:
-	return { "node": 11.5, "collector": 2.6, "relay": 3.7, "outpost": 5.6, "reactor": 3.0, "storage": 2.6,
+	return { "node": 11.5, "collector": 2.6, "relay": 3.7, "outpost": 5.6, "keep": 5.6, "reactor": 3.0, "storage": 2.6,
 		"barracks": 5.0, "nullifier": 4.4, "cannon": 4.0, "mortar": 4.1, "beam": 5.4, "sniper": 4.2,
 		"bertha": 8.6, "thor": 5.0, "forge": 8.6, "beacon": 2.7 }.get(type, 3.0)
 

@@ -29,7 +29,7 @@ const CASTLE_RULES := { "aggression": 1.1, "reprisal_warn": 60.0, "nest_buff": 0
 const SHIELD_HINT := "Its shield is powered from underground: send the Operative into the Rift and destroy the Deep Core."
 const OBJECTIVES := [
 	{ "id": "spire", "who": "Operative", "text": "Destroy the Spore Spire", "hint": "East Blight plateau: ramp on its south side. Totem (Orbital tab) near the ramp foot, then press E at the Spire." },
-	{ "id": "e1", "who": "Network", "text": "Nullify Emitter West", "hint": "Relays and weapons out to it, clear the creeper, then a Nullifier within 4 cells." },
+	{ "id": "e1", "who": "Network", "text": "Nullify Emitter West", "hint": "Relays and weapons out to it, clear the creeper, then a Nullifier within 10 cells." },
 	{ "id": "e2", "who": "Network", "text": "Nullify Emitter East", "hint": "Same drill, in the east valley." },
 	{ "id": "e4", "who": "Network", "text": "Nullify Emitter North-West", "hint": "Behind Northreach and Crown Keep: mind the Sentinels' 32-cell reach." },
 	{ "id": "core", "who": "Operative", "text": "Destroy the Deep Core", "hint": "Walk the Operative into the Rift (west Blight) and press E. Shoot the 3 Shield Pylons, then the Core." },
@@ -60,16 +60,16 @@ static func build() -> Dictionary:
 		"landing_hint": Vector2i(80, 142),
 		"landing_min_dist": 18.0,
 		"emitters": [
-			{ "id": "e1", "name": "Emitter West", "x": 38, "z": 92, "amount": 3.0, "interval": 1.5 },
-			{ "id": "e2", "name": "Emitter East", "x": 122, "z": 92, "amount": 3.0, "interval": 1.5 },
-			{ "id": "e4", "name": "Emitter North-West", "x": 56, "z": 40, "amount": 4.5, "interval": 1.5 },
-			{ "id": "e3", "name": "Emitter North", "x": 80, "z": 26, "amount": 3.0, "interval": 1.5, "start": 300.0, "shielded_by": "core", "shield_hint": SHIELD_HINT },
-			{ "id": "e5", "name": "Emitter Marches", "x": 112, "z": 72, "amount": 3.0, "interval": 1.5, "start": 600.0, "shielded_by": "core", "shield_hint": SHIELD_HINT },
+			{ "id": "e1", "name": "Emitter West", "x": 38, "z": 92, "amount": 4.0, "interval": 0.5 },
+			{ "id": "e2", "name": "Emitter East", "x": 122, "z": 92, "amount": 4.0, "interval": 0.5 },
+			{ "id": "e4", "name": "Emitter North-West", "x": 56, "z": 40, "amount": 6.0, "interval": 0.5 },
+			{ "id": "e3", "name": "Emitter North", "x": 80, "z": 26, "amount": 5.0, "interval": 0.5, "start": 300.0, "shielded_by": "core", "shield_hint": SHIELD_HINT },
+			{ "id": "e5", "name": "Emitter Marches", "x": 112, "z": 72, "amount": 5.0, "interval": 0.5, "start": 600.0, "shielded_by": "core", "shield_hint": SHIELD_HINT },
 		],
 		"vents": [
-			{ "x": 46, "z": 84, "amount": 1.6, "interval": 3.0 },
-			{ "x": 116, "z": 86, "amount": 1.6, "interval": 3.0 },
-			{ "x": 62, "z": 118, "amount": 1.4, "interval": 3.0 },
+			{ "x": 46, "z": 84, "amount": 1.6, "interval": 1.0 },
+			{ "x": 116, "z": 86, "amount": 1.6, "interval": 1.0 },
+			{ "x": 62, "z": 118, "amount": 1.4, "interval": 1.0 },
 		],
 		"nests": [
 			{ "name": "Rift", "x": 15, "z": 60 },

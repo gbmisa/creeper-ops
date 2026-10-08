@@ -13,6 +13,8 @@ var grid: Grid
 var dist := PackedInt32Array()
 var timer := 0.0
 var has_goals := false
+var areas := PackedInt32Array()  # walking area id per cell (4-way, one terrace a step)
+var _areas_dirty := true
 
 
 func _init(g: Grid) -> void:
@@ -32,6 +34,74 @@ func update(dt: float, goal_cells: Array) -> void:
 ## Terrain changed: rebuild on the next update instead of waiting out the interval.
 func invalidate() -> void:
 	timer = 0.0
+	_areas_dirty = true
+
+
+## Can a raider at `from` walk to within striking distance of `to` (prey of `radius` m)?
+## True when a cell within reach of the target (structures and gates stand on their own
+## cells) shares the raider's walking area. Raiders ignore prey up a cliff instead of
+## pressing into the rock.
+func reachable(from: Vector3, to: Vector3, radius := 1.0) -> bool:
+	if _areas_dirty:
+		_label_areas()
+	var a := grid.world_to_cell(from.x, from.z)
+	if not grid.in_bounds(a.x, a.y):
+		return false
+	var mine := areas[grid.idx(a.x, a.y)]
+	var c := grid.world_to_cell(to.x, to.z)
+	var k := maxi(1, ceili((radius + 1.0) / Config.CELL))
+	for dz in range(-k, k + 1):
+		for dx in range(-k, k + 1):
+			var x := c.x + dx
+			var z := c.y + dz
+			# ...and close enough in height to strike from (not at the foot of a tall cliff)
+			if grid.in_bounds(x, z) and areas[grid.idx(x, z)] == mine \
+					and absf(grid.cell_ground(x, z).y - to.y) <= radius + 3.0:
+				return true
+	return false
+
+
+## Flood-fill walking areas. Diagonal steps need both side cells walkable, so 4-way
+## connectivity gives the same areas for a quarter of the checks.
+func _label_areas() -> void:
+	_areas_dirty = false
+	areas.resize(grid.w * grid.h)
+	areas.fill(-1)
+	var next := 0
+	var w := grid.w
+	var h := grid.h
+	var wh := PackedFloat32Array()  # enemy walk height per cell, so each step is one compare
+	wh.resize(w * h)
+	for i in wh.size():
+		wh[i] = grid.walk_height(i % w, int(i / w), Grid.Faction.ENEMY)
+	var up := Config.RAIDER_CLIMB
+	var down := Config.RAIDER_DROP
+	var open := PackedInt32Array()
+	for start in areas.size():
+		if areas[start] >= 0:
+			continue
+		areas[start] = next
+		open.clear()
+		open.append(start)
+		var head := 0
+		while head < open.size():
+			var b := open[head]
+			head += 1
+			var bx := b % w
+			var bz := int(b / w)
+			if bx + 1 < w and areas[b + 1] < 0 and wh[b + 1] - wh[b] <= up and wh[b] - wh[b + 1] <= down:
+				areas[b + 1] = next
+				open.append(b + 1)
+			if bx > 0 and areas[b - 1] < 0 and wh[b - 1] - wh[b] <= up and wh[b] - wh[b - 1] <= down:
+				areas[b - 1] = next
+				open.append(b - 1)
+			if bz + 1 < h and areas[b + w] < 0 and wh[b + w] - wh[b] <= up and wh[b] - wh[b + w] <= down:
+				areas[b + w] = next
+				open.append(b + w)
+			if bz > 0 and areas[b - w] < 0 and wh[b - w] - wh[b] <= up and wh[b] - wh[b - w] <= down:
+				areas[b - w] = next
+				open.append(b - w)
+		next += 1
 
 
 func rebuild(goal_cells: Array) -> void:

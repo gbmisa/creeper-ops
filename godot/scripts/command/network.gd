@@ -94,10 +94,50 @@ func rebuild(list: Array) -> void:
 		for i in range(1, r.size()):
 			m += r[i - 1].distance_to(r[i])
 		_len[s] = m
+	_hold_flying_node(list, edges)
 	for s in list:
 		if not s.def.get("needs_network", true):
 			s.connected = true
 	_draw(edges)
+
+
+## A flying Command Node keeps its network: everything it reached from the cell it lifted off
+## stays connected (collectors keep claiming, weapons keep firing from stock) and its links
+## follow it. Nothing routes through it, so it launches no packets until it lands (CW3);
+## an Outpost or castle keep still supplies whatever it reaches.
+func _hold_flying_node(list: Array, edges: Array) -> void:
+	var node: Structure = null
+	for s in list:
+		if s.type == "node" and s.is_flying() and s.is_built():
+			node = s
+	if node == null:
+		return
+	var from: Vector2i = node.flight.get("from_cell", Vector2i(node.x, node.z))
+	node.connected = true
+	var seen := { node: true }
+	var open: Array = [node]
+	while not open.is_empty():
+		var a: Structure = open.pop_back()
+		for b in list:
+			if seen.has(b) or not _relaying(b):
+				continue
+			var near: bool = Vector2(b.x - from.x, b.z - from.y).length() <= maxf(node.def.link, b.def.link) \
+				if a == node else linked(a, b)
+			if not near:
+				continue
+			seen[b] = true
+			open.append(b)
+			if a == node or not b.connected:
+				edges.append([a, b])
+			b.connected = true
+	for s in list:  # leaves hang off the nearest relaying node it kept
+		if s.connected or s.def.link <= 0.0 or s.is_flying():
+			continue
+		for n in seen:
+			if n != node and _dist(n, s) <= maxf(n.def.link, s.def.link):
+				s.connected = true
+				edges.append([n, s])
+				break
 
 
 func _draw(edges: Array) -> void:

@@ -172,6 +172,8 @@ func nearest_to(x: int, z: int, filter: Callable) -> Structure:
 func update(dt: float, time: float) -> void:
 	var node := command_node()
 	for s in list:
+		if s.type == "node" and s.is_flying():
+			dirty = true  # its held links follow it (Network._hold_flying_node)
 		if s.is_flying() and Mover.update(s, dt):
 			dirty = true
 			Sfx.play("build", s.pos)

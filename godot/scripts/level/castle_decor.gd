@@ -27,13 +27,16 @@ static func build(root: Node3D, lay: Dictionary) -> Array:
 	var top: float = lay.wall_top * lh
 	var corners := [Vector2(r.position.x, r.position.y), Vector2(r.end.x, r.position.y),
 		Vector2(r.position.x, r.end.y), Vector2(r.end.x, r.end.y)]
-	for k in corners:
-		var p := Vector3(k.x * c, 0, k.y * c)
-		var t := Node3D.new()
-		t.position = p
-		root.add_child(t)
-		var centre := Vector3(r.get_center().x * c, 0, r.get_center().y * c)
-		_round_tower(t, base, top + 2.6, 2.1, banners, (p - centre).normalized())
+	var centre := Vector3(r.get_center().x * c, 0, r.get_center().y * c)
+	for tw in lay.get("towers", []):  # terrain towers (CastleTowers): crown them, guards stand on top
+		_tower_crown(root, tw, centre, banners)
+	if lay.get("towers", []).is_empty():
+		for k in corners:
+			var p := Vector3(k.x * c, 0, k.y * c)
+			var t := Node3D.new()
+			t.position = p
+			root.add_child(t)
+			_round_tower(t, base, top + 2.6, 2.1, banners, (p - centre).normalized())
 	for gt in lay.gates:
 		_gatehouse(root, gt, lay, banners)
 	_spire_trim(root, lay)
@@ -75,6 +78,32 @@ static func _spire_trim(root: Node3D, lay: Dictionary) -> void:
 			var q := p + t * (0.9 if j % 2 == 0 else -0.9) + Vector3(0, -(h1 - h0) * 0.28, 0)
 			ShapeKit.strut(root, p, q, 0.32, vein, 0.1)
 			p = q
+
+
+## Battlements round a terrain tower's flat top (left open for its Sentinels), a corner
+## flagpole and a long banner down its outer face.
+static func _tower_crown(root: Node3D, tw: Dictionary, centre: Vector3, banners: Array) -> void:
+	var b := StrongholdMeshes._bounds(tw.cells, tw.top)
+	var mid: Vector3 = b[0]
+	var size: Vector2 = b[1]
+	var stone := StructureMeshes.mat(StrongholdMeshes.DECOR_STONE, 0.0, 0.92)
+	var hx := size.x * 0.5 - 0.25
+	var hz := size.y * 0.5 - 0.25
+	for i in 5:  # merlons along each edge
+		var f := -1.0 + i * 0.5
+		for side in [Vector3(f * hx, 0, -hz), Vector3(f * hx, 0, hz), Vector3(-hx, 0, f * hz), Vector3(hx, 0, f * hz)]:
+			StructureMeshes.box(root, Vector3(0.6, 0.8, 0.6), stone, mid + side + Vector3(0, 0.4, 0))
+	var out := Vector3(mid.x - centre.x, 0, mid.z - centre.z).normalized()
+	var pole := mid + Vector3(signf(out.x) * hx, 0, signf(out.z) * hz)
+	ShapeKit.rod(root, pole, pole + Vector3(0, 4.5, 0), 0.06, StructureMeshes.pal("bronze"), 6)
+	banners.append(StructureMeshes.box(root, Vector3(2.2, 1.3, 0.06), cloth("enemy"), pole + Vector3(1.1, 3.8, 0)))
+	var hang := Node3D.new()
+	hang.position = mid
+	hang.rotation.y = atan2(out.x, out.z)
+	root.add_child(hang)
+	var face := (hz if absf(out.z) > absf(out.x) else hx) + 0.3
+	for mi in ShapeKit.banner(hang, 1.4, 3.6, cloth("enemy"), Vector3(0, -0.3, face)).get_children():
+		banners.append(mi)
 
 
 static func _round_tower(t: Node3D, base: float, top: float, rad: float, banners: Array, out: Vector3) -> void:

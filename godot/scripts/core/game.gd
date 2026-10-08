@@ -19,6 +19,7 @@ var cave: World
 var cave_hazards: CaveHazards
 var castles: Strongholds
 var castle_raids: CastleRaids
+var keeps: CastleKeeps
 var guards: CastleGuards
 var orbital: Orbital
 var command: CommandMode
@@ -86,6 +87,7 @@ func _ready() -> void:
 	castles.op = func(): return fps.controller if fps.world == surface else null
 	castles.stockpile = stockpile
 	command.castles = castles
+	keeps = CastleKeeps.new(castles, structures)
 	castles.on_lost = func(cells: Array):
 		for cell in cells:
 			var s = structures.occupied.get(surface.grid.idx(cell.x, cell.y))
@@ -149,6 +151,7 @@ func update(dt: float) -> void:
 		fps.update(dt, input)
 	surface.update(dt)
 	cave.update(dt)
+	keeps.update()
 	structures.update(dt, time)
 	units.update(dt, hazards.nests.enemies() + castles.enemies() + guards.enemies())
 	orbital.update(dt)

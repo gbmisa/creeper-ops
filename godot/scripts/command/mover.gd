@@ -18,7 +18,7 @@ static func start(mgr, s: Structure, x: int, z: int) -> void:
 		cruise = maxf(cruise, g.smooth_y(p.x, p.z))
 	cruise += Config.LIFT_HEIGHT
 	var travel := Vector2(to.x - from.x, to.z - from.z).length() / (float(s.def.move_speed) * Upgrades.mult("move"))
-	s.flight = { "from": from, "to": to, "cruise": cruise, "t": 0.0, "travel": travel }
+	s.flight = { "from": from, "to": to, "cruise": cruise, "t": 0.0, "travel": travel, "from_cell": Vector2i(s.x, s.z) }
 	s.x = x
 	s.z = z
 	mgr.occupy(s)

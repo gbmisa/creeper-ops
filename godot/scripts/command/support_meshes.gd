@@ -10,7 +10,7 @@ static func build(type: String, root: Node3D) -> void:
 		"node": node(root)
 		"collector": collector(root)
 		"relay": relay(root)
-		"outpost": outpost(root)
+		"outpost", "keep": outpost(root)
 		"reactor": reactor(root)
 		"storage": storage(root)
 		"barracks": barracks(root)
