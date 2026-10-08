@@ -32,7 +32,7 @@ cam = bpy.data.objects.new("cam", cam_data)
 sc.collection.objects.link(cam)
 sc.camera = cam
 size = max(mesh.dimensions) or 1.0
-cam.location = Vector((1.1, -1.5, 0.9)) * size * 1.4
+cam.location = Vector((1.1, -1.5, 0.9)) * size * 1.1
 cam.rotation_euler = (Vector((0, 0, size * 0.25)) - cam.location).to_track_quat("-Z", "Y").to_euler()
 cam_data.lens = 40
 
