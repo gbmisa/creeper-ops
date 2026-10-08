@@ -207,7 +207,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 |---|---|
 | Save and load in the middle of a level (terrain edits, creeper, structures, units, Strongholds, clock) | Opus format design, Sonnet build |
 | Meta skill tree and its story framing, plus a campaign profile | Opus design, Sonnet build |
-| Large-map performance: terrain level of detail, chunked flow fields, profiling | Opus |
+| Large-map readiness for **up to 512×512 cells** (10× Level 2, the user's cap): benchmark at 512², then fix what it shows (likely incremental flow-field updates, terrain/creeper mesh detail by distance). Whole-map creeper flow stays | Grok (benchmark), Opus review |
 | RTS army control: control groups, squads, rally points, unit production at Outposts | Opus design, Sonnet build |
 | Phase 3 difficulty: director, reinforcements, time gates (see DEV_PLAN) | Opus design, Sonnet build |
 | Flying enemies (Beam targets) | Sonnet |
