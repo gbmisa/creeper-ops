@@ -113,6 +113,10 @@ func _structure_text(s: Structure) -> String:
 	if s.has_ammo_store():
 		var what := "Supply stock" if s.type == "barracks" else "Ammo"
 		lines.append("%s %d / %d%s" % [what, floori(s.ammo), s.ammo_max(), "" if s.supply_on else "  [color=#ffc857](supply OFF)[/color]"])
+	if AmmoGrades.has_grades(s):
+		var gl := AmmoDefs.label(s.grade)
+		lines.append("Ammo grade: %s%s  [color=#8899aa](%s switches%s)[/color]" % [gl, "" if s.grade == "std" else " (%d graded)" % floori(s.grade_ammo),
+			"/".join([Keybinds.short("ammo_next"), Keybinds.short("ammo_prev")]), "" if AmmoGrades.unlocked else "; locked"])
 	if s.hold_fire:
 		lines.append("[color=#ffc857]Holding fire[/color]")
 	if s.type == "forge":

@@ -179,6 +179,7 @@ static func _snipe(s: Structure, mgr) -> bool:
 	var p: Vector3 = best.node.position
 	_aim(s, p)
 	w.effects.beam(_fx(s), p, Color("e0f0ff"), 0.08, 0.05)
-	best.enemy.hit.call(s.def.power)
+	var grade := AmmoGrades.take_shot(s)
+	AmmoGrades.shoot(best.enemy, s.def.power, grade, w, p)
 	Sfx.play("rifle", s.pos)
 	return true

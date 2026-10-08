@@ -23,6 +23,7 @@ var castle_raids: CastleRaids
 var keeps: CastleKeeps
 var guards: CastleGuards
 var engines: SalvageEngines
+var cave_engines: SalvageEngines
 var orbital: Orbital
 var command: CommandMode
 var fps: FpsMode
@@ -70,6 +71,8 @@ func _ready() -> void:
 	cave.setup("Cave", cave_data.grid, true)
 	add_child(cave)
 	cave_hazards = CaveHazards.new(cave, cave_data)
+	cave_engines = SalvageEngines.new(cave, cave_data.get("engines", []), structures, stockpile)
+	cave_engines.cash_mode = true
 	castles = Strongholds.new(surface, level.castles, hazards.nests)
 	castle_raids = CastleRaids.new(castles, level.get("castle_rules", {}))
 	guards = CastleGuards.new(surface, castles, level.castles)
@@ -128,6 +131,7 @@ func _ready() -> void:
 			if s != null and not s.dead:
 				structures.remove(s, "destroyed")
 
+	AmmoGrades.reset(level)
 	hud = Hud.new()
 	add_child(hud)
 	hud.setup(command, units)
@@ -185,6 +189,7 @@ func update(dt: float) -> void:
 	time += dt
 	teleport_cooldown = maxf(0.0, teleport_cooldown - dt)
 	stockpile.tick(dt)
+	AmmoGrades.tick(dt)
 	deploy.update(dt)
 	flow.update(dt)
 	if mode != "command":

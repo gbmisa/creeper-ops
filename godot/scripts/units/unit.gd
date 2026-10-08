@@ -25,6 +25,8 @@ var post: Variant = null        # Vector2 world xz the player sent it to
 var home: Structure = null      # the barracks that trained it (population cap)
 var depot: Structure = null     # the barracks it is walking to for resupply (nearest stocked)
 var warned_dry := false
+var grade := "std"             # ammo grade of the rounds in grade_ammo (from its barracks)
+var grade_ammo := 0.0
 var prey: Dictionary            # what enemies see: { node, radius, alive, hit }
 
 

@@ -201,6 +201,7 @@ static func build() -> Dictionary:
 			{ "x": 72, "z": 36 },
 			{ "x": 22, "z": 58 },
 		],
+		"ammo_unlock": "e1",  # improved ammo (AmmoGrades) once this objective completes
 		"engines": ENGINES.duplicate(true),
 		"rift": { "x": 14, "z": 42 },
 		"intro": [

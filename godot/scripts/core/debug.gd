@@ -39,6 +39,7 @@ class_name Debug
 ##   --gallery     one of every structure, unit and raider tier in rows (art screenshots)
 ##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
 ##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
+##   --ammo=ap|inc  unlock improved ammo, crossbow loaded with that grade (HUD shows [AP]/[INC])
 ##   --engine=I[,hold|hooked|top[,S]]  Operative at Salvage Engine I (hold: mid-hook; hooked: all sockets
 ##                 hooked with a relay chain; top: on its roof). See debug_engines.gd
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
@@ -128,6 +129,9 @@ static func apply(g) -> void:
 		RaiderBurrow.demo(g)
 	if args.has("mortar"):
 		EnemyMortars.demo(g)
+	if args.has("ammo"):  # --ammo=ap|inc: unlock improved ammo and select that crossbow grade
+		AmmoGrades.unlocked = true
+		AmmoGrades.op.rifle = str(args.ammo) if str(args.ammo) in ["ap", "inc"] else "std"
 	if args.has("engine"):
 		DebugEngines.apply(g, str(args.engine))
 	if args.has("look"):

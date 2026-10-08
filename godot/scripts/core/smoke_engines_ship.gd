@@ -28,26 +28,29 @@ static func run(g) -> void:
 	SmokeTest._check("ship: Salvage arrives at the Node", g.stockpile.salvage >= s0 + 1.0 and e.reserve <= r0 - 1.0,
 		"(%.0f -> %.0f, reserve %.0f -> %.0f)" % [s0, g.stockpile.salvage, r0, e.reserve])
 	var a := eng.shipped
-	SmokeTest._sim(g, 60.0)
+	SmokeTest._sim(g, 48.0)
 	var one := eng.shipped - a
 	eng.hook(e, side)
 	a = eng.shipped
-	SmokeTest._sim(g, 60.0)
+	SmokeTest._sim(g, 48.0)
 	var two := eng.shipped - a
-	SmokeTest._check("ship: two sockets ship twice as fast", one >= 8.0 and two / maxf(one, 1.0) > 1.8 and two / maxf(one, 1.0) < 2.2,
-		"(%d vs %d in 60 s)" % [int(one), int(two)])
+	SmokeTest._check("ship: two sockets ship twice as fast", one >= 7.0 and two / maxf(one, 1.0) > 1.8 and two / maxf(one, 1.0) < 2.2,
+		"(%d vs %d in 48 s)" % [int(one), int(two)])
 	SmokeTest._check("ship: sockets_hooked counts them", eng.total_hooked() == 2)
 	side.prey.hit.call(EngineDefs.CLAMP_HP + 1.0)
 	SmokeTest._check("ship: a raider can cut a clamp", not side.hooked and eng.total_hooked() == 1 and eng.prey().size() == 1)
 	a = eng.shipped
-	SmokeTest._sim(g, 60.0)
+	SmokeTest._sim(g, 48.0)
 	SmokeTest._check("ship: shipping drops after the cut", eng.shipped - a < two * 0.7 and eng.shipped - a > 6.0, "(%d)" % int(eng.shipped - a))
 	top.acc = EngineDefs.RATE - 0.5  # about to ship: only creeper can stop it
 	a = eng.shipped
-	for i in 100:  # 5 s with creeper held over the socket's cell
+	var wet_always := true
+	for i in 100:  # 5 s with creeper held over the socket's cell (weapons nearby may zap it between ticks)
 		g.surface.creeper.set_depth(top.cell.x, top.cell.y, 0.3)
+		wet_always = wet_always and eng.is_wet(top)
 		g.update(0.05)
-	SmokeTest._check("ship: a wet engine pauses", eng.is_wet(top) and eng.shipped == a and top.acc < EngineDefs.RATE)
+	SmokeTest._check("ship: a wet engine pauses", wet_always and eng.shipped == a and top.acc < EngineDefs.RATE,
+		"(shipped %d vs %d, acc %.2f)" % [eng.shipped, a, top.acc])
 	_dry(g)
 	SmokeTest._check("ship: a dry engine resumes", not eng.is_wet(top))
 	eng.unhook(top, "test end")
@@ -63,7 +66,9 @@ static func _calm(g) -> Dictionary:
 	var on: Array = g.surface.creeper.sources.filter(func(x): return x.active)
 	for src in on:
 		src.active = false
-	var saved := { "sources": on, "timer": g.hazards.spire.timer, "structures": g.hazards.nests.structures }
+	var saved := { "sources": on, "timer": g.hazards.spire.timer, "structures": g.hazards.nests.structures,
+		"prey": g.hazards.nests.prey }
+	g.hazards.nests.prey = func() -> Array: return []  # raiders and Weavers see nothing to attack
 	_dry(g)
 	g.hazards.spire.timer = -1.0e9
 	g.hazards.nests.structures = null
@@ -82,6 +87,7 @@ static func _restore(g, saved: Dictionary) -> void:
 		src.active = true
 	g.hazards.spire.timer = saved.timer
 	g.hazards.nests.structures = saved.structures
+	g.hazards.nests.prey = saved.prey
 
 
 ## Walk the Operative up to the socket and hold the use key through FpsMode, as a player does.

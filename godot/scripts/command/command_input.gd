@@ -15,6 +15,8 @@ static func hotkeys(cm: CommandMode, input: InputState) -> void:
 		if input.act("move"): cm.begin_move()
 		if input.act("supply"): cm.toggle_supply()
 		if input.act("hold_fire"): cm.toggle_hold()
+		if input.act("ammo_next"): AmmoGrades.cycle_structure(cm.selected, 1)
+		if input.act("ammo_prev"): AmmoGrades.cycle_structure(cm.selected, -1)
 	if input.act("select_units"):
 		CommandSelect.select_units(cm, null)
 	if input.act("cam_home") and cm.structures.command_node():

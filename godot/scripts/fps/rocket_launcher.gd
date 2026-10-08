@@ -34,7 +34,7 @@ func update(dt: float, world: World) -> void:
 			rockets.remove_at(i)
 
 
-func fire(world: World, from: Vector3, dir: Vector3) -> bool:
+func fire(world: World, from: Vector3, dir: Vector3, cluster := false) -> bool:
 	if loaded <= 0:
 		return false
 	loaded -= 1
@@ -47,7 +47,7 @@ func fire(world: World, from: Vector3, dir: Vector3) -> bool:
 	mi.material_override = Effects.glow_mat(Color("ffb347"))
 	mi.position = from
 	world.add_child(mi)
-	rockets.append({ "node": mi, "pos": from, "dir": dir.normalized(), "dist": 0.0, "world": world })
+	rockets.append({ "node": mi, "pos": from, "dir": dir.normalized(), "dist": 0.0, "world": world, "cluster": cluster })
 	Sfx.play("mortar")
 	return true
 
@@ -69,28 +69,38 @@ func _step(r: Dictionary, dt: float) -> bool:
 			if t.alive.call():
 				var c: Vector3 = (t.node as Node3D).global_position + Vector3(0, t.get("oy", 0.0), 0)
 				if p.distance_to(c) <= t.radius:
-					_explode(w, p)
+					_explode(w, p, r.cluster)
 					return true
 		var surf := w.grid.smooth_y(p.x, p.z) + w.creeper.depth_world(p) * Config.LEVEL_H
 		var size := w.grid.world_size()
 		if p.y <= surf or p.x < 0.0 or p.z < 0.0 or p.x > size.x or p.z > size.y:
-			_explode(w, p)
+			_explode(w, p, r.cluster)
 			return true
 	(r.node as Node3D).position = r.pos
 	w.effects.beam(prev, r.pos, Color("ffcc66"), 0.25, 0.05)
 	return false
 
 
-func _explode(w: World, p: Vector3) -> void:
+func _explode(w: World, p: Vector3, cluster := false) -> void:
+	if cluster:  # AmmoGrades cluster rocket: four smaller blasts around the impact
+		var g: Dictionary = AmmoDefs.GRADES.cluster
+		for i in int(g.subs):
+			var a := TAU * float(i) / float(g.subs) + PI * 0.25
+			var at := p + Vector3(cos(a), 0.0, sin(a)) * float(g.spread) * Config.CELL
+			_blast(w, at, Config.ROCKET.blast * float(g.sub_blast), float(g.sub_scale))
+		return
+	_blast(w, p, Config.ROCKET.blast, 1.0)
+
+
+func _blast(w: World, p: Vector3, blast: float, scale: float) -> void:
 	var c := w.grid.world_to_cell(p.x, p.z)
-	var blast: float = Config.ROCKET.blast
-	w.creeper.remove_radius(c.x, c.y, blast, Config.ROCKET.power)
+	w.creeper.remove_radius(c.x, c.y, blast, Config.ROCKET.power * scale)
 	var reach := blast * Config.CELL
 	for t in w.targets:
 		if t.alive.call():
 			var tc: Vector3 = (t.node as Node3D).global_position + Vector3(0, t.get("oy", 0.0), 0)
 			var d: float = tc.distance_to(p) - t.radius
 			if d <= reach:
-				t.on_hit.call(Config.ROCKET.damage * (1.0 - 0.5 * maxf(0.0, d) / reach), p)
+				t.on_hit.call(Config.ROCKET.damage * scale * (1.0 - 0.5 * maxf(0.0, d) / reach), p)
 	w.effects.burst(p, Color("ffaa33"), reach * 0.9, 0.45)
 	Sfx.play("boom", p)

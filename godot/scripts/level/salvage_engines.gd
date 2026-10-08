@@ -162,7 +162,7 @@ func tick(dt: float) -> void:
 	for e in list:
 		var idle := guard_note(e) != "" or float(e.reserve) <= 0.0
 		for s in e.sockets:
-			if s.hooked:
+			if s.hooked and not cash_mode:
 				_ship(e, s, dt, idle)
 			EngineHook.animate(self, e, s, _t)
 	_hint()

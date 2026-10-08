@@ -158,6 +158,9 @@ static func run(g) -> void:
 	SmokeEnemyBuild.run(g)
 	SmokeLoot.run(g)
 	SmokeEngines.run(g)
+	SmokeEnginesShip.run(g)
+	SmokeAmmo.run(g)
+	SmokePlacement.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 
@@ -167,6 +170,10 @@ static func _run_only(g) -> void:
 			"engines":
 				SmokeEngines.run(g)
 				SmokeEnginesShip.run(g)
+			"ammo":
+				SmokeAmmo.run(g)
+			"placement":
+				SmokePlacement.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

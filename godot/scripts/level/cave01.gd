@@ -30,6 +30,12 @@ const MAP := """
 ########################################"""
 
 const WALL := 7.0
+## Salvage Engines underground (EngineDefs). No network reaches here: hooking one strips it for
+## a share of its reserve at once (SalvageEngines.cash_mode). The wreck needs the stair climbed.
+const ENGINES := [
+	{ "id": "c1", "x": 33, "z": 7, "kind": "bore" },
+	{ "id": "c2", "x": 17, "z": 16, "kind": "wreck" },
+]
 ## No nests underground yet. Same clock shape as the surface, ready if a cave fight grows them.
 const RAID_SCHEDULE := {
 	"raid_delay": 300.0,
@@ -65,5 +71,7 @@ static func build() -> Dictionary:
 			g.set_height(x, z, hh)
 	# The Core floods its pit: each burst tops it up to base_cap depth, which rises over time so
 	# waiting makes the dive harder (CW3 emitter rule).
+	cave["engines"] = ENGINES.duplicate(true)
+	EngineShape.stamp_all(g, cave.engines)
 	cave["core_source"] = { "interval": 0.5, "base_cap": 3.0, "cap_growth": 1.0 / 900.0 }
 	return cave

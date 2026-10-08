@@ -51,9 +51,9 @@ func label() -> String:
 	if advanced.handles(current):
 		return advanced.label()
 	match current:
-		"rifle": return "[%s] %s" % [Keybinds.short("rifle"), Config.RIFLE.name]
+		"rifle": return "[%s] %s%s" % [Keybinds.short("rifle"), Config.RIFLE.name, AmmoGrades.op_tag("rifle")]
 		"sprayer": return "[%s] %s" % [Keybinds.short("sprayer"), Config.SPRAYER.name]
-	return "[%s] %s  %d/%d" % [Keybinds.short("rocket"), Config.ROCKET.name, launcher.loaded, launcher.mag_size()]
+	return "[%s] %s%s  %d/%d" % [Keybinds.short("rocket"), Config.ROCKET.name, AmmoGrades.op_tag("rocket"), launcher.loaded, launcher.mag_size()]
 
 
 ## Armoury weapons (railgun, plasma, demo) have no model of their own yet: they show the crossbow.
@@ -69,6 +69,10 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 			current = w
 	advanced.update(dt, input, world, feet)
 	_show_model()
+	if input.act("ammo_next") and not advanced.handles(current):
+		AmmoGrades.cycle_op(current, 1)
+	if input.act("ammo_prev") and not advanced.handles(current):
+		AmmoGrades.cycle_op(current, -1)
 	var m := coil.material_override as StandardMaterial3D
 	m.emission = { "rifle": Color("2a9fd0"), "sprayer": Color("3faa22"), "rocket": Color("ff8a1a"),
 		"railgun": Color("d7f6ff"), "plasma": Color("c45bff"), "demo": Color("ff8844") }.get(current, Color("2a9fd0"))
@@ -96,7 +100,7 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 	elif current == "rocket" and trigger and cooldown <= 0.0:
 		cooldown = 0.6
 		var d := -camera.global_transform.basis.z
-		if launcher.fire(world, gun.global_position + d * 0.4, d):
+		if launcher.fire(world, gun.global_position + d * 0.4, d, AmmoGrades.op_rocket(advanced.stockpile)):
 			gun.position.z = -0.38  # heavy recoil
 		else:
 			Sfx.play("deny")
@@ -116,6 +120,7 @@ static func ray_sphere(o: Vector3, d: Vector3, c: Vector3, r: float) -> float:
 
 
 func _fire(world: World) -> void:
+	var grade := AmmoGrades.op_shot("rifle", advanced.stockpile)
 	var o := camera.global_position
 	var d := -camera.global_transform.basis.z
 	var reach: float = Config.RIFLE.range
@@ -135,13 +140,14 @@ func _fire(world: World) -> void:
 	var end := o + d * reach
 	if not best.is_empty() and bt < gd:
 		end = o + d * bt
-		best.on_hit.call(Config.RIFLE.damage * OperativeUpgrades.mult("firepower"), end)
+		AmmoGrades.shoot(best, Config.RIFLE.damage * OperativeUpgrades.mult("firepower"), grade, world, end)
 		hit_marker = 0.15
 		Sfx.play("hit")
 	elif ground != null:
 		end = ground
 		world.effects.burst(end, Color("ffffaa"), 0.3, 0.12)
-	world.effects.beam(start, end, Color("9ff6ff"), 0.06, 0.025)
+	AmmoGrades.impact(world, end, grade)
+	world.effects.beam(start, end, AmmoGrades.color(grade), 0.06, 0.025)
 	Sfx.play("rifle")
 	gun.position.z = -0.45  # recoil kick
 

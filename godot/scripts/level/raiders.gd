@@ -49,8 +49,8 @@ func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
 		r.hp -= dealt
 		if r.hp <= 0.0:
 			kill(r)
-	r["enemy"] = { "node": node, "oy": tier.size * 0.6, "radius": tier.size, "alive": func(): return r.alive, "hit": hit }
-	r["target"] = { "node": node, "radius": tier.size, "oy": tier.size * 0.6, "alive": func(): return r.alive, "on_hit": hit }
+	r["enemy"] = { "node": node, "oy": tier.size * 0.6, "radius": tier.size, "alive": func(): return r.alive, "hit": hit, "tier": tier }
+	r["target"] = { "node": node, "radius": tier.size, "oy": tier.size * 0.6, "alive": func(): return r.alive, "on_hit": hit, "tier": tier }
 	world.add_target(r.target)
 	list.append(r)
 	nest.count += 1

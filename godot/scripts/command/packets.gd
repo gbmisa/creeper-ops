@@ -104,7 +104,10 @@ func update(dt: float, list: Array, sender_ready: bool) -> void:
 				sent += 1
 				served = true
 				_cursor = (i + 1) % n
-				flying.append({ "s": s, "kind": kind, "route": route, "seg": 0, "t": 0.0 })
+				var fly := { "s": s, "kind": kind, "route": route, "seg": 0, "t": 0.0 }
+				if kind == "ammo":
+					fly["grade"] = AmmoGrades.surcharge(s, stockpile)  # Salvage surcharge for improved ammo
+				flying.append(fly)
 		if economy.energy < 1.0:
 			for s in list:
 				if s.req_acc >= 1.0 and need(s) != "":
@@ -162,6 +165,7 @@ func _arrive(p: Dictionary) -> void:
 			s.delivered += 1
 		"ammo":
 			s.ammo = minf(s.ammo_max(), s.ammo + s.def.ammo.per_packet)
+			AmmoGrades.arrived(s, str(p.get("grade", "")), s.def.ammo.per_packet)
 		"unit":
 			if not s.queue.is_empty():
 				s.queue[0].delivered += 1
