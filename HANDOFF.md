@@ -16,11 +16,11 @@ Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Ru
 - Xvfb screenshots: command view, first person (new crossbow, clouds), gallery (new enemies), mortar ring.
 
 ## NOT verified / needs the user
-- **Spitter decision:** in the balance pass Grok made the Spitter HP 4 with a 2-cell lob (spec: HP 10, range 20) so the *scripted* demo base survives. That removes the "medium-range acid lobber" role. Also Skitter dps 3→6, `NEST_GUARDS` 2→1, later unlocks (Lancer 0.55, groups 0.60). Ask the user; restoring spec is a Grok-sized task.
+- **Spitter:** the user chose the spec. HP 10, range 20 (`raider_defs.gd`). Skitter dps 6, `NEST_GUARDS` 1, and the later unlocks (Lancer 0.55, groups 0.60) stay as the balance pass left them. L1 `--demo --units --sim=900` now loses the Node at 622 s (was 500/500 at 900 s). Snipers still shoot nearer Skitters while Spitters shell from 20 cells.
 - Nothing played by a human: Forward+ look (SSAO, sky), drag-build feel, Armoury, Terp, hives, mortars.
 
 ## Known gaps (from Stage 8 log)
 No loot pickups (§4.4), no SPOTTED HUD widget (uses Bus.say), mortars not in the hive save, metal/stone-wall shell damage not built, Outpost Ore cost waits for 9a. Smoke files over 250 lines: smoke_terp 436, smoke_armoury 313, smoke_dragbuild 308; debug.gd ~280.
 
 ## Next
-1. Playtest; Spitter call. 2. Grok briefs: 8c enemy construction, 9a economy, splitting the long smoke files/debug.gd, SPOTTED widget + loot pickups. 3. Opus: CW4_SPEC read if wanted.
+1. Playtest. 2. Grok briefs: 8c enemy construction, 9a economy, splitting the long smoke files/debug.gd, SPOTTED widget + loot pickups. 3. Opus: CW4_SPEC read if wanted.
