@@ -1,6 +1,6 @@
 class_name SmokeDragbuild
-## Drag-build: chain spacing, cannon rows, commit, cliff backoff, cancel, ghosts and cost.
-## Called from SmokeTest.run. One file, so it runs past the usual 250-line cap.
+## Drag-build: chain spacing, cannon rows, commit, cliff backoff and cancel.
+## Ghosts and the Operative drag are in SmokeDragView. Called from SmokeTest.run.
 
 const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
@@ -18,8 +18,8 @@ static func run(g) -> void:
 		_commit(g, cm, "collector", collector[0], collector[1])
 	_cliff(g, cm)
 	_cancel(g, cm)
-	_preview(cm, collector)
-	_operative(g, collector)
+	SmokeDragView._preview(cm, collector)
+	SmokeDragView._operative(g, collector)
 	cm.set_tool("")
 	_silence(g)
 
@@ -143,92 +143,6 @@ static func _cancel(g, cm: CommandMode) -> void:
 	CommandInput.left_mouse(cm, g.input)
 	SmokeTest._check("right-click during a drag places nothing", sm.list.size() == n and cm.tool == "" and cm.drag_plan.is_empty())
 	_silence(g)
-
-
-static func _preview(cm: CommandMode, span: Array) -> void:
-	if span.is_empty():
-		SmokeTest._check("drag ghosts", false, "no collector span")
-		return
-	cm.set_tool("collector")
-	var items := DragBuild.plan(cm, span[0], span[1])
-	cm.overlay.show_plan(items, "collector")
-	var vis := 0
-	var tint := true
-	for i in items.size():
-		vis += 1 if cm.overlay.plan_ghosts[i].visible else 0
-		var col: Color = cm.overlay.plan_mats[i].albedo_color
-		tint = tint and ((col.g > col.r) == items[i].ok)
-	var fields := int(cm.overlay.mat.get_shader_parameter("field_plan_count"))
-	SmokeTest._check("drag ghosts", vis == items.size() and tint, "visible %d" % vis)
-	SmokeTest._check("collector field outlines", fields == items.size(), "fields %d" % fields)
-	cm.set_tool("relay")
-	cm.overlay.show_plan(DragBuild.plan(cm, span[0], span[0]), "relay")
-	SmokeTest._check("relay chain has no field outline", int(cm.overlay.mat.get_shader_parameter("field_plan_count")) == 0)
-	cm.overlay.hide_plan()
-	var hidden := true
-	for node in cm.overlay.plan_ghosts:
-		hidden = hidden and not node.visible
-	SmokeTest._check("hide plan hides ghosts", hidden)
-
-
-static func _operative(g, span: Array) -> void:
-	if span.is_empty():
-		SmokeTest._check("operative drag places", false, "no collector span")
-		return
-	var sm = g.structures
-	var grid: Grid = sm.world.grid
-	var cam := Camera3D.new()
-	g.add_child(cam)
-	var bld: OperativeBuild = g.fps.builder
-	bld.toggle(true)
-	bld.tool = "collector"
-	var had := _had(sm)
-	_hold(g, bld, cam, grid, span[0], span[1])
-	var oks := 0
-	for it in bld.drag_plan:
-		oks += 1 if it.ok else 0
-	var preview: bool = bld.drag_plan.size() >= 2 and "energy total" in bld.status
-	g.input.left = false
-	g.input.left_released = true
-	bld.update(g.input, g.surface, cam)
-	SmokeTest._check("operative drag places", preview and _new(sm, had).size() == oks, bld.status)
-	for s in _new(sm, had):
-		sm.remove(s)
-	_silence(g)
-	bld.toggle(true)
-	had = _had(sm)
-	_hold(g, bld, cam, grid, span[0], span[1])
-	g.input.right_clicked = true
-	g.input.left_released = true
-	bld.update(g.input, g.surface, cam)
-	SmokeTest._check("operative right-click during a drag places nothing", _new(sm, had).is_empty() and not bld.active)
-	_silence(g)
-	bld.toggle(true)
-	had = _had(sm)
-	_hold(g, bld, cam, grid, span[0], span[1])
-	g.input._pressed[KEY_ESCAPE] = true
-	g.input.left_released = true
-	bld.update(g.input, g.surface, cam)
-	SmokeTest._check("operative esc during a drag places nothing", _new(sm, had).is_empty() and bld.drag_plan.is_empty())
-	bld.toggle(false)
-	cam.queue_free()
-	_silence(g)
-
-
-static func _hold(g, bld: OperativeBuild, cam: Camera3D, grid: Grid, a: Vector2i, b: Vector2i) -> void:
-	_silence(g)
-	_aim(cam, grid, a)
-	g.input.left = true
-	g.input.left_pressed = true
-	bld.update(g.input, g.surface, cam)
-	g.input.left_pressed = false
-	_aim(cam, grid, b)
-	bld.update(g.input, g.surface, cam)
-
-
-static func _aim(cam: Camera3D, grid: Grid, c: Vector2i) -> void:
-	var p := grid.cell_ground(c.x, c.y)
-	cam.global_transform = Transform3D(Basis(Vector3(1, 0, 0), Vector3(0, 0, -1), Vector3(0, 1, 0)), p + Vector3(0, 20, 0))
 
 
 static func _span(sm, type: String, span: int) -> Array:

@@ -61,6 +61,7 @@ static func hurt(host, hive: Dictionary, part: Dictionary, dmg: float, source: S
 	if str(part.kind) == "core":
 		Hives.raze(host, hive)
 	else:
+		Loot.drop(host.world, part.pos, Config.LOOT_PART, host.stockpile, host.operative)
 		forget(host.world, part)
 
 

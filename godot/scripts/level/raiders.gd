@@ -19,6 +19,7 @@ var on_march := func(_r: Dictionary) -> void: pass  # injected: may give a march
 var time := 0.0
 var next_group := 1
 var seen := {}  # tier name -> how many have spawned this mission
+var loot_host = null  # SporeNests, so a death can drop its Salvage pickup
 
 
 func _init(w: World) -> void:
@@ -64,6 +65,8 @@ func kill(r: Dictionary) -> void:
 	r.alive = false
 	r.nest.count -= 1
 	var p: Vector3 = r.node.position
+	if loot_host != null:
+		Loot.from_raider(loot_host, r)
 	world.effects.burst(p + Vector3.UP * r.size, r.tier.color, 1.0 + r.size, 0.3)
 	Sfx.play("pop", p)
 	r.node.queue_free()

@@ -54,7 +54,7 @@ static func run(g, mode: String) -> void:
 	g.command.cam.focus(w.grid.cell_ground(43, 73))
 	g.command.cam.dist = 70.0
 	if mode == "fps":  # the Operative 6 m behind the soldier, looking at the cannon
-		Debug._drop(g, 40, 62, 0.0)
+		DebugHooks._drop(g, 40, 62, 0.0)
 		g.fps.controller.spawn(w.grid, 25, 76, 0.12)
 		g.fps.controller.pitch = 0.05
 

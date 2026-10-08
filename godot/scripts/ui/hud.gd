@@ -231,6 +231,6 @@ func refresh(g, dt: float) -> void:
 		_selbox.size = r.size
 	else:
 		_selbox.visible = false
-		fps.refresh(g.fps)
+		fps.refresh(g.fps, g.fps.world == g.surface and EnemyMortarFire.any_spotted(g.hazards.nests))
 	if ArmouryMenu.is_open():
 		ArmouryMenu.current.refresh()

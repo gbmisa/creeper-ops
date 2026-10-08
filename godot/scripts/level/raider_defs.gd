@@ -4,7 +4,7 @@ extends RefCounted
 ## Brute, Ravager and Behemoth keep today's stats. Skitter dps is the Stage 8 balance pass.
 ## The Spitter is the spec lobber: 10 HP, range 20. Unlock is a pressure, not a clock time.
 ## `special` rows are not in the ordinary weighted pick: Spotter arrives with a mortar (phase 7).
-## Loot numbers are data only. Pickups are §4.4 and are not spawned here.
+## Loot numbers are the Salvage pickup when that raider dies (Loot).
 ## Weight among the ordinary unlocked rows is 2^order (oldest 1, next 2, ...), so the newest
 ## is about half of a two-type pool and still the most common in a larger one.
 

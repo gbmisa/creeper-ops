@@ -31,6 +31,7 @@ func _init(w: World, defs: Array, sched: Dictionary = {}, lvl: Dictionary = {}) 
 	schedule = sched
 	level = lvl
 	raiders = Raiders.new(w)
+	raiders.loot_host = self
 	for d in defs:
 		nests.append(_make_nest(d))
 

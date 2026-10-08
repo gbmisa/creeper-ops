@@ -1,7 +1,7 @@
 class_name EnemyMortarFire
 ## Targeting, the telegraph, and the terrain-shader ring for an enemy mortar (§4.3).
-## A Spotter's line of sight is the only way onto the Operative. SPOTTED is a log line:
-## the operative HUD has no alert slot for it.
+## A Spotter's line of sight is the only way onto the Operative.
+## The operative HUD shows SPOTTED while a mortar has them. The log line stays too.
 
 
 static func volley(host, hive: Dictionary, dt: float) -> void:
@@ -142,6 +142,16 @@ static func shells(host) -> void:
 		packed[i] = Vector4(hat.x, hat.z, lerpf(0.6, blast, hk), 1.0)
 		i += 1
 	mat.set_shader_parameter("shells", packed)
+
+
+static func any_spotted(host) -> bool:
+	for n in host.nests:
+		var hive: Dictionary = n
+		for item in hive.get("mortars", []):
+			var m: Dictionary = item
+			if m.alive and bool(m.spotted):
+				return true
+	return false
 
 
 static func _feet(host) -> Variant:

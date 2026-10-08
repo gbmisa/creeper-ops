@@ -14,6 +14,7 @@ var _charge: ProgressBar
 var _need: Label
 var _prompt: Label
 var _warn: Label
+var _spotted: Label
 var _recall: ProgressBar
 var _recall_note: Label
 var _flash: ColorRect
@@ -56,6 +57,9 @@ func _init() -> void:
 	_need = _centered(UiKit.label("", 18, UiKit.WARN), 78)
 	_prompt = _centered(UiKit.label("", 20, UiKit.WARN), 60)
 	_warn = _centered(UiKit.label("", 22, UiKit.BAD), -140)
+	_spotted = _centered(UiKit.label("", 28, UiKit.BAD), -156)
+	_spotted.custom_minimum_size.x = 280
+	_spotted.position.x = -140
 	_recall = UiKit.bar(260, 10, UiKit.ENERGY)
 	_recall.set_anchors_preset(Control.PRESET_CENTER)
 	_recall.position = Vector2(-130, 100)
@@ -88,7 +92,11 @@ func _centered(l: Label, y: float) -> Label:
 	return l
 
 
-func refresh(fps: FpsMode) -> void:
+func spotted_lit() -> bool:
+	return _spotted.visible and _spotted.text == "SPOTTED"
+
+
+func refresh(fps: FpsMode, spotted := false) -> void:
 	var cap := maxf(1.0, OperativeUpgrades.suit_max())
 	var suit := clampf(maxf(0.0, fps.suit) / cap, 0.0, 1.0)
 	_suit.value = suit
@@ -109,6 +117,10 @@ func refresh(fps: FpsMode) -> void:
 	_need.text = fps.weapons.advanced.hud_need()
 	_prompt.text = fps.prompt
 	_warn.text = ("IN CREEPER: SUIT BURNING%s" % (" FAST" if fps.creeper_depth > 1.0 else "")) if fps.in_creeper else ""
+	_spotted.visible = spotted
+	_spotted.text = "SPOTTED" if spotted else ""
+	if spotted:
+		_spotted.modulate.a = 0.55 + 0.45 * absf(sin(Time.get_ticks_msec() * 0.006))
 	_cross.add_theme_color_override("font_color", UiKit.BAD if fps.weapons.hit_marker > 0.0 else UiKit.TEXT)
 	var holding := fps.recall_hold > 0.0
 	_recall.visible = holding
