@@ -3,6 +3,7 @@
 ## State
 Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Rules: [docs/CREEPER_SPEC.md](docs/CREEPER_SPEC.md); enemies: [docs/STRONGHOLDS_DESIGN.md](docs/STRONGHOLDS_DESIGN.md) (§3.3, §4 have "As built (Stage 8)" notes). `docs/CW4_SPEC.md` (user's, untracked) still unread.
 **Roles:** Opus orchestrates and merges; Grok follows [AGENTS.md](AGENTS.md). The user is budget-limited: **give Grok everything a lesser model can do**; flag it when Opus isn't needed.
+**Muse Code** (Meta) can now take the Grok role: setup and task queue in [Muse.md](Muse.md).
 
 ## Merged to main this session (all Grok, reviewed by Opus)
 - **7c** stairs on L1 · **11a** Terp (Earth) · **10a** Armoury (upgrades, railgun/plasma/demo charge)
