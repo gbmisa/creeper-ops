@@ -5,6 +5,7 @@ class_name CastleDebug
 ##                       corner tower stair), wall (outer wall walk), hall (keep hall), roof (keep roof)
 ##   --stage=I,N         castle I hostile with its first N rings taken (0 gate, 1 bailey, 2 keep)
 ##   --held=I            castle I held (perks on), e.g. with --look to see the ward drain
+##   --engines=I         a cannon in reach of castle I's trebuchets, which fire at once (ring shots)
 
 
 static func apply(g, args: Dictionary) -> void:
@@ -16,6 +17,14 @@ static func apply(g, args: Dictionary) -> void:
 		var hc: Dictionary = g.castles.list[int(args.held)]
 		StrongholdRules.to_held(g.surface, hc, g.castles.lays[hc.id])
 		StrongholdMeshes.refresh(g.castles.views[hc.id], hc)
+	if args.has("engines"):
+		var ec: Dictionary = g.castles.list[int(args.engines)]
+		var e0: Dictionary = ec.engines[0]
+		var out: Vector2i = (e0.post - g.castles.lays[ec.id].rect.get_center()).sign()
+		var at: Vector2i = e0.post + out * 16
+		g.structures.place("cannon", at.x, at.y, true)
+		for e in ec.engines:
+			e.cd = 0.2
 	if args.has("castle2"):
 		_drop(g, args.castle2.split(","))
 

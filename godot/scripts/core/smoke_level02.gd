@@ -21,7 +21,7 @@ static func run(g) -> void:
 	var want := 0
 	for c in lvl.castles:
 		want += c.guards
-	SmokeTest._check("guards: all posted at t=0", guards.list.size() == want and guards.foes().size() == want, "(%d)" % want)
+	SmokeTest._check("guards: all posted at t=0", guards.list.size() == want and guards.list.filter(func(x): return x.alive).size() == want, "(%d)" % want)
 	SmokeTest._check("guards: range beats a Sniper", Config.GUARD_RANGE > StructureDefs.DEFS.sniper.range)
 	_fire(w, guards, grid)
 	_capture(w, castles, guards)

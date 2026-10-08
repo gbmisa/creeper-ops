@@ -155,6 +155,8 @@ static func run(g) -> void:
 	SmokeLoot.run(g)
 	SmokeCastles2Shape.run(g)
 	SmokeCastles2Walk.run(g)
+	SmokeCastles2Capture.run(g)
+	SmokeCastles2Engines.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

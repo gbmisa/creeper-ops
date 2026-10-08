@@ -36,7 +36,28 @@ Branch `stage/21-castles`, worktree `creeper fps td-worktrees/stage21`. Design: 
   p3_bailey.png (inner gate passage), p3_gatehall.png, p3_hall.png (crown in the keep hall), p3_roof.png (keep roof), p3_tower.png.
 - Unfinished: the roof slab is plain stone (no ashlar texture); command view can't see creeper under roofs.
 
+## P4 Staged capture + war engines
+- New: `level/castle_stages.gd` (CastleStages: gate → bailey → keep, contest, ring retake, per-ring gate owner, bailey
+  build rights, garrison home, marker text), `stronghold_tick.gd` (per-state ticks split out of `stronghold.gd`, which
+  keeps `_capturing/_holding/_pad` wrappers for old smoke), `castle_engines.gd` + `castle_engine_meshes.gd` (trebuchets).
+- `StrongholdRules`: new state keys `stage`, `ring`, `engines`; `sealed(c, lay, ring)`, `in_ward`; `sync_grid` hangs gates
+  per ring. `StrongholdHooks`: prey/enemy rows per ring (inner walls are always raider prey), `breach_cells(c, lay, ring)`.
+  `Strongholds.castle_goals`: ward cells + one breach line per sealed ring. Crown hits do nothing until the bailey is yours.
+- Siege on a concentric castle: raiders anywhere inside → siege; only raiders in the ward run the retake timer.
+- Engines: 2 per concentric castle (opposite corners), range 40 / min 8, 11 s, 3 s ground ring + whistle, blast 2.5 cells
+  (45 structure / 25 unit / 22 Operative), HP 140, respawn 150 s until the bailey falls. Weapons first; the Operative only
+  in line of sight (roofs hide you). Units, Snipers and the Lance hit them (`Strongholds.enemies`, `CastleGuards.foes`).
+  Sentinels no longer post on the engines' corner towers; the keep roof corners are Sentinel posts.
+- Rings share the enemy-mortar shader slots (`EnemyMortarFire.extra`).
+- Smoke: 510 PASS (+15 capture: every transition, contest, ring retake, bailey build rights, siege only from the ward,
+  abandoned keep keeps the rings, save round trip; +10 engines incl. "an Operative who walks out takes nothing").
+- Screenshot: p4_engine_ring.png (trebuchet on the NW tower, ring under the target cannon).
+- Debug: `--engines=I` (a cannon in reach, engines fire now), `--stage=I,N`.
+
 ## Shared-file edits (for the orchestrator)
+- `level/enemy_mortar_fire.gd`: `static var extra` + 4 lines appending it to the `shells` uniform.
+- `core/game.gd`: `castles.engine_prey = surface_prey` (1 line).
+- `core/smoke_level02.gd`: "guards: all posted" counts live Sentinels (foes() now includes engines).
 - `world/grid.gd`: `roof` array (+resize) and `GridRoofs.in_slab` in `raycast` (2 lines).
 - `fps/player_controller.gd`: `can_occupy`/`_push_out` use `GridRoofs.op_height`; ceiling clamp + `GridRoofs.stand_y`.
 - `core/debug.gd`: one `CastleDebug.apply(g, args)` line, header doc line, `castle2` in the auto list.

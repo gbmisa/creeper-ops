@@ -7,32 +7,34 @@ class_name StrongholdHooks
 
 static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary) -> void:
 	var world := s.world
-	var enemy_owned := func(p: Dictionary): return c.owner == "enemy" and p.hp > 0.0
-	var ours_sealed := func(p: Dictionary): return c.owner == "player" and p.hp > 0.0 and StrongholdRules.sealed(c, lay)
+	var enemy_owned := func(p: Dictionary, ring: String): return CastleStages.ring_owner(c, lay, ring) == "enemy" and p.hp > 0.0
+	var ours_sealed := func(p: Dictionary, ring: String): return c.owner == "player" and p.hp > 0.0 and StrongholdRules.sealed(c, lay, ring)
 	world.add_target({ "node": v.crown, "radius": 1.9, "oy": 2.0,
 		"alive": func(): return c.state == "hostile", "on_hit": func(d, _p = null): s._hit_crown(c, d) })
 	v["prey"] = []
 	v["enemies"] = []
 	var parts := []
 	for i in lay.gates.size():
-		parts.append(["gates", i, v.gates[i], 3.2])
+		parts.append(["gates", i, v.gates[i], 3.2, lay.gates[i].get("ring", "outer")])
 	if v.has("winch"):
-		parts.append(["winch", 0, v.winch, 1.2])
-	if not lay.raised and not lay.moat:  # walls raiders can stand next to
-		for i in lay.segments.size():
-			parts.append(["walls", i, v.segs[i], CastleShape.SEGMENT_MAX * 0.5 * Config.CELL * 0.6 + Config.CELL])
+		parts.append(["winch", 0, v.winch, 1.2, "outer"])
+	for i in lay.segments.size():  # walls raiders can stand next to: no moat, not raised; inner always
+		var ring: String = lay.segments[i].get("ring", "outer")
+		if ring == "inner" or (not lay.raised and not lay.moat):
+			parts.append(["walls", i, v.segs[i], CastleShape.SEGMENT_MAX * 0.5 * Config.CELL * 0.6 + Config.CELL, ring])
 	for p in parts:
 		var part: String = p[0]
 		var i: int = p[1]
+		var rg: String = p[4]
 		var state := func() -> Dictionary: return c.winch if part == "winch" else c[part][i]
 		var hit := func(d, _pt = null): s._hit(c, lay, part, i, d)
-		var reach := func(): return part != "gates" or not lay.raised or c.winch.hp <= 0.0  # raised gate: winch first
-		var prey_row := { "node": p[2], "radius": p[3], "alive": func(): return ours_sealed.call(state.call()) and reach.call(), "hit": hit }
+		var reach := func(): return part != "gates" or rg == "inner" or not lay.raised or c.winch.hp <= 0.0  # raised gate: winch first
+		var prey_row := { "node": p[2], "radius": p[3], "alive": func(): return ours_sealed.call(state.call(), rg) and reach.call(), "hit": hit }
 		if part == "walls":
 			prey_row["wall"] = true  # Brute / Behemoth wall_mult
 		v.prey.append(prey_row)
 		if part != "walls":
-			var e := { "node": p[2], "oy": 0.5, "radius": p[3] * 0.6, "alive": func(): return enemy_owned.call(state.call()), "hit": hit }
+			var e := { "node": p[2], "oy": 0.5, "radius": p[3] * 0.6, "alive": func(): return enemy_owned.call(state.call(), rg), "hit": hit }
 			v.enemies.append(e)
 			world.add_target({ "node": p[2], "radius": e.radius, "oy": 0.5, "alive": e.alive, "on_hit": hit })
 	_turrets(s, c, v)
@@ -43,7 +45,7 @@ static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 			c.pump.jam = Config.PUMP_JAM_TIME
 			Sfx.play("click")
 			Bus.say("Spire pump jammed: %s builds nothing from its moat for %ds." % [c.name, Config.PUMP_JAM_TIME], "good") })
-	world.markers.append({ "pos": (v.crown as Node3D).position + Vector3(0, 5, 0), "label": func(): return label(c),
+	world.markers.append({ "pos": (v.crown as Node3D).position + Vector3(0, 5, 0), "label": func(): return label(c, lay),
 		"color": StrongholdMeshes.PLAYER if c.owner == "player" else Color("ff6a8a"), "visible": func(): return true })
 
 
@@ -64,27 +66,30 @@ static func _turrets(s: Strongholds, c: Dictionary, v: Dictionary) -> void:
 					Bus.say(why, "warn") })
 
 
-static func label(c: Dictionary) -> String:
+static func label(c: Dictionary, lay: Dictionary) -> String:
 	match c.state:
-		"hostile": return "%s: climb the spire, kill the crown nest" % c.name
+		"hostile": return CastleStages.marker(c, lay)
 		"capturing": return "%s: hold the spire top %d%%" % [c.name, roundi(c.capture.progress * 100.0)]
 		"siege": return "%s UNDER SIEGE %ds" % [c.name, ceili(Config.RETAKE_TIME - c.capture.retake)]
 	return "%s (yours) +%.0f Æ/min" % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)]
 
 
-## Where raiders gather to break into a sealed castle you hold.
-static func breach_cells(c: Dictionary, lay: Dictionary) -> Array:
+## Where raiders gather to break into a sealed ring of a castle you hold (outside its walls).
+static func breach_cells(c: Dictionary, lay: Dictionary, ring := "outer") -> Array:
 	var out := []
-	var r: Rect2i = lay.rect
-	if not lay.raised and not lay.moat:
+	var r: Rect2i = lay.inner_rect if ring == "inner" else lay.rect
+	if ring == "inner" or (not lay.raised and not lay.moat):
 		for seg in lay.segments:
+			if seg.get("ring", "outer") != ring:
+				continue
 			for cell in seg.cells:
 				for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 					if not r.has_point(cell + d):
 						out.append(cell + d)
 	for gt in lay.gates:
-		out.append_array(gt.outer)
-	if c.winch.hp > 0.0 and lay.winch.x >= 0:
+		if gt.get("ring", "outer") == ring:
+			out.append_array(gt.outer)
+	if ring == "outer" and c.winch.hp > 0.0 and lay.winch.x >= 0:
 		for d in [Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0)]:
 			out.append(lay.winch + d)
 	return out

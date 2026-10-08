@@ -32,10 +32,14 @@ func _init(w: World, s: Strongholds, rows: Array) -> void:
 	w.updaters.append(update)
 
 
-## Tower tops first, then evenly spread points along the wall walk.
+## Tower tops first (concentric: not the war engines' corner towers; then the keep roof), then
+## evenly spread points along the wall walk.
 static func posts(g: Grid, lay: Dictionary, count: int) -> Array:
 	var spots: Array[Vector2i] = []
-	var towers: Array = lay.towers
+	var engines: Array = lay.get("engine_posts", [])
+	var towers: Array = lay.towers.filter(func(t): return not engines.has(t.centre))
+	for k in lay.get("keep_posts", []):
+		towers.append({ "centre": k })
 	var from_towers := mini(count, towers.size())
 	for i in from_towers:
 		spots.append(towers[i * towers.size() / from_towers].centre)
@@ -51,12 +55,13 @@ static func posts(g: Grid, lay: Dictionary, count: int) -> Array:
 
 
 func enemies() -> Array:
-	return foes().map(func(s): return s.enemy)
+	return list.filter(func(s): return s.alive).map(func(s): return s.enemy)  # engines come via Strongholds.enemies
 
 
-## Live Sentinels (each has `node` and `enemy.hit`): what Snipers and the Lance may hit.
+## Live Sentinels and castle war engines (each has `node` and `enemy.hit`): what Snipers and
+## the Lance may hit.
 func foes() -> Array:
-	return list.filter(func(s): return s.alive)
+	return list.filter(func(s): return s.alive) + CastleEngines.foes(castles)
 
 
 func alive_at(castle_id: String) -> int:
