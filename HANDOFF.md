@@ -1,35 +1,26 @@
-# Handoff: 2026-10-07 (session 12: visual pass 1, drag-build, Grok briefs out)
+# Handoff: 2026-10-08 (session 13: overnight Grok work reviewed and merged)
 
 ## State
-Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Rules: [docs/CREEPER_SPEC.md](docs/CREEPER_SPEC.md). `docs/CW4_SPEC.md` (user's, untracked) still unread.
-**Roles:** Opus orchestrates and merges; Grok follows [AGENTS.md](AGENTS.md). The user is low on Opus/weekly budget: **give Grok everything a lesser model can do**; Opus does review, merges, and design calls.
+Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Rules: [docs/CREEPER_SPEC.md](docs/CREEPER_SPEC.md); enemies: [docs/STRONGHOLDS_DESIGN.md](docs/STRONGHOLDS_DESIGN.md) (§3.3, §4 have "As built (Stage 8)" notes). `docs/CW4_SPEC.md` (user's, untracked) still unread.
+**Roles:** Opus orchestrates and merges; Grok follows [AGENTS.md](AGENTS.md). The user is budget-limited: **give Grok everything a lesser model can do**; flag it when Opus isn't needed.
 
-## This session (Opus, on main, commit 797bf37 + docs commit)
-- User verdict on the merged build: graphics bad: ground, creeper, first person, UI clutter (all four).
-- **Stage 18a:** `shaders/terrain_look.gdshaderinc` (grass patches/dirt/pebbles, near-camera blade detail, rock strata with ledge cracks and dark wall feet, grass lip, castle ashlar walls + flagstone tops, Blight cracks, bump via `bumped()`), `shaders/noise.gdshaderinc` (shared noise/voronoi/bump). Surface kind rides in vertex colour ALPHA (`TerrainMesh._colour`: 1 natural, .66 Blight, .33 stone, 0 spire). Creeper: deep navy, ripple + churn normals, gloss, low fresnel, contours kept.
-- **DragBuild** (`command/drag_build.gd`, user request): with a structure tool, drag = Collector/Relay chain at max link along the line (backs off from bad cells) or a row of other structures edge to edge. Preview discs + link lines (`plans` uniform), "Release to place N". `Placement.can_place(..., planned)`. Debug `--drag=T,x0,z0,x1,z1` (after `--sim=3`).
-
-## Out to Grok (parallel; briefs in docs/tasks/, table in docs/tasks/README.md)
-| Brief | Worktree / branch |
-|---|---|
-| STAGE18b_fps_visuals (weapon models, sky, haze, SSAO) | `stage18b` / `stage/18b-fps-visuals` |
-| STAGE18c_hud_declutter (compact objectives J, fading log, banner, "Crossbow") | `stage18c` / `stage/18c-hud-declutter` |
-| STAGE18d_dragbuild_polish (ghosts, field outlines, cost, Operative, smoke) | `stage18d` / `stage/18d-dragbuild-polish` |
-| SYNC_grok_branches (merge main into 7c, 10a, 11a; one session each) | `stage7c`, `stage10a`, `stage11a` |
-| **STAGE8_enemies_long** (overnight: pressure, roster, ranged, hives, enemy mortars; progress in `docs/tasks/STAGE8_progress.md`) | `stage8` / `stage/8-enemies` |
+## Merged to main this session (all Grok, reviewed by Opus)
+- **7c** stairs on L1 · **11a** Terp (Earth) · **10a** Armoury (upgrades, railgun/plasma/demo charge)
+- **18b** viewmodels (`WeaponModels`), `dusk_sky.gdshader` with clouds, haze, SSAO · **18c** compact objectives (J), fading log, small banner, "Crossbow" · **18d** drag-build ghosts, field outlines, cost line, Operative drag-build
+- **Stage 8** (overnight, 8 phases, log `docs/tasks/STAGE8_progress.md`): `Pressure` curve + overrun, `RaiderDefs` roster (Spitter, Lancer, Warden, Spotter, Burrower), ranged shots, mixed groups, **hives** replace nests (Core: Operative/Lance only, raze, Outpost, rebuild), **enemy mortars** with telegraph ring, Spotter, sabotage, sealed-Node rule.
+- **Opus merge fixes:** raider separation clamped (packed groups outran their slowest member); Armoury weapons fall back to the crossbow model; Lancer smoke kills leftover raiders first; command view uses 1/4 fog (`WorldLook.set_command_view`; 18b's haze washed the whole top-down map beige/lavender); creeper roughness 0.32 / specular 0.25.
 
 ## Verified
-- Smoke **235/235 PASS** after 18a. Xvfb screenshots of ground (L1 top/FPS, L2 castle), creeper, and drag previews (collector chain, relay chain, cannon row with cliff cells red).
+- Smoke **382/382 PASS**, three runs. Parse clean.
+- Sims (merged): L1 demo 900 s Node 500/500; L1 undefended dies 336 s; L2 undefended 226 s; L2 demo dies 652 s. All four tiers + Spitter/Lancer/Warden seen in the L1 demo.
+- Xvfb screenshots: command view, first person (new crossbow, clouds), gallery (new enemies), mortar ring.
 
-## NOT verified
-- 18a on the real GPU (Forward+) or in motion: creeper glint strength, bump, near grass. Drag-build by a human (only debug hook + code path).
-- Commit path of drag-build ran only through smoke-less code review (18d adds the tests).
+## NOT verified / needs the user
+- **Spitter decision:** in the balance pass Grok made the Spitter HP 4 with a 2-cell lob (spec: HP 10, range 20) so the *scripted* demo base survives. That removes the "medium-range acid lobber" role. Also Skitter dps 3→6, `NEST_GUARDS` 2→1, later unlocks (Lancer 0.55, groups 0.60). Ask the user; restoring spec is a Grok-sized task.
+- Nothing played by a human: Forward+ look (SSAO, sky), drag-build feel, Armoury, Terp, hives, mortars.
 
-## Known issues
-- Creeper sparkles may be noisy in motion; tune `bumped(... 0.08)` and `SPECULAR` in creeper.gdshader.
-- At frame 0 after `--autostart` the Node isn't connected yet, so a drag preview is all red (not an issue in play).
+## Known gaps (from Stage 8 log)
+No loot pickups (§4.4), no SPOTTED HUD widget (uses Bus.say), mortars not in the hive save, metal/stone-wall shell damage not built, Outpost Ore cost waits for 9a. Smoke files over 250 lines: smoke_terp 436, smoke_armoury 313, smoke_dragbuild 308; debug.gd ~280.
 
-## Next (Opus, morning)
-1. Ask the user how 18a looks on their GPU and how drag-build feels.
-2. Review + merge SYNCed 7c, 10a, 11a, then 18b/18c/18d (expect small conflicts: 18b and 10a both touch `operative_weapons.gd`; 18c and 10a touch `fps_hud.gd`/`hud.gd`).
-3. Later art: structures in motion, terrain far LOD, cave look.
+## Next
+1. Playtest; Spitter call. 2. Grok briefs: 8c enemy construction, 9a economy, splitting the long smoke files/debug.gd, SPOTTED widget + loot pickups. 3. Opus: CW4_SPEC read if wanted.
