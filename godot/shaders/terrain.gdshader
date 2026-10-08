@@ -9,6 +9,7 @@ render_mode cull_back;
 
 uniform sampler2D grain : filter_linear_mipmap, repeat_enable;
 uniform sampler2D claim_tex : filter_nearest, repeat_disable; // R = cell claimed by a collector
+uniform sampler2D terp_tex : filter_nearest, repeat_disable;   // R = raise, G = lower (0 = not painted)
 uniform vec2 map_size = vec2(160.0);
 uniform float show_overlay = 1.0;
 uniform float show_cover = 0.0;
@@ -58,6 +59,16 @@ void fragment() {
 		col = mix(col, vec3(0.05, 0.36, 0.14), claim * 0.5);  // dark enough to read on pale rock
 		col = mix(col, vec3(0.25, 0.80, 0.40), claim * grid * 0.55);
 		emit += claim * 0.03;
+		// Terp paint. Unpainted texels are 0, so the mix is a no-op. Amber raises, blue lowers.
+		vec2 tf = uv * vec2(textureSize(terp_tex, 0));
+		vec2 mark = texelFetch(terp_tex, ivec2(tf), 0).rg;
+		vec2 cell_uv = fract(tf);
+		float stripe = step(0.5, fract((cell_uv.x + cell_uv.y) * 5.0));
+		float edge = 1.0 - smoothstep(0.05, 0.09, min(min(cell_uv.x, 1.0 - cell_uv.x), min(cell_uv.y, 1.0 - cell_uv.y)));
+		float hatch = max(edge, 0.35 + 0.65 * stripe);
+		col = mix(col, vec3(0.95, 0.62, 0.16), mark.r * hatch);
+		col = mix(col, vec3(0.22, 0.52, 1.0), mark.g * hatch);
+		emit += (mark.r + mark.g) * (0.05 + 0.12 * hatch);
 		if (show_cover > 0.5) {
 			float cover = 0.0;
 			for (int i = 0; i < node_count; i++) cover = max(cover, disc(p, nodes[i].xy, nodes[i].z, 0.6));

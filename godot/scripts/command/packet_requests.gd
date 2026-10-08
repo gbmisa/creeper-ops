@@ -11,6 +11,7 @@ static func rate(kind: String) -> float:
 	match kind:
 		"build": return Config.REQ_BUILD * Upgrades.mult("build")
 		"ammo": return Config.REQ_AMMO
+		"terp": return Config.REQ_TERP
 		_: return Config.REQ_UNIT
 
 
@@ -24,7 +25,7 @@ static func transit_headroom(network: Network, s: Structure) -> float:
 	return s.per_shot() / WeaponLogic.fire_interval(s) * transit
 
 
-## "build" | "ammo" | "unit" | "". Counts packets already in flight so we never over-send.
+## "build" | "ammo" | "unit" | "terp" | "". Counts packets already in flight so we never over-send.
 static func need(network: Network, s: Structure) -> String:
 	if not s.connected or s.dead or s.def.get("drop_pod", false):
 		return ""
@@ -42,4 +43,9 @@ static func need(network: Network, s: Structure) -> String:
 		var q: Dictionary = s.queue[0]
 		if q.delivered + s.in_flight < q.cost:
 			return "unit"
+	# Joins the same round robin as ammo and builds. No priority.
+	if s.type == "terp" and not s.job.is_empty() and int(s.job.get("x", -1)) >= 0 \
+			and float(s.job.get("timer", 0.0)) <= 0.0 \
+			and int(s.job.get("paid", 0)) + s.in_flight < Config.TERP_PACKETS:
+		return "terp"
 	return ""

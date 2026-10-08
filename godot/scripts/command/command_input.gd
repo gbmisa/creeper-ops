@@ -19,12 +19,20 @@ static func hotkeys(cm: CommandMode, input: InputState) -> void:
 		CommandSelect.select_units(cm, null)
 	if input.act("cam_home") and cm.structures.command_node():
 		cm.cam.focus(cm.structures.command_node().pos)
+	if cm.tool == "@terp" and cm.overlay.paint != null:
+		if input.act("terp_up"):
+			cm.overlay.paint.nudge(cm, 1)
+		if input.act("terp_down"):
+			cm.overlay.paint.nudge(cm, -1)
 	for t in UnitDefs.ORDER:
 		if input.act(UnitDefs.KEYS[t]):
 			cm.train(t)
 
 
 static func left_mouse(cm: CommandMode, input: InputState) -> void:
+	if cm.tool == "@terp":
+		TerpPaint.pointer(cm, input)
+		return
 	var dragging := input.left and cm.tool == "" and input.mouse.distance_to(input.down_pos) > DRAG_PX
 	cm.drag_rect = Rect2(input.down_pos, input.mouse - input.down_pos).abs() if dragging else Rect2()
 	if not input.left_released:
@@ -62,6 +70,8 @@ static func click(cm: CommandMode, shift: bool) -> void:
 				CastleTurrets.buy(t.castle, t.i, cm.tool.substr(1), cm.castles.stockpile)
 				Sfx.play("good")
 				cm.set_tool("")
+			"@terp":
+				return  # TerpPaint.pointer owns the drag; a click must not place "@terp"
 			_:
 				cm.structures.place(cm.tool, c.x, c.y)
 				Sfx.play("click")  # CW3: the tool stays armed; right-click or Esc to stop

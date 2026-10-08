@@ -162,6 +162,12 @@ static func make(type: String) -> Node3D:
 			ring.outer_radius = 1.5
 			_add(spin, ring, mat(Color("d38cff"), 0.2, 0.3, Color("b060ff"), 2.5), Vector3.ZERO)
 			ball(root, 0.7, mat(Color("f0d0ff"), 0, 0.2, Color("c080ff"), 3.0), Vector3(0, 3.0, 0))
+		"terp":
+			cyl(root, 0.75, 0.95, 0.4, dark)
+			var arm := _part(root, "Spin", 0.4)
+			box(arm, Vector3(1.6, 0.14, 0.28), metal, Vector3(0.75, 0.2, 0))
+			box(arm, Vector3(0.4, 0.45, 0.7), mat(Color("c4a46a"), 0.3, 0.55), Vector3(1.4, 0.12, 0))
+			ball(root, 0.2, glow, Vector3(0, 0.75, 0))
 		"beacon":
 			cyl(root, 0.3, 0.7, 0.3, dark)
 			var g := _part(root, "Glow", 0.3)

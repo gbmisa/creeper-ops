@@ -16,6 +16,7 @@ var dirty := true
 var network: Network
 var packets: Packets
 var field: CollectorField
+var level: Dictionary = {}   # live level dict (unlocks); set by Game
 
 
 func setup(w: World, eco: Economy) -> void:

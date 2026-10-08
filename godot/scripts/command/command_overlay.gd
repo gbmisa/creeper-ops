@@ -7,6 +7,7 @@ extends RefCounted
 
 var world: World
 var mat: ShaderMaterial
+var paint: TerpPaint = null   # hatched target tint; Game attaches it before setup
 var ghost_node: Node3D = null
 var ghost_type := ""
 var ghost_mat: StandardMaterial3D = null
@@ -15,6 +16,8 @@ var ghost_mat: StandardMaterial3D = null
 func _init(w: World) -> void:
 	world = w
 	mat = w.terrain_mat
+	if w.has_meta("terp_tint"):
+		paint = w.get_meta("terp_tint") as TerpPaint
 
 
 func _set_ghost_model(type: String) -> void:

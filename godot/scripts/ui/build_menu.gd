@@ -5,6 +5,7 @@ extends PanelContainer
 ## shows its full description and numbers.
 
 var on_pick := Callable()   # func(item: String) — structure type or "@action"
+var level: Dictionary = {}  # live level dict; Hud assigns it before refresh
 var tab := 0
 var _tab_buttons: Array[Button] = []
 var _items: HBoxContainer
@@ -62,8 +63,11 @@ func show_tab(i: int) -> void:
 		b.text = "%s  %s\n%s" % [Keybinds.short("build_%d" % (n + 1)) if n < 9 else "", StructureDefs.label(item), StructureDefs.cost_text(item)]
 		b.add_theme_font_size_override("font_size", 14)
 		b.toggle_mode = true
+		b.set_meta("slot", n)
 		b.pressed.connect(func(): _pick(item))
-		b.mouse_entered.connect(func(): _tip.text = "%s: %s" % [StructureDefs.label(item), StructureDefs.desc(item)])
+		b.mouse_entered.connect(func():
+			var why := StructureDefs.lock_reason(level, item)
+			_tip.text = why if why != "" else "%s: %s" % [StructureDefs.label(item), StructureDefs.desc(item)])
 		b.mouse_exited.connect(func(): _tip.text = "")
 		_items.add_child(b)
 		_buttons[item] = b
@@ -71,6 +75,11 @@ func show_tab(i: int) -> void:
 
 
 func _pick(item: String) -> void:
+	var locked := StructureDefs.lock_reason(level, item)
+	if locked != "":
+		Sfx.play("deny")
+		Bus.say(locked, "warn")
+		return
 	Sfx.play("click")
 	if on_pick.is_valid():
 		on_pick.call(item)
@@ -105,15 +114,29 @@ func handle_key(key: int) -> bool:
 	return false
 
 
-## Grey out what you can't afford right now (drop pods / lance pay up front).
+## Grey out a locked item, and anything that has to be paid up front (drop pods / lance).
 func refresh(energy: float) -> void:
 	for item in _buttons:
 		var b: Button = _buttons[item]
+		var n := int(b.get_meta("slot", 0))
+		var key := Keybinds.short("build_%d" % (n + 1)) if n < 9 else ""
+		var locked := StructureDefs.lock_reason(level, item)
+		if locked != "":
+			b.disabled = true
+			b.modulate = Color(1, 1, 1, 0.4)
+			b.tooltip_text = locked
+			b.custom_minimum_size = Vector2(230, 58)
+			b.text = "%s  %s\n%s" % [key, StructureDefs.label(item), locked]
+			continue
+		b.disabled = false
+		b.tooltip_text = ""
+		b.custom_minimum_size = Vector2(118, 58)
+		b.text = "%s  %s\n%s" % [key, StructureDefs.label(item), StructureDefs.cost_text(item)]
 		var up_front := 0.0
 		if item == "@lance":
 			up_front = Config.LANCE_COST
 		elif item == "@drop":
 			up_front = Config.DROP_BASE
-		elif not item.begins_with("@") and StructureDefs.DEFS[item].get("drop_pod", false):
+		elif not str(item).begins_with("@") and StructureDefs.DEFS[item].get("drop_pod", false):
 			up_front = StructureDefs.DEFS[item].cost
 		b.modulate = Color(1, 1, 1, 0.5) if energy < up_front else Color.WHITE

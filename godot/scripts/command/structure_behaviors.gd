@@ -15,6 +15,8 @@ static func update(s: Structure, dt: float, mgr, time: float) -> void:
 			_nullifier(s, dt, mgr)
 		"barracks":
 			_barracks(s, dt)
+		"terp":
+			Terp.tick(s, dt, mgr)
 
 
 static func _nullifier(s: Structure, dt: float, mgr) -> void:

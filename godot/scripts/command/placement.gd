@@ -42,6 +42,9 @@ static func _ground_rules(mgr, type: String, x: int, z: int, ignore: Structure) 
 
 static func can_place(mgr, type: String, x: int, z: int) -> Dictionary:
 	var def: Dictionary = StructureDefs.DEFS[type]
+	var locked := StructureDefs.lock_reason(mgr.level, type)
+	if locked != "":
+		return { "ok": false, "reason": locked }
 	var why := _ground_rules(mgr, type, x, z, null)
 	if why != "":
 		return { "ok": false, "reason": why }

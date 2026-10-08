@@ -46,6 +46,7 @@ func _ready() -> void:
 	add_child(surface)
 	structures = StructureManager.new()
 	structures.setup(surface, economy)
+	structures.level = level
 	surface.add_child(structures)
 	hazards = SurfaceHazards.new(surface, level, structures)
 	structures.hazards = hazards
@@ -62,6 +63,8 @@ func _ready() -> void:
 
 	orbital = Orbital.new(surface, economy)
 	orbital.hazards = hazards
+	TerpPaint.attach(surface)
+	TerpPaint.attach(cave)
 	command = CommandMode.new()
 	command.setup(surface, structures, units, orbital, level)
 	add_child(command)
