@@ -30,3 +30,7 @@ One file per task. Start a **fresh** agent session in the task's worktree and gi
 | [STAGE18d_dragbuild_polish.md](STAGE18d_dragbuild_polish.md) | `creeper fps td-worktrees/stage18d` | `stage/18d-dragbuild-polish` |
 | [SYNC_grok_branches.md](SYNC_grok_branches.md) (one session each) | `stage7c`, `stage10a`, `stage11a` | their own branches |
 | [STAGE8_enemies_long.md](STAGE8_enemies_long.md) (**long, overnight**) | `creeper fps td-worktrees/stage8` | `stage/8-enemies` |
+| **Long runs** (rules: [LONG_RUN_RULES.md](LONG_RUN_RULES.md)) | | |
+| [STAGE9b_content_long.md](STAGE9b_content_long.md) | `creeper fps td-worktrees/stage9b` | `stage/9b-content` |
+| [STAGE19_flyers_long.md](STAGE19_flyers_long.md) | `creeper fps td-worktrees/stage19` | `stage/19-flyers` |
+| [STAGE20_art2_long.md](STAGE20_art2_long.md) | `creeper fps td-worktrees/stage20` | `stage/20-art2` |

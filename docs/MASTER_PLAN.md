@@ -2,7 +2,7 @@
 
 The living plan. **Update this file at the end of every stage:** tick the box, set the status, add a line to the Changelog, and move any new decisions into Settled Design. It replaces the Roadmap in [DEV_PLAN.md](DEV_PLAN.md). That file's model-routing guide still applies.
 
-**Status (2026-10-08):** everything through Stage 18 and Stage 8 (8a + 8b) is merged to `main` (⚠ = not human-verified). Open: 8c enemy construction, 9a/9b economy, 12 level placement, 13 tuning, 14 review. Waiting on the user: a playtest of the merged build (see HANDOFF). The Spitter is restored to the §4.2 table (HP 10, range 20).
+**Status (2026-10-08):** everything through Stage 18, Stage 8 (8a/8b/8c), 9a and loot/SPOTTED is merged to `main` (⚠ = not human-verified). Out to Grok (long runs): 9b+ammo+12+13 content, 19 flyers, 20 art pass 2. Phase B (save/load, large maps, RTS) waits for the user.
 **Status key:** ☐ not started · ◐ in progress · ☑ done (verified) · ⚠ done, not verified by a human
 
 ---
@@ -114,9 +114,9 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 7c | Traversable terrain on Level 1 (stairs, no isolated shelves) | Sonnet 5.5 (Grok), Opus review | ⚠ merged 2026-10-08 (Grok, Opus review) |
 | 8a | Nest bases and enemy mortars | Grok Build (long run with 8b) | ⚠ merged 2026-10-08 (Grok long run; Spitter restored to HP 10, range 20) |
 | 8b | Enemy roster (incl. Burrower, Weaver) | Grok Build (long run, before 8a) | ⚠ merged 2026-10-08 (Grok long run) |
-| 8c | **Enemy construction:** hubs in enemy castles, Weavers, Leeches, build planner, enemy structures (design §4.5) | Sonnet 5.5, Opus review | ☐ |
-| 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ☐ |
-| 9b | Extractors and supply points | Sonnet 5.5 | ☐ |
+| 8c | **Enemy construction:** hubs in enemy castles, Weavers, Leeches, build planner, enemy structures (design §4.5) | Sonnet 5.5, Opus review | ⚠ merged 2026-10-08 (Grok) |
+| 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ⚠ merged 2026-10-08 (Grok) |
+| 9b | Extractors and supply points | Sonnet 5.5 | ☐ long brief: [tasks/STAGE9b_content_long.md](tasks/STAGE9b_content_long.md) |
 | 10 | Armoury (incl. Ctrl + wheel ammo switching). **10a** = upgrades + advanced weapons; 10b-ammo later | Sonnet 5.5 (Grok) | ⚠ merged 2026-10-08 (Grok, Opus review) |
 | 10b | **Operative deployment:** Totems, drop anywhere, recall cooldown, Shield Domes block drops, expensive respawn (design §5.4) | Sonnet 5.5 (Grok), Opus review | ⚠ merged, verified headless |
 | 11 | Terp. **11a** = Earth only; Metal (11b) after 9a's Ore | Sonnet 5.5 (Grok) | ⚠ merged 2026-10-08 (Grok, Opus review) |
@@ -127,8 +127,10 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 18b | **First-person visuals:** crossbow/sprayer/launcher models, sky with sun disc + clouds, aerial haze, SSAO | Grok Build | ⚠ merged 2026-10-08 (Grok, Opus review) |
 | 18c | **HUD declutter:** compact objectives (J expands), fading 5-line log, smaller fading banner, "Crossbow" label | Grok Build | ⚠ merged 2026-10-08 (Grok, Opus review) |
 | 18d | **Drag-build polish:** ghosts per piece, field outlines, cost line, Operative drag-build, smoke | Grok Build | ⚠ merged 2026-10-08 (Grok, Opus review) |
-| 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ☐ |
-| 13 | Tuning | Haiku 4.5 (`balance-tester`) | ☐ |
+| 19 | **Flying enemies:** Spore Bat, Gasbag (drops creeper), Wyvern; roost hive part; Beams/Flak/Operative/Lance counter them | Grok Build (long) | ☐ brief: [tasks/STAGE19_flyers_long.md](tasks/STAGE19_flyers_long.md) |
+| 20 | **Art pass 2, motion and feedback:** recoil, muzzle flash, hit flash, deaths, walk cycles, cave look | Grok Build (long, self-judged with the rubric) | ☐ brief: [tasks/STAGE20_art2_long.md](tasks/STAGE20_art2_long.md) |
+| 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ☐ in the 9b long brief |
+| 13 | Tuning | Haiku 4.5 (`balance-tester`) | ☐ in the 9b long brief |
 | 14 | Review and screenshots | **Opus 5.5** | ☐ |
 
 ### Stage details
@@ -248,3 +250,4 @@ Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix
 - 2026-10-07: Plan created from the design conversation. Old corrections that were never built are folded into Stages 1 and 2.
 - 2026-10-07: Stage 1 ⚠. Built `weapon` structures take creeper HP damage; a weapon with `charge > 0` takes none. New `WEAPON_CREEPER_BASE_DPS` 5.5 / `WEAPON_CREEPER_DPS` 2.5: a 40 HP cannon lasts 5 s at depth 1, about 3 s at depth 3. (Opus review: the Node keeps `STRUCT_*` 6/14; Grok's first version had changed those too.)
 - 2026-10-07: Stage 2 done headless (⚠, no human playtest). Beams are surface-to-air and burn flying enemies, mortar splash deals `MORTAR_RAIDER_DMG`, raiders step one terrace, and raid timing comes from each level's `RAID_SCHEDULE`.
+- 2026-10-08: Opus merged 9a (return packets, Ore, Miner), 8c (Weavers build in enemy castles), loot pickups + SPOTTED. Smoke OK x2. L1 demo loses the Node at 603 s (expected after the Spitter restore). Long briefs out: 9b content, 19 flyers, 20 art pass 2 ([LONG_RUN_RULES](tasks/LONG_RUN_RULES.md)).
