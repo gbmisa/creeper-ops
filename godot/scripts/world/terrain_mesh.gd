@@ -17,8 +17,8 @@ const PALETTES := {
 
 
 const STONE := Color("8a8478")
-const SPIRE := Color("1c1626")
-const SPIRE_VEIN := Color("7a3aa8")
+const SPIRE := Color("2a2730")  # obsidian
+const SPIRE_VEIN := Color("5a4a6a")  # dull violet glassy streaks
 
 static func sample_height(grid: Grid, wx: float, wz: float, noise: Noise2D, cave: bool) -> float:
 	var size := grid.world_size()

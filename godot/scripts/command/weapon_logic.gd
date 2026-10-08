@@ -54,11 +54,22 @@ static func _muzzle(s: Structure) -> Vector3:
 	return s.node.position + Vector3(0, s.def.link_y, 0)
 
 
+## Where shot effects start: the model's "Muzzle" (visual only; rules use _muzzle).
+static func _fx(s: Structure) -> Vector3:
+	var m := s.body.find_child("Muzzle", true, false) as Node3D
+	return m.global_position if m and m.is_inside_tree() else _muzzle(s)
+
+
 static func _aim(s: Structure, target: Vector3) -> void:
 	var tur := s.body.get_node_or_null("Turret") as Node3D
 	if tur:
 		var d := target - s.node.position
 		tur.rotation.y = atan2(-d.z, d.x)
+		var arm := tur.get_node_or_null("Arm") as Node3D
+		if arm:  # visual pitch: dip toward near/low targets, rear up for lobs
+			var lob := s.type == "mortar" or s.type == "bertha"
+			var flat := Vector2(d.x, d.z).length()
+			arm.rotation.z = 0.12 if lob else clampf(atan2(d.y - 3.0, flat) * 0.5, -0.3, 0.15)
 
 
 ## The cell a weapon fires from: where it is now, even mid-flight.
@@ -73,11 +84,10 @@ static func _zap(s: Structure, mgr) -> bool:
 	if t == null:
 		return false
 	CreeperStrike.hits(w.creeper, t.x, t.y, s.def.splash, s.def.hits, s.def.power)
-	var a := _muzzle(s)
 	var b := w.grid.cell_ground(t.x, t.y) + Vector3(0, w.creeper.depth_at(t.x, t.y), 0)
 	_aim(s, b)
 	var col := Color("7fe0ff") if s.type == "thor" else Color("fff27a")
-	w.effects.beam(a, b, col, 0.07, 0.08)
+	w.effects.beam(_fx(s), b, col, 0.07, 0.08)
 	w.effects.burst(b, Color("fff6b0"), 0.6, 0.12)
 	Sfx.play("blaster", s.pos)
 	return true
@@ -90,13 +100,12 @@ static func _lob(s: Structure, mgr) -> bool:
 		Config.LOB_RANGE_PER_LEVEL, s.def.get("min_range", 0))
 	if t == null:
 		return false
-	var a := _muzzle(s)
 	var b := w.grid.cell_ground(t.x, t.y) + Vector3(0, w.creeper.depth_at(t.x, t.y), 0)
 	_aim(s, b)
 	var big := s.type == "bertha"
 	var splash: float = s.def.splash
 	var power: float = s.def.power
-	w.effects.lob(a, b, { "color": Color("ffb347"), "time": 2.2 if big else 1.0, "arc": 30.0 if big else 10.0,
+	w.effects.lob(_fx(s), b, { "color": Color("ffb347"), "time": 2.2 if big else 1.0, "arc": 30.0 if big else 10.0,
 		"size": 0.8 if big else 0.45, "on_arrive": func():
 			CreeperStrike.disk(w.creeper, t.x, t.y, splash, power)
 			WeaponLogic._splash_raiders(mgr, b, splash)
@@ -115,8 +124,8 @@ static func _beam(s: Structure, mgr) -> bool:
 	for it in w.effects.lobs():
 		if it.has("spore") and (it.pos as Vector3).distance_to(a) <= reach:
 			it.spore_hp -= s.def.power
-			w.effects.beam(a, it.pos, Color("ff5050"), 0.06, 0.07)
 			_aim(s, it.pos)
+			w.effects.beam(_fx(s), it.pos, Color("ff5050"), 0.06, 0.07)
 			if it.spore_hp <= 0.0:
 				it.dead = true
 				w.effects.burst(it.pos, Color("88ff55"), 2.5, 0.4)
@@ -159,7 +168,7 @@ static func _snipe(s: Structure, mgr) -> bool:
 		return false
 	var p: Vector3 = best.node.position
 	_aim(s, p)
-	w.effects.beam(a, p, Color("e0f0ff"), 0.08, 0.05)
+	w.effects.beam(_fx(s), p, Color("e0f0ff"), 0.08, 0.05)
 	best.enemy.hit.call(s.def.power)
 	Sfx.play("rifle", s.pos)
 	return true

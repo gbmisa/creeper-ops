@@ -8,7 +8,7 @@ class_name Debug
 ##   --surface / --spire   drop the Operative near the Rift / at the Spire ramp
 ##   --cave        go straight into the cave       --killcore  destroy pylons + Core
 ##   --fast        8x sim speed                    --nocapture don't capture the mouse
-##   --look=x,z[,d] point the command camera at a cell (d = zoom distance)   --rocket  Operative fires a rocket
+##   --look=x,z[,d[,p]] point the command camera at a cell (d = zoom distance, p = pitch rad)   --rocket  Operative fires a rocket
 ##                 just before --shot
 ##   --sim=N       fast-forward N seconds, print a [sim] report
 ##   --smoke       run scripted mechanics checks (smoke_test.gd)
@@ -28,6 +28,7 @@ class_name Debug
 ##   --castle=I[,spot]  drop the Operative at castle I: climb (pillar route, default), pad
 ##                 (spire jump pad), top (spire top), gate (outside the gate)
 ##   --guardsfire  every Sentinel is ready to fire now (screenshots of a bolt in flight)
+##   --gallery     one of every structure, unit and raider tier in rows (art screenshots)
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -50,7 +51,7 @@ static func apply(g) -> void:
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
 	if args.has("nocapture") or args.has("shot"):
 		g.ignore_capture = true
-	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "raid", "sim", "shot", "smoke"].any(func(k): return args.has(k))
+	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "raid", "gallery", "sim", "shot", "smoke"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
 	elif auto:
@@ -107,10 +108,14 @@ static func apply(g) -> void:
 		Bus.enter_cave.emit()
 	if args.has("killcore"):
 		g.cave_hazards.kill_all()
+	if args.has("gallery"):
+		Gallery.run(g, args.gallery)
 	if args.has("look"):
 		var xz: PackedStringArray = args.look.split(",")
 		g.command.cam.focus(g.level.grid.cell_ground(int(xz[0]), int(xz[1])))
 		g.command.cam.dist = float(xz[2]) if xz.size() > 2 else 55.0
+		if xz.size() > 3:
+			g.command.cam.pitch = float(xz[3])
 	if args.has("gpu-parity") or args.has("perf-sim"):
 		SimBench.run(g, args)
 		return

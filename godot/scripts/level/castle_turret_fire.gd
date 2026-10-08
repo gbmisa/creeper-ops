@@ -31,13 +31,22 @@ static func refresh(v: Dictionary, c: Dictionary) -> void:
 			continue
 		var def: Dictionary = CastleTurrets.DEFS[s.turret]
 		var k: float = 1.3 + 0.25 * s.level  # reads from command height; grows per level
-		StructureMeshes.cyl(n, 0.7 * k, 0.9 * k, 0.6 * k, StructureMeshes.mat(Color("3a4150")), 0.0, 10)
-		var head := Node3D.new()
-		head.name = "Head"
-		head.position.y = 0.9 * k
-		n.add_child(head)
-		StructureMeshes.ball(head, 0.45 * k, StructureMeshes.mat(def.color, 0.3, 0.5, def.color, 0.4))
-		StructureMeshes.box(head, Vector3(0.18, 0.18, 1.0 * k), StructureMeshes.mat(Color("20242c")), Vector3(0, 0, -0.5 * k))
+		_model(n, def.color, k)
+
+
+## Stone pedestal, bronze yoke and a ballista head (looks along -Z, aimed via "Head").
+static func _model(n: Node3D, col: Color, k: float) -> void:
+	ShapeKit.lathe(n, PackedVector2Array([Vector2(0.8, 0.0), Vector2(0.65, 0.2), Vector2(0.55, 0.6),
+		Vector2(0.7, 0.75), Vector2(0.0, 0.75)]) , StructureMeshes.mat(StrongholdMeshes.DECOR_STONE, 0.0, 0.9), Vector3.ZERO, 8).scale = Vector3.ONE * k
+	var head := Node3D.new()
+	head.name = "Head"
+	head.position.y = 0.95 * k
+	n.add_child(head)
+	StructureMeshes.box(head, Vector3(0.5, 0.35, 0.5) * k, StructureMeshes.pal("bronze"))
+	StructureMeshes.box(head, Vector3(0.14, 0.14, 1.3) * k, StructureMeshes.pal("oak"), Vector3(0, 0.05, -0.4) * k)
+	for sx in [-1.0, 1.0]:
+		ShapeKit.strut(head, Vector3(0, 0.05, -0.85) * k, Vector3(sx * 0.6, 0.05, -0.55) * k, 0.07 * k, StructureMeshes.pal("bronze_dark"))
+	StructureMeshes.ball(head, 0.12 * k, StructureMeshes.glow(col, 1.6), Vector3(0, 0.25, 0) * k, 8)
 
 
 static func tick(world: World, c: Dictionary, v: Dictionary, raiders: Raiders, dt: float) -> void:

@@ -78,7 +78,7 @@ func place(type: String, x: int, z: int, instant := false) -> Structure:
 	s.body = StructureMeshes.make(type)
 	s.node.add_child(s.body)
 	var big := StructureDefs.footprint(type) > 0
-	s.hp_bar = Bar.new(3.0 if big else 1.6, s.def.link_y + (3.0 if big else 1.3))
+	s.hp_bar = Bar.new(3.0 if big else 1.6, StructureMeshes.top_y(type) + 0.6)
 	s.node.add_child(s.hp_bar)
 	if s.has_ammo_store():
 		s.ammo_bar = Bar.new(3.0 if big else 1.6, s.hp_bar.position.y - 0.25)
