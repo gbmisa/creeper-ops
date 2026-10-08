@@ -15,12 +15,21 @@ var coil: MeshInstance3D
 var cone: MeshInstance3D
 var launcher := RocketLauncher.new()
 var advanced: AdvancedWeapons
+var models := {}
 
 
 func _init(cam: Camera3D) -> void:
 	camera = cam
 	gun = Node3D.new()
-	_arbalest(gun)
+	for id in ["rifle", "sprayer", "rocket"]:
+		var n := Node3D.new()
+		n.name = id
+		models[id] = n
+		gun.add_child(n)
+	coil = WeaponModels.crossbow(models["rifle"])
+	WeaponModels.sprayer(models["sprayer"])
+	WeaponModels.launcher(models["rocket"])
+	_show_model()
 	gun.scale = Vector3.ONE * 0.4
 	gun.position = Vector3(0.18, -0.16, -0.5)
 	cam.add_child(gun)
@@ -47,19 +56,11 @@ func label() -> String:
 	return "[%s] %s  %d/%d" % [Keybinds.short("rocket"), Config.ROCKET.name, launcher.loaded, launcher.mag_size()]
 
 
-## Viewmodel: a wood-and-bronze rune arbalest (looks down -Z). `coil` is the rune crystal
-## on top; its own material, because update() recolours it per weapon.
-func _arbalest(g: Node3D) -> void:
-	var M := StructureMeshes
-	M.box(g, Vector3(0.07, 0.08, 0.5), M.pal("oak"), Vector3(0, 0, 0.02))
-	M.box(g, Vector3(0.09, 0.07, 0.12), M.pal("bronze"), Vector3(0, 0.01, -0.02))
-	M.box(g, Vector3(0.05, 0.13, 0.06), M.pal("oak"), Vector3(0, -0.09, 0.14)).rotation.x = 0.3
-	for sx in [-1.0, 1.0]:
-		ShapeKit.strut(g, Vector3(sx * 0.02, 0.02, -0.24), Vector3(sx * 0.15, 0.0, -0.19), 0.02, M.pal("bronze_dark"), 0.025)
-		ShapeKit.rod(g, Vector3(sx * 0.15, 0.0, -0.19), Vector3(0, 0.03, -0.06), 0.003, M.pal("iron"), 4)
-	ShapeKit.rod(g, Vector3(0, 0.05, -0.02), Vector3(0, 0.05, -0.34), 0.01, M.pal("oak"), 6)
-	coil = M.crystal(g, 0.03, 0.14, M.mat_new(Color("3fb8f0"), 0.0, 0.3, Color("2a9fd0"), 0.9), Vector3(0, 0.08, 0.06))
-	coil.rotation.x = PI / 2.0
+## Armoury weapons (railgun, plasma, demo) have no model of their own yet: they show the crossbow.
+func _show_model() -> void:
+	var shown: String = current if models.has(current) else "rifle"
+	for id in models:
+		(models[id] as Node3D).visible = id == shown
 
 
 func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
@@ -67,6 +68,7 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 		if input.act(w):
 			current = w
 	advanced.update(dt, input, world, feet)
+	_show_model()
 	var m := coil.material_override as StandardMaterial3D
 	m.emission = { "rifle": Color("2a9fd0"), "sprayer": Color("3faa22"), "rocket": Color("ff8a1a"),
 		"railgun": Color("d7f6ff"), "plasma": Color("c45bff"), "demo": Color("ff8844") }.get(current, Color("2a9fd0"))

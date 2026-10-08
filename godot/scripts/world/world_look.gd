@@ -3,6 +3,7 @@ class_name WorldLook
 
 
 ## Surface: warm fantasy dusk (amber sun low in the east, violet-blue zenith).
+## The cave keeps its colours. Both get SSAO; GL compatibility (Xvfb) ignores it.
 static func make_environment(cave: bool) -> WorldEnvironment:
 	var e := Environment.new()
 	e.tonemap_mode = Environment.TONE_MAPPER_ACES
@@ -11,6 +12,9 @@ static func make_environment(cave: bool) -> WorldEnvironment:
 	e.glow_intensity = 0.4
 	e.glow_bloom = 0.0
 	e.glow_hdr_threshold = 1.2
+	e.ssao_enabled = true
+	e.ssao_radius = 1.5
+	e.ssao_intensity = 1.5
 	if cave:
 		e.background_mode = Environment.BG_COLOR
 		e.background_color = Color("120b1c")
@@ -21,22 +25,23 @@ static func make_environment(cave: bool) -> WorldEnvironment:
 		e.fog_light_color = Color("1a1028")
 		e.fog_density = 0.02
 	else:
-		var sky := ProceduralSkyMaterial.new()
-		sky.sky_top_color = Color("2b3766")
-		sky.sky_horizon_color = Color("dfa48a")
-		sky.ground_horizon_color = Color("8a6a6a")
-		sky.ground_bottom_color = Color("2e2430")
-		sky.sun_angle_max = 20.0
+		var sky_mat := ShaderMaterial.new()
+		sky_mat.shader = load("res://shaders/dusk_sky.gdshader")
 		var s := Sky.new()
-		s.sky_material = sky
+		s.sky_material = sky_mat
 		e.background_mode = Environment.BG_SKY
 		e.sky = s
 		e.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 		e.ambient_light_energy = 0.9
 		e.fog_enabled = true
-		e.fog_light_color = Color("a08a88")
-		e.fog_density = 0.0016
-		e.fog_sky_affect = 0.2
+		e.fog_light_color = Color("c4a090")
+		# 1 - exp(-density * metres). 0.0032 is about 40% haze at 160 m, Level 1's far edge.
+		e.fog_density = 0.0032
+		e.fog_aerial_perspective = 0.7
+		e.fog_sun_scatter = 0.3
+		e.fog_sky_affect = 0.28
+		e.adjustment_enabled = true
+		e.adjustment_saturation = 1.06
 	var we := WorldEnvironment.new()
 	we.environment = e
 	return we
