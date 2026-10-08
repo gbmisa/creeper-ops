@@ -196,8 +196,7 @@ static func raze(host, hive: Dictionary) -> void:
 	EnemyMortars.reconcile(host, hive)
 	HiveSite.drop_anchor(hive)
 	HiveSite.zone(host, hive, false)
-	if host.stockpile != null:
-		host.stockpile.add("salvage", Config.HIVE_SALVAGE)
+	Loot.drop(host.world, hive.pos, Config.HIVE_SALVAGE, host.stockpile, host.operative)
 	host.world.effects.burst(hive.pos + Vector3.UP, Color("a8ff5a"), 6.0, 0.8)
 	Sfx.play("boom", hive.pos)
 	Bus.say("Hive razed: %s. The Blight clears." % str(hive.name), "good")

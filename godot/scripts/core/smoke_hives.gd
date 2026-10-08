@@ -140,9 +140,17 @@ static func _core(g, nests: SporeNests, grid: Grid) -> void:
 			got[0] = true
 	Bus.objective_done.connect(cb)
 	HiveParts.hurt(nests, hive, core, 9999.0, "lance")
-	SmokeTest._check("razing clears Blight and pays salvage", str(hive.state) == "razed" and not hive.alive
+	var core_drop := Loot.find(hive.pos, Config.HIVE_SALVAGE)
+	SmokeTest._check("razing clears Blight and drops salvage", str(hive.state) == "razed" and not hive.alive
 		and grid.zone_at(int(hive.x), int(hive.z)) == Grid.Zone.NONE
-		and g.stockpile.salvage >= salvage + Config.HIVE_SALVAGE - 0.01)
+		and is_equal_approx(g.stockpile.salvage, salvage) and not core_drop.is_empty())
+	if not core_drop.is_empty():
+		g.fps.enter(g.surface, Vector2i(int(hive.x), int(hive.z)), 0.0)
+		g.fps.controller.pos = hive.pos
+		g.fps.body.position = hive.pos
+		(core_drop.tick as Callable).call(0.05)
+		g.fps.leave()
+	SmokeTest._check("operative collects the core pickup", not core_drop.is_empty() and is_equal_approx(g.stockpile.salvage, salvage + Config.HIVE_SALVAGE))
 	var pad: Structure = g.structures.place("outpost", int(hive.x), int(hive.z), true)
 	HiveSite.tick(nests, hive, 0.05)
 	SmokeTest._check("outpost on the core claims the hive", str(hive.state) == "outpost")

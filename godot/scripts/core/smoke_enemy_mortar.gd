@@ -65,6 +65,18 @@ static func _aiming(g, nests: SporeNests, hive: Dictionary) -> void:
 	EnemyMortarFire.spotter(nests, m)
 	picked = EnemyMortars.aim(nests, m)
 	SmokeTest._check("operative targeted while a spotter has line of sight", str(picked.get("kind", "")) == "operative")
+	m.cd = 0.0
+	m.spotted = false
+	EnemyMortarFire.volley(nests, hive, 0.0)
+	var mode := str(g.mode)
+	g.mode = "surface"
+	g.hud.refresh(g, 0.05)
+	SmokeTest._check("HUD shows SPOTTED while a mortar has the Operative", bool(m.spotted) and g.hud.fps.spotted_lit() and g.hud.log_has("SPOTTED"))
+	g.mode = mode
+	g.hud.set_mode(mode)
+	m.telegraph = null
+	m.cd = 0.0
+	m.spotted = false
 	g.fps.controller.pos = g.surface.grid.cell_ground(10, 72)
 	g.fps.body.position = g.fps.controller.pos
 	picked = EnemyMortars.aim(nests, m)

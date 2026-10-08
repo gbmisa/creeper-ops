@@ -218,6 +218,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix. First-pass Aether Towers (Stage 7 replaces them). First-pass nest raiders with tier escalation (Stages 2 and 8 rework them). 49/49 smoke tests pass.
 
 ## 6. Changelog
+- 2026-10-08: Salvage pickups (§4.4) and a red SPOTTED label on the operative HUD while a mortar has them. Smoke files over 250 lines (smoke_terp, smoke_armoury, smoke_dragbuild) and debug.gd are split. No stage box: this was a Grok cleanup, not a new stage.
 - 2026-10-08: Opus merged 7c, 11a, 10a, 18b, 18c, 18d and Stage 8 (8b roster + 8a hives/mortars, 8 phases, log in tasks/STAGE8_progress.md). Smoke 382/382 x3. Merge fixes: raider separation can't add speed (groups march together), Armoury weapons show the crossbow model, Lancer smoke isolated from leftover raiders, command view uses 1/4 fog (18b haze washed the map out). Sims: L1 demo 900 s Node 500; L1 undefended dies 336 s; L2 undefended 226 s; L2 demo 652 s.
 - 2026-10-07: Stage 11a Terp (Earth only, ⚠): paint a target level; a Terp spends 4 packets and 3s per level via TerrainEdit. Metal, mortar-by-material, and the seal warning wait for 11b.
 - 2026-10-07: Long overnight brief for Grok: Stage 8 (8b roster, then 8a hives + enemy mortars) in 8 committed phases with a progress log.

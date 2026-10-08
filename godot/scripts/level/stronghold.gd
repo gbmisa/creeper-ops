@@ -92,6 +92,7 @@ func _hit_crown(c: Dictionary, dmg: float) -> void:
 	var p: Vector3 = (views[c.id].crown as Node3D).position
 	world.effects.burst(p + Vector3.UP * 2.0, Color("a8ff5a"), 8.0, 0.9)
 	Sfx.play("boom", p)
+	Loot.drop(world, p, Config.LOOT_CROWN, stockpile, op)
 	Bus.say("Crown nest destroyed. Hold the top of the spire for %ds to take %s." % [Config.CAPTURE_TIME, c.name], "good")
 	_counterattack(c)
 	StrongholdMeshes.refresh(views[c.id], c)
