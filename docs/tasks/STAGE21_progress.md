@@ -88,6 +88,20 @@ Branch `stage/21-castles`, worktree `creeper fps td-worktrees/stage21`. Design: 
   L2 `--autostart` 227 → 226 s. Without the 24-cell range, L1's trebuchet shelled the demo base and the Node died at 365 s.
 - Screenshots: p6_l2_map.png (all five castles), p6_l1_map.png, p6_l1_held.png (held Ashmoat + muster barracks).
 
+## P7 Grok brief
+- `docs/tasks/STAGE21b_castles_detail_long.md` (P0 audit, P1 stone/roofs/parapets/arches, P2 braziers/banners/standards,
+  P3 interior props, P4 command-view roof fade + progress + trebuchet reach ring, P5 Ballista + Ward Lamp turrets,
+  P6 wall patrols + hall guard, P7 castle-only player Trebuchet, P8 leftovers). Registered in `docs/tasks/README.md`
+  (worktree `stage21b`, branch `stage/21b-castles-detail`; not created). MASTER_PLAN: rows 21 (⚠) and 21b (☐) + changelog.
+
+## Unfinished / left for 21b
+- Roof slabs are flat stone (no ashlar), no parapets on roof edges, no door arches; halls are lit by a bare light.
+- Command view hides creeper under roofs (no fade yet). No ring showing a trebuchet's reach.
+- Enemy builder may still pick sites in a bailey you took (`enemy_build_plan.gd` reads `lay.courtyard`).
+- Portcullis only recolours on capture; no raise/lower animation.
+- `--castle2=0,gate` on Level 1 faces a slope; `tower` spot looks at a wall.
+- Not playtested by a human: the feel of the 1-wide tower stairs (flat castle-stone rule), trebuchet fairness, stage pacing.
+
 ## Shared-file edits (for the orchestrator)
 - `command/weapon_logic.gd`: `static var range_bonus` (callable) multiplies `range_cells` (set by `CastlePerks.attach`).
 - `core/game.gd`: `CastlePerks.attach(castles)` (1 line).
@@ -104,4 +118,9 @@ Branch `stage/21-castles`, worktree `creeper fps td-worktrees/stage21`. Design: 
 - `level/level02.gd`: Crown Keep row.
 
 ## Suggestions
-(none yet)
+- Level 1 is 80x80: concentric castles of 35+ need a bigger map. If the user wants L1 castles at full size, grow L1 (or
+  move Ashmoat into a new Level 1.5) rather than squeezing more.
+- Roof layer could later carry raider rooftop paths (archers on roofs) with a second walk layer in `RaiderField`;
+  today raiders never stand on roofs.
+- `TERRACE_BAND` 2/3 makes 1-cell interiors look like V-trenches; a per-material band in `terrain_mesh.gd` +
+  `creeper.gdshader` (castle stone 0.2) would give vertical inner walls. Touches the terrain chunks the bench512 run owns.
