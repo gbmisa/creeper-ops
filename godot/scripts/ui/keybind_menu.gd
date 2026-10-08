@@ -119,4 +119,4 @@ func _refresh() -> void:
 			if _waiting.size() == 2 and _waiting[0] == id and _waiting[1] == slot:
 				b.text = "press a key..."
 			else:
-				b.text = OS.get_keycode_string(k[slot]) if slot < k.size() else "-"
+				b.text = Keybinds.key_name(k[slot]) if slot < k.size() else "-"

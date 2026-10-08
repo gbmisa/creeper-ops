@@ -116,8 +116,8 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 8b | Enemy roster (incl. Burrower, Weaver) | Grok Build (long run, before 8a) | ⚠ merged 2026-10-08 (Grok long run) |
 | 8c | **Enemy construction:** hubs in enemy castles, Weavers, Leeches, build planner, enemy structures (design §4.5) | Sonnet 5.5, Opus review | ⚠ merged 2026-10-08 (Grok) |
 | 9a | Return packets, Salvage, Ore, Miner, turrets | Sonnet 5.5 | ⚠ merged 2026-10-08 (Grok) |
-| 9b | Extractors and supply points | Sonnet 5.5 | ☐ long brief: [tasks/STAGE9b_content_long.md](tasks/STAGE9b_content_long.md) |
-| 10 | Armoury (incl. Ctrl + wheel ammo switching). **10a** = upgrades + advanced weapons; 10b-ammo later | Sonnet 5.5 (Grok) | ⚠ merged 2026-10-08 (Grok, Opus review) |
+| 9b | Extractors and supply points (**Salvage Engines replace extractors**) | Sonnet 5.5 | ⚠ branch `stage/9b-content`, headless only; log [tasks/STAGE9b_progress.md](tasks/STAGE9b_progress.md) |
+| 10 | Armoury (incl. Ctrl + wheel ammo switching). **10a** = upgrades + advanced weapons; 10b-ammo done in 9b (Repeater turrets still open) | Sonnet 5.5 (Grok) | ⚠ merged 2026-10-08 (Grok, Opus review); ammo ⚠ on `stage/9b-content` |
 | 10b | **Operative deployment:** Totems, drop anywhere, recall cooldown, Shield Domes block drops, expensive respawn (design §5.4) | Sonnet 5.5 (Grok), Opus review | ⚠ merged, verified headless |
 | 11 | Terp. **11a** = Earth only; Metal (11b) after 9a's Ore | Sonnet 5.5 (Grok) | ⚠ merged 2026-10-08 (Grok, Opus review) |
 | 15 | **Fantasy art pass:** structures redesigned, weapons on jointed arms, soldiers at Operative height, structures taller than the Operative, Blight enemies, castle decor, dusk lighting. Judged by an art-judge agent each round | Opus 5.5 subagent + Opus judge | ⚠ round 4 on `stage/15-fantasy-art` (awaiting judge); brief: [tasks/STAGE15_fantasy_art.md](tasks/STAGE15_fantasy_art.md) |
@@ -134,8 +134,8 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 21 | **Castles 2.0:** concentric castles (outer wall, bailey, inner wall, keep), walkable interiors (Operative roof layer), staged capture gate → bailey → keep, trebuchets on hostile castles, held perks (reach, ward, muster, vault API); L1/L2 converted. Design: [CASTLES2_DESIGN.md](CASTLES2_DESIGN.md) | **Opus 5.5** | ⚠ merged 2026-10-08 (Opus), smoke 575/575, Xvfb screenshots, no human playtest; log [tasks/STAGE21_progress.md](tasks/STAGE21_progress.md) |
 | 21b | **Castles detail pass:** ashlar roofs, parapets, door arches, braziers, banners, interior props, command-view roof fade, Ballista + Ward Lamp turrets, wall patrols + hall guard, castle-only Trebuchet, Stage 21 leftovers | Grok Build (long) | ☐ brief: [tasks/STAGE21b_castles_detail_long.md](tasks/STAGE21b_castles_detail_long.md) |
 | 24 | **Play metrics:** records events, 10 s samples and a summary per mission to `user://metrics/*.json`; `--metrics-report`; end-screen lines. Recording only | Sonnet | ⚠ merged 2026-10-08 (Sonnet, Opus review), no human playtest |
-| 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ☐ in the 9b long brief |
-| 13 | Tuning | Haiku 4.5 (`balance-tester`) | ☐ in the 9b long brief |
+| 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ⚠ engines on L1/L2/cave in the 9b branch (ramp chokes skipped) |
+| 13 | Tuning | Haiku 4.5 (`balance-tester`) | ⚠ done in the 9b branch: sim fields, Sniper rule changes, better L1 demo |
 | 14 | Review and screenshots | **Opus 5.5** | ☐ |
 
 ### Stage details
@@ -260,3 +260,4 @@ Rebindable keys (F10). The can't-build-on-creeper rule. The full-ammo packet fix
 - 2026-10-08: Stage 21 ⚠ (Opus, branch stage/21-castles). Concentric castles (`CastleShape2`, `CastleStairs`, `CastleKeepShape`), Operative-only roof layer (`Grid.roof`, `GridRoofs`), staged capture (`CastleStages`), trebuchets (`CastleEngines`), held perks (`CastlePerks`, muster barracks in `CastleKeeps`), vault API (`CastleVaults`). All five L2 castles and L1 Ashmoat converted; High Bastion stays Stage 7. Smoke 575. Brief for 21b written.
 - 2026-10-08: Stage 24 ⚠ (branch stage/24-metrics). PlayMetrics recorder (`Bus.metric`, `core/play_metrics.gd`, `metrics_summary.gd`, `metrics_report.gd`), JSON per mission, `--metrics=` / `--metrics-report`, end-screen lines. No balance changes.
 - 2026-10-08: Merged 19, 21, 24 into main (Opus). Smoke 612+ OK. Metrics hooks added for castle held/hostile/siege and flyer kills. Sims: L1 undefended 337 s, L1 demo 704 s, L2 demo 395 s.
+- 2026-10-08: Stage 9b/12/13 + 10 ammo ⚠ (branch `stage/9b-content`, Sonnet, headless only). Salvage Engines (hold-E hooking, return packets, hive/castle guards, cave cash-in), improved ammo on Ctrl+wheel, engines on L1/L2/cave, `[sim]` fields, Sniper priority + ground-range rules; L1 demo now holds 900 s (6/6). See [tasks/STAGE9b_progress.md](tasks/STAGE9b_progress.md).

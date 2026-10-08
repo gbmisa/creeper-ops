@@ -22,6 +22,8 @@ var builder: EnemyBuilder
 var castle_raids: CastleRaids
 var keeps: CastleKeeps
 var guards: CastleGuards
+var engines: SalvageEngines
+var cave_engines: SalvageEngines
 var orbital: Orbital
 var command: CommandMode
 var fps: FpsMode
@@ -34,6 +36,8 @@ var landing := true         # Command Node still in orbit
 var fps_paused := false     # Esc in Operative mode
 var over := false
 var time := 0.0
+var win_time := -1.0         # game seconds when the last required objective completed
+var objective_times := {}    # objective id -> game seconds it completed (sim report)
 var teleport_cooldown := 0.0
 var speed := 1
 var time_scale := 1.0       # debug multiplier on top of speed
@@ -70,10 +74,16 @@ func _ready() -> void:
 	cave.setup("Cave", cave_data.grid, true)
 	add_child(cave)
 	cave_hazards = CaveHazards.new(cave, cave_data)
+	cave_engines = SalvageEngines.new(cave, cave_data.get("engines", []), structures, stockpile)
+	cave_engines.cash_mode = true
 	castles = Strongholds.new(surface, level.castles, hazards.nests)
 	castle_raids = CastleRaids.new(castles, level.get("castle_rules", {}))
 	guards = CastleGuards.new(surface, castles, level.castles)
 	hazards.guards = guards
+
+	engines = SalvageEngines.new(surface, level.get("engines", []), structures, stockpile)
+	engines.nests = hazards.nests
+	engines.castles = castles
 
 	orbital = Orbital.new(surface, economy)
 	orbital.hazards = hazards
@@ -126,6 +136,9 @@ func _ready() -> void:
 			if s != null and not s.dead:
 				structures.remove(s, "destroyed")
 
+	AmmoGrades.reset(level)
+	Bus.objective_done.connect(func(id: String): objective_times[id] = roundi(time))
+	Bus.victory.connect(func(): win_time = time if win_time < 0.0 else win_time)
 	hud = Hud.new()
 	add_child(hud)
 	hud.setup(command, units)
@@ -165,6 +178,7 @@ func surface_prey() -> Array:
 		row["weapon"] = bool(s.def.get("weapon", false))
 		prey.append(row)
 	prey.append_array(castles.prey())
+	prey.append_array(engines.prey())
 	if mode == "surface":
 		prey.append(fps.prey)
 	return prey
@@ -188,6 +202,7 @@ func update(dt: float) -> void:
 	metrics.tick(dt)
 	teleport_cooldown = maxf(0.0, teleport_cooldown - dt)
 	stockpile.tick(dt)
+	AmmoGrades.tick(dt)
 	deploy.update(dt)
 	flow.update(dt)
 	if mode != "command":

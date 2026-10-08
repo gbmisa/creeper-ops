@@ -36,6 +36,21 @@ const CASTLES := [
 	{ "id": "stormcrown", "name": "Stormcrown", "x": 117, "z": 8, "size": 35, "floor": 3, "variant": "ground", "plan": "concentric",
 		"moat": true, "gates": ["w"], "inner_gate": "s", "climbs": ["s"], "spire_h": 20, "guards": 5 },
 ]
+## Salvage Engines (EngineDefs). Two safe ones by the landing mesa; the rest sit beside hives and castles
+## (`hive`: ships nothing until that hive is razed; `castle`: ships only while you hold it).
+const ENGINES := [
+	{ "id": "e1", "x": 100, "z": 132, "kind": "bore" },
+	{ "id": "e2", "x": 60, "z": 132, "kind": "wreck" },
+	{ "id": "e3", "x": 55, "z": 70, "kind": "forge", "hive": "West Moor" },
+	{ "id": "e4", "x": 50, "z": 142, "kind": "wreck", "hive": "Southern Barrows" },
+	{ "id": "e5", "x": 104, "z": 114, "kind": "forge", "hive": "East Moor" },
+	{ "id": "e6", "x": 92, "z": 50, "kind": "bore", "hive": "North Knoll" },
+	{ "id": "e7", "x": 105, "z": 82, "kind": "wreck", "castle": "crown" },
+	{ "id": "e8", "x": 49, "z": 28, "kind": "forge", "castle": "northreach" },
+	{ "id": "e9", "x": 47, "z": 112, "kind": "wreck", "castle": "ashgate" },
+	{ "id": "e10", "x": 116, "z": 117, "kind": "bore", "castle": "thornwall" },
+	{ "id": "e11", "x": 112, "z": 25, "kind": "wreck", "castle": "stormcrown" },
+]
 const CASTLE_RULES := { "aggression": 1.1, "reprisal_warn": 60.0, "nest_buff": 0.2 }
 const SHIELD_HINT := "Its shield is powered from underground: send the Operative into the Rift and destroy the Deep Core."
 const OBJECTIVES := [
@@ -96,6 +111,8 @@ static func build() -> Dictionary:
 		"spire": { "x": 138, "z": 58 },
 		"castles": castles,
 		"castle_rules": CASTLE_RULES,
+		"ammo_unlock": "e1",
+		"engines": ENGINES.duplicate(true),  # improved ammo (AmmoGrades) once this objective completes
 		"ores": [
 			{ "x": 96, "z": 124 },
 			{ "x": 52, "z": 48 },
@@ -116,6 +133,7 @@ static func build() -> Dictionary:
 	}
 	level["nests"] = level.hives # alias: older readers still say nests
 	HiveShape.stamp_all(g, level.hives)
+	EngineShape.stamp_all(g, level.engines)
 	var hazards: Array = level.emitters + level.vents + level.nests + [level.spire, level.rift]
 	for p in hazards:
 		LevelShape.disc(g, p.x, p.z, 1.5, func(x, z, _d): g.blocked[g.idx(x, z)] = 1)

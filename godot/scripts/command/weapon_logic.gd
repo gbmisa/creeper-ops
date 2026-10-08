@@ -179,16 +179,27 @@ static func _snipe(s: Structure, mgr) -> bool:
 		foes.append_array(mgr.hazards.guards.foes())  # Sentinels, if the range allows
 	if mgr.enemy_build != null:
 		foes.append_array(mgr.enemy_build.snipe_foes())
+	var best_ranged := false
 	for m in foes:
-		var d := (m.node.position as Vector3).distance_to(a)
-		if d < bd:
+		# Stage 9b rule change: range is measured on the ground, like the enemy ranged weapons it answers
+		# (a Spitter on the flat used to out-reach a Sniper standing a mesa above it).
+		var mp: Vector3 = m.node.position
+		var d := Vector2(mp.x - a.x, mp.z - a.z).length()
+		if d >= reach:
+			continue
+		# Stage 9b rule change: a Sniper shoots ranged raiders (Spitter, Lancer) in range before nearer
+		# melee ones; otherwise it is the nearest foe as before.
+		var ranged: bool = str((m.get("tier", {}) as Dictionary).get("role", "")) == "ranged"
+		if best.is_empty() or (ranged and not best_ranged) or (ranged == best_ranged and d < bd):
 			bd = d
 			best = m
+			best_ranged = ranged
 	if best.is_empty():
 		return false
 	var p: Vector3 = best.node.position
 	_aim(s, p)
 	w.effects.beam(_fx(s), p, Color("e0f0ff"), 0.08, 0.05)
-	best.enemy.hit.call(s.def.power)
+	var grade := AmmoGrades.take_shot(s)
+	AmmoGrades.shoot(best.enemy, s.def.power, grade, w, p)
 	Sfx.play("rifle", s.pos)
 	return true

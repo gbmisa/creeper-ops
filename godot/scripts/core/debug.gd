@@ -3,7 +3,10 @@ class_name Debug
 ##   godot --path godot -- --demo --units --sim=600 --shot=/tmp/a.png
 ##   --autostart   skip briefing, land the Node at the suggested site
 ##   --demo        autostart + scripted base (relay chain to Emitter NW, nullifier, defences);
-##                 --demo=slow places it unbuilt so packets must deliver everything
+##                 --demo=slow places it unbuilt so packets must deliver everything.
+##                 It also hooks one Salvage Engine (the nearest safe one, every socket, no Operative
+##                 walking) after DebugEngines.DEMO_HOOK_AT seconds, with a free relay chain, so the
+##                 shipping loop runs in sims
 ##   --units       autostart + a squad sent at the central nest
 ##   --surface / --spire   drop the Operative near the Rift / at the Spire ramp
 ##   --cave        go straight into the cave       --killcore  destroy pylons + Core
@@ -43,6 +46,9 @@ class_name Debug
 ##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
 ##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
 ##   --fire=rifle|sprayer|rocket  (with --surface) hold the trigger so --shot catches the weapon firing
+##   --ammo=ap|inc  unlock improved ammo, crossbow loaded with that grade (HUD shows [AP]/[INC])
+##   --engine=I[,hold|hooked|top[,S]]  Operative at Salvage Engine I (hold: mid-hook; hooked: all sockets
+##                 hooked with a relay chain; top: on its roof). See debug_engines.gd
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -51,6 +57,10 @@ const DEMO_BUILD := [
 	["cannon", 33, 56], ["cannon", 47, 57], ["cannon", 40, 55], ["cannon", 29, 50], ["mortar", 37, 59],
 	["beam", 44, 60], ["reactor", 43, 62], ["storage", 37, 63], ["barracks", 47, 66],
 	["sniper", 36, 56], ["sniper", 44, 56],
+	["sniper", 40, 57], ["sniper", 32, 58], ["sniper", 48, 58], ["beam", 38, 59], ["beam", 42, 59],
+	["sniper", 34, 55], ["sniper", 46, 55], ["beam", 36, 57],
+	["cannon", 35, 61], ["cannon", 41, 61], ["cannon", 31, 62], ["cannon", 49, 62],
+	["reactor", 36, 66], ["reactor", 40, 66], ["reactor", 44, 66], ["reactor", 36, 69], ["reactor", 44, 69], ["storage", 40, 69],
 ]
 
 
@@ -71,7 +81,7 @@ static func apply(g) -> void:
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
 	if args.has("nocapture") or args.has("shot"):
 		g.ignore_capture = true
-	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "castle2", "engines", "raid", "gallery", "sim", "shot", "smoke"].any(func(k): return args.has(k))
+	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "castle2", "engines", "raid", "gallery", "sim", "shot", "smoke", "engine"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
 	elif auto:
@@ -83,6 +93,7 @@ static func apply(g) -> void:
 	if args.has("demo"):
 		for b in g.level.get("demo", DEMO_BUILD):  # --demo=slow: unbuilt, so every packet must really be delivered
 			g.structures.place(b[0], b[1], b[2], args.demo != "slow")
+		DebugEngines.demo(g)  # scripted: hooks the nearest safe Salvage Engine after DEMO_HOOK_AT seconds
 	if args.has("units"):
 		var p: Vector3 = g.structures.command_node().pos
 		var squad := []
@@ -96,7 +107,7 @@ static func apply(g) -> void:
 		var c: Vector3 = g.level.grid.cell_ground(tgt.x, tgt.y)
 		g.units.order(squad, Vector2(c.x, c.z), true)
 	if args.has("surface"):
-		DebugHooks._drop(g, g.level.rift.x + 9, g.level.rift.z, PI / 2.0)
+		DebugHooks._drop(g, g.level.rift.x + 12, g.level.rift.z, PI / 2.0)
 	if args.has("spire"):
 		var st: Vector2i = g.level.get("spire_totem", Vector2i(61, 37))
 		DebugHooks._drop(g, st.x, st.y, 0.0)
@@ -143,6 +154,11 @@ static func apply(g) -> void:
 		g.hazards.nests.time = float(args.t0)
 	if args.has("flyers"):
 		FlyerLaunch.demo(g, args.flyers)
+	if args.has("ammo"):  # --ammo=ap|inc: unlock improved ammo and select that crossbow grade
+		AmmoGrades.unlocked = true
+		AmmoGrades.op.rifle = str(args.ammo) if str(args.ammo) in ["ap", "inc"] else "std"
+	if args.has("engine"):
+		DebugEngines.apply(g, str(args.engine))
 	if args.has("look"):
 		var xz: PackedStringArray = args.look.split(",")
 		g.command.cam.focus(g.level.grid.cell_ground(int(xz[0]), int(xz[1])))
@@ -168,6 +184,7 @@ static func apply(g) -> void:
 	if args.has("armoury"):
 		DebugHooks._armoury(g, str(args.armoury))
 	if args.has("smoke"):
+		SmokeTest.only = str(args.smoke)
 		SmokeTest.run(g)
 	if args.has("sim"):
 		DebugHooks._fast_forward(g, float(args.sim))

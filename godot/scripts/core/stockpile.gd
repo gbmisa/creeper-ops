@@ -4,6 +4,8 @@ extends RefCounted
 ## ore_rate / salvage_rate are per-second rolling averages for the HUD.
 
 var ore := 0.0
+var earned_ore := 0.0     # everything ever added (sim report: ore_mined)
+var earned_salvage := 0.0 # everything ever added (sim report: salvage_earned)
 var salvage := 0.0
 var ore_rate := 0.0
 var salvage_rate := 0.0
@@ -28,6 +30,11 @@ func add(kind: String, n: float) -> void:
 		return
 	_assign(kind, amount(kind) + n)
 	_bump(kind, n)
+	if n > 0.0:
+		if kind == "ore":
+			earned_ore += n
+		else:
+			earned_salvage += n
 
 
 func spend(kind: String, n: float) -> bool:

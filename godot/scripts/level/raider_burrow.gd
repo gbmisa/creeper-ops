@@ -23,6 +23,8 @@ static func setup(r: Dictionary) -> void:
 static func filter(host: Raiders, r: Dictionary, dmg: float) -> float:
 	if str(r.get("burrow", "")) == "down":
 		return -1.0
+	if AmmoGrades.piercing:
+		return dmg  # armour-piercing rounds ignore a Warden's aura
 	var p: Vector3 = (r.node as Node3D).position
 	for o in host.list:
 		if o == r or not o.alive:

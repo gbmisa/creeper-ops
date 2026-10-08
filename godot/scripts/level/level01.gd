@@ -43,6 +43,19 @@ const DEMO := [
 	["cannon", 33, 56], ["cannon", 47, 57], ["cannon", 40, 55], ["cannon", 35, 50], ["mortar", 37, 59],
 	["beam", 44, 60], ["reactor", 43, 62], ["storage", 37, 63], ["barracks", 47, 66],
 	["sniper", 36, 56], ["sniper", 44, 56],
+	["sniper", 40, 57], ["sniper", 32, 58], ["sniper", 48, 58], ["beam", 38, 59], ["beam", 42, 59],
+	["sniper", 34, 55], ["sniper", 46, 55], ["beam", 36, 57],
+	["cannon", 35, 61], ["cannon", 41, 61], ["cannon", 49, 62],
+	["reactor", 36, 66], ["reactor", 40, 66], ["reactor", 44, 66], ["reactor", 36, 69], ["reactor", 44, 69], ["storage", 40, 69],
+]
+## Salvage Engines (EngineDefs). One safe wreck near the base; the rest sit beside hives and the
+## Bastion, where hooking is a risk: `hive` / `castle` engines ship only once that is razed / held.
+const ENGINES := [
+	{ "id": "e1", "x": 58, "z": 67, "kind": "wreck" },
+	{ "id": "e2", "x": 28, "z": 22, "kind": "forge", "hive": "Central knoll" },
+	{ "id": "e3", "x": 47, "z": 15, "kind": "wreck", "castle": "bastion" },
+	{ "id": "e4", "x": 66, "z": 26, "kind": "bore", "hive": "Spire Heights" },
+	{ "id": "e5", "x": 22, "z": 42, "kind": "forge", "hive": "Rift" },
 ]
 ## Castle stakes (CastleRaids; keys default to Config.CASTLE_RULES). Level 1 is gentle.
 const CASTLE_RULES := { "aggression": 0.5, "reprisal_warn": 90.0, "nest_buff": 0.15 }
@@ -204,6 +217,8 @@ static func build() -> Dictionary:
 			{ "x": 72, "z": 36 },
 			{ "x": 33, "z": 66 },  # under Ashmoat's east wall
 		],
+		"ammo_unlock": "e1",  # improved ammo (AmmoGrades) once this objective completes
+		"engines": ENGINES.duplicate(true),
 		"rift": { "x": 14, "z": 42 },
 		"demo": DEMO,
 		"intro": [
@@ -215,6 +230,7 @@ static func build() -> Dictionary:
 	}
 	level["nests"] = level.hives # alias: older readers still say nests
 	HiveShape.stamp_all(g, level.hives)
+	EngineShape.stamp_all(g, level.engines)
 	var hazards: Array = level.emitters + level.vents + level.nests + [level.spire, level.rift]
 	for p in hazards:
 		_disc(g, p.x, p.z, 1.5, func(x, z, _d): g.blocked[g.idx(x, z)] = 1)

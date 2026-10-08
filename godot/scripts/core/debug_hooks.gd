@@ -69,7 +69,7 @@ static func _fast_forward(g, seconds: float) -> void:
 		"energy": roundi(g.economy.energy), "max": g.economy.max_energy, "income": snappedf(g.economy.income, 0.01),
 		"demand": snappedf(s.packets.demand_rate, 0.01), "unmet": snappedf(s.packets.unmet_rate, 0.01),
 		"sent": snappedf(s.packets.sent_rate, 0.01), "wasted": snappedf(g.economy.wasted, 0.01),
-		"field": g.economy.field_cells, "structures": s.list.size(),
+		"field": g.economy.field_cells, "structures": s.list.size(), "mix": _mix(s.list),
 		"connected": s.list.filter(func(x): return x.connected).size(),
 		"unbuilt": s.list.filter(func(x): return not x.is_built()).map(func(x): return "%s:%d/%d%s" % [x.type, x.delivered, x.def.cost, "" if x.connected else "(off)"]),
 		"weapons_dry": "%d/%d %s" % [weapons.filter(func(w): return w.ammo < w.per_shot()).size(), weapons.size(),
@@ -86,8 +86,19 @@ static func _fast_forward(g, seconds: float) -> void:
 		"coverage": snappedf(g.surface.creeper.coverage(), 0.01),
 		"objectives": g.hud.objectives.items.filter(func(o): return o.done).map(func(o): return o.id),
 		"cave_coverage": snappedf(g.cave.creeper.coverage(), 0.01), "over": g.over,
+		"salvage": roundi(g.stockpile.salvage), "salvage_earned": roundi(g.stockpile.earned_salvage), "salvage_left": roundi(g.engines.salvage_left()),
+		"ore_mined": roundi(g.stockpile.earned_ore), "pressure": snappedf(g.hazards.nests.pressure(), 0.01),
+		"sockets_hooked": g.engines.total_hooked(), "win_time": roundi(g.win_time), "objective_times": g.objective_times,
 		"emitter_ring": g.hazards.emitters.filter(func(e): return e.alive).map(func(e): return _dry_ring(g, e)),
 	}))
+
+
+## "sniper:5 beam:2" counts, for the sim report.
+static func _mix(list: Array) -> String:
+	var n := {}
+	for x in list:
+		n[x.type] = int(n.get(x.type, 0)) + 1
+	return " ".join(n.keys().map(func(k): return "%s:%d" % [k, n[k]]))
 
 
 ## "name: dry/total" cells within Nullifier range of an emitter (where one could be built).

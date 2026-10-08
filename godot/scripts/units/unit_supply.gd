@@ -75,6 +75,7 @@ static func _resupply(mgr: UnitManager, u: Unit, dt: float) -> void:
 	var take := minf(minf(Config.RESUPPLY_RATE * dt, b.ammo), u.def.ammo - u.ammo)
 	u.ammo += take
 	b.ammo -= take
+	_take_grade(u, b, take)
 	u.hp = minf(u.def.hp, u.hp + UnitDefs.DOCK_HEAL * dt)
 	if u.ammo >= u.def.ammo - 0.01 and u.hp >= u.def.hp * 0.9:
 		if u.post != null:
@@ -109,7 +110,7 @@ static func _fight(mgr: UnitManager, u: Unit, dt: float, enemies: Array) -> void
 		if u.gun_cd <= 0.0:
 			u.gun_cd = gun.rate
 			u.ammo -= 1.0
-			best.hit.call(gun.damage)
+			AmmoGrades.shoot(best, gun.damage, _grade_round(u), w, ep)
 			w.effects.beam(muzzle, ep, Color("ffc06a") if u.type == "crawler" else Color("bfffa0"), 0.07, 0.04)
 			Sfx.play("rifle", u.pos)
 		return
@@ -129,3 +130,23 @@ static func _fight(mgr: UnitManager, u: Unit, dt: float, enemies: Array) -> void
 	if u.path.is_empty():
 		u.heading = atan2(-(p.z - u.pos.z), p.x - u.pos.x)
 	w.effects.beam(muzzle, p, Color("9dff7a"), 0.1, 0.12 if u.type == "crawler" else 0.04)
+
+
+## Graded rounds ride along with the stock a unit draws (the barracks magazine holds one grade).
+static func _take_grade(u: Unit, b: Structure, take: float) -> void:
+	var g := minf(take, b.grade_ammo)
+	if g <= 0.0:
+		return
+	if u.grade != b.grade:
+		u.grade_ammo = 0.0
+		u.grade = b.grade
+	u.grade_ammo = minf(u.ammo, u.grade_ammo + g)
+	b.grade_ammo -= g
+
+
+## The grade of the round about to be fired (and spent from the unit's graded rounds).
+static func _grade_round(u: Unit) -> String:
+	if u.grade_ammo < 1.0:
+		return "std"
+	u.grade_ammo = minf(u.grade_ammo - 1.0, maxf(0.0, u.ammo))
+	return u.grade
