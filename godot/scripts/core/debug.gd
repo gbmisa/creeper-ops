@@ -11,6 +11,8 @@ class_name Debug
 ##   --look=x,z[,d[,p]] point the command camera at a cell (d = zoom distance, p = pitch rad)   --rocket  Operative fires a rocket
 ##                 just before --shot
 ##   --sim=N       fast-forward N seconds, print a [sim] report
+##   --metrics=PATH  write this run's play metrics (a .json file or a folder)
+##   --metrics-report[=N] [--metrics-dir=D]  print the last N recorded missions and per-level averages
 ##   --smoke       run scripted mechanics checks (smoke_test.gd)
 ##   --tool=T      hold a build tool (screenshots of the ghost/overlays)
 ##   --drag=T,x0,z0,x1,z1  drag-build preview of T from one cell to another
@@ -60,6 +62,12 @@ static func apply(g) -> void:
 	if args.is_empty():
 		return
 	print("[debug] ", args)
+	PlayMetrics.persist = false  # debug runs never write to the player's metrics folder
+	PlayMetrics.out_path = str(args.get("metrics", ""))
+	if args.has("metrics-report"):
+		MetricsReport.run(args)
+		g.get_tree().quit()
+		return
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
 	if args.has("nocapture") or args.has("shot"):
 		g.ignore_capture = true

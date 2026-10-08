@@ -62,10 +62,13 @@ func on_key(k: int) -> void:
 		g.hud.keys.open()
 	elif Keybinds.matches("pause", k) and not g.landing:
 		g.paused = not g.paused
+		Bus.metric.emit("pause", { "paused": g.paused })
 	elif Keybinds.matches("speed_up", k):
 		g.cycle_speed(1)
+		Bus.metric.emit("speed", { "speed": g.speed })
 	elif Keybinds.matches("speed_down", k):
 		g.cycle_speed(-1)
+		Bus.metric.emit("speed", { "speed": g.speed })
 	elif Keybinds.matches("teleport", k):
 		g.deploy.deploy_totem()
 	elif not g.landing:
@@ -126,6 +129,7 @@ func to_command(message: String, kind := "info") -> void:
 
 func set_mode(m: String) -> void:
 	g.mode = m
+	Bus.metric.emit("mode", { "mode": m })
 	g.hud.set_mode(m)
 	var cmd := m == "command"
 	g.surface.set_active(m != "cave")
@@ -180,7 +184,9 @@ func end_game(won: bool) -> void:
 	g.over = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	Sfx.play("good" if won else "lost")
+	g.metrics.finish("victory" if won else "node_destroyed")
 	var t := "%dm %ds" % [floori(g.time / 60.0), floori(fmod(g.time, 60.0))]
 	var msg := "[font_size=26][b]%s secured[/b][/font_size]\nAll threats neutralised in %s." % [g.level.name, t] if won \
 		else "[font_size=26][b]Command Node lost[/b][/font_size]\nThe creeper overran the Node after %s." % t
+	msg += g.metrics.end_text()
 	g.hud.show_overlay(msg, [{ "label": "Play again", "on_click": func(): g.get_tree().reload_current_scene() }])

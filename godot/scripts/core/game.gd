@@ -26,6 +26,7 @@ var orbital: Orbital
 var command: CommandMode
 var fps: FpsMode
 var flow: GameFlow
+var metrics: PlayMetrics
 
 var mode := "command"       # command | surface | cave
 var paused := true          # until the briefing is dismissed
@@ -136,7 +137,12 @@ func _ready() -> void:
 	cave.set_active(false)
 	command.cam.current = true
 	flow.show_briefing()
+	metrics = PlayMetrics.new(self)
 	Debug.apply(self)
+
+
+func _exit_tree() -> void:
+	metrics.finish("quit")
 
 
 ## Cells nest raiders march toward: every grounded structure's footprint.
@@ -179,6 +185,7 @@ func _process(delta: float) -> void:
 
 func update(dt: float) -> void:
 	time += dt
+	metrics.tick(dt)
 	teleport_cooldown = maxf(0.0, teleport_cooldown - dt)
 	stockpile.tick(dt)
 	deploy.update(dt)

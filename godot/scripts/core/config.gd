@@ -291,6 +291,12 @@ const RAIDER_TIER_TIMES := [0.0, 480.0, 900.0, 1320.0]
 ## Raider stats live in RaiderDefs (pressure unlocks). RAID_SCHEDULE.tier_times still advances
 ## the legacy 0..3 index that castle-raid size and the old escalate smoke read.
 
+# ---- play metrics (PlayMetrics) -------------------------------------------------------
+const METRICS_ON := true       # record events, samples and a summary per mission
+const METRICS_SAMPLE := 10.0   # seconds between samples
+const METRICS_MIN_QUIT := 60.0 # a quit/level change writes a partial file only after this long
+const METRICS_HIT_GAP := 5.0   # Node-hit events are throttled to one per this many seconds
+
 # ---- units (barracks) --------------------------------------------------------------
 const UNITS_PER_BARRACKS := 4  # population cap: more barracks, more (dependent) units
 const RESUPPLY_RANGE := 4.0    # metres from a barracks to draw supply

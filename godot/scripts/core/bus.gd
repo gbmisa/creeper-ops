@@ -19,6 +19,7 @@ signal unit_trained(type: String, barracks)
 signal nest_destroyed(nest)
 signal selection_changed
 signal tool_changed(type: String)
+signal metric(kind: String, data: Dictionary)  # PlayMetrics recorder: one-line reports from any system
 signal terrain_changed(world, cells: Array)  # TerrainEdit: heights changed under these cells
 
 
