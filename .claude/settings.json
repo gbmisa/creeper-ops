@@ -27,7 +27,8 @@
       "Bash(sed -i 's|\\(metrics file `L2_20261008-165004.json`|\\(metrics file `docs/playtests/L2_20261008-165004.json`|' docs/tasks/PLAYTEST2_pressure.md)",
       "Bash(git branch *)",
       "Bash(timeout 400 art/blender/review.sh ravager /tmp/claude-1000/-home-gregory-milligan-AI-projects-creeper-fps-td/af2721bc-7ab0-4309-89d6-f8a359128d8b/scratchpad/ravager.png)",
-      "Bash(sed -i 's/\\\\* size \\\\* 1.4$/* size * 1.1/' art/blender/preview.py)"
+      "Bash(sed -i 's/\\\\* size \\\\* 1.4$/* size * 1.1/' art/blender/preview.py)",
+      "Bash(timeout 400 art/blender/review.sh behemoth /tmp/claude-1000/-home-gregory-milligan-AI-projects-creeper-fps-td/af2721bc-7ab0-4309-89d6-f8a359128d8b/scratchpad/behemoth.png)"
     ],
     "additionalDirectories": [
       "/home/gregory-milligan/AI projects/creeper fps td-worktrees/art3-models/art/blender"

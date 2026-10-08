@@ -23,5 +23,7 @@ Clone https://github.com/gbmisa/creeper-ops and check out branch art/3-fx. Read 
 ```
 
 ## Rules reminder
-- Godot 4.7 is needed for the parse and smoke checks. If Muse's environment doesn't have it, it should say so in the report and Opus runs the checks.
+- Muse has headless Godot 4.7.2: run the parse and smoke checks and headless sims yourself. Screenshots and GPU checks are Opus's job (Muse has no display).
+- All four tasks can run at once, one worker per branch.
+- For brief A: real models are on branch `art/3-models` (`godot/assets/models/*.glb`, made by Opus). Copy `skitter.glb` into your branch **only for testing, then remove it before the final commit**; Opus merges the models from its own branch.
 - If Muse pushes to `main`, rewrites AGENTS.md or merges anything: stop it and tell Opus.
