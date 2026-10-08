@@ -54,7 +54,21 @@ Branch `stage/21-castles`, worktree `creeper fps td-worktrees/stage21`. Design: 
 - Screenshot: p4_engine_ring.png (trebuchet on the NW tower, ring under the target cannon).
 - Debug: `--engines=I` (a cannon in reach, engines fire now), `--stage=I,N`.
 
+## P5 Held perks
+- New: `level/castle_perks.gd` (CastlePerks: reach, ward drain, hive slow), `castle_vaults.gd` (CastleVaults: engine/
+  placement API). `CastleKeeps` also places a free, finished **Castle Barracks** in the ward of a held castle (muster),
+  removed when the castle falls. Stage 7 castles get reach/ward/hive slow too (their courtyards are too tight for a barracks).
+- Numbers (CastleDefs): reach +25% weapon range within 28 cells of a held castle's centre; ward drains 0.03 depth/s per wet
+  courtyard cell; hives within 30 cells spawn 30% slower; muster on.
+- 9b hook: `CastleVaults.ships(castles, cell)` is false inside a castle you don't hold; `lay.vaults` = 2 ward cells beside
+  the keep for the richest engines; `CastleVaults.inside_held` for future castle-only production.
+- Smoke: 518 PASS (+9 perks; muster checks wait for a concentric castle in Level 1). `smoke_castle_raids` nest-buff check now
+  includes the ward factor.
+- Screenshot: p5_held.png (held Crown Keep: blue banners, keep sender + Castle Barracks in the ward).
+
 ## Shared-file edits (for the orchestrator)
+- `command/weapon_logic.gd`: `static var range_bonus` (callable) multiplies `range_cells` (set by `CastlePerks.attach`).
+- `core/game.gd`: `CastlePerks.attach(castles)` (1 line).
 - `level/enemy_mortar_fire.gd`: `static var extra` + 4 lines appending it to the `shells` uniform.
 - `core/game.gd`: `castles.engine_prey = surface_prey` (1 line).
 - `core/smoke_level02.gd`: "guards: all posted" counts live Sentinels (foes() now includes engines).

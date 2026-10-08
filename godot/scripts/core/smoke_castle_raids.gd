@@ -56,7 +56,8 @@ static func _nest_buff(raids: CastleRaids, castles: Strongholds, a: Dictionary, 
 	SmokeTest._check("raids: hostile castles speed up nearby nests", is_equal_approx(n.rate, 1.0 + raids.rules.nest_buff * k))
 	StrongholdRules.to_held(castles.world, a, castles.lays[a.id])
 	raids.update(0.0)
-	SmokeTest._check("raids: taking the castle removes its nest buff", is_equal_approx(n.rate, 1.0 + raids.rules.nest_buff * (k - 1)))
+	var ward := CastlePerks.hive_factor(castles, Vector2(n.x, n.z))  # Stage 21: a held castle also slows it
+	SmokeTest._check("raids: taking the castle removes its nest buff", is_equal_approx(n.rate, (1.0 + raids.rules.nest_buff * (k - 1)) * ward))
 
 
 static func _reprisal(raids: CastleRaids, castles: Strongholds, a: Dictionary, raiders: Raiders) -> void:

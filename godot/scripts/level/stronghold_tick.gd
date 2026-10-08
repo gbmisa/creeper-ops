@@ -49,6 +49,7 @@ static func holding(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 	if s.stockpile:
 		s.stockpile.add("salvage", Config.CASTLE_SALVAGE_RATE * c.get("yield", 1.0) * dt)
 	CastleTurretFire.tick(s.world, c, v, nests.raiders, dt)
+	CastlePerks.ward(s, c, lay, dt)
 	var inside := nests.raiders.list.filter(func(r): return StrongholdRules.in_courtyard(lay, r.node.position))
 	if inside.is_empty():
 		if c.state == "siege":

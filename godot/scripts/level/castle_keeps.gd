@@ -4,10 +4,13 @@ extends RefCounted
 ## a packet sender and relay like an Outpost that you never build or pay for. It appears when
 ## the castle is held, comes back once a siege is beaten if raiders destroyed it, and goes
 ## when the castle falls (Strongholds.on_lost clears the courtyard).
+## Stage 21 muster: a held castle also gets a free, finished Castle Barracks in its ward
+## (units train and resupply at the front), with the same lifetime as the keep.
 
 var castles: Strongholds
 var structures: StructureManager
 var keeps := {}  # castle id -> Structure
+var musters := {}  # castle id -> the free barracks
 
 
 func _init(c: Strongholds, s: StructureManager) -> void:
@@ -26,6 +29,33 @@ func update() -> void:
 				Bus.say("%s now launches packets to your network." % c.name, "good")
 		elif c.owner != "player" and alive:
 			structures.remove(s, "destroyed")
+		_muster(c)
+
+
+func _muster(c: Dictionary) -> void:
+	var b: Structure = musters.get(c.id)
+	var alive := b != null and not b.dead
+	if c.owner != "player":
+		if alive:
+			structures.remove(b, "destroyed")
+		return
+	if alive or c.state != "held" or not CastleDefs.MUSTER:
+		return
+	b = _place_muster(castles.lays[c.id])
+	if b:
+		musters[c.id] = b
+		Bus.say("%s musters a Castle Barracks: train and resupply units there." % c.name, "good")
+
+
+## The free barracks: the first ward cell (nearest the keep sender) where it fits on level ground.
+func _place_muster(lay: Dictionary) -> Structure:
+	var home: Vector2i = lay.rect.position + lay.rect.size / 2
+	var cells: Array = lay.get("ward", lay.courtyard).duplicate()
+	cells.sort_custom(func(a, b): return (a - home).length_squared() < (b - home).length_squared())
+	for cell in cells:
+		if Placement._ground_rules(structures, "barracks", cell.x, cell.y, null) == "":
+			return structures.place("barracks", cell.x, cell.y, true)
+	return null
 
 
 ## On the free courtyard cell nearest the castle's centre (beside the spire), so it never
