@@ -13,6 +13,7 @@ var emitters: Array[Dictionary] = []
 var vents: Array[Dictionary] = []
 var spire: Dictionary
 var nests: SporeNests
+var guards: CastleGuards = null  # injected by Game: Sentinels are foes for Snipers and the Lance
 
 
 func _init(w: World, level: Dictionary, sm: StructureManager) -> void:
@@ -24,7 +25,7 @@ func _init(w: World, level: Dictionary, sm: StructureManager) -> void:
 	for v in level.vents:
 		var node := HazardMeshes.vent()
 		world.place_at(node, v.x, v.z)
-		var src := world.creeper.add_source({ "x": v.x, "z": v.z, "amount": v.amount, "interval": v.interval })
+		var src := world.creeper.add_source({ "x": v.x, "z": v.z, "amount": v.amount, "interval": v.interval, "start": v.get("start", 0.0) })
 		vents.append({ "node": node, "source": src })
 	spire = _make_spire(level.spire)
 	nests = SporeNests.new(w, level.nests, level.get("raid_schedule", {}))
@@ -40,7 +41,7 @@ func _make_emitter(e: Dictionary) -> Dictionary:
 	var pos := world.place_at(node, e.x, e.z)
 	var em := e.duplicate()
 	em.merge({ "node": node, "pos": pos, "alive": true, "shield": null, "link": null,
-		"source": world.creeper.add_source({ "x": e.x, "z": e.z, "amount": e.amount, "interval": e.interval }) })
+		"source": world.creeper.add_source({ "x": e.x, "z": e.z, "amount": e.amount, "interval": e.interval, "start": e.get("start", 0.0) }) })
 	em["shield_hint"] = e.get("shield_hint", "")
 	if e.has("shielded_by"):
 		em.shield = HazardMeshes.shield(3.4)

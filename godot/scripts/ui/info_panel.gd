@@ -104,7 +104,7 @@ func refresh() -> void:
 func _structure_text(s: Structure) -> String:
 	var lines := []
 	if not s.is_built():
-		lines.append("[color=#5fd4ff]Building: %d / %d packets[/color]" % [s.delivered, s.def.cost])
+		lines.append("[color=#5fd4ff]Building: %d / %d packets[/color]" % [s.delivered - s.lost, s.def.cost])
 	lines.append("HP %d / %d" % [ceili(s.hp), s.def.hp])
 	if s.is_flying():
 		lines.append("[color=#ffc857]In flight: no packets, no firing[/color]")
@@ -126,8 +126,8 @@ func _structure_text(s: Structure) -> String:
 		lines.append("Right-click ground: rally point")
 	elif s.def.get("movable", false):
 		lines.append("Right-click ground: fly there")
-	if s.wet > Config.DAMAGE_DEPTH:
-		lines.append("[color=#ff5a4a]Under creeper: taking damage[/color]")
+	if s.wet > Config.MIN_DEPTH:
+		lines.append("[color=#ff5a4a]Under creeper: %s[/color]" % ("taking damage" if s.is_built() else "losing build progress"))
 	lines.append("[color=#8899aa]%s[/color]" % s.def.desc)
 	return "\n".join(lines)
 

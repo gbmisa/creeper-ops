@@ -8,11 +8,12 @@ class_name Debug
 ##   --surface / --spire   drop the Operative near the Rift / at the Spire ramp
 ##   --cave        go straight into the cave       --killcore  destroy pylons + Core
 ##   --fast        8x sim speed                    --nocapture don't capture the mouse
-##   --look=x,z[,d] point the command camera at a cell (d = zoom distance)   --rocket  Operative fires a rocket
+##   --look=x,z[,d[,p]] point the command camera at a cell (d = zoom distance, p = pitch rad)   --rocket  Operative fires a rocket
 ##                 just before --shot
 ##   --sim=N       fast-forward N seconds, print a [sim] report
 ##   --smoke       run scripted mechanics checks (smoke_test.gd)
 ##   --tool=T      hold a build tool (screenshots of the ghost/overlays)
+##   --drag=T,x0,z0,x1,z1  drag-build preview of T from one cell to another
 ##   --salvage=N   set the Salvage stockpile
 ##   --armoury=id[,id...]  grant those upgrades free (unlock_railgun or railgun).
 ##                 id "open" shows the first-person Armoury at the Node; "fire" holds
@@ -23,11 +24,15 @@ class_name Debug
 ##   --keys        open the Controls (keybind) menu
 ##   --gpu-parity / --perf-sim=N   GPU creeper sim checks (SimBench; need a display)
 ##   --cpu-sim     force the CPU creeper sim
+##   --level=N     play Level N (1 Hollow Ridge, 2 The Crown Marches); see Levels
 ##   --raise=x,z,r,by   raise (negative: lower) a disc of terrain through TerrainEdit
 ##   --fpsbuild=T  Operative near the base in first-person build mode holding structure T
 ##   --turrets=I   castle I held with a Repeater, Lobber and Flak on its first sockets
+##   --raid=I[,S]  castle I held; its reprisal raid marches in S seconds (default 20)
 ##   --castle=I[,spot]  drop the Operative at castle I: climb (pillar route, default), pad
 ##                 (spire jump pad), top (spire top), gate (outside the gate)
+##   --guardsfire  every Sentinel is ready to fire now (screenshots of a bolt in flight)
+##   --gallery     one of every structure, unit and raider tier in rows (art screenshots)
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -50,7 +55,7 @@ static func apply(g) -> void:
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
 	if args.has("nocapture") or args.has("shot"):
 		g.ignore_capture = true
-	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "sim", "shot", "smoke"].any(func(k): return args.has(k))
+	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "raid", "gallery", "sim", "shot", "smoke"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
 	elif auto:
@@ -60,24 +65,27 @@ static func apply(g) -> void:
 	if args.has("fast"):
 		g.time_scale = 8.0
 	if args.has("demo"):
-		for b in DEMO_BUILD:  # --demo=slow: unbuilt, so every packet must really be delivered
+		for b in g.level.get("demo", DEMO_BUILD):  # --demo=slow: unbuilt, so every packet must really be delivered
 			g.structures.place(b[0], b[1], b[2], args.demo != "slow")
 	if args.has("units"):
 		var p: Vector3 = g.structures.command_node().pos
 		var squad := []
 		for i in 6:
-			var b: Structure = g.structures.nearest_to(40, 66, func(s): return s.type == "barracks")
+			var hint: Vector2i = g.level.landing_hint
+			var b: Structure = g.structures.nearest_to(hint.x, hint.y, func(s): return s.type == "barracks")
 			var u: Unit = g.units.spawn("soldier" if i < 4 else "crawler", p.x - 6 + i * 2.4, p.z - 12)
 			u.home = b
 			squad.append(u)
-		var c: Vector3 = g.level.grid.cell_ground(40, 27)
+		var tgt: Vector2i = g.level.get("demo_target", Vector2i(40, 27))
+		var c: Vector3 = g.level.grid.cell_ground(tgt.x, tgt.y)
 		g.units.order(squad, Vector2(c.x, c.z), true)
 	if args.has("surface"):
 		_drop(g, g.level.rift.x + 9, g.level.rift.z, PI / 2.0)
 	if args.has("spire"):
-		_drop(g, 61, 37, 0.0)
+		var st: Vector2i = g.level.get("spire_totem", Vector2i(61, 37))
+		_drop(g, st.x, st.y, 0.0)
 	if args.has("fpsbuild"):  # --fpsbuild=T: Operative near the base in build mode holding T
-		_drop(g, 40, 62, 0.0)
+		_drop(g, g.level.landing_hint.x, g.level.landing_hint.y - 4, 0.0)
 		g.fps.controller.pitch = -0.45
 		g.fps.builder.toggle(true)
 		g.fps.builder.tool = args.fpsbuild
@@ -90,14 +98,28 @@ static func apply(g) -> void:
 		for i in CastleTurrets.ORDER.size():
 			CastleTurrets.buy(c, i, CastleTurrets.ORDER[i], g.stockpile)
 		StrongholdMeshes.refresh(g.castles.views[c.id], c)
+	if args.has("raid"):  # --raid=I[,S]: castle I held, reprisal in S seconds
+		var p: PackedStringArray = args.raid.split(",")
+		var rc: Dictionary = g.castles.list[int(p[0])]
+		StrongholdRules.to_held(g.surface, rc, g.castles.lays[rc.id])
+		StrongholdMeshes.refresh(g.castles.views[rc.id], rc)
+		g.castle_raids.update(0.0)
+		rc.raid.warn = float(p[1]) if p.size() > 1 else 20.0
+	if args.has("guardsfire"):
+		for s in g.guards.list:
+			s.cd = 0.0
 	if args.has("cave"):
 		Bus.enter_cave.emit()
 	if args.has("killcore"):
 		g.cave_hazards.kill_all()
+	if args.has("gallery"):
+		Gallery.run(g, args.gallery)
 	if args.has("look"):
 		var xz: PackedStringArray = args.look.split(",")
 		g.command.cam.focus(g.level.grid.cell_ground(int(xz[0]), int(xz[1])))
 		g.command.cam.dist = float(xz[2]) if xz.size() > 2 else 55.0
+		if xz.size() > 3:
+			g.command.cam.pitch = float(xz[3])
 	if args.has("gpu-parity") or args.has("perf-sim"):
 		SimBench.run(g, args)
 		return
@@ -113,6 +135,11 @@ static func apply(g) -> void:
 		SmokeTest.run(g)
 	if args.has("sim"):
 		_fast_forward(g, float(args.sim))
+	if args.has("drag"):  # --drag=T,x0,z0,x1,z1: drag-build preview (DragBuild screenshots)
+		var d: PackedStringArray = args.drag.split(",")
+		g.command.set_tool(d[0])
+		g.command.drag_plan = DragBuild.plan(g.command, Vector2i(int(d[1]), int(d[2])), Vector2i(int(d[3]), int(d[4])))
+		g.command.overlay.show_plan(g.command.drag_plan, d[0])
 	if args.select == "all-weapons" if args.has("select") else false:
 		var all: Array[Structure] = []
 		all.assign(g.structures.list.filter(func(x): return x.def.get("movable", false) and x.type != "node"))
@@ -193,10 +220,10 @@ static func _castle(g, p: PackedStringArray) -> void:
 	var at: Vector2i = { "pad": lay.spire.pad[0] if not lay.spire.pad.is_empty() else lay.spire.entry,
 		"top": centre + Vector2i(1, 1), "gate": lay.gates[0].outer.back() + (lay.gates[0].outer.back() - centre).sign() * 4,
 		"climb": lay.climbs[0][0] + (lay.climbs[0][0] - centre).sign() * Vector2i(1, 0) if not lay.climbs.is_empty() else centre }[spot]
-	_drop(g, 40, 62, 0.0)
+	_drop(g, g.level.landing_hint.x, g.level.landing_hint.y - 4, 0.0)
 	var target: Vector2i = lay.climbs[0].back() if spot == "climb" and not lay.climbs.is_empty() else centre
 	g.fps.controller.spawn(g.level.grid, at.x, at.y, atan2(-(target.x - at.x), -(target.y - at.y)))
-	g.fps.controller.pitch = 0.25 if spot == "climb" else -0.1
+	g.fps.controller.pitch = 0.25 if spot == "climb" else (0.4 if spot == "gate" else -0.1)
 
 
 static func _fast_forward(g, seconds: float) -> void:
@@ -217,13 +244,15 @@ static func _fast_forward(g, seconds: float) -> void:
 		"field": g.economy.field_cells, "structures": s.list.size(),
 		"connected": s.list.filter(func(x): return x.connected).size(),
 		"unbuilt": s.list.filter(func(x): return not x.is_built()).map(func(x): return "%s:%d/%d%s" % [x.type, x.delivered, x.def.cost, "" if x.connected else "(off)"]),
-		"weapons_dry": "%d/%d" % [weapons.filter(func(w): return w.ammo < w.per_shot()).size(), weapons.size()],
+		"weapons_dry": "%d/%d %s" % [weapons.filter(func(w): return w.ammo < w.per_shot()).size(), weapons.size(),
+			weapons.filter(func(w): return w.ammo < w.per_shot()).map(func(w): return w.type)],
 		"node_hp": roundi(node.hp) if node else 0,
 		"units": " ".join(g.units.list.map(func(u): return "%s:%d hp/%d ammo/%s" % [u.type, u.hp, u.ammo, u.state])),
 		"nests_alive": g.hazards.nests.alive_count(),
 		"raiders": g.hazards.nests.raiders.list.map(func(r): return r.tier.name.left(2) + ("g" if r.guard else "")),
 		"raider_tier": Config.RAIDER_TIERS[g.hazards.nests.tier].name,
 		"aether": Upgrades.aether, "castles": g.castles.list.map(func(c): return "%s:%s" % [c.id, c.state]),
+		"castle_raids": g.castle_raids.launched,
 		"coverage": snappedf(g.surface.creeper.coverage(), 0.01),
 		"objectives": g.hud.objectives.items.filter(func(o): return o.done).map(func(o): return o.id),
 		"cave_coverage": snappedf(g.cave.creeper.coverage(), 0.01), "over": g.over,

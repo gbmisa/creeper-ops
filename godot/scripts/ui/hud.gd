@@ -31,7 +31,7 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	add_child(fps)
 	top = TopBar.new()
 	add_child(top)
-	objectives = Objectives.new()
+	objectives = Objectives.new(cm.level.get("objectives", Objectives.LIST))
 	add_child(objectives)
 	build = BuildMenu.new()
 	add_child(build)

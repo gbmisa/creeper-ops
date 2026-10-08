@@ -20,11 +20,7 @@ var advanced: AdvancedWeapons
 func _init(cam: Camera3D) -> void:
 	camera = cam
 	gun = Node3D.new()
-	var M = StructureMeshes
-	M.box(gun, Vector3(0.07, 0.09, 0.42), M.mat(Color("5a6878")))
-	M.box(gun, Vector3(0.03, 0.03, 0.3), M.mat(Color("2a2f36")), Vector3(0, 0.015, -0.33))
-	coil = M.box(gun, Vector3(0.075, 0.03, 0.2), M.mat(Color("7fe0ff"), 0.0, 0.3, Color("2a9fd0"), 2.0), Vector3(0, 0.055, -0.02))
-	M.box(gun, Vector3(0.05, 0.12, 0.06), M.mat(Color("2a2f36")), Vector3(0, -0.09, 0.1)).rotation.x = 0.3
+	_arbalest(gun)
 	gun.scale = Vector3.ONE * 0.4
 	gun.position = Vector3(0.18, -0.16, -0.5)
 	cam.add_child(gun)
@@ -49,6 +45,21 @@ func label() -> String:
 		"rifle": return "[%s] %s" % [Keybinds.short("rifle"), Config.RIFLE.name]
 		"sprayer": return "[%s] %s" % [Keybinds.short("sprayer"), Config.SPRAYER.name]
 	return "[%s] %s  %d/%d" % [Keybinds.short("rocket"), Config.ROCKET.name, launcher.loaded, launcher.mag_size()]
+
+
+## Viewmodel: a wood-and-bronze rune arbalest (looks down -Z). `coil` is the rune crystal
+## on top; its own material, because update() recolours it per weapon.
+func _arbalest(g: Node3D) -> void:
+	var M := StructureMeshes
+	M.box(g, Vector3(0.07, 0.08, 0.5), M.pal("oak"), Vector3(0, 0, 0.02))
+	M.box(g, Vector3(0.09, 0.07, 0.12), M.pal("bronze"), Vector3(0, 0.01, -0.02))
+	M.box(g, Vector3(0.05, 0.13, 0.06), M.pal("oak"), Vector3(0, -0.09, 0.14)).rotation.x = 0.3
+	for sx in [-1.0, 1.0]:
+		ShapeKit.strut(g, Vector3(sx * 0.02, 0.02, -0.24), Vector3(sx * 0.15, 0.0, -0.19), 0.02, M.pal("bronze_dark"), 0.025)
+		ShapeKit.rod(g, Vector3(sx * 0.15, 0.0, -0.19), Vector3(0, 0.03, -0.06), 0.003, M.pal("iron"), 4)
+	ShapeKit.rod(g, Vector3(0, 0.05, -0.02), Vector3(0, 0.05, -0.34), 0.01, M.pal("oak"), 6)
+	coil = M.crystal(g, 0.03, 0.14, M.mat_new(Color("3fb8f0"), 0.0, 0.3, Color("2a9fd0"), 0.9), Vector3(0, 0.08, 0.06))
+	coil.rotation.x = PI / 2.0
 
 
 func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:

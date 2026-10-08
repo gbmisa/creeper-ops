@@ -1,7 +1,8 @@
 class_name Mover
 ## Relocating structures, CW3 style: lift off, fly over terrain and creeper, settle, reconnect.
-## Weapons keep their ammo but don't fire or receive packets while airborne. The Command Node
-## produces nothing while flying. Thor is a "flying" def: it always hovers.
+## Weapons keep their ammo but don't fire or receive packets while airborne, except a `roams`
+## weapon (Thor), which fires from its magazine in flight. The Command Node produces nothing
+## while flying. Thor is a "flying" def: it always hovers.
 
 const HOVER := 4.0  # metres Thor floats above ground/creeper
 
@@ -17,7 +18,7 @@ static func start(mgr, s: Structure, x: int, z: int) -> void:
 		cruise = maxf(cruise, g.smooth_y(p.x, p.z))
 	cruise += Config.LIFT_HEIGHT
 	var travel := Vector2(to.x - from.x, to.z - from.z).length() / (float(s.def.move_speed) * Upgrades.mult("move"))
-	s.flight = { "from": from, "to": to, "cruise": cruise, "t": 0.0, "travel": travel }
+	s.flight = { "from": from, "to": to, "cruise": cruise, "t": 0.0, "travel": travel, "from_cell": Vector2i(s.x, s.z) }
 	s.x = x
 	s.z = z
 	mgr.occupy(s)

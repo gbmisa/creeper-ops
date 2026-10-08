@@ -12,16 +12,18 @@ const TERRACE_BAND := 2.0 / 3.0  # share of the centre-to-centre gap a level cha
                                  # 2/3 with DETAIL 3 puts every ramp knee on a mesh vertex.
 
 # ---- creeper -----------------------------------------------------------------
-const CREEPER_TICK := 1.0 / 15.0
-const FLOW_RATE := 0.22        # fraction of head difference moved per neighbour per tick
-const MIN_DEPTH := 0.02        # below this a cell counts as dry
+## CW3 rule (docs/CREEPER_SPEC.md §1): 30 ticks/s; each edge exchanges FLOW_RATE x head
+## difference, clamped to FLOW_RATE x the giving cell's own depth (<= 16 %/tick per cell).
+const CREEPER_TICK := 1.0 / 30.0
+const FLOW_RATE := 0.04
+const CREEPER_DRY := 0.001     # thinner films evaporate at the end of a tick
+const MIN_DEPTH := 0.02        # below this a cell counts as dry (and isn't drawn)
 const MAX_DEPTH := 25.0
-const DAMAGE_DEPTH := 0.06     # structures/units take damage above this depth
-const STRUCT_DPS := 14.0       # Command Node: damage per second per unit depth
-const STRUCT_BASE_DPS := 6.0   # Command Node: flat damage per second while wet at all
-const WEAPON_CREEPER_DPS := 2.5       # built weapons: extra damage per second per unit depth
-const WEAPON_CREEPER_BASE_DPS := 5.5  # built weapons: flat per second while wet. Depth 1 is
-                                      # 8 HP/s (40 HP cannon lasts 5 s); depth 3 is 13 HP/s.
+const DAMAGE_DEPTH := 0.06     # units take damage above this depth
+## CW3 wet damage is flat, whatever the depth: a structure with a health reserve dies after
+## `wet_time` seconds in creeper (def key, else WET_TIME). Same rate off build progress.
+const WET_TIME := 12.0         # CW3 pulse cannon
+const HEAL_TIME := 50.0        # seconds a dry structure takes to heal from 0 to full (CW3)
 
 # ---- economy (CW3: energy IS packets; no launch cap) -----------------------------
 const START_ENERGY := 0.0     # the Node lands empty: first packets come from its own output
@@ -35,7 +37,6 @@ const PACKET_SPEED := 18.0     # metres per second along links
 const RECYCLE_REFUND := 0.5
 const COLLECT_RADIUS := 3      # half-size of a collector's SQUARE field (7x7 cells, CW3/CW4 style)
 const COLLECT_PER_CELL := 0.005 # energy/s per claimed dry cell (a full 49-cell field ~0.25/s)
-const REPAIR_PER_SEC := 1.5    # HP/s regen when dry and connected
 const STAT_WINDOW := 3.0       # seconds the production/demand readout averages over
 
 # ---- movement of weapons / Command Node -----------------------------------------
@@ -106,6 +107,26 @@ const PUMP_DEPTH_CAP := 3.0
 const PUMP_JAM_TIME := 60
 const PUMP_JAM_RANGE := 3.0
 const JUMP_PAD_MARGIN := 1.5      # levels above the column top the pad throws you
+## Castle stakes (castle_raids.gd). Levels override any key with their CASTLE_RULES.
+const CASTLE_RULES := {
+	"aggression": 1.0, "held_stack": 0.5,     # raid size and siege rate x aggression x stack
+	"reprisal_warn": 60.0, "siege_interval": 240.0, "siege_warn": 45.0,
+	"reprisal_base": 8, "reprisal_per_tier": 3, "siege_base": 4, "siege_per_tier": 2,
+	"nest_buff": 0.25, "nest_buff_range": 30.0,  # +spawn rate per enemy castle within range (cells)
+}
+const CASTLE_SIEGE_MIN := 90.0    # sieges never come faster than this (seconds)
+
+## Castle guards (castle_guards.gd): Sentinels on tower tops and the wall walk of hostile castles.
+const GUARD_RANGE := 32.0         # cells; longer than a Sniper (26) on purpose
+const GUARD_CHARGE := 0.8         # seconds of visible glow before each bolt
+const GUARD_INTERVAL := 4.5       # seconds from one bolt to the next, per Sentinel
+const GUARD_BOLT_SPEED := 16.0    # metres/s; a 64 m shot takes 4 s, so walking sideways dodges it
+const GUARD_BOLT_RADIUS := 2.0    # metres from the impact point that still gets hurt
+const GUARD_DMG_OPERATIVE := 14.0 # suit damage (SUIT_MAX is 100)
+const GUARD_DMG_UNIT := 18.0
+const GUARD_DMG_STRUCT := 20.0
+const GUARD_RESPAWN := 90.0       # seconds for a dead Sentinel to regrow from the crown nest
+const SENTINEL := { "name": "Sentinel", "hp": 30.0, "dps": 0.0, "speed": 0.0, "size": 1.1, "color": Color("ff4a5a") }
 
 # ---- threats -------------------------------------------------------------------
 const SPIRE_INTERVAL := 60.0
@@ -114,8 +135,8 @@ const SPIRE_SPEEDUP := 0.92
 const SPORE_AMOUNT := 14.0
 const SPORE_HP := 3.0          # Beams can shoot volleys down
 const CHARGE_FUSE := 3.0
-const NULLIFY_TIME := 8.0
-const NULLIFY_RANGE := 4.0
+const NULLIFY_TIME := 2.0      # CW3: the magazine drains over 2 s, then the emitter dies
+const NULLIFY_RANGE := 10.0    # CW3 open disk r 10
 const MITE_SPAWN := 6.0
 const MITE_MAX := 6
 const MITE_SPEED := 4.5

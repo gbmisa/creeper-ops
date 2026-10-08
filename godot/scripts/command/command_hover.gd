@@ -14,6 +14,10 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 	if cm.tool == "":
 		cm.reason = ""
 		return
+	if not cm.drag_plan.is_empty():  # DragBuild draws its own preview
+		cm.overlay.hide_ghost()
+		cm.reason = DragBuild.summary(cm.drag_plan)
+		return
 	var c: Vector2i = cm.hover.cell
 	var at := cm.world.grid.cell_ground(c.x, c.y)
 	var res := check(cm, c)

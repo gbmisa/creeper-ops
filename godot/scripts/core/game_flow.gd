@@ -153,7 +153,18 @@ Hold the line Creeper World 3 style, and drop an [b]Operative[/b] to finish what
 • [b]Creeper destroys anything it touches,[/b] built or not. Only the Node has armour. Purple [b]Blight[/b] can't be built on.
 • [b]Spore Nests grow.[/b] They raid your base and breed tougher raiders the longer the mission runs. [b]Castles[/b] feed the Forge: the Operative climbs the spire, kills the crown nest and holds the top; raiders come to take them back. Barracks units can enter it, but they run dry and must walk home to restock.
 • Only the [b]Operative[/b] can plant charges or enter the Rift.""" % g.level.name,
-		[{ "label": "Begin: choose landing site", "on_click": begin }, { "label": "Controls", "on_click": g.hud.keys.open }])
+		[{ "label": "Begin: choose landing site", "on_click": begin }, { "label": "Controls", "on_click": g.hud.keys.open }]
+		+ _level_buttons())
+
+
+## One button per level: picks it and restarts the scene.
+func _level_buttons() -> Array:
+	var out := []
+	for i in Levels.NAMES.size():
+		out.append({ "label": "Level %d: %s" % [i + 1, Levels.NAMES[i]], "on_click": func():
+			Levels.selected = i + 1
+			g.get_tree().reload_current_scene() })
+	return out
 
 
 func begin() -> void:

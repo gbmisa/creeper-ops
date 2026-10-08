@@ -49,8 +49,9 @@ func _build_core() -> void:
 	shield.position.y = 2.6
 	node.add_child(shield)
 	var src: Dictionary = cave.core_source
-	var source := world.creeper.add_source({ "x": cave.core.x, "z": cave.core.y, "amount": src.amount,
-		"interval": src.interval, "cap": src.base_cap })
+	# CW3 emitter: each burst tops the pit up to the current pressure (base_cap, rising).
+	var source := world.creeper.add_source({ "x": cave.core.x, "z": cave.core.y, "amount": src.base_cap,
+		"interval": src.interval })
 	core = { "node": node, "pos": pos, "shield": shield, "source": source, "hp": CORE_HP, "alive": true,
 		"light": _light(pos + Vector3(0, 4, 0), Color("ff3355"), 6.0, 45.0) }
 	core["target"] = { "node": node, "oy": 2.6, "radius": 1.3, "deep_core": true, "alive": func(): return core.alive,
@@ -135,7 +136,7 @@ func update(dt: float) -> void:
 	time += dt
 	if core.alive:
 		var src: Dictionary = cave.core_source
-		core.source.cap = src.base_cap + time * src.cap_growth  # flood pressure grows
+		core.source.amount = src.base_cap + time * src.cap_growth  # flood pressure grows
 		var heart := core.node.get_node("Heart") as Node3D
 		heart.scale = Vector3.ONE * (1.0 + 0.08 * sin(time * (3.0 if core.shield else 8.0)))
 		heart.rotation.y += dt * 0.6
