@@ -85,6 +85,7 @@ func kill(f: Dictionary) -> void:
 		return
 	f.alive = false
 	stats.killed += 1
+	Bus.metric.emit("flyer_killed", { "type": f.type })
 	var node := f.node as Node3D
 	var p := node.position
 	var row: Dictionary = f.row

@@ -59,6 +59,7 @@ static func holding(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 		return
 	if c.state == "held":
 		c.state = "siege"
+		Bus.metric.emit("castle_siege", { "name": c.name })
 		Sfx.play("alarm")
 		Bus.say("Raiders are inside %s! Clear them or hold the %s." % [c.name, "keep hall" if lay.stages.size() > 1 else "spire top"], "bad")
 	var ward := inside.filter(func(r): return StrongholdRules.in_ward(lay, r.node.position))

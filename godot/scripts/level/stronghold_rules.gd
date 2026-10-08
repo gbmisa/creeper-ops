@@ -109,6 +109,7 @@ static func sealed(c: Dictionary, lay: Dictionary, ring := "") -> bool:
 
 static func to_hostile(world: World, c: Dictionary, lay: Dictionary, regrow: float) -> void:
 	c.state = "hostile"
+	Bus.metric.emit("castle_hostile", { "name": c.name })
 	c.crown.hp = c.crown.max_hp * regrow
 	c.capture = { "progress": 0.0, "away": 0.0, "retake": 0.0 }
 	c.garrison_timer = 0.0
@@ -120,6 +121,7 @@ static func to_hostile(world: World, c: Dictionary, lay: Dictionary, regrow: flo
 
 static func to_held(world: World, c: Dictionary, lay: Dictionary) -> void:
 	c.state = "held"
+	Bus.metric.emit("castle_held", { "name": c.name })
 	c.capture.retake = 0.0
 	c["stage"] = lay.stages.size()
 	set_owner(world, c, lay, "player")
