@@ -35,6 +35,7 @@ class_name Debug
 ##   --raid=I[,S]  castle I held; its reprisal raid marches in S seconds (default 20)
 ##   --castle=I[,spot]  drop the Operative at castle I: climb (pillar route, default), pad
 ##                 (spire jump pad), top (spire top), gate (outside the gate)
+##   --castle2=I[,spot] / --stage=I,N / --held=I   concentric castles (CastleDebug)
 ##   --guardsfire  every Sentinel is ready to fire now (screenshots of a bolt in flight)
 ##   --gallery     one of every structure, unit and raider tier in rows (art screenshots)
 ##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
@@ -61,7 +62,7 @@ static func apply(g) -> void:
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
 	if args.has("nocapture") or args.has("shot"):
 		g.ignore_capture = true
-	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "raid", "gallery", "sim", "shot", "smoke"].any(func(k): return args.has(k))
+	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "castle2", "raid", "gallery", "sim", "shot", "smoke"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
 	elif auto:
@@ -97,6 +98,7 @@ static func apply(g) -> void:
 		g.fps.builder.tool = args.fpsbuild
 	if args.has("castle"):
 		DebugHooks._castle(g, args.castle.split(","))
+	CastleDebug.apply(g, args)  # Stage 21: --castle2, --stage, --held
 	if args.has("turrets"):  # --turrets=I: castle I held, one of each turret type armed
 		var c: Dictionary = g.castles.list[int(args.turrets)]
 		StrongholdRules.to_held(g.surface, c, g.castles.lays[c.id])

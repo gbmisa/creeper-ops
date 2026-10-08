@@ -25,6 +25,7 @@ var deck := PackedFloat32Array()         # drawbridge deck level over this cell 
 var deck_owner := PackedByteArray()      # Faction that may walk the deck (NONE = no deck, ALL)
 var terp_target := PackedFloat32Array()  # -1 = not painted; else the level the Terp works toward
 var terp_mat := PackedByteArray()         # material to lay (Earth now; 11b: Metal)
+var roof := PackedFloat32Array()          # walkable roof level over the floor (0 = none); Operative only (GridRoofs)
 
 
 func _init(width: int, depth: int) -> void:
@@ -41,6 +42,7 @@ func _init(width: int, depth: int) -> void:
 	terp_target.resize(w * h)
 	terp_target.fill(-1.0)
 	terp_mat.resize(w * h)
+	roof.resize(w * h)
 
 
 func idx(x: int, z: int) -> int:
@@ -201,13 +203,13 @@ func raycast(origin: Vector3, dir: Vector3, max_dist := 600.0) -> Variant:
 	while t < max_dist:
 		var p := origin + dir * t
 		var inside := p.x >= 0.0 and p.z >= 0.0 and p.x <= ww and p.z <= dd
-		if inside and p.y <= smooth_y(p.x, p.z):
+		if inside and (p.y <= smooth_y(p.x, p.z) or GridRoofs.in_slab(self, p)):  # castle roofs stop rays
 			var lo := prev
 			var hi := t
 			for i in 10:
 				var mid := (lo + hi) * 0.5
 				var q := origin + dir * mid
-				if q.y <= smooth_y(q.x, q.z):
+				if q.y <= smooth_y(q.x, q.z) or GridRoofs.in_slab(self, q):
 					hi = mid
 				else:
 					lo = mid

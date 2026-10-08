@@ -104,12 +104,13 @@ static func to_held(world: World, c: Dictionary, lay: Dictionary) -> void:
 	set_owner(world, c, lay, "player")
 
 
-## Operative in the capture zone: on the column top.
-static func in_zone(lay: Dictionary, p: Variant) -> bool:
-	if p == null:
+## Operative in the final capture zone: the spire column top (Stage 7) or the keep hall.
+static func in_zone(lay: Dictionary, p: Variant, zone := "keep") -> bool:
+	if p == null or not lay.zones.has(zone):
 		return false
+	var z: Dictionary = lay.zones[zone]
 	var cell := Vector2i(floori(p.x / Config.CELL), floori(p.z / Config.CELL))
-	return cell in lay.spire.column and p.y >= (lay.spire.top - 0.5) * Config.LEVEL_H
+	return cell in z.cells and p.y >= (z.y - 0.5) * Config.LEVEL_H and p.y < (z.y_max - 1.0) * Config.LEVEL_H
 
 
 static func in_courtyard(lay: Dictionary, p: Vector3) -> bool:

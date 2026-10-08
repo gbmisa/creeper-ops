@@ -85,7 +85,9 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 			cap.position = cell_pos(c.x, c.y, world.grid.height_at(c.x, c.y)) - Vector3(0, 0.12, 0)
 	var sp: Dictionary = lay.spire
 	var crown := CastleDecor.crown_nest()  # fungal husk round a pulsing red "Sac"
-	crown.position = cell_pos(sp.centre.x, sp.centre.y, sp.top)
+	var ca: Dictionary = lay.crown_at  # spire top (Stage 7) or the keep hall (concentric)
+	crown.position = cell_pos(ca.cell.x, ca.cell.y, ca.level)
+	v["interiors"] = CastleInteriorMeshes.build(root, world.grid, lay)
 	root.add_child(crown)
 	v["crown"] = crown
 	if not sp.pad.is_empty():

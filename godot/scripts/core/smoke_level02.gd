@@ -60,9 +60,16 @@ static func _towers(lvl: Dictionary) -> void:
 	var grid: Grid = lvl.grid
 	for c in lvl.castles:
 		var lay: Dictionary = c.layout
-		var seen := LevelShape.walkable_from(grid, lay.courtyard[0])
-		var bad: Array = lay.towers.filter(func(t): return not seen.has(t.centre))
-		SmokeTest._check("L2: %s towers (%d) climbable from the courtyard" % [c.id, lay.towers.size()], not lay.towers.is_empty() and bad.is_empty())
+		var bad: Array
+		if lay.get("plan", "") == "concentric":  # roofs are Operative ground: flood both rings
+			var a := GridRoofs.walkable(grid, lay.bailey[0])
+			var b := GridRoofs.walkable(grid, lay.ward[0])
+			bad = lay.towers.filter(func(t): return not GridRoofs.reached(a, t.centre, t.top) and not GridRoofs.reached(b, t.centre, t.top))
+		else:
+			var seen := LevelShape.walkable_from(grid, lay.courtyard[0])
+			bad = lay.towers.filter(func(t): return not seen.has(t.centre))
+		SmokeTest._check("L2: %s towers (%d) climbable from the courtyard" % [c.id, lay.towers.size()], not lay.towers.is_empty() and bad.is_empty(),
+			str(bad.map(func(t): return t.centre)))
 
 
 class Dummy:

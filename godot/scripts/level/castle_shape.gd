@@ -22,6 +22,8 @@ const SEGMENT_MAX := 5  # wall columns per destructible segment
 
 
 static func build(g: Grid, row: Dictionary) -> Dictionary:
+	if row.get("plan", "") == "concentric":
+		return CastleShape2.build(g, row)  # Stage 21 concentric castle
 	var n: int = row.get("size", 15)
 	var r := Rect2i(row.x, row.z, n, n)
 	var floor_h: int = row.floor
@@ -31,7 +33,7 @@ static func build(g: Grid, row: Dictionary) -> Dictionary:
 	var gates: Array = row.get("gates", ["s"])
 	var lay := { "rect": r, "floor": floor_h, "yard": yard, "raised": raised, "moat": moat,
 		"wall_top": yard + WALL_UP, "segments": [], "gates": [], "bridge": [], "winch": Vector2i(-1, -1),
-		"climbs": [], "pump_cells": [], "courtyard": [], "towers": [], "keep": {} }
+		"climbs": [], "pump_cells": [], "courtyard": [], "towers": [], "keep": {}, "stages": ["keep"], "interiors": [], "zones": {} }
 	for k in range(-4, 0):  # apron, then moat / gap
 		for c in _ring(r, k):
 			g.set_height(c.x, c.y, floor_h - (MOAT_DEPTH if moat and k >= -2 else 0))
@@ -45,6 +47,8 @@ static func build(g: Grid, row: Dictionary) -> Dictionary:
 	_stairs(g, r, yard)
 	CastleTowers.build(g, towers, yard + WALL_UP, lay)
 	lay["spire"] = SpireShape.build(g, Vector2i(r.position.x + n / 2, r.position.y + n / 2), yard, row.get("spire_h", 20))
+	lay.zones["keep"] = { "cells": lay.spire.column, "y": lay.spire.top, "y_max": 999 }  # capture on the column top
+	lay["crown_at"] = { "cell": lay.spire.centre, "level": lay.spire.top }
 	if row.get("keep", false):
 		CastleTowers.keep(g, lay.spire.centre, yard, lay)
 	for side in row.get("climbs", []):
