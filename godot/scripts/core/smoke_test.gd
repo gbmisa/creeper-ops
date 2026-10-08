@@ -150,6 +150,7 @@ static func run(g) -> void:
 	SmokeRoster.run(g)
 	SmokeHives.run(g)
 	SmokeEnemyMortar.run(g)
+	SmokeEnemyBuild.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

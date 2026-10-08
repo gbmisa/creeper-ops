@@ -53,6 +53,9 @@ func _strike(at: Vector3) -> void:
 	world.effects.beam(at + Vector3(0, 80, 0), at, Color("fff0c0"), 0.4, 2.2)
 	world.effects.burst(at, Color("ffb070"), Config.LANCE_RADIUS * Config.CELL * 1.3, 0.7)
 	Sfx.play("boom", at)
+	var scale := 1.0
+	if hazards != null and hazards.nests.builder != null:
+		scale = hazards.nests.builder.lance_scale(at)
 	if hazards:
 		var reach := Config.LANCE_RADIUS * Config.CELL
 		var foes: Array = hazards.nests.raiders.list.duplicate()
@@ -60,4 +63,6 @@ func _strike(at: Vector3) -> void:
 			foes.append_array(hazards.guards.foes())
 		for m in foes:
 			if (m.node.position as Vector3).distance_to(at) < reach:
-				m.enemy.hit.call(99.0)
+				m.enemy.hit.call(99.0 * scale)
+		if hazards.nests.builder != null:
+			hazards.nests.builder.on_lance(at)

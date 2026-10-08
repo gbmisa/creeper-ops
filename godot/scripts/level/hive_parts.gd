@@ -90,7 +90,10 @@ static func lance(host, ats: Array) -> void:
 					continue
 				var pos: Vector3 = q.pos
 				if Vector2(pos.x - p.x, pos.z - p.z).length() <= reach:
-					hurt(host, h, q, Config.HIVE_LANCE_DMG, "lance")
+					var dmg := Config.HIVE_LANCE_DMG
+					if host.builder != null:
+						dmg *= host.builder.lance_scale(p)
+					hurt(host, h, q, dmg, "lance")
 
 
 static func combat(host, hive: Dictionary, dt: float) -> void:

@@ -22,6 +22,8 @@ var seal := 0.0
 var seal_arm := 0.0
 var operative: Callable = func(): return null
 var node_pos := func() -> Vector3: return Vector3.ZERO
+var builder = null                 # EnemyBuilder: Lance scale inside a Shield Dome
+var hub_mortars: Array = []       # finished hub mortars; shells() draws their telegraphs
 
 
 func _init(w: World, defs: Array, sched: Dictionary = {}, lvl: Dictionary = {}) -> void:

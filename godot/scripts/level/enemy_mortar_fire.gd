@@ -132,6 +132,15 @@ static func shells(host) -> void:
 			var at: Vector3 = shot.at
 			packed[i] = Vector4(at.x, at.z, lerpf(0.6, blast, k), 1.0)
 			i += 1
+	for item in host.hub_mortars:
+		var hub_m: Dictionary = item
+		if hub_m.telegraph == null or i >= 8:
+			continue
+		var hub_shot: Dictionary = hub_m.telegraph
+		var hk := clampf(float(hub_shot.t) / Config.MORTAR_TELEGRAPH, 0.0, 1.0)
+		var hat: Vector3 = hub_shot.at
+		packed[i] = Vector4(hat.x, hat.z, lerpf(0.6, blast, hk), 1.0)
+		i += 1
 	mat.set_shader_parameter("shells", packed)
 
 

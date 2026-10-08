@@ -24,6 +24,10 @@ static func _ground_rules(mgr, type: String, x: int, z: int, ignore: Structure) 
 		var i := g.idx(c.x, c.y)
 		if g.zone[i] == Grid.Zone.BLIGHT:
 			return "Blight zone: nothing can be built or parked here. Send the Operative or units."
+		if mgr.enemy_build != null and mgr.enemy_build.occupies(c.x, c.y):
+			return "An enemy structure holds this cell"
+		if mgr.enemy_build != null and mgr.enemy_build.blocks(c.x, c.y):
+			return "Blight Pylon: nothing can be built here. Destroy the pylon."
 		if g.blocked[i]:
 			if g.yard[i] and g.material[i] == Grid.Mat.NATURAL:
 				return "Enemy castle: capture it to build in its courtyard"
@@ -63,10 +67,12 @@ static func can_place(mgr, type: String, x: int, z: int, planned: Array[Vector3]
 			and not planned.any(func(p: Vector3): return Vector2(p.x - x, p.y - z).length() <= maxf(p.z, def.link)):
 		return { "ok": false, "reason": "Out of network range: build a Relay or Collector closer" }
 	if type == "nullifier":
-		var e = mgr.hazards.emitter_near(x, z, WeaponLogic.nullify_range()) if mgr.hazards else null
-		if e == null:
-			return { "ok": false, "reason": "Nullifier must be within %.1f cells of an emitter" % WeaponLogic.nullify_range() }
-		if mgr.hazards.is_shielded(e):
+		var reach := WeaponLogic.nullify_range()
+		var e = mgr.hazards.emitter_near(x, z, reach) if mgr.hazards else null
+		var pump: bool = mgr.enemy_build != null and mgr.enemy_build.pump_near(x, z)
+		if e == null and not pump:
+			return { "ok": false, "reason": "Nullifier must be within %.1f cells of an emitter" % reach }
+		if e != null and mgr.hazards.is_shielded(e) and not pump:
 			return { "ok": false, "reason": "%s is SHIELDED. %s" % [e.name, e.shield_hint] }
 	return { "ok": true, "reason": "" }
 

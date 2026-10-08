@@ -117,6 +117,17 @@ const SPIRE_PUMP_RATE := 0.6      # creeper/s drawn per level of average moat de
 const PUMP_DEPTH_CAP := 3.0
 const PUMP_JAM_TIME := 60
 const PUMP_JAM_RANGE := 3.0
+const ENEMY_BUILD_BASE := 1.0 / 180.0  # progress/s; first structure is ~3 min at pressure 0
+const PUMP_REF := 1.8                  # full-moat intake (SPIRE_PUMP_RATE x PUMP_DEPTH_CAP)
+const ENEMY_MAT_PER := 324.0           # pump stock spent per 1.0 of the intake bonus
+const ENEMY_BUILD_REACH := 36.0        # cells from the spire centre a hub may build
+const ENEMY_WEAPON_GAP := 10.0         # prefer a site at least this far from a weapon
+const ENEMY_SLOTS_PRESSURE := 0.5      # a hub grows two structures at once from here
+const ENEMY_WEAVER_SPEED := 3.0
+const ENEMY_WEAVER_RESPAWN := 8.0
+const ENEMY_LEECH_RANGE := 16.0        # a pump emits while an undenied Leech is this close
+const ENEMY_LEECH_MAT := 0.15          # material/s one grown Leech adds to its hub
+const ENEMY_BLIGHT_DPS := 1.5          # HP/s a Blight Pylon deals to structures in its radius
 const JUMP_PAD_MARGIN := 1.5      # levels above the column top the pad throws you
 ## Castle stakes (castle_raids.gd). Levels override any key with their CASTLE_RULES.
 const CASTLE_RULES := {

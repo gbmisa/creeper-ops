@@ -9,6 +9,7 @@ const DROP_POD_TIME := 3.0
 var world: World
 var economy: Economy
 var hazards = null            # SurfaceHazards (set by Game)
+var enemy_build = null        # EnemyBuilder (set by Game): blight, shields, sniper foes
 var list: Array[Structure] = []
 var occupied := {}            # grid idx -> Structure
 var selected_beacon: Structure = null

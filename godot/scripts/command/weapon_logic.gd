@@ -109,6 +109,7 @@ static func _lob(s: Structure, mgr) -> bool:
 		"size": 0.8 if big else 0.45, "on_arrive": func():
 			CreeperStrike.disk(w.creeper, t.x, t.y, splash, power)
 			WeaponLogic._splash_raiders(mgr, b, splash)
+			WeaponLogic._splash_builds(mgr, b, splash, big)
 			w.effects.burst(b, Color("ffaa33"), splash * Config.CELL * 0.7, 0.45)
 			Sfx.play("boom", b) })
 	Sfx.play("mortar", s.pos)
@@ -148,6 +149,13 @@ static func _splash_raiders(mgr, at: Vector3, splash: float) -> void:
 			m.enemy.hit.call(Config.MORTAR_RAIDER_DMG)
 
 
+static func _splash_builds(mgr, at: Vector3, splash: float, big: bool) -> void:
+	if mgr.enemy_build == null:
+		return
+	var dmg := EnemyStructures.SHELL_BERTHA if big else EnemyStructures.SHELL_MORTAR
+	mgr.enemy_build.splash(at, splash * Config.CELL, dmg)
+
+
 static func _snipe(s: Structure, mgr) -> bool:
 	if mgr.hazards == null:
 		return false
@@ -159,6 +167,8 @@ static func _snipe(s: Structure, mgr) -> bool:
 	var foes: Array = mgr.hazards.nests.raiders.list.duplicate()
 	if mgr.hazards.guards:
 		foes.append_array(mgr.hazards.guards.foes())  # Sentinels, if the range allows
+	if mgr.enemy_build != null:
+		foes.append_array(mgr.enemy_build.snipe_foes())
 	for m in foes:
 		var d := (m.node.position as Vector3).distance_to(a)
 		if d < bd:
