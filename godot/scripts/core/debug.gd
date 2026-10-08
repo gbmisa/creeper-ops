@@ -31,7 +31,7 @@ class_name Debug
 ##   --guardsfire  every Sentinel is ready to fire now (screenshots of a bolt in flight)
 ##   --gallery     one of every structure, unit and raider tier in rows (art screenshots)
 ##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
-##   --burrow      a Warden ring and a Burrower dust trail (screenshot)
+##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
 
 const DEMO_BUILD := [
@@ -117,6 +117,8 @@ static func apply(g) -> void:
 		RaiderShots.demo(g)
 	if args.has("burrow"):
 		RaiderBurrow.demo(g)
+	if args.has("mortar"):
+		EnemyMortars.demo(g)
 	if args.has("look"):
 		var xz: PackedStringArray = args.look.split(",")
 		g.command.cam.focus(g.level.grid.cell_ground(int(xz[0]), int(xz[1])))

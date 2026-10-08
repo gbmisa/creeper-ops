@@ -76,6 +76,7 @@ static func sync(host, hive: Dictionary) -> void:
 	if str(hive.state) != "active":
 		return
 	unlock_to(host, hive, stage_for(host.pressure()))
+	EnemyMortars.reconcile(host, hive)
 
 
 static func unlock_to(host, hive: Dictionary, want: int) -> void:
@@ -98,7 +99,7 @@ static func _add(host, hive: Dictionary, stage: int, grown: bool) -> void:
 	var ids: Array = BY_STAGE[stage]
 	for id in ids:
 		if str(id) == "mortar":
-			continue  # Phase 7 builds the mortar body. Stage 4 still grants the HP bonus.
+			continue  # EnemyMortars builds the body. Stage 4 still grants the HP bonus.
 		if not _id(hive, str(id)).is_empty():
 			continue
 		HiveParts.spawn(host, hive, str(id), stage, grown)
@@ -192,6 +193,7 @@ static func raze(host, hive: Dictionary) -> void:
 	for part in (hive.parts as Array).duplicate():
 		HiveParts.forget(host.world, part)
 	hive.parts = []
+	EnemyMortars.reconcile(host, hive)
 	HiveSite.drop_anchor(hive)
 	HiveSite.zone(host, hive, false)
 	if host.stockpile != null:
@@ -223,6 +225,7 @@ static func unpack(host, hive: Dictionary, data: Dictionary) -> void:
 	for part in (hive.parts as Array).duplicate():
 		HiveParts.forget(host.world, part)
 	hive.parts = []
+	EnemyMortars.clear(host, hive)
 	HiveSite.drop_anchor(hive)
 	hive.state = str(data.state)
 	hive.stage = int(data.stage)

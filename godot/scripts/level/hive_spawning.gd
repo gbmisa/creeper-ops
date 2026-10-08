@@ -18,6 +18,9 @@ var raiding := false
 var schedule: Dictionary = {}
 var level: Dictionary = {}
 var overrun_t := 0.0
+var seal := 0.0
+var seal_arm := 0.0
+var operative: Callable = func(): return null
 var node_pos := func() -> Vector3: return Vector3.ZERO
 
 
@@ -41,6 +44,11 @@ func enemies() -> Array:
 				out.append(p.enemy)
 	for r in raiders.list:
 		out.append(r.enemy)
+	for n in nests:
+		for item in n.get("mortars", []):
+			var m: Dictionary = item
+			if m.alive:
+				out.append(m.enemy)
 	return out
 
 
@@ -114,6 +122,7 @@ func update(dt: float) -> void:
 		sac.scale = sac.scale.lerp(Vector3.ONE * growth * (1.0 + 0.08 * sin(time * 3.0 + n.x)), 0.2)
 		n.timer += dt
 		try_spawn(n)
+	EnemyMortars.tick(self, dt)
 	raiders.update(dt, prey.call(), goal_cells.call())
 
 

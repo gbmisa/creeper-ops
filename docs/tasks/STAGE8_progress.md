@@ -207,3 +207,33 @@ Commit message: `Stage 8 P6: hives replace spore nests`.
 ### Not finished
 
 - Phase 7: enemy mortars and the Spotter. Phase 8: balance, the as-built notes, and the MASTER_PLAN status cells.
+
+## Phase 7: enemy mortars and Spotter — done
+
+Commit message: `Stage 8 P7: enemy mortars and spotters`.
+
+### What changed
+
+- `level/enemy_mortar.gd` builds the mortars. Stage 3 builds one, stage 4 builds a second and both gain the +50% HP. Any active hive also builds one within 60 s after the Node has had no walking route for 60 s. Each mortar grows in over 20 s and brings a Spotter.
+- A shell is aimed, then a red ring grows on the ground for 2.5 s (`shells[8]` on `terrain.gdshader`). A thump plays at launch and a whistle in the last 1 s. Blast is 2.5 cells: structures 30, units 20, the Operative 70% of max suit at the centre, falling off. The 3×3 loses one Earth level through TerrainEdit, never below `base_height`. Spire cells are skipped.
+- The Operative is a target only while that mortar's Spotter has line of sight within 25 m. `Bus.say("SPOTTED", "bad")` fires when a shell is called on them. Hold E within 2 m starts a 3 s channel; staying there destroys the mortar and pays 5 Salvage.
+
+### Decisions where the spec was silent
+
+- The mortar is not a hive part. The stage-4 part id stays skipped so the body can be two mortars, and so a sealed hive can build one before stage 3. `enemy_mortar_fire.gd` and `enemy_mortar_hit.gd` hold the aim and the blast so each file stays under 250 lines.
+- A killed mortar is not rebuilt. An ungrown extra is removed if the hive drops below the stage that wanted it. A grown one stays. Razing the hive removes them. They are not in the hive save blob.
+- The seal clock is global. It resets if any active hive can walk to the Node (`RaiderField.reachable`), and a flying Node counts as open. The build happens once the clock has been closed for 60 s and then another 60 s.
+- A spotted Operative is preferred over a weapon. Units are splash, not an aim point. Weapons and Terps beat other structures.
+- The Spotter is a real raider posted beside its mortar. Only a Spotter with a post holds still, so the roster smoke's unposted Spotter still wanders. It respawns 30 s after dying while the mortar lives, and it dies with the mortar. It counts toward the nest's raider cap.
+- Sabotage is the only thing that pays the 5 Salvage. Shot death does not. `use()` starts the channel; the mortar update finishes it if the Operative is still within 2 m. There is no HUD widget for SPOTTED. The operative HUD has no alert hook, and this brief stays out of `scripts/ui`.
+- Metal and plated stone lose nothing to a shell. A stone wall segment is not damaged here. Both would be new per-cell chip state, and the wall HP would mean editing `castle_*.gd`.
+- At most 8 telegraphs are drawn. A ninth shell still lands.
+
+### Tests
+
+- Parse clean. Smoke **307 PASS / 0 FAIL** (286 previous + 21). A collector 4 cells away is ignored. A cannon beats a nearer relay. The Operative is ignored without a Spotter, chosen when one can see them, and ignored again inside 6 cells. The Spotter is still dead at 29 s and back at 31 s. Earth at the impact goes from base+2 to base+1, then refuses to go under base. A Spire neighbour is unchanged. The centre hit takes the suit from 100 to 30. Sabotage cancels if you step away, waits out 3 s, then pays 5 Salvage. Stage 3 builds one mortar, stage 4 a second at 120 HP. An open route does not arm the seal. Lifting the Node off the ground for 50 s does not build; the following 80 s does, one mortar.
+- Screenshot `/tmp/stage8-shots/p7-mortar.png` (`--mortar --look=48,33,38,0.85`, Xvfb 1600x900). The tube and its red mouth sit up the slope from a red ring on the grass.
+
+### Not finished
+
+- Phase 8: the four baseline sims, tuning, the as-built notes, and the 8a/8b status cells. Metal chip, stone-wall HP, and a real SPOTTED widget are not in this phase.

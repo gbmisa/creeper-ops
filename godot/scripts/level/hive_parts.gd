@@ -1,7 +1,7 @@
 class_name HiveParts
 ## Core, spawner pits, spitter turrets and the spore launcher (§3.3).
 ## The Core ignores every weapon except the Operative and the Lance.
-## A mortar body is Phase 7; the slot and the HP bonus still exist.
+## The mortar body lives in EnemyMortars. This slot stays empty on purpose.
 
 
 static func kind_of(id: String) -> String:

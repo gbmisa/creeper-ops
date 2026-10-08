@@ -116,6 +116,10 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 		return
 	var p: Vector3 = r.node.position
 	var home: Vector3 = r.nest.pos
+	if str(tier.get("special", "")) == "spotter" and r.has("post"):
+		var post: Vector3 = r.post
+		_walk(r, Vector2(post.x, post.z), dt)
+		return
 	var goal = null  # Vector2 XZ
 	var target: Dictionary
 	if r.guard:

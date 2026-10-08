@@ -177,6 +177,23 @@ const HIVE_SPITTER_DMG := 6.0
 const HIVE_SPITTER_INTERVAL := 2.0
 const HIVE_SPITTER_RANGE := 20.0  # cells
 const HIVE_SPITTER_SPLASH := 1.5  # cells
+## Enemy mortars (§4.3). Range is in cells. The Operative takes a fraction of max suit at the centre.
+const MORTAR_RANGE := 36.0
+const MORTAR_MIN_RANGE := 6.0
+const MORTAR_INTERVAL := 6.0
+const MORTAR_BLAST := 2.5
+const MORTAR_STRUCT := 30.0
+const MORTAR_UNIT := 20.0
+const MORTAR_OPERATIVE := 0.70
+const MORTAR_TELEGRAPH := 2.5
+const MORTAR_WHISTLE := 1.0       # last seconds of the telegraph
+const MORTAR_SEAL := 60.0         # no walking route to the Node
+const MORTAR_SEAL_BUILD := 60.0   # then a mortar is up within this long
+const MORTAR_SIGHT := 25.0        # metres, Spotter line of sight
+const MORTAR_SABOTAGE_TIME := 3.0
+const MORTAR_SABOTAGE_RANGE := 2.0
+const MORTAR_SALVAGE := 5.0
+const MORTAR_SPOTTER_RESPAWN := 30.0
 ## Overrun (§4.1): at pressure 1, every OVERRUN_INTERVAL each active nest sends this many
 ## straight at the Node. "Tier" is Pressure.legacy_tier (0..3), so a capped wave is 12.
 const OVERRUN_INTERVAL := 45.0

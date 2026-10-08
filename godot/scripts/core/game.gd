@@ -90,6 +90,7 @@ func _ready() -> void:
 	castles.op = func(): return fps.controller if fps.world == surface else null
 	castles.stockpile = stockpile
 	hazards.nests.stockpile = stockpile
+	hazards.nests.operative = func(): return fps if fps.world == surface else null
 	command.castles = castles
 	keeps = CastleKeeps.new(castles, structures)
 	castles.on_lost = func(cells: Array):

@@ -23,6 +23,8 @@ static func part(kind: String) -> Node3D:
 			_spitter(root)
 		"launcher":
 			_launcher(root)
+		"mortar":
+			_mortar(root)
 		_:
 			StructureMeshes.ball(root, 0.4, StructureMeshes.glow(Color("ff8844"), 1.0), Vector3(0, 0.6, 0))
 	return root
@@ -50,3 +52,9 @@ static func _spitter(root: Node3D) -> void:
 static func _launcher(root: Node3D) -> void:
 	StructureMeshes.cyl(root, 0.2, 0.45, 1.1, StructureMeshes.mat(Color("3a2450"), 0.1, 0.5), 0.55)
 	StructureMeshes.ball(root, 0.34, StructureMeshes.glow(Color("c060ff"), 1.2), Vector3(0, 1.35, 0))
+
+
+static func _mortar(root: Node3D) -> void:
+	StructureMeshes.cyl(root, 0.55, 0.7, 0.35, StructureMeshes.mat(Color("2a2420"), 0.05, 0.7), 0.12)
+	StructureMeshes.cyl(root, 0.22, 0.28, 1.35, StructureMeshes.mat(Color("4a3028"), 0.15, 0.45), 0.7)
+	StructureMeshes.ball(root, 0.2, StructureMeshes.glow(Color("ff4422"), 1.5), Vector3(0.15, 1.55, 0.35))
