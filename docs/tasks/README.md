@@ -25,3 +25,7 @@ One file per task. Start a **fresh** agent session in the task's worktree and gi
 | [STAGE11a_terp_earth.md](STAGE11a_terp_earth.md) | `creeper fps td-worktrees/stage11a` | `stage/11a-terp` |
 | [STAGE15_fantasy_art.md](STAGE15_fantasy_art.md) (+ judge: [JUDGE_art_rubric.md](JUDGE_art_rubric.md)) | `creeper fps td-worktrees/stage15` | `stage/15-fantasy-art` |
 | [STAGE16_level02.md](STAGE16_level02.md) | `creeper fps td-worktrees/stage16` | `stage/16-level02` |
+| [STAGE18b_fps_visuals.md](STAGE18b_fps_visuals.md) | `creeper fps td-worktrees/stage18b` | `stage/18b-fps-visuals` |
+| [STAGE18c_hud_declutter.md](STAGE18c_hud_declutter.md) | `creeper fps td-worktrees/stage18c` | `stage/18c-hud-declutter` |
+| [STAGE18d_dragbuild_polish.md](STAGE18d_dragbuild_polish.md) | `creeper fps td-worktrees/stage18d` | `stage/18d-dragbuild-polish` |
+| [SYNC_grok_branches.md](SYNC_grok_branches.md) (one session each) | `stage7c`, `stage10a`, `stage11a` | their own branches |
