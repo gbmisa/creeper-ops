@@ -12,6 +12,16 @@ const RAID_SCHEDULE := {
 	"raid_delay": 300.0,
 	"tier_times": [0.0, 480.0, 900.0, 1320.0],
 }
+## Pressure curve (§4.1). Points hold the old unlocks: Brute ~8 min (0.20), Ravager ~15 (0.60),
+## Behemoth ~22 (0.85). Grace matches the raid start; cap is the spec's 2400 s.
+const PRESSURE := { "grace": 300.0, "cap": 2400.0 }
+const PRESSURE_POINTS := [
+	{ "t": 300.0, "p": 0.0 },
+	{ "t": 480.0, "p": 0.20 },
+	{ "t": 900.0, "p": 0.60 },
+	{ "t": 1320.0, "p": 0.85 },
+	{ "t": 2400.0, "p": 1.0 },
+]
 ## Castles (CastleShape rows). The Operative takes them; raiders take them back.
 ## Ashmoat: a ground keep whose moat the core-fed SW vent fills. High Bastion: a raised keep
 ## on a plateau, reached by a drawbridge from the south or the climbing pillars on its east.
@@ -137,6 +147,8 @@ static func build() -> Dictionary:
 			{ "name": "Central knoll", "x": 40, "z": 23 },
 		],
 		"raid_schedule": RAID_SCHEDULE,
+		"pressure": PRESSURE,
+		"pressure_points": PRESSURE_POINTS,
 		"spire": { "x": 66, "z": 9 },
 		"castles": castles,
 		"castle_rules": CASTLE_RULES,

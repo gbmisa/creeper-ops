@@ -154,6 +154,11 @@ const NEST_CAP_PER_MIN := 0.35
 const NEST_CAP_MAX := 10
 const NEST_GUARDS := 2         # raiders per nest that stay home once raids start
 const NEST_RAID_DELAY := 300.0 # fallback grace period when a level has no RAID_SCHEDULE
+## Overrun (§4.1): at pressure 1, every OVERRUN_INTERVAL each active nest sends this many
+## straight at the Node. "Tier" is Pressure.legacy_tier (0..3), so a capped wave is 12.
+const OVERRUN_INTERVAL := 45.0
+const OVERRUN_BASE := 6
+const OVERRUN_PER_TIER := 2
 const RAIDER_MAX_TOTAL := 60
 const RAIDER_AGGRO := 9.0      # metres: a marching raider attacks anything this close
 const RAIDER_CLIMB := 1.1      # max terrain levels a raider may step up between cells

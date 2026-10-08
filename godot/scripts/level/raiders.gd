@@ -134,6 +134,9 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 ## Castle raiders follow the castle field while it has a route for them; everyone else
 ## (and castle raiders with no route) follows the field to your structures.
 func _route(r: Dictionary, p: Vector3) -> Variant:
+	if r.get("overrun", false):
+		var rush: Vector3 = r.get("rush", r.nest.pos)
+		return Vector2(rush.x, rush.z)
 	if r.get("mission", "") == "castle" and castle_field.has_goals:
 		var s = castle_field.next_step(p.x, p.z)
 		if s != null:

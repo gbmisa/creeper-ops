@@ -84,6 +84,9 @@ func _ready() -> void:
 	hazards.nests.prey = surface_prey
 	guards.prey = surface_prey
 	hazards.nests.goal_cells = raider_goals
+	hazards.nests.node_pos = func() -> Vector3:
+		var n := structures.command_node()
+		return n.pos if n else Vector3.ZERO
 	castles.op = func(): return fps.controller if fps.world == surface else null
 	castles.stockpile = stockpile
 	command.castles = castles

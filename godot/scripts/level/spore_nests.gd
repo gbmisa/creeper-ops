@@ -13,15 +13,20 @@ var raiders: Raiders
 var prey := func() -> Array: return []        # injected by Game: [{ node, radius, alive, hit }]
 var goal_cells := func() -> Array: return []  # injected by Game: cells of grounded structures
 var time := 0.0
-var tier := 0       # highest unlocked tier index
+var tier := 0       # highest unlocked tier index (RAID_SCHEDULE; spawning stays on this until 8b)
 var raiding := false
 var schedule: Dictionary = {}  # level RAID_SCHEDULE; empty falls back to Config
+var level: Dictionary = {}     # for Pressure.value
+var overrun_t := 0.0
+## Where overrun waves walk. Game injects the Command Node; tests can override it.
+var node_pos := func() -> Vector3: return Vector3.ZERO
 ## nest.rate (default 1) speeds a nest's spawns; CastleRaids raises it near enemy castles.
 
 
-func _init(w: World, defs: Array, sched: Dictionary = {}) -> void:
+func _init(w: World, defs: Array, sched: Dictionary = {}, lvl: Dictionary = {}) -> void:
 	world = w
 	schedule = sched
+	level = lvl
 	raiders = Raiders.new(w)
 	for d in defs:
 		nests.append(_make_nest(d))
@@ -42,17 +47,22 @@ func alive_count() -> int:
 	return nests.filter(func(n): return n.alive).size()
 
 
-## Growth curves, all driven by mission time.
+## Growth curves. Spawn interval and cap read pressure (§4.1); HP growth still uses minutes.
 func minutes() -> float:
 	return time / 60.0
 
 
+func pressure() -> float:
+	return Pressure.value(level, time)
+
+
 func spawn_interval() -> float:
-	return maxf(Config.NEST_SPAWN_MIN, Config.NEST_SPAWN_START * pow(Config.NEST_SPAWN_RAMP, minutes()))
+	return lerpf(Config.NEST_SPAWN_START, Config.NEST_SPAWN_MIN, pressure())
 
 
 func capacity() -> int:
-	return mini(Config.NEST_CAP_MAX, Config.NEST_CAP_START + floori(minutes() * Config.NEST_CAP_PER_MIN))
+	return clampi(roundi(lerpf(float(Config.NEST_CAP_START), float(Config.NEST_CAP_MAX), pressure())),
+		Config.NEST_CAP_START, Config.NEST_CAP_MAX)
 
 
 func _make_nest(d: Dictionary) -> Dictionary:
@@ -114,6 +124,7 @@ func _escalate() -> void:
 func update(dt: float) -> void:
 	time += dt
 	_escalate()
+	_overrun(dt)
 	var interval := spawn_interval()
 	var cap := capacity()
 	var growth: float = 1.0 + minutes() * 0.1
@@ -129,6 +140,32 @@ func update(dt: float) -> void:
 			var guard: bool = not raiding or _guards(n) < Config.NEST_GUARDS
 			raiders.spawn(n, pick_tier(), guard)
 	raiders.update(dt, prey.call(), goal_cells.call())
+
+
+## At pressure 1, each active nest sends a wave straight at the Node. Ignores guard slots
+## and the per-nest cap; still stops at RAIDER_MAX_TOTAL so the sim cannot explode.
+func _overrun(dt: float) -> void:
+	if pressure() < 1.0 or alive_count() == 0:
+		overrun_t = 0.0
+		return
+	overrun_t += dt
+	if overrun_t < Config.OVERRUN_INTERVAL:
+		return
+	overrun_t = 0.0
+	var dest: Vector3 = node_pos.call()
+	var wave := Config.OVERRUN_BASE + Config.OVERRUN_PER_TIER * Pressure.legacy_tier(pressure())
+	for n in nests:
+		if not n.alive:
+			continue
+		for _i in wave:
+			if raiders.list.size() >= Config.RAIDER_MAX_TOTAL:
+				return
+			raiders.spawn(n, pick_tier(), false)
+			var r: Dictionary = raiders.list.back()
+			r.guard = false
+			r["overrun"] = true
+			r["rush"] = dest
+	Bus.say("The nests overrun: a wave is marching straight at the Command Node.", "bad")
 
 
 func _guards(n: Dictionary) -> int:
