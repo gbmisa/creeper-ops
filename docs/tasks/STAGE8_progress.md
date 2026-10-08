@@ -176,3 +176,34 @@ Commit message: `Stage 8 P5: mixed raid groups`.
 ### Not finished
 
 - Phase 6 onward. Hives, mortars, balance. The defended sims in phase 8 are where the later roster shows up.
+
+## Phase 6: hives — done
+
+Commit message: `Stage 8 P6: hives replace spore nests`.
+
+### What changed
+
+- Each former nest is a hive. `HiveShape` stamps a berm of whole Earth levels with three gaps, and Blight inside the ring that actually rose. Stage follows pressure: 0 at the start (Core + one pit), 1 at 0.20, 2 at 0.45, 3 at 0.70, 4 at 0.90. Parts added after stage 0 grow in over 20 s and can be shot while small.
+- The Core takes damage only from the Operative and the Lance. Razing it clears the Blight, pays 40 Salvage, and leaves the site razed. An Outpost on the Core cell marks the hive `outpost`. Three raiders within 4 cells for 30 s rebuild it one stage lower, unless a player structure is that close.
+- `spore_nests.gd` is now `hive_spawning.gd`. The class is still `SporeNests`, and level rows are `hives` with `nests` kept as an alias. The objective id stays `nests`. Living grown pits share one spawn clock, so killing a pit slows the next spawn. The spore launcher uses the old Spire volley.
+- A Lance that is about to land is applied to hive parts from `game.gd`. `orbital.gd` is unchanged.
+
+### Decisions where the spec was silent
+
+- The mortar id is listed at stage 4 and skipped. Phase 7 builds the mortar body. Stage 4 still applies the +50% HP.
+- A rebuilt hive's parts start fully grown. There is no second 20 s grow, and the Core does not use the old nest HP heal.
+- The Lance deals `HIVE_LANCE_DMG` 100. It hurts the Core. It does not erase a fresh one. `HiveParts.lance` holds that scan so `hives.gd` stays under 250 lines. Rebuild, Blight, and the anchor live in `hive_site.gd` for the same reason.
+- An outer berm is stamped only when at least 8 cells can rise by one whole level without a cliff. Otherwise the inner ring is used and Blight stops at that ring. Level 1 and 2 knolls are flat only out to about 3 cells, so most of them take the inner ring. The plateau nest can hold the outer one.
+- The spawn clock stays on the hive. The wait is the old interval divided by the number of living grown pits. One fire releases one raider, or one group once groups are on. Stage 0 parts are present immediately.
+- The Outpost still costs its existing 40 energy packets. No second energy charge, and no Ore until 9a.
+- An undamaged part's HP tracks the pressure formula, including the stage-4 bonus. A damaged part is multiplied by 1.5 only on the frame it enters stage 4.
+- The hive spitter uses the raider Spitter numbers (6 damage, 2 s, 20 cells, splash 1.5 cells).
+
+### Tests
+
+- Parse clean (second import, no SCRIPT ERROR). Smoke **286 PASS / 0 FAIL** (266 previous + 20). Stages match pressure after the roster smoke's clock is put back to 0. Two grown pits wait half as long as one (8.70 s vs 17.39 s), and killing the extra pit lengthens the wait. At t=2040 (pressure 0.95) the Core is 367.5 / 367.5 and there is still no mortar body. A cannon shot leaves the Core untouched. Razing clears Blight and adds 40 Salvage. One razed hive does not complete the objective. An Outpost claims the site and losing it returns `razed`. A collector 3 cells away blocks the rebuild. Three raiders restore it after the full 30 s, not at 20 s. Save/load restored stage and Core HP (the restored HP was 250 after the stage-4 drop divided a full Core by 1.5).
+- Screenshot `/tmp/stage8-shots/p6-hive.png` (`--look=40,23,42,0.9`, Xvfb 1600x900). Central knoll: inner Earth berm, Blight bowl, Core and one pit.
+
+### Not finished
+
+- Phase 7: enemy mortars and the Spotter. Phase 8: balance, the as-built notes, and the MASTER_PLAN status cells.

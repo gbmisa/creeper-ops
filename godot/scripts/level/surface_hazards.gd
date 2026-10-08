@@ -28,7 +28,8 @@ func _init(w: World, level: Dictionary, sm: StructureManager) -> void:
 		var src := world.creeper.add_source({ "x": v.x, "z": v.z, "amount": v.amount, "interval": v.interval, "start": v.get("start", 0.0) })
 		vents.append({ "node": node, "source": src })
 	spire = _make_spire(level.spire)
-	nests = SporeNests.new(w, level.nests, level.get("raid_schedule", {}), level)
+	nests = SporeNests.new(w, level.get("hives", level.nests), level.get("raid_schedule", {}), level)
+	nests.structures = sm
 	w.updaters.append(update)
 
 

@@ -89,6 +89,7 @@ func _ready() -> void:
 		return n.pos if n else Vector3.ZERO
 	castles.op = func(): return fps.controller if fps.world == surface else null
 	castles.stockpile = stockpile
+	hazards.nests.stockpile = stockpile
 	command.castles = castles
 	keeps = CastleKeeps.new(castles, structures)
 	castles.on_lost = func(cells: Array):
@@ -160,7 +161,14 @@ func update(dt: float) -> void:
 	keeps.update()
 	structures.update(dt, time)
 	units.update(dt, hazards.nests.enemies() + castles.enemies() + guards.enemies())
+	var due: Array[Vector3] = []
+	for i in orbital._pending.size():
+		var strike: Dictionary = orbital._pending[i]
+		if float(strike.t) + dt >= Config.LANCE_DELAY:
+			due.append(strike.at as Vector3)
 	orbital.update(dt)
+	if not due.is_empty():
+		hazards.nests.on_lance(due)
 
 
 func render(dt: float) -> void:

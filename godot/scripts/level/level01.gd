@@ -141,7 +141,7 @@ static func build() -> Dictionary:
 			{ "x": 24, "z": 36, "amount": 1.6, "interval": 1.0 },
 			{ "x": 18, "z": 58, "amount": 1.4, "interval": 1.0 },
 		],
-		"nests": [
+		"hives": [
 			{ "name": "Rift", "x": 9, "z": 38 },
 			{ "name": "Spire Heights", "x": 59, "z": 13 },
 			{ "name": "Central knoll", "x": 40, "z": 23 },
@@ -160,6 +160,8 @@ static func build() -> Dictionary:
 			["Ops: Purple Blight can't be built on. Barracks units can go there, but they run dry and must come home.", "radio"],
 		],
 	}
+	level["nests"] = level.hives # alias: older readers still say nests
+	HiveShape.stamp_all(g, level.hives)
 	var hazards: Array = level.emitters + level.vents + level.nests + [level.spire, level.rift]
 	for p in hazards:
 		_disc(g, p.x, p.z, 1.5, func(x, z, _d): g.blocked[g.idx(x, z)] = 1)

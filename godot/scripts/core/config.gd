@@ -154,6 +154,29 @@ const NEST_CAP_PER_MIN := 0.35
 const NEST_CAP_MAX := 10
 const NEST_GUARDS := 2         # raiders per nest that stay home once raids start
 const NEST_RAID_DELAY := 300.0 # fallback grace period when a level has no RAID_SCHEDULE
+## Hives (§3.3). Stage 0 is up at the start; later parts grow in. Mortar bodies are Phase 7.
+const HIVE_P1 := 0.20
+const HIVE_P2 := 0.45
+const HIVE_P3 := 0.70
+const HIVE_P4 := 0.90
+const HIVE_GROW := 20.0
+const HIVE_REBUILD_TIME := 30.0
+const HIVE_REBUILD_RANGE := 4.0   # cells
+const HIVE_REBUILD_NEED := 3
+const HIVE_RADIUS := 6.0          # cells; player structures on the site die when a rebuild lands
+const HIVE_CORE_BASE := 150.0
+const HIVE_CORE_PER_P := 100.0
+const HIVE_PIT_HP := 40.0
+const HIVE_SPITTER_HP := 50.0
+const HIVE_LAUNCHER_HP := 40.0
+const HIVE_MORTAR_HP := 80.0
+const HIVE_STAGE4_HP := 1.5
+const HIVE_SALVAGE := 40.0
+const HIVE_LANCE_DMG := 100.0     # a Lance hurts the Core; it does not erase a fresh one
+const HIVE_SPITTER_DMG := 6.0
+const HIVE_SPITTER_INTERVAL := 2.0
+const HIVE_SPITTER_RANGE := 20.0  # cells
+const HIVE_SPITTER_SPLASH := 1.5  # cells
 ## Overrun (§4.1): at pressure 1, every OVERRUN_INTERVAL each active nest sends this many
 ## straight at the Node. "Tier" is Pressure.legacy_tier (0..3), so a capped wave is 12.
 const OVERRUN_INTERVAL := 45.0

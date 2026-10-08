@@ -80,7 +80,7 @@ static func build() -> Dictionary:
 			{ "x": 116, "z": 86, "amount": 1.6, "interval": 1.0 },
 			{ "x": 62, "z": 118, "amount": 1.4, "interval": 1.0 },
 		],
-		"nests": [
+		"hives": [
 			{ "name": "Rift", "x": 15, "z": 60 },
 			{ "name": "Spire Heights", "x": 133, "z": 64 },
 			{ "name": "North Knoll", "x": 82, "z": 40 },
@@ -107,6 +107,8 @@ static func build() -> Dictionary:
 			["Ops: Raids start in three minutes. The nests will not wait.", "radio"],
 		],
 	}
+	level["nests"] = level.hives # alias: older readers still say nests
+	HiveShape.stamp_all(g, level.hives)
 	var hazards: Array = level.emitters + level.vents + level.nests + [level.spire, level.rift]
 	for p in hazards:
 		LevelShape.disc(g, p.x, p.z, 1.5, func(x, z, _d): g.blocked[g.idx(x, z)] = 1)
