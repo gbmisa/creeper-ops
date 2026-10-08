@@ -126,6 +126,10 @@ static func apply(g) -> void:
 		RaiderBurrow.demo(g)
 	if args.has("mortar"):
 		EnemyMortars.demo(g)
+	if args.has("noflyers"):
+		FlyerLaunch.enabled = false
+	if args.has("t0"):  # --t0=S: start the mission clock at S seconds (pressure for balance sims)
+		g.hazards.nests.time = float(args.t0)
 	if args.has("flyers"):
 		FlyerLaunch.demo(g, args.flyers)
 	if args.has("look"):

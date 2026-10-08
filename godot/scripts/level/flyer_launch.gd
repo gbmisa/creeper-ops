@@ -5,9 +5,13 @@ class_name FlyerLaunch
 ## is sealed (SporeNests.seal at MORTAR_SEAL) every Roost also launches a flock at the Node.
 ## Killing the Roost stops that hive's flyers.
 
+static var enabled := true  # debug: --noflyers
+
 
 ## Called from Hives.tick for an active hive: grow the Roost once pressure allows.
 static func sync(host, hive: Dictionary) -> void:
+	if not enabled:
+		return
 	if host.pressure() < Config.FLYER_ROOST_P:
 		return
 	for part in hive.parts:
