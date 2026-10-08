@@ -54,7 +54,7 @@ func _build_core() -> void:
 		"interval": src.interval })
 	core = { "node": node, "pos": pos, "shield": shield, "source": source, "hp": CORE_HP, "alive": true,
 		"light": _light(pos + Vector3(0, 4, 0), Color("ff3355"), 6.0, 45.0) }
-	core["target"] = { "node": node, "oy": 2.6, "radius": 1.3, "alive": func(): return core.alive,
+	core["target"] = { "node": node, "oy": 2.6, "radius": 1.3, "deep_core": true, "alive": func(): return core.alive,
 		"on_hit": func(dmg, p): _hit_core(dmg, p) }
 	world.add_target(core.target)
 	world.markers.append({ "pos": pos + Vector3(0, 5.5, 0), "color": Color("ff5577"), "visible": func(): return core.alive,

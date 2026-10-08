@@ -9,6 +9,9 @@ var controller: PlayerController
 var weapons: OperativeWeapons
 var body := Node3D.new()
 var suit := Config.SUIT_MAX
+var shield := 0.0
+var stockpile: Stockpile
+var node_pos: Callable = func(): return null  # Vector3 of the Command Node, or null
 var recall_hold := 0.0
 var recall_cd := 0.0
 var commit_recall: Callable = func() -> void: pass
@@ -60,15 +63,28 @@ func leave() -> void:
 	if builder:
 		builder.toggle(false)
 	world = null
+	ArmouryMenu.close_menu()
 
 
 func reset_suit() -> void:
-	suit = Config.SUIT_MAX
+	suit = OperativeUpgrades.suit_max()
+	shield = OperativeUpgrades.shield_max()
 	weapons.tank = Config.TANK_MAX
 
 
+## Shield (Armour tier 3) soaks first. What remains hits the suit.
+func absorb(amount: float) -> void:
+	var left := amount
+	if shield > 0.0:
+		var soak := minf(shield, left)
+		shield -= soak
+		left -= soak
+	if left > 0.0:
+		suit -= left
+
+
 func damage(amount: float) -> void:
-	suit -= amount
+	absorb(amount)
 	hurt_flash = 0.3
 	since_hurt = 0.0
 	Sfx.play("hurt")
@@ -81,6 +97,10 @@ func update(dt: float, input: InputState) -> void:
 	var surface_y := g.ground_y(feet.x, feet.z) + depth * Config.LEVEL_H
 	in_creeper = depth > 0.04 and feet.y < surface_y + 0.15
 	creeper_depth = depth if in_creeper else 0.0
+	if ArmouryMenu.is_open():
+		prompt = ""
+		_vitals(dt, depth)
+		return
 	controller.update(dt, input, g, Config.CREEPER_SLOW if in_creeper else 1.0)
 	body.position = controller.pos
 	var building := builder != null and world == builder.structures.world and builder.update(input, world, camera)
@@ -88,16 +108,8 @@ func update(dt: float, input: InputState) -> void:
 	if not building:
 		weapons.update(dt, input, world, controller.pos)
 	Sfx.listener = camera.global_position
-	since_hurt += dt
-	if in_creeper:  # suit burns, faster the deeper you wade
-		suit -= (Config.OP_CREEPER_BASE_DPS + depth * Config.OP_CREEPER_DPS) * dt
-		since_hurt = 0.0
-		Sfx.play("sizzle")
-	elif since_hurt > Config.REGEN_DELAY:
-		suit = minf(Config.SUIT_MAX, suit + Config.SUIT_REGEN * dt)
-	hurt_flash = maxf(0.0, hurt_flash - dt)
+	_vitals(dt, depth)
 	if suit <= 0.0:
-		Bus.operative_down.emit()
 		return
 	_interact(input)
 	if building:
@@ -105,11 +117,32 @@ func update(dt: float, input: InputState) -> void:
 	_recall(dt, input)
 
 
+func _vitals(dt: float, depth: float) -> void:
+	since_hurt += dt
+	if in_creeper:  # suit burns, faster the deeper you wade; the shield soaks it first
+		absorb((Config.OP_CREEPER_BASE_DPS + depth * Config.OP_CREEPER_DPS) * dt)
+		since_hurt = 0.0
+		Sfx.play("sizzle")
+	elif since_hurt > Config.REGEN_DELAY:
+		var cap := OperativeUpgrades.shield_max()
+		if shield < cap:
+			shield = minf(cap, shield + Config.SUIT_REGEN * dt)
+		suit = minf(OperativeUpgrades.suit_max(), suit + Config.SUIT_REGEN * dt)
+	hurt_flash = maxf(0.0, hurt_flash - dt)
+	if suit <= 0.0:
+		Bus.operative_down.emit()
+
+
 func _interact(input: InputState) -> void:
 	var feet := controller.pos
 	var best: Dictionary = {}
 	var bd := INF
 	var candidates: Array = world.interactables.duplicate()
+	var np = node_pos.call()
+	if np is Vector3:
+		candidates.append({ "pos": np, "radius": ArmouryMenu.REACH,
+			"prompt": func(): return "" if ArmouryMenu.is_open() else "[E] Armoury",
+			"use": func(): ArmouryMenu.open(self, stockpile) })
 	for b in beacons.call(world):
 		candidates.append({ "pos": b.pos, "radius": 1.8, "prompt": func(): return "[E] Recall to the Command Node (free)",
 			"use": func(): commit_recall.call() })
@@ -119,6 +152,8 @@ func _interact(input: InputState) -> void:
 			best = it
 			bd = d
 	prompt = best.prompt.call() if not best.is_empty() else ""
+	if ArmouryMenu.take_suppress():
+		return
 	if not best.is_empty() and input.act("use"):
 		best.use.call()
 

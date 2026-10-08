@@ -15,6 +15,9 @@ class_name Debug
 ##   --tool=T      hold a build tool (screenshots of the ghost/overlays)
 ##   --drag=T,x0,z0,x1,z1  drag-build preview of T from one cell to another
 ##   --salvage=N   set the Salvage stockpile
+##   --armoury=id[,id...]  grant those upgrades free (unlock_railgun or railgun).
+##                 id "open" shows the first-person Armoury at the Node; "fire" holds
+##                 the trigger on an unlocked advanced weapon just before --shot
 ##   --landing     dismiss the briefing and stop at the landing-site choice
 ##   --hover=x,z   put the (fake) cursor over a cell
 ##   --select=T    select the first structure of type T (T=all-weapons: every movable weapon)
@@ -134,6 +137,8 @@ static func apply(g) -> void:
 			StructureDefs.grant_unlock(g.level, id.strip_edges())
 	if args.has("paint") or args.has("terp"):
 		TerpPaint.debug_scene(g, args)
+	if args.has("armoury"):
+		_armoury(g, str(args.armoury))
 	if args.has("smoke"):
 		SmokeTest.run(g)
 	if args.has("sim"):
@@ -175,6 +180,37 @@ static func apply(g) -> void:
 		_screenshot_later(g, args.shot)
 	elif args.has("quit"):
 		g.get_tree().create_timer(float(args.quit)).timeout.connect(func(): g.get_tree().quit())
+
+
+static func _armoury(g, spec: String) -> void:
+	var open_menu := false
+	var fire := false
+	for raw in spec.split(",", false):
+		var id := str(raw).strip_edges()
+		if id == "open":
+			open_menu = true
+		elif id == "fire":
+			fire = true
+		elif OperativeUpgrades.DEFS.has(id):
+			OperativeUpgrades.grant(id)
+		elif OperativeUpgrades.DEFS.has("unlock_" + id):
+			OperativeUpgrades.grant("unlock_" + id)
+	var n: Structure = g.structures.command_node()
+	if n == null:
+		return
+	if open_menu:
+		g.fps.enter(g.surface, Vector2i(n.x + 2, n.z), PI)
+		g.flow.set_mode("surface")
+		ArmouryMenu.open(g.fps, g.stockpile)
+	elif fire:
+		g.fps.enter(g.surface, Vector2i(n.x + 3, n.z + 3), 0.5)
+		g.fps.controller.pitch = -0.35
+		g.flow.set_mode("surface")
+		var pick: String = "plasma" if OperativeUpgrades.unlocked("plasma") else "railgun"
+		g.fps.weapons.current = pick
+		g.get_tree().create_timer(1.15).timeout.connect(func():
+			g.fps.weapons.current = pick
+			g.fps.weapons.advanced.showcase = true)
 
 
 static func _drop(g, x: int, z: int, yaw: float) -> void:

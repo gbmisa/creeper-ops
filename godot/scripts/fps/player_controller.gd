@@ -14,6 +14,8 @@ var pitch := 0.0
 var on_ground := false
 var bob := 0.0
 var moving := false
+var _air_left := 0
+var _jet_left := 0.0
 
 
 func _init(cam: Camera3D) -> void:
@@ -25,6 +27,8 @@ func spawn(g: Grid, x: int, z: int, facing := PI) -> void:
 	vel_y = 0.0
 	yaw = facing
 	pitch = 0.0
+	_air_left = 0
+	_jet_left = 0.0
 	_sync()
 
 
@@ -49,7 +53,10 @@ func update(dt: float, input: InputState, g: Grid, speed_factor := 1.0) -> void:
 	if input.held("op_right"): mv.x += 1.0
 	moving = mv.length() > 0.0
 	if moving:
-		var speed := (Config.SPRINT if input.held("sprint") else Config.WALK) * speed_factor
+		var speed := Config.WALK
+		if input.held("sprint"):
+			speed = Config.SPRINT * OperativeUpgrades.mult("mobility")
+		speed *= speed_factor
 		mv = mv.normalized()
 		var s := sin(yaw)
 		var c := cos(yaw)
@@ -62,9 +69,16 @@ func update(dt: float, input: InputState, g: Grid, speed_factor := 1.0) -> void:
 		if on_ground:
 			bob += dt * speed * 1.6
 	_push_out(g)
-	if on_ground and input.act("jump"):
-		vel_y = Config.JUMP_V
-		on_ground = false
+	if input.act("jump"):
+		if on_ground:
+			_hop()
+		elif _air_left > 0:
+			_air_left -= 1
+			vel_y = Config.JUMP_V
+	if not on_ground and input.held("jump") and _jet_left > 0.0:
+		var lift := minf(_jet_left, OperativeUpgrades.jet_rate() * dt)
+		pos.y += lift  # jump jet: one terrace of extra lift, then it is spent
+		_jet_left -= lift
 	vel_y -= Config.GRAVITY * dt
 	pos.y += vel_y * dt
 	var ground := g.stand_y(pos.x, pos.z, Grid.Faction.PLAYER)  # drawbridge decks count
@@ -72,6 +86,8 @@ func update(dt: float, input: InputState, g: Grid, speed_factor := 1.0) -> void:
 		pos.y = ground
 		vel_y = 0.0
 		on_ground = true
+		_air_left = 0
+		_jet_left = 0.0
 	elif on_ground and vel_y <= 0.0 and pos.y - ground < 0.5:
 		pos.y = ground  # stick to slopes walking downhill
 		vel_y = 0.0
@@ -102,6 +118,13 @@ func _push_out(g: Grid) -> void:
 			pos.x = px
 		else:
 			pos.z = pz
+
+
+func _hop() -> void:
+	vel_y = Config.JUMP_V
+	on_ground = false
+	_air_left = OperativeUpgrades.air_jumps()
+	_jet_left = OperativeUpgrades.jet_budget()
 
 
 func _sync() -> void:

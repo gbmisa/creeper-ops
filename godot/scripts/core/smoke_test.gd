@@ -144,6 +144,7 @@ static func run(g) -> void:
 	SmokeLevel02.run(g)
 	SmokeKeeps.run(g)
 	SmokeTerp.run(g)
+	SmokeArmoury.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

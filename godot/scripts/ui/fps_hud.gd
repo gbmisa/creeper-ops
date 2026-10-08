@@ -5,8 +5,13 @@ extends Control
 
 var _cross: Label
 var _suit: ProgressBar
+var _shield_lbl: Label
+var _shield: ProgressBar
 var _tank: ProgressBar
 var _weapon: Label
+var _salvage: Label
+var _charge: ProgressBar
+var _need: Label
 var _prompt: Label
 var _warn: Label
 var _recall: ProgressBar
@@ -30,16 +35,25 @@ func _init() -> void:
 	box.anchor_right = 0.5
 	box.anchor_top = 1.0
 	box.anchor_bottom = 1.0
-	box.position = Vector2(-130, -110)  # bottom centre: the event log owns bottom-left
+	box.position = Vector2(-130, -176)  # bottom centre: the event log owns bottom-left
 	add_child(box)
 	box.add_child(UiKit.label("SUIT", 11, UiKit.DIM))
 	_suit = UiKit.bar(260, 14, UiKit.GOOD)
 	box.add_child(_suit)
+	_shield_lbl = UiKit.label("SHIELD", 11, UiKit.ENERGY)
+	box.add_child(_shield_lbl)
+	_shield = UiKit.bar(260, 10, UiKit.ENERGY)
+	box.add_child(_shield)
 	box.add_child(UiKit.label("SPRAYER TANK", 11, UiKit.DIM))
 	_tank = UiKit.bar(260, 10, Color("9ff6ff"))
 	box.add_child(_tank)
 	_weapon = UiKit.label("", 16)
 	box.add_child(_weapon)
+	_salvage = UiKit.label("", 14, UiKit.WARN)
+	box.add_child(_salvage)
+	_charge = UiKit.bar(260, 8, Color("e8fbff"))
+	box.add_child(_charge)
+	_need = _centered(UiKit.label("", 18, UiKit.WARN), 78)
 	_prompt = _centered(UiKit.label("", 20, UiKit.WARN), 60)
 	_warn = _centered(UiKit.label("", 22, UiKit.BAD), -140)
 	_recall = UiKit.bar(260, 10, UiKit.ENERGY)
@@ -75,11 +89,24 @@ func _centered(l: Label, y: float) -> Label:
 
 
 func refresh(fps: FpsMode) -> void:
-	var suit := maxf(0.0, fps.suit) / Config.SUIT_MAX
+	var cap := maxf(1.0, OperativeUpgrades.suit_max())
+	var suit := clampf(maxf(0.0, fps.suit) / cap, 0.0, 1.0)
 	_suit.value = suit
 	UiKit.set_bar_color(_suit, UiKit.BAD if suit < 0.35 else UiKit.GOOD)
+	var smax := OperativeUpgrades.shield_max()
+	_shield_lbl.visible = smax > 0.0
+	_shield.visible = smax > 0.0
+	if smax > 0.0:
+		_shield.value = clampf(fps.shield / smax, 0.0, 1.0)
 	_tank.value = fps.weapons.tank / Config.TANK_MAX
 	_weapon.text = fps.weapons.label()
+	_salvage.text = fps.weapons.advanced.salvage_line()
+	_salvage.visible = _salvage.text != ""
+	var ch := fps.weapons.advanced.charge_ratio()
+	_charge.visible = ch >= 0.0
+	if ch >= 0.0:
+		_charge.value = ch
+	_need.text = fps.weapons.advanced.hud_need()
 	_prompt.text = fps.prompt
 	_warn.text = ("IN CREEPER: SUIT BURNING%s" % (" FAST" if fps.creeper_depth > 1.0 else "")) if fps.in_creeper else ""
 	_cross.add_theme_color_override("font_color", UiKit.BAD if fps.weapons.hit_marker > 0.0 else UiKit.TEXT)

@@ -7,11 +7,22 @@ extends RefCounted
 var rockets: Array[Dictionary] = []
 var loaded: int = Config.ROCKET.mag
 var _reload := 0.0
+var _cap := Config.ROCKET.mag
 static var _mesh: SphereMesh
 
 
+func mag_size() -> int:
+	return Config.ROCKET.mag + OperativeUpgrades.level("firepower")
+
+
 func update(dt: float, world: World) -> void:
-	if loaded < Config.ROCKET.mag:
+	var cap := mag_size()
+	if cap > _cap:
+		loaded += cap - _cap  # a bigger magazine arrives loaded
+	_cap = cap
+	if loaded > cap:
+		loaded = cap
+	if loaded < cap:
 		_reload += dt
 		if _reload >= Config.ROCKET.reload:
 			_reload = 0.0
