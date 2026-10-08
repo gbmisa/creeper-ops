@@ -52,7 +52,7 @@ static func _turrets(s: Strongholds, c: Dictionary, v: Dictionary) -> void:
 	for i in c.sockets.size():
 		var node: Node3D = v.turrets[i]
 		var sock := func() -> Dictionary: return c.sockets[i]
-		v.prey.append({ "node": node, "radius": 1.0, "alive": func(): return c.owner == "player" and CastleTurrets.alive(sock.call()),
+		v.prey.append({ "node": node, "radius": 1.0, "weapon": true, "alive": func(): return c.owner == "player" and CastleTurrets.alive(sock.call()),
 			"hit": func(d, _pt = null): CastleTurretFire.hit(c, sock.call(), d) })
 		s.world.interactables.append({ "pos": node.position, "radius": 2.5,
 			"prompt": func(): return CastleTurrets.use_label(c, i, s.stockpile.salvage) if c.owner == "player" and s.stockpile else "",

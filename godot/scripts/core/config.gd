@@ -165,6 +165,11 @@ const RAIDER_CLIMB := 1.1      # max terrain levels a raider may step up between
 const RAIDER_DETOUR_TIME := 2.0  # s a raider blocked on its way to a target follows the flow field
 const RAIDER_DROP := RAIDER_CLIMB # one terrace down as well; steeper ground is a wall
 const RAIDER_FIELD_INTERVAL := 2.0
+const RAIDER_STANDOFF := 0.65  # ranged raiders back up when closer than this share of their range
+const RAIDER_SHOT_SPEED := 18.0 # m/s, acid lobs. A 40 m shot takes about 2 s and can be walked out of
+const RAIDER_BEAM_SPEED := 32.0 # m/s, Lancer bolts. Still a travel time, so a moving target is missed
+const RAIDER_BEAM_RADIUS := 1.2 # metres around the aim point. No splash
+const RAIDER_LANCER_GAP := 1.5  # seconds after a Lancer bolt before the next charge (the charge itself is the row interval)
 const MORTAR_RAIDER_DMG := 1.2 # mortar/Bertha splash vs one raider; 30% of a Sniper shot (power 4)
 ## Fallback tier unlock times (seconds) when a level has no RAID_SCHEDULE.
 const RAIDER_TIER_TIMES := [0.0, 480.0, 900.0, 1320.0]

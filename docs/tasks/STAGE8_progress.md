@@ -94,3 +94,32 @@ Commit message: `Stage 8 P2: enemy roster and silhouettes`.
 ### Not finished
 
 - Phase 3 onward. Ranged shots, Warden aura, Burrower, groups, hives, mortars, balance.
+
+## Phase 3: Spitter and Lancer — done
+
+Commit message: `Stage 8 P3: Spitter and Lancer shots`.
+
+### What changed
+
+- `level/raider_shots.gd`. Acid and Lancer bolts are `effects.lob` arcs. The aim point is where the target stood when the shot left. Impact hurts whoever is still inside the radius.
+- Spitter: every 2 s, 6 damage, splash 1.5 cells, range 20 cells. Lancer: 1.5 s growing glow, then 25 damage in a 1.2 m radius, range 32 cells. After the bolt, 1.5 s before the next charge.
+- They stop inside range and back up when closer than 65% of range. With nobody in range they march (guards patrol).
+- Lancers prefer a Sniper, then any prey with `weapon` set (player weapons and castle turrets), then anyone else. Nearest inside a band.
+- `game.gd` `surface_prey` copies each structure's prey and adds `type` and `weapon`. Command code was not edited. `castle_guards.gd` was not edited.
+
+### Decisions where the spec was silent
+
+- Roster `range` is cells, matching the §4.2 table and the Sniper comparison. Multiplied by `Config.CELL` at use.
+- The spec names the Lancer's 1.5 s charge and not a cooldown. `RAIDER_LANCER_GAP` is another 1.5 s so they do not chain bolts.
+- Spitter splash is the full 6 to everyone still inside 1.5 cells. No falloff.
+- No line-of-sight test on these shots. The spec only requires travel time so a moving target can be missed. Spotter line of sight is phase 7.
+- Standoff fraction is 0.65. Acid speed 18 m/s, bolt speed 32 m/s.
+
+### Tests
+
+- Parse clean. Smoke **258 PASS / 0 FAIL** (254 previous + 4). A Spitter in range took a cannon from 40 to 34. A Lancer took the farther Sniper from 40 to 15 and left the nearer cannon at 40. A lob already in flight missed a cannon that was moved 40 m.
+- Screenshot `/tmp/stage8-shots/p3-ranged.png` (`--ranged`, Xvfb 1600x900). The Spitter's acid lob is in the air on the southern pad. The Lancer sits at the left edge of that frame.
+
+### Not finished
+
+- Phase 4 onward. Warden aura, Burrower, groups, hives, mortars, balance.

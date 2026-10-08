@@ -124,7 +124,10 @@ func surface_prey() -> Array:
 	for u in units.list:
 		prey.append(u.prey)
 	for s in structures.list:
-		prey.append(s.prey)
+		var row := s.prey.duplicate() as Dictionary
+		row["type"] = s.type
+		row["weapon"] = bool(s.def.get("weapon", false))
+		prey.append(row)
 	prey.append_array(castles.prey())
 	if mode == "surface":
 		prey.append(fps.prey)

@@ -93,6 +93,11 @@ func _nearest(from: Vector3, prey: Array, max_d: float, leash_home = null) -> Di
 
 
 func _think(r: Dictionary, dt: float, prey: Array) -> void:
+	var tier := r.tier as Dictionary
+	var attack := str(tier.get("attack", "melee"))
+	if attack == "acid" or attack == "beam":
+		RaiderShots.step(self, r, dt, prey)
+		return
 	var p: Vector3 = r.node.position
 	var home: Vector3 = r.nest.pos
 	var goal = null  # Vector2 XZ
@@ -114,7 +119,6 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 		var tp: Vector3 = target.node.position
 		var reach: float = target.radius + r.size + 0.5
 		if Vector2(tp.x - p.x, tp.z - p.z).length() <= reach and absf(tp.y - p.y) <= reach + 2.5:
-			var tier := r.tier as Dictionary
 			var dmg: float = float(tier.dps) * dt
 			if target.get("wall", false):
 				dmg *= float(tier.get("wall_mult", 1.0))
