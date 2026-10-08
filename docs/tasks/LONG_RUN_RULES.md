@@ -1,5 +1,7 @@
 # Rules for long, unattended Grok runs
 
+**Claude subagents:** run as `stage-runner`, at most 2 phases per agent, then stop; a fresh agent resumes from the progress log (keeps context small). Muse/Grok sessions may run all phases but should start a new session per phase if their tool supports it.
+
 These apply to every brief named `*_long.md`, on top of [AGENTS.md](../../AGENTS.md) and [README.md](README.md).
 
 - Do the phases **in order**. Each phase ends **playable**: parse check clean, full smoke all PASS (the castle-garrison check flakes ~1 in 10; re-run once if only that fails), then **commit** with message `<Stage> Pn: ...`.
