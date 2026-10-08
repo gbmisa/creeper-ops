@@ -92,7 +92,7 @@ func refresh(g) -> void:
 		status_lbl.text = ""
 	var held: int = g.castles.held()
 	var nests: SporeNests = g.hazards.nests
-	var threat := ("Nests: %s" % RaiderDefs.newest(nests.pressure()).name if nests.alive_count() > 0 else "Nests: none") + "  Pressure %d%%" % roundi(nests.pressure() * 100.0)
+	var threat := ("Nests: %s" % RaiderDefs.newest(nests.pressure()).name if nests.alive_count() > 0 else "Nests: none") + "  Pressure %d%%" % roundi(nests.pressure() * 100.0) + ("  AIR %d" % nests.flyers.count() if nests.flyers.count() > 0 else "")
 	stats_lbl.text = "Æther %d (%d castles)   Packets %d   Field %d   Units %d   Creeper %d%%   %s" % [Upgrades.aether, held,
 		pk.count(), eco.field_cells, g.units.list.size(), roundi(g.surface.creeper.coverage() * 100.0), threat]
 	var node: Structure = g.structures.command_node()

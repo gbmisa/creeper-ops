@@ -56,6 +56,7 @@ func _strike(at: Vector3) -> void:
 	var scale := 1.0
 	if hazards != null and hazards.nests.builder != null:
 		scale = hazards.nests.builder.lance_scale(at)
+	Flyers.strike_area(world, at, Config.LANCE_RADIUS * Config.CELL, 99.0 * scale)  # Stage 19
 	if hazards:
 		var reach := Config.LANCE_RADIUS * Config.CELL
 		var foes: Array = hazards.nests.raiders.list.duplicate()

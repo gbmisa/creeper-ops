@@ -116,8 +116,8 @@ static func _lob(s: Structure, mgr) -> bool:
 	return true
 
 
-## Beam: surface-to-air. Burns flying enemies. Spore volleys are the flying threat today;
-## flyers join this shot when they exist. Ground raiders are left to Snipers.
+## Beam: surface-to-air. Burns flying enemies: spore volleys first, then Flyers. Ground
+## raiders are left to Snipers.
 static func _beam(s: Structure, mgr) -> bool:
 	var w: World = mgr.world
 	var a := _muzzle(s)
@@ -133,6 +133,12 @@ static func _beam(s: Structure, mgr) -> bool:
 				Sfx.play("pop", it.pos)
 			Sfx.play("beam", s.pos)
 			return true
+	var fp = Flyers.strike(w, a, reach, s.def.power)  # Stage 19: flyers
+	if fp != null:
+		_aim(s, fp)
+		w.effects.beam(_fx(s), fp, Color("ff5050"), 0.06, 0.07)
+		Sfx.play("beam", s.pos)
+		return true
 	return false
 
 

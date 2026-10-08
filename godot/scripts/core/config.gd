@@ -225,6 +225,15 @@ const HIVE_PIT_HP := 40.0
 const HIVE_SPITTER_HP := 50.0
 const HIVE_LAUNCHER_HP := 40.0
 const HIVE_MORTAR_HP := 80.0
+# Flyers (Stage 19; rows live in level/flyer_defs.gd)
+const FLYER_ROOST_P := 0.30        # a hive grows its Roost at this pressure (the first flyer unlock)
+const FLYER_ROOST_HP := 40.0
+const FLYER_FIRST_DELAY := 20.0    # seconds from a Roost growing to its first flock
+const FLYER_INTERVAL_START := 50.0 # seconds between flocks per Roost at the first unlock
+const FLYER_INTERVAL_MIN := 22.0   # ...at full pressure
+const FLYER_MAX := 24              # live flyers across the map
+const FLYER_DIVE_RANGE := 4.0      # metres: a bat starts its dive this close to the target
+const FLYER_SEAL_REPEAT := 40.0    # seconds between extra flocks while the Node stays sealed
 const HIVE_STAGE4_HP := 1.5
 const HIVE_SALVAGE := 40.0       # Core pickup (§4.4)
 const LOOT_LIFE := 90.0          # seconds a Salvage orb stays

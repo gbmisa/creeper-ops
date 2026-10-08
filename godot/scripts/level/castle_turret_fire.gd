@@ -143,4 +143,9 @@ static func _flak(world: World, s: Dictionary, def: Dictionary, at: Vector3) -> 
 				Sfx.play("pop", it.pos)
 			Sfx.play("blaster", at)
 			return true
+	var fp = Flyers.strike(world, at, reach, def.power[s.level - 1])  # Stage 19: flyers
+	if fp != null:
+		world.effects.burst(fp, def.color, 1.2, 0.2)
+		Sfx.play("blaster", at)
+		return true
 	return false

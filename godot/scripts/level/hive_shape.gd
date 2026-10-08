@@ -18,6 +18,7 @@ const OFFSETS := {
 	"spitter_b": Vector2i(-1, 2),
 	"launcher": Vector2i(1, -2),
 	"mortar": Vector2i(-2, -1),
+	"roost": Vector2i(-2, 1),
 }
 
 
