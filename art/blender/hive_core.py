@@ -19,14 +19,15 @@ def rib(i):
 def build():
     bones = [("root", (0, 0, 0), (0, 0, 0.1), None),
              ("base", (0, 0, 0), (0, 0, 0.35), "root"),
-             ("heart", (0, 0, 0.75), (0, 0, 1.15), "base")]
+             ("heart", (0, 0, 0.75), (0, 0, 1.15), "base"),
+             ("halo", (0, 0, 0.36), (0, 0, 0.5), "base")]
     bones += [("rib%d" % i, *rib(i), "base") for i in range(RIBS)]
     arm = lib.armature("hive_core", bones)
     b = lib.Builder("hive_core")
     b.lathe([(0.85, 0.0), (0.8, 0.12), (0.62, 0.3), (0.4, 0.38), (0.0, 0.4)], "core_flesh", "base", seg=12)
     for k in range(6):  # veins up the mound
         a = k * math.pi / 3
-        b.limb((math.cos(a) * 0.82, math.sin(a) * 0.82, 0.03), (math.cos(a) * 0.35, math.sin(a) * 0.35, 0.38), 0.05, 0.03, "sick", "base", seg=4)
+        b.limb((math.cos(a) * 0.82, math.sin(a) * 0.82, 0.03), (math.cos(a) * 0.35, math.sin(a) * 0.35, 0.38), 0.05, 0.03, "sinew", "base", seg=4)
     for i in range(RIBS):
         lo, hi = rib(i)
         mid = tuple((a + c) * 0.5 + (d * 0.25) for a, c, d in zip(lo, hi, (lo[0], lo[1], 0)))
@@ -36,6 +37,7 @@ def build():
     for k in range(5):  # veins clutching the heart
         a = k * 2 * math.pi / 5
         b.limb((math.cos(a) * 0.42, math.sin(a) * 0.42, 0.95), (math.cos(a) * 0.3, math.sin(a) * 0.3, 1.38), 0.05, 0.02, "sick", "heart", seg=4)
+    b.lathe([(0.82, 0.05), (0.88, 0.09), (0.82, 0.13)], "core_glow", "halo", seg=16)  # ring that flares on the beat
     b.ball((0, 0, 1.15), 0.42, "core_glow", "heart", seg=12, rings=9)
     b.ball((0, 0, 1.15), 0.3, "core_flesh", "heart", scale=(1.5, 0.35, 1.45), seg=8, rings=6)  # dark cleft
     b.finish(arm)
@@ -49,11 +51,12 @@ def beat(t, strong=1.0):
 
 def pose(arm, t, strong=1.0, flex=1.0):
     h = beat(t, strong)
-    p = {"heart": (None, None, (1 + 0.25 * h,) * 3)}
+    p = {"heart": (None, None, (1 + 0.4 * h,) * 3), "base": (None, None, (1 + 0.04 * h, 1 - 0.03 * h, 1 + 0.04 * h)),
+         "halo": (None, None, (1 + 0.25 * h, 1, 1 + 0.25 * h))}
     for i in range(RIBS):
         lo, _hi = rib(i)
         axis = (-lo[1], lo[0], 0)  # tangent: rotating about it opens the rib outward
-        p["rib%d" % i] = (lib.world_rot(arm, "rib%d" % i, axis, 0.15 * h * flex), None)
+        p["rib%d" % i] = (lib.world_rot(arm, "rib%d" % i, axis, 0.25 * h * flex), None)
     return p
 
 
@@ -66,7 +69,7 @@ def clips(arm):
         j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
         p = pose(arm, 0.5)
         p["heart"] = (None, lib.world_loc(arm, "heart", (0.05 * j, 0, 0)), (1 - 0.12 * j,) * 3)
-        p["base"] = (None, None, (1 + 0.04 * j, 1 + 0.04 * j, 1 - 0.06 * j))
+        p["base"] = (None, None, (1 + 0.04 * j, 1 - 0.06 * j, 1 + 0.04 * j))
         return p
     lib.action(arm, "hit", 10, hit, step=1)
 

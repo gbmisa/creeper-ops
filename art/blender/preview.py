@@ -32,8 +32,8 @@ cam = bpy.data.objects.new("cam", cam_data)
 sc.collection.objects.link(cam)
 sc.camera = cam
 size = max(mesh.dimensions) or 1.0
-cam.location = Vector((1.1, -1.5, 0.9)) * size * 1.1
-cam.rotation_euler = (Vector((0, 0, size * 0.25)) - cam.location).to_track_quat("-Z", "Y").to_euler()
+cam.location = Vector((1.1, -1.5, 0.9)) * size * 1.1 + Vector((0, 0, mesh.dimensions.z * 0.2))
+cam.rotation_euler = (Vector((0, 0, mesh.dimensions.z * 0.42)) - cam.location).to_track_quat("-Z", "Y").to_euler()
 cam_data.lens = 40
 
 sun_data = bpy.data.lights.new("sun", "SUN")
