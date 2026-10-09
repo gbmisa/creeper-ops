@@ -1,35 +1,37 @@
-# Handoff: 2026-10-08 (session 15f: military restyle + UI overhaul, Opus, unmerged)
+# Handoff: 2026-10-09 (integration + playtest 3, Opus)
 
 ## State
-Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) (new Stage 25 row). Run: [RUN.md](RUN.md). Opus long-horizon plan: [docs/tasks/ART3_OPUS_plan.md](docs/tasks/ART3_OPUS_plan.md).
-Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHub branches; **Opus** orchestrates, merges and does the visuals. Opus → Muse notes go in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md); the latest note covers A4/A5 merge order and the new glbs.
+Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md).
+Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHub branches; **Opus** orchestrates, merges and does the visuals.
 
-## Done this session (Gregory: "military models + UI overhaul, work continuously")
-**`art/3-models`** (pushed, worktree `art3-models`; log in `docs/tasks/ART3M_progress.md`; sheets in `docs/art/military/`):
-- Restyled as military, with bone names and pivots kept: cannon, mortar, sniper, beam, collector, relay, command_node, totem, drop_pod, soldier (rifleman, new `flash` bone) and crawler (4x4 armoured car).
-- New glbs: miner, reactor, storage, barracks and forge (static-structure contract). **No loader in game yet.**
-- `mil_kit.py` (shared parts). `icons.sh` renders the build-menu icons.
-- Sonnet grades: cannon 7.5, mortar 8, sniper 7.5, beam 8.5, collector 7, relay 7, soldier 7, Node 8, totem 7, pod 7.5 (all at or above the old fantasy grades).
+**Everything lives on `integ/2026-10-09`** (worktree `creeper fps td-worktrees/integ`, local only, not pushed, not on main). Gregory is playtesting it:
+`cd "…/creeper fps td-worktrees/integ" && godot --path godot`
 
-**`ui/overhaul`** (pushed, worktree `ui-overhaul`, branched from main `7913773`; smoke reports `OK: 0 failure(s)`, parse is clean):
-- `UiTheme`: Barlow Condensed and Share Tech Mono (OFL, in `assets/fonts`), olive/charcoal panels, amber accents, square corners. It is set on every HUD child, because a CanvasLayer blocks the Window theme.
-- `UiKit`: new palette, plus `header`, `caption`, `mono` and `brackets` (corner marks drawn from the panel's draw signal).
-- Top bar: captioned gauges, a Node HP bar, and a status chip that truncates. Packets and Field are hidden below 1400 px.
-- `BuildCard` (icon, key, name, cost, lock note; `summary` is for tests) with icons in `assets/icons`; the menu keeps a stable width across tabs.
-- `HudOverlay` modals with an amber primary button. The briefing now says five build screens.
-- `Crosshair`, bracketed FPS vitals, tag plates on markers and log lines, and markers clamped on screen.
-- Stopgaps: a `StructureMeshes.MILITARY` palette for the procedural player meshes (castles unchanged), and military colours on the viewmodels and arms.
-- Debug hooks: `--briefing` and `--ended=won|lost`. Screens: `docs/art/ui/` (before/after).
-- UI grader: old HUD about 4/10, new HUD about 7/10.
+## In integ (full smoke OK: 0 failures, parse clean)
+- Muse's 12 overnight branches: 13 tuning, plasma recoil, K split, playtest-small, shot tour, 21b castles, Q spitter towers, anti-creeper, playtest2 pressure, A3 hive models, A4 structure models, art/3-models.
+- Muse's 9 follow-ups: enemy-los, beam-intercept-lobs, enemy-castle-mortars, spitter-vs-structures, network-planned-relays, raider-circle-anim, bailey-standard-ux, ammo-float-snap, deploy-from-node. **deploy-from-node changes a settled rule** (deploy from the Node when there's no Totem; the Totem is cheap and builds itself). Gregory hasn't confirmed it.
+- Playtest 3 fixes ([docs/tasks/PLAYTEST3_feedback.md](docs/tasks/PLAYTEST3_feedback.md), status line at item list end):
+  - Spitter range 14, with a smoke rule that acid reach stays below Sniper range.
+  - `art/totem-red`: taller Totem with a red glowing ball, unviewed.
+  - `pt3/enemy-builds`: mortars die only to the demo charge (free while `DEMO_CHARGE_FREE`); spitter towers pay 0 Salvage; enemy rebuilds wait `ENEMY_REBUILD_DELAY` 30 s.
+  - `pt3/castle-guard`: Lancers garrison hostile castles (`castle_lancers.gd`); no building within `BUILD_BAN_RADIUS` 24 of an unheld castle (`castle_exclusion.gd`, red rings in the shader, unviewed).
+
+## Open (playtest 3)
+1. Enemies float on creeper (item 2).
+2. Flying Node launches packets (item 15; update the CLAUDE.md contract).
+3. Railgun prompt says where to buy it and clears on weapon switch (item 6).
+4. Ask Gregory: should E-hold mortar sabotage still kill a mortar and pay 5 Salvage?
+5. The Ashmote Keep over-the-wall Lancer shot is unreproduced; it needs Gregory's replay.
+
+The pt3/small-fixes agent for items 1-3 was stopped by Gregory before it changed anything. Don't restart it unasked.
+
+## Decisions pending from Gregory
+- UI: `ui/overhaul` (Opus) vs `fix/ui-viewport-fit` (Muse). Screenshots are in the session scratchpad `ui/`; regenerate if gone.
+- Tuning (Lance cooldown 60→45, Wyvern HP 90→70): deferred until after more playtests.
+- When to merge integ → main and push.
+
+## Debt
+`raiders.gd` 304 lines, `weapon_logic.gd` 356, `shot_tour.gd` 300: split. A4 `_relay_pass` is O(n) per waypoint.
 
 ## Not verified
-No human playtest of the new HUD or the colours. GPU (Vulkan) rendering not checked, only Xvfb GL. The new glbs are not visible in game until A4/A5 loaders merge.
-
-## Branches waiting (unchanged from 15e)
-P (9 smoke failures, fix-up out), A3, C, S (gallery fix-up), Q, T, A4, K: see MUSE_NOTES.
-
-## Next (Opus)
-1. Gregory reviews `ui/overhaul` and `art/3-models`. On approval, merge `ui/overhaul` to main (strip `godot/.godot/`), then re-run smoke.
-2. Merge A4, then `art/3-models`, keeping the `art/3-models` glbs. Then start A5, which now also loads miner/reactor/storage/barracks/forge.
-3. UI follow-ups: icons for `@lance` and the castle turrets (they fall back to stencil glyphs); an info-panel stat grid; FPS ammo readout.
-4. Re-review the Muse branches as they land.
+No human look at: the Totem, the build-ban rings, the 21b castles, the anti-creeper fluid, military glb pivots. GPU (Vulkan) path not checked.
