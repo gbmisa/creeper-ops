@@ -110,11 +110,12 @@ static func _launch(world: World, r: Dictionary, target: Dictionary, prey: Array
 	var tier: Dictionary = r.tier
 	var dmg := float(tier.damage)
 	var color: Color = tier.color
-	world.effects.lob(from, aim, {
+	var it: Dictionary = world.effects.lob(from, aim, {
 		"color": color, "size": size, "time": maxf(dist / speed, 0.35),
 		"arc": clampf(dist * arc_k, 1.2, 8.0),
 		"on_arrive": func(): _impact(world, aim, radius, dmg, color, prey, from),
 	})
+	it["foe"] = true  # hostile lob: Beams shoot these down (spitter acid)
 	Sfx.play("mortar", from)
 
 

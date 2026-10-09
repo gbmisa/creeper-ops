@@ -132,7 +132,7 @@ static func _spitter(host, part: Dictionary, dt: float, prey: Array) -> void:
 	var aim: Vector3 = (best.node as Node3D).position
 	var splash := Config.HIVE_SPITTER_SPLASH * Config.CELL
 	var dmg := Config.HIVE_SPITTER_DMG
-	host.world.effects.lob(from + Vector3(0, 0.9, 0), aim, {
+	var it: Dictionary = host.world.effects.lob(from + Vector3(0, 0.9, 0), aim, {
 		"color": Color("d6ff3a"), "size": 0.28, "time": maxf(from.distance_to(aim) / Config.RAIDER_SHOT_SPEED, 0.35),
 		"arc": 2.5,
 		"on_arrive": func():
@@ -146,6 +146,7 @@ static func _spitter(host, part: Dictionary, dt: float, prey: Array) -> void:
 						HitFeel.note_source(from)
 					(q.hit as Callable).call(dmg),
 	})
+	it["foe"] = true  # hostile lob: Beams shoot these down (hive spitter acid)
 
 
 static func _launcher(host, part: Dictionary, dt: float) -> void:
