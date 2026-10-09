@@ -32,6 +32,7 @@ uniform vec3 ring_a_color : source_color = vec3(0.37, 0.83, 1.0);
 uniform vec4 ring_b = vec4(0.0);
 uniform vec3 ring_b_color : source_color = vec3(0.62, 1.0, 0.48);
 uniform vec4 shells[8];          // enemy mortar telegraphs: xy, z = radius m, w = on
+uniform vec4 bans[8];          // enemy castle build ban: xy centre, z = radius m, w = on
 uniform int sel_count = 0;
 uniform int plan_count = 0;
 uniform vec4 plans[48];       // drag-build preview: xy, z = radius m, w = 1 ok / 0 blocked
@@ -143,11 +144,17 @@ void fragment() {
 		float aa = fwidth(d) * 1.5;
 		sh = max(sh, shells[i].w * (1.0 - smoothstep(0.35, 0.35 + aa + 0.2, d)));
 	}
+	float ban = 0.0;  // enemy castle build ban: a red edge and a faint wash inside
+	for (int i = 0; i < 8; i++) {
+		float bd = length(p - bans[i].xy) - bans[i].z;
+		ban = max(ban, bans[i].w * (max(1.0 - smoothstep(0.2, 0.3 + fwidth(bd) * 1.5, abs(bd)), step(bd, 0.0) * 0.12)));
+	}
 	float rs = 0.0;  // group rings: thicker and warm so they read on the green field
 	for (int i = 0; i < sel_count; i++) {
 		float d = abs(length(p - sels[i].xy) - sels[i].z);
 		rs = max(rs, 1.0 - smoothstep(0.22, 0.3 + fwidth(d) * 1.5, d));
 	}
+	col = mix(col, vec3(1.0, 0.2, 0.15), ban * show_overlay * 0.8);
 	col = mix(col, ring_a_color, ra * 0.85);
 	col = mix(col, ring_b_color, rb * 0.85);
 	col = mix(col, vec3(1.0, 0.16, 0.08), sh * 0.92);

@@ -8,6 +8,8 @@ class_name Placement
 
 
 static var inside_held := Callable()
+## Set by CastlePerks.attach: (x, z) -> reason "" or why enemy castle land can't be built on.
+static var castle_ban := Callable()
 
 
 static func footprint_cells(type: String, x: int, z: int) -> Array[Vector2i]:
@@ -25,6 +27,10 @@ static func _ground_rules(mgr, type: String, x: int, z: int, ignore: Structure) 
 	var creeper: CreeperSim = mgr.world.creeper
 	var h0 := g.height_at(x, z)
 	var flying: bool = def.get("flying", false)
+	if castle_ban.is_valid():
+		var ban: String = castle_ban.call(x, z)
+		if ban != "":
+			return ban
 	for c in footprint_cells(type, x, z):
 		if not g.in_bounds(c.x, c.y):
 			return "Out of bounds"

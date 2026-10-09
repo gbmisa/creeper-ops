@@ -65,7 +65,9 @@ static func _move(host: Raiders, r: Dictionary, dt: float, target: Dictionary, t
 	var p: Vector3 = node.position
 	if target.is_empty():
 		var goal: Variant = null
-		if r.guard:
+		if r.has("guard_post"):
+			goal = CastleLancers.stand(host, r)
+		elif r.guard:
 			goal = host._patrol(r.nest.pos, r)
 		else:
 			goal = host._route(r, p)
@@ -77,7 +79,7 @@ static func _move(host: Raiders, r: Dictionary, dt: float, target: Dictionary, t
 	var dist := Vector2(tp.x - p.x, tp.z - p.z).length()
 	var hold: float = float(tier.range) * Config.CELL * Config.RAIDER_STANDOFF
 	host._face(r, Vector2(tp.x - p.x, tp.z - p.z))
-	if dist < hold:
+	if dist < hold and not r.has("guard_post"):  # castle guards hold their post
 		var away := Vector2(p.x - tp.x, p.z - tp.z)
 		if away.length() < 0.05:
 			away = Vector2(1, 0)
@@ -107,11 +109,25 @@ static func _beam(host: Raiders, r: Dictionary, dt: float, target: Dictionary, t
 	_grow_glow(r, tier)
 	if charge > 0.0:
 		return
+	if not _bolt_clear(host.world.grid, r, target):  # the flat bolt would hit a wall: hold fire
+		_end_glow(r)
+		r["charge"] = -1.0
+		r.erase("aim_node")
+		r["shot_cd"] = Config.RAIDER_LANCER_GAP
+		return
 	_launch(host.world, r, target, prey, Config.RAIDER_BEAM_RADIUS, Config.RAIDER_BEAM_SPEED, 0.28, 0.04)
 	_end_glow(r)
 	r["charge"] = -1.0
 	r.erase("aim_node")
 	r["shot_cd"] = Config.RAIDER_LANCER_GAP
+
+
+## The bolt's own arc, not just the sight line, must reach the target (keep walls, roofs).
+static func _bolt_clear(grid: Grid, r: Dictionary, target: Dictionary) -> bool:
+	var from: Vector3 = (r.node as Node3D).position + Vector3(0, float(r.size), 0)
+	var aim: Vector3 = (target.node as Node3D).position
+	var arc := clampf(maxf(from.distance_to(aim), 0.5) * 0.04, 1.2, 8.0)
+	return WeaponLogic.clip_lob(grid, from, aim, arc).distance_to(aim) <= Config.SNIPER_LOS_SLACK + 0.5
 
 
 static func _launch(world: World, r: Dictionary, target: Dictionary, prey: Array, radius: float, speed: float, size: float, arc_k: float) -> void:

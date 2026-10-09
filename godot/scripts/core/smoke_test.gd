@@ -164,6 +164,7 @@ static func run(g) -> void:
 	SmokeEnemyBuild.run(g)
 	SmokeEnemyRules.run(g)
 	SmokeEnemyLos.run(g)
+	SmokeCastleGuard.run(g)
 	SmokeLoot.run(g)
 	SmokeFpsFeel.run(g)
 	SmokeFpsArms.run(g)

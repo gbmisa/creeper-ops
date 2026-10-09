@@ -23,6 +23,7 @@ var on_lost := func(_cells: Array) -> void: pass  # injected: destroy your struc
 var stockpile: Stockpile = null  # injected: Salvage for turrets, the castle trickle and capture bounty
 var engine_prey := func() -> Array: return []  # injected: what war engines may hit (Game.surface_prey)
 var time := 0.0
+var ban_cache := PackedVector4Array()  # last build-ban rings sent to the terrain shader
 
 
 func _init(w: World, castles: Array, sn: SporeNests) -> void:
@@ -35,7 +36,7 @@ func _init(w: World, castles: Array, sn: SporeNests) -> void:
 		lays[c.id] = lay
 		var v := StrongholdMeshes.build(w, lay)
 		CastleTurretFire.build_views(w, c, v)
-		v["garrison"] = { "name": c.name, "pos": w.grid.cell_ground(lay.home.x, lay.home.y), "count": 0 }
+		v["garrison"] = { "name": c.name, "castle": c.id, "pos": w.grid.cell_ground(lay.home.x, lay.home.y), "count": 0 }
 		views[c.id] = v
 		StrongholdHooks.attach(self, c, lay, v)
 		CastleEngines.attach(self, c, v)
@@ -43,6 +44,7 @@ func _init(w: World, castles: Array, sn: SporeNests) -> void:
 		StrongholdMeshes.refresh(v, c)
 	nests.raiders.castle_goals = castle_goals
 	nests.raiders.on_march = _assign
+	nests.raiders.castle_posts = func() -> Array: return CastleLancers.posts(self)
 	w.updaters.append(update)
 
 
@@ -167,6 +169,7 @@ func update(dt: float) -> void:
 		if o != null and c.state == "hostile":
 			StrongholdRules.crown_push(v, o)
 		StrongholdMeshes.animate(v, c, time)
+	CastleExclusion.refresh(self)
 	EnemyMortarFire.extra = CastleEngines.rings  # trebuchet rings share the mortar-ring shader slots
 
 
