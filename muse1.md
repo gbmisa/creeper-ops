@@ -38,6 +38,11 @@ Clone https://github.com/gbmisa/creeper-ops and check out branch stage/21b-castl
 Clone https://github.com/gbmisa/creeper-ops and check out branch fix/muse-b-bugs. Read AGENTS.md, CLAUDE.md and docs/tasks/MUSE_B_bugs.md. Do that brief and nothing else. Commit and push only to fix/muse-b-bugs. Never touch main, never merge. Report in the AGENTS.md format.
 ```
 
+## A2: creature models integration fixes (do next: blocks the Art 3 merge)
+```
+Clone https://github.com/gbmisa/creeper-ops and check out branch art/3-integration. Read AGENTS.md, CLAUDE.md and docs/tasks/ART3_A2_integration.md. Do that brief and nothing else. Commit and push only to art/3-integration. Never touch main, never merge. Report in the AGENTS.md format.
+```
+
 ## Rules reminder
 - Muse has headless Godot 4.7.2: run the parse and smoke checks and headless sims yourself. Screenshots and GPU checks are Opus's job (Muse has no display).
 - All four tasks can run at once, one worker per branch.
