@@ -247,26 +247,26 @@ static func _structure_models(g) -> void:
 ## linger + die. Drives the lifecycle directly (payment is covered by SmokeDeploy).
 static func _drop_pod(g) -> void:
 	var cell := Vector2i(40, 60)
-	g.deploy._begin_pod(cell)
-	var pod := g.deploy._pod.get("node") as Node3D
+	g.deploy.pods.begin(cell)
+	var pod := g.deploy.pods.st.get("node") as Node3D
 	SmokeTest._check("drop pod: node exists while pending",
 		pod != null and is_instance_valid(pod) and pod.is_inside_tree())
 	var t := 0.0
-	while str(g.deploy._pod.get("phase", "")) == "fall" and t < Config.DROP_TIME + 2.0:
-		g.deploy._tick_pod(0.05)
+	while str(g.deploy.pods.st.get("phase", "")) == "fall" and t < Config.DROP_TIME + 2.0:
+		g.deploy.pods.tick(0.05)
 		t += 0.05
 	SmokeTest._check("drop pod: touchdown -> linger",
-		str(g.deploy._pod.get("phase", "")) == "linger", "(t=%.2f)" % t)
+		str(g.deploy.pods.st.get("phase", "")) == "linger", "(t=%.2f)" % t)
 	t = 0.0
-	while str(g.deploy._pod.get("phase", "")) == "linger" and t < Config.POD_LINGER + 2.0:
-		g.deploy._tick_pod(0.05)
+	while str(g.deploy.pods.st.get("phase", "")) == "linger" and t < Config.POD_LINGER + 2.0:
+		g.deploy.pods.tick(0.05)
 		t += 0.05
-	var dying := str(g.deploy._pod.get("phase", "")) == "die"
+	var dying := str(g.deploy.pods.st.get("phase", "")) == "die"
 	var p := _find_player(pod)
 	if p != null:
 		p.animation_finished.emit("die")  # the headless sim has no frames: end the clip now
 	SmokeTest._check("drop pod: gone after linger + die",
-		dying and (not is_instance_valid(pod) or pod.is_queued_for_deletion()) and g.deploy._pod.is_empty())
+		dying and (not is_instance_valid(pod) or pod.is_queued_for_deletion()) and g.deploy.pods.st.is_empty())
 
 
 ## A3 task 0: the gallery strip is flattened — every gallery node's ground cell

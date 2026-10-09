@@ -55,6 +55,8 @@ func _rebuild_actions() -> void:
 	var s := command.selected
 	if s == null:
 		return
+	if s.type == "beacon" and s.is_built():
+		_btn("Deploy here [%s]" % Keybinds.short("teleport"), command.deploy.deploy_totem)
 	if s.def.get("movable", false):
 		_btn("Move [%s]" % Keybinds.short("move"), command.begin_move)
 	if s.has_ammo_store():
