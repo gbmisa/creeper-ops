@@ -183,6 +183,8 @@ func _arrive(p: Dictionary) -> void:
 			s.delivered += 1
 		"ammo":
 			s.ammo = minf(s.ammo_max(), s.ammo + s.def.ammo.per_packet)
+			if s.ammo_max() - s.ammo < 0.01:
+				s.ammo = s.ammo_max()  # snap: float residue must never leave a magazine visually unfilled
 			AmmoGrades.arrived(s, str(p.get("grade", "")), s.def.ammo.per_packet)
 		"unit":
 			if not s.queue.is_empty():
