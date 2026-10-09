@@ -31,7 +31,7 @@ const DEFAULTS := {
 	"pause": ["Command", "Pause", [KEY_SPACE]],
 	"speed_up": ["Command", "Game speed up", [KEY_EQUAL, KEY_KP_ADD]],
 	"speed_down": ["Command", "Game speed down", [KEY_MINUS, KEY_KP_SUBTRACT]],
-	"teleport": ["Command", "Deploy Operative", [KEY_T]],
+	"teleport": ["Command", "Deploy Operative (Totem, else Command Node)", [KEY_T]],
 	"tab_1": ["Command", "Build tab: Structures", [KEY_F1]],
 	"tab_2": ["Command", "Build tab: Weapons", [KEY_F2]],
 	"tab_3": ["Command", "Build tab: Titans", [KEY_F3]],

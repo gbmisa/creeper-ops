@@ -5,7 +5,7 @@ extends PanelContainer
 ## Each hint says WHO can do it (Network, Units, Operative) and HOW.
 
 const LIST := [
-	{ "id": "spire", "who": "Operative", "text": "Destroy the Spore Spire", "hint": "NE Blight plateau. Drop a Totem (Orbital tab) near the ramp south of it, press T, climb, press E at the Spire. Or use Drop to pod in. Beams shoot its volleys down." },
+	{ "id": "spire", "who": "Operative", "text": "Destroy the Spore Spire", "hint": "NE Blight plateau. Place a Totem (Orbital tab) near the ramp south of it, press T, climb, press E at the Spire. Or use Drop to pod in. Beams shoot its volleys down." },
 	{ "id": "e1", "who": "Network", "text": "Nullify Emitter NW", "hint": "Push Relays and weapons to it, clear the creeper around it, then build a Nullifier within 10 cells. Creeper destroys it on contact." },
 	{ "id": "core", "who": "Operative", "text": "Destroy the Deep Core", "hint": "Walk the Operative into the Rift (west Blight) and press E. Shoot the 3 Shield Pylons, then the Core." },
 	{ "id": "e2", "who": "Network", "text": "Nullify Emitter East", "hint": "Shielded until the Deep Core dies (follow the purple link). Then nullify it." },

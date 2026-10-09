@@ -23,7 +23,7 @@ static var ACTIONS := _turret_actions().merged({
 	"@lance": { "label": "Orbital Lance", "cost_text": "%d now" % Config.LANCE_COST,
 		"desc": "Strike from orbit: after %ds, burns away creeper in a %.0f-cell radius anywhere you can see. Paid up front (%d), %ds cooldown." % [Config.LANCE_DELAY, Config.LANCE_RADIUS, Config.LANCE_COST, Config.LANCE_COOLDOWN] },
 	"@operative": { "label": "Deploy Operative", "cost_text": "T",
-		"desc": "Send the Operative to the selected Totem (or the newest). Free and instant while the teleporter is ready. Only the Operative can plant charges, enter the Rift and kill the Deep Core." },
+		"desc": "Send the Operative to the selected Totem (or the newest) — or the Command Node if no Totem is finished. Free and instant while the teleporter is ready. Only the Operative can plant charges, enter the Rift and kill the Deep Core." },
 	"@terp": { "label": "Terp Paint", "cost_text": "paint", "unlock": "terp",
 		"desc": "Drag a rectangle to paint a target level (0-%d). It starts at the ground under the first cell; Page Up and Page Down change it, hold C to erase. Hatched until a Terp finishes the cell." % Config.MAX_LEVEL },
 	"@repair": { "label": "Repair Wall", "cost_text": "Salvage",
@@ -90,8 +90,8 @@ static var DEFS := {
 	"keep": { "label": "Castle Keep", "cost": 0, "hp": 300.0, "link": 10.0, "relays": true, "sender": true, "link_y": 4.0,
 		"movable": false, "buildable": false, "reserve": true, "wet_time": 60.0,
 		"desc": "Your held castle's keep. A packet sender and relay (link 10): structures nearby take packets from it, like an Outpost. Comes with the castle and falls with it." },
-	"beacon": { "tab": "Orbital", "label": "Totem", "cost": 10, "hp": 40.0, "link": 0.0, "needs_network": false, "link_y": 1.0, "drop_pod": true,
-		"desc": "Operative arrival point, dropped from orbit: no network, paid up front, not in Blight. Deploying here (T) is free and instant. Recalling within %.0f m is free and does not cool the teleporter down." % Config.TOTEM_FREE_RADIUS },
+	"beacon": { "tab": "Orbital", "label": "Totem", "cost": 5, "hp": 40.0, "link": 0.0, "needs_network": false, "link_y": 1.0, "self_build": true,
+		"desc": "Operative arrival point, built on site: no network, paid up front, not in Blight. Deploying here (T) is free and instant — T uses the Command Node when no Totem stands. Recalling within %.0f m is free and does not cool the teleporter down." % Config.TOTEM_FREE_RADIUS },
 	"terp": { "tab": "Titans", "label": "Terp", "cost": 25, "hp": 80.0, "link": 6.0, "link_y": 1.5,
 		"work_range": 7.0, "movable": false, "unlock": "terp",
 		"desc": "Raises or lowers painted ground one level at a time, within 7 cells. Each level costs %d packets and takes %.0fs once they arrive. Earth only. Link 6. Not movable." % [Config.TERP_PACKETS, Config.TERP_STEP_TIME] },
@@ -117,7 +117,7 @@ static func cost_text(type: String) -> String:
 	var d: Dictionary = DEFS[type]
 	if type == "outpost":
 		return "%d Ore + %d" % [int(Config.OUTPOST_ORE), int(d.cost)]
-	return ("%d now" % d.cost) if d.get("drop_pod", false) else str(d.cost)
+	return ("%d now" % d.cost) if d.get("self_build", false) else str(d.cost)
 
 
 static func label(type: String) -> String:

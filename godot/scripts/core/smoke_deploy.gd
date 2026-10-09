@@ -3,13 +3,28 @@ class_name SmokeDeploy
 
 
 static func run(g) -> void:
+	_node_deploy(g)
 	var grid: Grid = g.level.grid
 	var origin := _line(grid, 20)
 	SmokeTest._check("walkable recall line", origin.x >= 0, str(origin))
 	if origin.x < 0:
 		return
 	var far := Vector2i(origin.x + 20, origin.y)
-	var totem: Structure = g.structures.place("beacon", origin.x, origin.y, true)
+	g.economy.energy = 100.0
+	var totem: Structure = g.structures.place("beacon", origin.x, origin.y)
+	SmokeTest._check("totem: costs 5", int(StructureDefs.DEFS["beacon"].cost) == 5)
+	SmokeTest._check("totem: no orbital flag", not StructureDefs.DEFS["beacon"].get("drop_pod", false) and bool(StructureDefs.DEFS["beacon"].get("self_build", false)))
+	SmokeTest._check("totem: paid up front", totem != null and absf(g.economy.energy - 95.0) < 0.01, "energy %.0f" % g.economy.energy)
+	SmokeTest._check("totem: builds over time", totem != null and not totem.is_built())
+	if totem != null:
+		var bt := 0.0
+		while not totem.is_built() and bt < 6.0:
+			StructureUpkeep.construction(g.structures, totem, 0.1)
+			bt += 0.1
+		SmokeTest._check("totem: self-builds", totem.is_built(), "t=%.1f" % bt)
+		SmokeTest._check("totem: no packets used", totem.delivered == 0)
+	else:
+		return
 	SmokeTest._check("totem label", totem.def.label == "Totem" and StructureDefs.MENU.Orbital.has("@drop"))
 	g.economy.energy = 400.0
 	var grew: bool = is_equal_approx(g.deploy.drop_cost(origin), Config.DROP_BASE) \
@@ -25,6 +40,48 @@ static func run(g) -> void:
 	_recall(g, origin, far)
 	_pod(g, far)
 	_death(g, origin)
+
+
+## T with no finished Totem falls back to the Command Node: free cell beside it.
+## Also covers totem priority and the deploy deny paths.
+static func _node_deploy(g) -> void:
+	for s in g.structures.beacons():
+		g.structures.remove(s)
+	g.flow.to_command("")
+	g.teleport_cooldown = 0.0
+	SmokeTest._check("node deploy: no beacons", g.structures.beacons().is_empty())
+	g.deploy.deploy_totem()
+	var node: Structure = g.structures.command_node()
+	SmokeTest._check("node deploy: on surface", g.mode == "surface" and g.fps.world == g.surface)
+	var grid: Grid = g.level.grid
+	var cell := grid.world_to_cell(g.fps.controller.pos.x, g.fps.controller.pos.z)
+	var cheb := maxi(absi(cell.x - node.x), absi(cell.y - node.z))
+	SmokeTest._check("node deploy: beside node", cheb >= 2 and cheb <= 5, "cheb=%d" % cheb)
+	SmokeTest._check("node deploy: cell free", g.structures.structure_at(cell.x, cell.y) == null, str(cell))
+	g.flow.to_command("")
+
+	# A finished Totem takes priority over the node.
+	var tb := _line(grid, 30)
+	g.structures.place("beacon", tb.x, tb.y, true)
+	g.deploy.deploy_totem()
+	var tc := grid.world_to_cell(g.fps.controller.pos.x, g.fps.controller.pos.z)
+	SmokeTest._check("totem priority", tc == Vector2i(tb.x, tb.y - 1), str(tc))
+	g.structures.remove(g.structures.beacons().back())
+	g.flow.to_command("")
+
+	# Deny paths still fire.
+	g.deploy.down = true
+	g.deploy.deploy_totem()
+	SmokeTest._check("deny while down", g.mode == "command")
+	g.deploy.down = false
+	g.deploy._pod = { "cell": Vector2i.ZERO, "t": 0.0, "tick": 0.0 }
+	g.deploy.deploy_totem()
+	SmokeTest._check("deny while pod falling", g.mode == "command")
+	g.deploy._pod = {}
+	g.landing = true
+	g.deploy.deploy_totem()
+	SmokeTest._check("deny while landing", g.mode == "command" and g.fps.world == null)
+	g.landing = false
 
 
 ## Brief B1: the Operative's spawn camera must not sit inside (or hard against) world

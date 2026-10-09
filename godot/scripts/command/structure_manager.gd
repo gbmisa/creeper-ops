@@ -4,7 +4,7 @@ extends Node3D
 ## tick. Rules live in Placement / Network / Packets / CollectorField / Mover / WeaponLogic /
 ## StructureBehaviors / StructureUpkeep (creeper contact, construction, bars).
 
-const DROP_POD_TIME := 3.0
+const SELF_BUILD_TIME := 3.0  # seconds for a self-building structure (Totem) to finish
 
 var world: World
 var economy: Economy
@@ -75,7 +75,7 @@ func structure_at(x: int, z: int) -> Structure:
 # ---- lifecycle --------------------------------------------------------------------
 func place(type: String, x: int, z: int, instant := false) -> Structure:
 	var s := Structure.new(type, x, z)
-	if s.def.get("drop_pod", false) and not instant and not economy.spend(s.def.cost):
+	if s.def.get("self_build", false) and not instant and not economy.spend(s.def.cost):
 		return null
 	if not _pay_ore(type, x, z, instant):
 		return null
