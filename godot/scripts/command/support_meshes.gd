@@ -178,12 +178,12 @@ static func beacon(root: Node3D) -> void:
 
 static func _procedural_beacon(root: Node3D) -> void:
 	StructureMeshes.cyl(root, 0.6, 0.7, 0.3, StructureMeshes.pal("stone_dark"), 0.0, 6)
-	ShapeKit.lathe(root, PackedVector2Array([Vector2(0.42, 0.3), Vector2(0.26, 2.2), Vector2(0.0, 2.35)]), StructureMeshes.pal("stone"), Vector3.ZERO, 4).rotation.y = PI / 4.0
+	ShapeKit.lathe(root, PackedVector2Array([Vector2(0.42, 0.3), Vector2(0.26, 3.6), Vector2(0.0, 3.75)]), StructureMeshes.pal("stone"), Vector3.ZERO, 4).rotation.y = PI / 4.0
 	var teal := StructureMeshes.glow(Color("66ffcc"), 2.0)
 	var g := StructureMeshes._part(root, "Glow", 0.5)
 	for sz in [-1.0, 1.0]:
-		StructureMeshes.box(g, Vector3(0.1, 1.4, 0.05), teal, Vector3(0, 0.75, sz * 0.27))
-	StructureMeshes.crystal(root, 0.14, 0.45, teal, Vector3(0, 2.55, 0))
+		StructureMeshes.box(g, Vector3(0.1, 2.2, 0.05), teal, Vector3(0, 1.2, sz * 0.27))
+	StructureMeshes.ball(root, 0.3, StructureMeshes.glow(Color(1, 0.15, 0.1), 3.0), Vector3(0, 4.3, 0), 16)
 
 
 ## Miner: a stone well with a bronze drill and an amber crystal, short enough to read as a machine.
