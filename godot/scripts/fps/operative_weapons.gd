@@ -229,7 +229,7 @@ func kick(id: String) -> void:
 	var inc: float = float(r.climb) * float(r.cam)
 	if inc > 0.0:
 		climb = minf(climb + inc, float(r.climb_max))
-		var yw := inc * 0.35
+		var yw := inc * 0.35 * float(r.get("drift", 1.0))
 		var cap := float(r.climb_max) * 0.5
 		climb_yaw = clampf(climb_yaw + randf_range(-yw, yw), -cap, cap)
 
