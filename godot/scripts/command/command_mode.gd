@@ -80,6 +80,11 @@ func select_structure(s: Structure) -> void:
 func update(dt: float, input: InputState) -> void:
 	if tool == "@move" and (selected == null or selected.is_flying()):
 		set_tool("")
+	if deploy.pick.active:  # choosing a deploy Totem: camera and pointer only
+		cam.update(dt, input, world.grid)
+		CommandHover.refresh(self, input)
+		deploy.pick.handle(self, input)
+		return
 	CommandInput.hotkeys(self, input)
 	cam.update(dt, input, world.grid)
 	Sfx.listener = cam.global_position

@@ -74,10 +74,10 @@ static func _node_deploy(g) -> void:
 	g.deploy.deploy_totem()
 	SmokeTest._check("deny while down", g.mode == "command")
 	g.deploy.down = false
-	g.deploy._pod = { "cell": Vector2i.ZERO, "t": 0.0, "tick": 0.0 }
+	g.deploy.pods.st = { "cell": Vector2i.ZERO, "t": 0.0, "tick": 0.0 }
 	g.deploy.deploy_totem()
 	SmokeTest._check("deny while pod falling", g.mode == "command")
-	g.deploy._pod = {}
+	g.deploy.pods.st = {}
 	g.landing = true
 	g.deploy.deploy_totem()
 	SmokeTest._check("deny while landing", g.mode == "command" and g.fps.world == null)

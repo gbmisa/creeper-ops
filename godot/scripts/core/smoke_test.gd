@@ -148,6 +148,7 @@ static func run(g) -> void:
 	SmokeSenders.run(g)
 	SmokePt3.run(g)
 	SmokeDeploy.run(g)
+	SmokeDeployPick.run(g)
 	SmokeTraps.run(g)
 	SmokeGroupSelect.run(g)
 	SmokeRally.run(g)
@@ -230,6 +231,8 @@ static func _run_only(g) -> void:
 				SmokePlaytestSmall.run(g)
 			"enemy_build":
 				SmokeEnemyBuild.run(g)
+			"deploypick":
+				SmokeDeployPick.run(g)
 			"cw3":
 				SmokeCw3.run(g)
 			"feel":
