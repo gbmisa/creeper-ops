@@ -1,8 +1,11 @@
-"""Command Node: stepped stone plinth, tapering tower with four buttresses, crenellated crown and a
-turning bronze crown-wheel holding the big rune crystal. Same silhouette as SupportMeshes.node.
-Clips: idle = wheel turns, crystal breathes; walk = flying (lift jets under the plinth, banners
-flutter, wheel spins fast); attack = packet launch (a rune ring runs up the tower, crystal flares);
-hit = shake; die = crystal shatters, crown wheel drops, tower leans and sinks.
+"""Command Node, military: a mobile HQ tower. A hazard-banded concrete plinth on four hydraulic
+landing legs, an olive armoured octagonal tower with gunmetal bands, dark vision slits and
+hydraulic buttress struts, a glazed command deck with a railing, insignia drapes on two faces,
+and a turning comms crown (three antenna masts, a radar ring and a dish) round a caged blue
+reactor core. Same silhouette as SupportMeshes.node.
+Clips: idle = crown turns, core breathes; walk = flying (lift thrusters under the plinth,
+drapes flutter, crown spins fast); attack = packet launch (a blue ring runs up the tower, core
+flares); hit = shake; die = core shatters, the crown drops, the tower leans and sinks.
 Real metres, scale 1, about 11.3 m tall. Game id: command_node.
 """
 import math
@@ -32,49 +35,72 @@ def build():
     bones += [("banner%d" % i, (0, s * 1.47, 6.6), (0, s * 1.47, 4.0), "tower") for i, s in enumerate((1, -1))]
     arm = lib.armature("command_node", bones)
     b = lib.Builder("command_node")
-    b.lathe([(2.8, 0.0), (2.8, 0.7), (2.3, 0.9), (0.0, 0.9)], "node_stone_dark", "base", seg=8, smooth=False)
-    b.lathe([(2.95, 0.0), (2.95, 0.18), (0.0, 0.18)], "bronze_dark", "base", seg=8, smooth=False)  # foot band
-    b.lathe([(2.1, 0.9), (1.55, 1.6), (1.35, 6.6), (1.8, 7.1), (1.8, 7.6), (0.0, 7.6)], "node_stone", "tower", seg=8, smooth=False)
-    b.lathe([(1.5, 3.5), (1.53, 3.7), (0.0, 3.7)], "bronze", "tower", seg=8, smooth=False)  # band
-    b.lathe([(1.84, 7.05), (1.84, 7.15), (0.0, 7.15)], "bronze", "tower", seg=8, smooth=False)  # crown lip
-    for x, y, z, a in BUTTRESS:
-        c, s = math.cos(a), math.sin(a)
-        b.limb((x, y, z), (c * 1.35, s * 1.35, 4.2), 0.34, 0.2, "node_stone", "tower", seg=4)
-        b.box((x, y, 0.85), (0.6, 0.6, 0.3), "node_stone_dark", "base", rot=Quaternion((0, 0, 1), a))
-        b.box((c * 1.42, s * 1.42, 4.25), (0.3, 0.3, 0.3), "bronze", "tower", rot=Quaternion((0, 0, 1), a))
-    for x, y, z, a in sk.ring(8, 1.62, 7.85, math.pi / 8):  # merlons
-        b.box((x, y, z), (0.5, 0.5, 0.55), "node_stone", "crown", rot=Quaternion((0, 0, 1), a))
-    for k in range(4):  # rune slits on the four faces
-        a = k * math.pi / 2
+    P8 = math.pi / 8
+    b.lathe([(2.8, 0.0), (2.8, 0.7), (2.3, 0.9), (0.0, 0.9)], "concrete_dark", "base", seg=8, smooth=False, phase=P8)
+    for i in range(16):  # hazard foot band
+        a = 2 * math.pi * i / 16 + P8 / 2
+        b.box((math.cos(a) * 2.6, math.sin(a) * 2.6, 0.45), (0.06, 1.0, 0.3), "hazard" if i % 2 else "rubber",
+              "base", rot=Quaternion((0, 0, 1), a))
+    b.lathe([(2.1, 0.9), (1.55, 1.6), (1.35, 6.4), (1.35, 6.6), (0.0, 6.6)], "olive", "tower", seg=8, smooth=False, phase=P8)
+    for z in (1.95, 3.6, 5.3):  # armour bands
+        r = (1.55 - (z - 1.6) * 0.04) / math.cos(P8) + 0.02
+        b.lathe([(r, z - 0.12), (r, z + 0.12), (0.0, z + 0.12)], "gunmetal", "tower", seg=8, smooth=False, phase=P8)
+    for k in range(8):  # vision slits on every face
+        a = k * math.pi / 4
         q = Quaternion((0, 0, 1), a)
-        for z, h in ((2.4, 0.6), (5.2, 0.9)):
+        for z in (2.7, 4.45):
             r = 1.55 - (z - 1.6) * 0.04 + 0.02
-            b.box((math.cos(a) * r, math.sin(a) * r, z), (0.08, 0.42, h), "rune", "tower", rot=q)
-    for z in (1.95, 4.75, 6.05):  # mortar courses
-        r = 1.55 - (z - 1.6) * 0.04 + 0.015
-        b.lathe([(r, z - 0.05), (r, z + 0.05), (0.0, z + 0.05)], "node_stone_dark", "tower", seg=8, smooth=False)
-    for i, s in enumerate((1, -1)):
+            b.box((math.cos(a) * r, math.sin(a) * r, z), (0.06, 0.5, 0.14), "solar", "tower", rot=q)
+    for x, y, z, a in BUTTRESS:  # hydraulic struts and landing legs
+        c, s = math.cos(a), math.sin(a)
+        b.limb((x, y, z), (c * 1.4, s * 1.4, 3.6), 0.3, 0.22, "olive_dark", "tower", seg=4)
+        b.limb((c * 2.2, s * 2.2, 1.1), (c * 1.5, s * 1.5, 2.8), 0.12, 0.12, "steel", "tower", seg=8)
+        b.box((x, y, 0.1), (0.9, 0.9, 0.2), "gunmetal", "base", rot=Quaternion((0, 0, 1), a))
+        b.limb((x, y, 0.2), (x * 0.85, y * 0.85, 0.75), 0.18, 0.18, "steel", "base", seg=8)
+        b.box((c * 1.45, s * 1.45, 3.65), (0.36, 0.36, 0.3), "hazard", "tower", rot=Quaternion((0, 0, 1), a))
+    # command deck: wide glazed octagon
+    b.lathe([(1.4, 6.4), (1.95, 6.7), (1.95, 7.5), (1.8, 7.6), (0.0, 7.6)], "olive", "tower", seg=8, smooth=False, phase=P8)
+    b.lathe([(1.97, 6.85), (1.97, 7.25), (0.0, 7.25)], "solar", "tower", seg=8, smooth=False, phase=P8)
+    for x, y, z, a in sk.ring(8, 1.8, 7.85, P8):  # railing posts (were merlons)
+        b.limb((x, y, 7.6), (x, y, 8.1), 0.05, 0.05, "steel", "crown", seg=4)
+    b.lathe([(1.78, 8.04), (1.86, 8.04), (1.86, 8.12), (1.78, 8.12), (1.78, 8.04)], "hazard", "crown", seg=8, cap=False, phase=P8)
+    for x, y, z, a in sk.ring(6, 1.35, 7.75, 0.3):  # sandbags on the roof
+        b.ball((x, y, z), 0.32, "sandbag", "crown", scale=(1.3, 0.7, 0.45), seg=6, rings=3,
+               rot=Quaternion((0, 0, 1), a + math.pi / 2))
+    for i, s in enumerate((1, -1)):  # insignia drapes
         bn = "banner%d" % i
-        b.box((0, s * 1.5, 5.1), (1.25, 0.05, 3.0), "cloth", bn)
-        b.box((0, s * 1.51, 3.65), (1.31, 0.07, 0.22), "brass", bn)  # hem
-        b.box((0, s * 1.53, 5.5), (0.46, 0.03, 1.1), "rune", bn)  # sigil
-        b.limb((-0.72, s * 1.5, 6.6), (0.72, s * 1.5, 6.6), 0.05, 0.05, "bronze", bn, seg=4)  # pole
-    for x, y, z, a in sk.ring(3, 0.5, 7.8, 0.0):  # crown-wheel spokes and crystals
+        b.box((0, s * 1.5, 5.1), (1.25, 0.05, 3.0), "olive_dark", bn)
+        b.box((0, s * 1.51, 3.65), (1.31, 0.07, 0.22), "hazard", bn)
+        for dz in (0.0, 0.32):  # chevrons
+            b.box((-0.2, s * 1.53, 5.4 - dz), (0.5, 0.03, 0.12), "khaki", bn, rot=Quaternion((0, 1, 0), 0.6))
+            b.box((0.2, s * 1.53, 5.4 - dz), (0.5, 0.03, 0.12), "khaki", bn, rot=Quaternion((0, 1, 0), -0.6))
+        b.limb((-0.72, s * 1.5, 6.6), (0.72, s * 1.5, 6.6), 0.05, 0.05, "steel", bn, seg=4)
+    for x, y, z, a in sk.ring(3, 0.5, 7.8, 0.0):  # comms crown: three antenna masts
         c, s = math.cos(a), math.sin(a)
         tip = (c * 1.2, s * 1.2, 9.5)
-        b.limb((x, y, z), tip, 0.1, 0.07, "bronze", "spin", seg=4)
-        b.ball((tip[0], tip[1], tip[2] + 0.25), 0.14, "rune", "spin", scale=(1, 1, 2.5), seg=5, rings=2, smooth=False)
-    b.lathe([(1.0, 8.72), (1.18, 8.8), (1.0, 8.88), (0.92, 8.8), (1.0, 8.72)], "bronze_dark", "spin", seg=16, cap=False)
-    b.lathe([(0.5, 7.6), (0.62, 7.8), (0.4, 8.6), (0.0, 8.6)], "bronze", "spin", seg=8, smooth=False)  # wheel hub
-    b.ball((0, 0, 10.1), 0.6, "rune_deep", "gem", scale=(1, 1, 2.0), seg=6, rings=2, smooth=False)
-    b.lathe([(1.7, 0.95), (1.9, 1.05), (1.7, 1.15), (1.6, 1.05), (1.7, 0.95)], "rune", "wave", seg=16, cap=False)
-    b.limb((0, 0, 0.0), (0, 0, -4.5), 2.2, 0.0, "flame", "jets", seg=10)
-    b.limb((0, 0, -0.05), (0, 0, -3.0), 1.4, 0.0, "rune", "jets", seg=8)  # hot core
+        b.limb((x, y, z), tip, 0.1, 0.07, "gunmetal", "spin", seg=4)
+        b.limb(tip, (tip[0], tip[1], tip[2] + 0.9), 0.04, 0.02, "steel", "spin", seg=4)
+        b.ball((tip[0], tip[1], tip[2] + 0.92), 0.09, "lamp_red", "spin", seg=6, rings=3)
+    b.lathe([(1.0, 8.72), (1.18, 8.8), (1.0, 8.88), (0.92, 8.8), (1.0, 8.72)], "steel", "spin", seg=16, cap=False)
+    b.lathe([(0.5, 7.6), (0.62, 7.8), (0.4, 8.6), (0.0, 8.6)], "gunmetal", "spin", seg=8, smooth=False)
+    dish = (1.25, 0.0, 8.5)
+    b.limb((0.4, 0, 8.3), dish, 0.06, 0.06, "steel", "spin", seg=4)
+    b.lathe([(0.0, -0.05), (0.55, 0.12), (0.62, 0.24), (0.55, 0.2), (0.0, 0.05)], "brake", "spin", at=dish, seg=12, smooth=False)
+    b.ball((0, 0, 10.1), 0.55, "arc_blue", "gem", scale=(1, 1, 1.8), seg=10, rings=6)
+    for z in (9.0, 11.2):
+        b.lathe([(0.0, z - 0.06), (0.62, z - 0.06), (0.62, z + 0.06), (0.0, z + 0.06)], "gunmetal", "gem", seg=8, smooth=False)
+    for i in range(4):
+        a = i * math.pi / 2 + math.pi / 4
+        b.limb((math.cos(a) * 0.6, math.sin(a) * 0.6, 9.0), (math.cos(a) * 0.6, math.sin(a) * 0.6, 11.2), 0.05, 0.05,
+               "steel", "gem", seg=4)
+    b.lathe([(1.7, 0.95), (1.9, 1.05), (1.7, 1.15), (1.6, 1.05), (1.7, 0.95)], "arc_blue", "wave", seg=16, cap=False)
+    b.limb((0, 0, 0.0), (0, 0, -4.5), 2.2, 0.0, "fire", "jets", seg=10)
+    b.limb((0, 0, -0.05), (0, 0, -3.0), 1.4, 0.0, "flash_white", "jets", seg=8)  # hot core
     for x, y, z, a in BUTTRESS:
-        b.limb((x, y, 0.0), (x * 1.08, y * 1.08, -2.6), 0.8, 0.0, "flame", "jets", seg=8)
-    b.lathe([(3.2, -0.1), (2.2, -0.05), (0.0, -0.05)], "flame", "jets", seg=16)  # wash on the ground below
+        b.limb((x, y, 0.0), (x * 1.08, y * 1.08, -2.6), 0.8, 0.0, "fire", "jets", seg=8)
+    b.lathe([(3.2, -0.1), (2.2, -0.05), (0.0, -0.05)], "smoke_dark", "jets", seg=16)  # wash on the ground below
     for i, (x, y, z, a) in enumerate(sk.ring(5, 0.4, 10.1, 0.3)):
-        b.ball((x, y, z), 0.32, "rune", "shard%d" % i, scale=(1, 1, 2.2), seg=4, rings=2, smooth=False)
+        b.ball((x, y, z), 0.32, "arc_blue", "shard%d" % i, scale=(1, 1, 2.2), seg=4, rings=2, smooth=False)
     b.finish(arm)
     return arm
 

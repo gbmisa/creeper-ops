@@ -1,8 +1,9 @@
-"""Collector: a rune-well obelisk on three stone feet, a glowing green well ring at its foot,
-and three turning bronze vanes round a floating green crystal. Same silhouette as
-SupportMeshes.collector (Spin at 1.85). Clips: idle = vanes turn, crystal bobs; attack = a
-harvest pulse (a green ring runs down the obelisk, crystal flares); hit = shake;
-die = crystal bursts, vanes fall, obelisk sinks. Real metres, about 2.7 m tall.
+"""Collector, military: a field energy mast on a tripod of concrete pads and olive struts, battery
+packs with green status lamps, a hazard band and a green charge ring at its foot, three turning
+solar panels on steel booms round a caged green energy cell. Same silhouette as
+SupportMeshes.collector (Spin at 1.85). Clips: idle = panels turn, cell bobs; attack = a harvest
+pulse (a green ring runs down the mast, the cell flares); hit = shake; die = cell bursts, panels
+fall, mast sinks. Real metres, about 2.7 m tall.
 """
 import math
 import os
@@ -11,6 +12,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 import lib  # noqa: E402
 import struct_kit as sk  # noqa: E402
+import mil_kit as mk  # noqa: E402
 from mathutils import Quaternion  # noqa: E402
 
 FEET = sk.ring(3, 0.62, 0.0, math.pi / 6)
@@ -24,25 +26,39 @@ def build():
                                      ("wave", (0, 0, 1.7), (0, 0, 1.9), "base")])
     b = lib.Builder("collector")
     for x, y, _z, a in FEET:
-        b.box((x, y, 0.16), (0.58, 0.4, 0.36), "node_stone_dark", "base", rot=Quaternion((0, 0, 1), a))
-        b.limb((x * 0.9, y * 0.9, 0.3), (x * 0.4, y * 0.4, 0.9), 0.16, 0.1, "node_stone_dark", "base", seg=4)
-    b.lathe([(0.66, 0.0), (0.66, 0.26), (0.44, 0.42), (0.27, 1.7), (0.37, 1.8), (0.37, 1.86), (0.0, 1.86)],
-            "node_stone", "base", seg=6, smooth=False)
-    b.lathe([(0.52, 0.28), (0.62, 0.3), (0.52, 0.36), (0.46, 0.32), (0.52, 0.28)], "glow_green", "base", seg=12, cap=False)
-    b.lathe([(0.34, 1.05), (0.35, 1.16), (0.0, 1.16)], "bronze", "base", seg=6, smooth=False)
+        b.box((x, y, 0.1), (0.5, 0.4, 0.2), "concrete", "base", rot=Quaternion((0, 0, 1), a))
+        b.limb((x * 0.9, y * 0.9, 0.2), (x * 0.35, y * 0.35, 0.95), 0.07, 0.06, "olive_dark", "base", seg=4)
+        b.ball((x * 0.9, y * 0.9, 0.22), 0.06, "steel", "base", seg=4, rings=2)
+    b.lathe([(0.44, 0.0), (0.44, 0.2), (0.3, 0.32), (0.22, 1.72), (0.3, 1.78), (0.3, 1.86), (0.0, 1.86)],
+            "olive", "base", seg=6, smooth=False)
+    b.lathe([(0.42, 0.04), (0.48, 0.06), (0.48, 0.14), (0.42, 0.16), (0.42, 0.04)], "glow_green", "base", seg=12, cap=False)
+    for i in range(6):
+        a = 2 * math.pi * i / 6 + math.pi / 6
+        b.box((math.cos(a) * 0.33, math.sin(a) * 0.33, 0.26), (0.03, 0.34, 0.08), "hazard" if i % 2 else "rubber",
+              "base", rot=Quaternion((0, 0, 1), a))
     for i in range(3):
         a = math.pi / 6 + i * 2 * math.pi / 3
-        r = 0.34
-        b.box((math.cos(a) * r, math.sin(a) * r, 0.7), (0.06, 0.12, 0.42), "glow_green", "base", rot=Quaternion((0, 0, 1), a))
-        b.box((math.cos(a) * 0.29, math.sin(a) * 0.29, 1.45), (0.06, 0.1, 0.3), "glow_green", "base", rot=Quaternion((0, 0, 1), a))
-    b.lathe([(0.25, 1.85), (0.3, 1.92), (0.12, 2.0), (0.0, 2.0)], "bronze", "spin", seg=6, smooth=False)
+        c, s = math.cos(a), math.sin(a)
+        b.box((c * 0.33, s * 0.33, 0.8), (0.16, 0.3, 0.5), "olive_dark", "base", rot=Quaternion((0, 0, 1), a))
+        b.box((c * 0.42, s * 0.42, 0.92), (0.02, 0.16, 0.05), "glow_green", "base", rot=Quaternion((0, 0, 1), a))
+        b.box((c * 0.42, s * 0.42, 0.72), (0.02, 0.2, 0.1), "khaki", "base", rot=Quaternion((0, 0, 1), a))
+    b.lathe([(0.25, 1.25), (0.27, 1.35), (0.0, 1.35)], "gunmetal", "base", seg=6, smooth=False)
+    mk.antenna(b, (0.2, 0.0, 1.86), 0.5, "base")
+    b.lathe([(0.24, 1.85), (0.28, 1.9), (0.14, 2.0), (0.0, 2.0)], "gunmetal", "spin", seg=8, smooth=False)
     for x, y, _z, a in sk.ring(3, 0.15, 1.9, 0.0):
         c, s = math.cos(a), math.sin(a)
-        b.limb((x, y, 1.92), (c * 0.7, s * 0.7, 2.25), 0.09, 0.07, "bronze", "spin", seg=5)
-        b.box((c * 0.7, s * 0.7, 2.32), (0.14, 0.42, 0.5), "bronze", "spin", rot=Quaternion((0, 0, 1), a + 0.5))
-        b.ball((c * 0.75, s * 0.75, 2.58), 0.06, "glow_green", "spin", seg=4, rings=2)
-    b.ball((0, 0, 2.45), 0.2, "glow_green", "gem", scale=(1, 1, 2.0), seg=6, rings=2, smooth=False)
-    b.lathe([(0.36, 1.64), (0.56, 1.76), (0.36, 1.88), (0.3, 1.76), (0.36, 1.64)], "rune_green", "wave", seg=12, cap=False)
+        b.limb((x, y, 1.94), (c * 0.62, s * 0.62, 2.2), 0.045, 0.04, "steel", "spin", seg=5)
+        q = Quaternion((0, 0, 1), a) @ Quaternion((0, 1, 0), -0.5)
+        b.box((c * 0.72, s * 0.72, 2.28), (0.06, 0.52, 0.62), "steel", "spin", rot=q)
+        b.box((c * 0.74, s * 0.74, 2.29), (0.04, 0.46, 0.56), "solar", "spin", rot=q)
+    b.ball((0, 0, 2.45), 0.16, "glow_green", "gem", scale=(1, 1, 1.9), seg=8, rings=4)
+    for z in (2.22, 2.68):
+        b.lathe([(0.0, z - 0.03), (0.2, z - 0.03), (0.2, z + 0.03), (0.0, z + 0.03)], "gunmetal", "gem", seg=8, smooth=False)
+    for i in range(4):
+        a = i * math.pi / 2
+        b.limb((math.cos(a) * 0.19, math.sin(a) * 0.19, 2.22), (math.cos(a) * 0.19, math.sin(a) * 0.19, 2.68),
+               0.02, 0.02, "steel", "gem", seg=4)
+    b.lathe([(0.3, 1.64), (0.46, 1.76), (0.3, 1.88), (0.24, 1.76), (0.3, 1.64)], "rune_green", "wave", seg=12, cap=False)
     b.finish(arm)
     return arm
 

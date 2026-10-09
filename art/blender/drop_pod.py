@@ -1,7 +1,8 @@
-"""Drop pod: bronze capsule, heat shield underneath, four fins up top, four doors over a glowing cradle.
-Clips (static-structure contract, re-purposed): walk = falling (thruster flame, judder, doors shut),
-attack = touchdown (squash, doors fall open, cap vents), idle = landed and open, die = sinks away.
-Real metres, scale 1, about 2.3 m tall. Game id: drop_pod.
+"""Drop pod, military: a scorched gunmetal heat shield, an olive armoured capsule with steel ribs,
+four hazard-striped blast doors over a lit cradle, a stencilled nose cone, four steel grid fins
+and an aerial. Clips (static-structure contract, re-purposed): walk = falling (retro flame,
+judder, doors shut), attack = touchdown (squash, doors blow open, the nose vents),
+idle = landed and open, die = sinks away. Real metres, scale 1, about 2.3 m tall. Game id: drop_pod.
 """
 import math
 import os
@@ -27,27 +28,38 @@ def build():
     bones += [("fin%d" % i, (x, y, z), (x * 1.6, y * 1.6, z + 0.3), "cap") for i, (x, y, z, _a) in enumerate(FINS)]
     arm = lib.armature("drop_pod", bones)
     b = lib.Builder("drop_pod")
-    b.lathe([(0.3, 0.0), (0.6, 0.12), (0.62, 0.3), (0.5, 0.42), (0.0, 0.42)], "iron", "base", seg=8, smooth=False)
-    b.lathe([(0.45, 0.02), (0.0, 0.0)], "flame", "base", seg=8)  # hot underside
-    b.lathe([(0.36, 0.4), (0.36, 1.62), (0.0, 1.62)], "unit_glow", "body", seg=8)  # cradle glow, seen when open
-    for k in range(4):  # corner ribs between the doors
+    b.lathe([(0.3, 0.0), (0.6, 0.12), (0.62, 0.3), (0.5, 0.42), (0.0, 0.42)], "gunmetal", "base", seg=8, smooth=False)
+    b.lathe([(0.63, 0.14), (0.64, 0.24), (0.0, 0.24)], "smoke_dark", "base", seg=8, smooth=False)  # scorch band
+    b.lathe([(0.45, 0.02), (0.0, 0.0)], "fire", "base", seg=8)  # hot underside
+    b.lathe([(0.36, 0.4), (0.36, 1.62), (0.0, 1.62)], "unit_glow", "body", seg=8)  # cradle light, seen when open
+    for k in range(4):  # steel ribs between the doors
         a = k * math.pi / 2
-        b.box((math.cos(a) * 0.46, math.sin(a) * 0.46, 1.02), (0.14, 0.14, 1.25), "iron", "body", rot=Quaternion((0, 0, 1), a))
-    b.lathe([(0.56, 1.6), (0.52, 1.85), (0.36, 2.1), (0.12, 2.28), (0.0, 2.3)], "brass", "cap", seg=8, smooth=False)
-    b.lathe([(0.58, 1.6), (0.58, 1.68), (0.0, 1.68)], "bronze_dark", "cap", seg=8, smooth=False)
-    b.limb((0, 0, 2.25), (0, 0, 2.55), 0.03, 0.0, "iron", "cap", seg=4)  # antenna
-    b.ball((0, 0, 2.56), 0.04, "teal", "cap", seg=5, rings=3)
-    for i, (x, y, z, a) in enumerate(FINS):
-        b.box((x * 1.25, y * 1.25, z + 0.05), (0.32, 0.05, 0.42) if i % 2 == 0 else (0.05, 0.32, 0.42), "iron", "fin%d" % i)
+        b.box((math.cos(a) * 0.46, math.sin(a) * 0.46, 1.02), (0.14, 0.14, 1.25), "steel", "body", rot=Quaternion((0, 0, 1), a))
+    b.lathe([(0.56, 1.6), (0.52, 1.85), (0.36, 2.1), (0.12, 2.28), (0.0, 2.3)], "olive_dark", "cap", seg=8, smooth=False)
+    b.lathe([(0.58, 1.6), (0.58, 1.7), (0.0, 1.7)], "gunmetal", "cap", seg=8, smooth=False)
+    for k in range(8):  # hazard collar
+        a = k * math.pi / 4 + math.pi / 8
+        b.box((math.cos(a) * 0.535, math.sin(a) * 0.535, 1.78), (0.04, 0.2, 0.1), "hazard" if k % 2 else "rubber",
+              "cap", rot=Quaternion((0, 0, 1), a) @ Quaternion((0, 1, 0), 0.15))
+    b.limb((0.15, 0, 2.2), (0.15, 0, 2.6), 0.02, 0.01, "rubber", "cap", seg=4)  # aerial
+    b.ball((0.15, 0, 2.61), 0.035, "lamp_red", "cap", seg=5, rings=3)
+    for i, (x, y, z, a) in enumerate(FINS):  # grid fins
+        size = (0.34, 0.05, 0.4) if i % 2 == 0 else (0.05, 0.34, 0.4)
+        b.box((x * 1.25, y * 1.25, z + 0.05), size, "steel", "fin%d" % i)
+        b.box((x * 1.25, y * 1.25, z + 0.05), tuple(c * 0.7 if c > 0.1 else c * 1.4 for c in size), "rubber", "fin%d" % i)
     for i, (x, y, z, a) in enumerate(DOORS):
         q = Quaternion((0, 0, 1), a)
-        b.box((x + math.cos(a) * 0.04, y + math.sin(a) * 0.04, z + 0.6), (0.14, 0.64, 1.18), "brass", "door%d" % i, rot=q)
-        b.box((x * 1.2, y * 1.2, z + 0.62), (0.04, 0.1, 0.9), "teal", "door%d" % i, rot=q)  # rune strip
+        b.box((x + math.cos(a) * 0.04, y + math.sin(a) * 0.04, z + 0.6), (0.14, 0.64, 1.18), "olive", "door%d" % i, rot=q)
         for dz in (0.12, 1.1):
-            b.box((x * 1.18, y * 1.18, z + dz), (0.05, 0.66, 0.08), "iron", "door%d" % i, rot=q)
-    b.limb((0, 0, 0.0), (0, 0, -2.2), 0.66, 0.0, "flame", "flame", seg=10)
-    b.lathe([(0.3, -0.02), (0.55, -0.1), (0.3, -0.18), (0.2, -0.1), (0.3, -0.02)], "teal", "flame", seg=12, cap=False)  # nozzle ring
-    b.limb((0, 0, -1.6), (0, 0, -2.3), 0.12, 0.0, "flame", "flame", seg=6)  # flicker tip
+            b.box((x * 1.18, y * 1.18, z + dz), (0.05, 0.66, 0.08), "gunmetal", "door%d" % i, rot=q)
+        for j in range(3):  # hazard chevrons near the door foot
+            off = (j - 1) * 0.2
+            b.box((x * 1.19 - math.sin(a) * off, y * 1.19 + math.cos(a) * off, z + 0.28), (0.03, 0.12, 0.14),
+                  "hazard", "door%d" % i, rot=q @ Quaternion((1, 0, 0), 0.6))
+        b.box((x * 1.19, y * 1.19, z + 0.75), (0.03, 0.3, 0.12), "khaki", "door%d" % i, rot=q)  # stencil
+    b.limb((0, 0, 0.0), (0, 0, -2.2), 0.66, 0.0, "fire", "flame", seg=10)
+    b.lathe([(0.3, -0.02), (0.55, -0.1), (0.3, -0.18), (0.2, -0.1), (0.3, -0.02)], "flash_white", "flame", seg=12, cap=False)
+    b.limb((0, 0, -1.6), (0, 0, -2.3), 0.12, 0.0, "fire", "flame", seg=6)  # flicker tip
     b.lathe([(0.7, 0.02), (0.9, 0.12), (0.7, 0.2), (0.55, 0.1), (0.7, 0.02)], "dust", "dust", seg=16, cap=False)
     b.finish(arm)
     return arm
