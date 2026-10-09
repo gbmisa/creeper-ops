@@ -82,6 +82,14 @@ class Builder:
         res = bmesh.ops.create_uvsphere(self.bm, u_segments=seg, v_segments=rings, radius=r, matrix=m)
         self._tag(res["verts"], mat, bone, smooth)
 
+    def box(self, at, size, mat, bone, rot=None):
+        m = Matrix.Translation(Vector(at))
+        if rot is not None:
+            m = m @ rot.to_matrix().to_4x4()
+        m = m @ Matrix.Diagonal(Vector(size).to_4d())
+        res = bmesh.ops.create_cube(self.bm, size=1.0, matrix=m)
+        self._tag(res["verts"], mat, bone, False)
+
     def limb(self, a, b, r0, r1, mat, bone, seg=6, smooth=False):
         """Tapered cylinder (cone when r1 == 0) from a to b."""
         a, b = Vector(a), Vector(b)
@@ -146,7 +154,7 @@ def world_loc(arm, bone, offset):
 
 
 def action(arm, name, frames, pose_fn, step=2, loop=False):
-    """Bake an action by sampling pose_fn(t in 0..1) -> {bone: (quat or None, loc or None)}."""
+    """Bake an action by sampling pose_fn(t in 0..1) -> {bone: (quat, loc[, scale]) with None = rest}."""
     act = bpy.data.actions.new(name)
     act.use_fake_user = True
     ad = arm.animation_data or arm.animation_data_create()
@@ -158,11 +166,13 @@ def action(arm, name, frames, pose_fn, step=2, loop=False):
         t = f / frames
         pose = pose_fn(t)
         for pb in arm.pose.bones:
-            q, loc = pose.get(pb.name, (None, None))
+            q, loc, *sc = pose.get(pb.name, (None, None))
             pb.rotation_quaternion = q if q is not None else Quaternion()
             pb.location = loc if loc is not None else Vector()
+            pb.scale = Vector(sc[0]) if sc and sc[0] is not None else Vector((1, 1, 1))
             pb.keyframe_insert("rotation_quaternion", frame=f)
             pb.keyframe_insert("location", frame=f)
+            pb.keyframe_insert("scale", frame=f)
     track = ad.nla_tracks.new()
     track.name = name
     track.strips.new(name, 0, act)

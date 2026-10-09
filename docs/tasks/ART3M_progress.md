@@ -11,5 +11,5 @@ Contract: u = 1, feet z = 0, faces +X, clips idle/walk/attack/hit/die, material 
 | ravager | done | 1200 |
 | behemoth | done | 1686 |
 | sentinel | todo (fixed size, robed archer, bow on its left = Blender +Y) | |
-| spitter lancer warden spotter burrower | todo (see raider_meshes_ranged.gd) | |
+| spitter lancer warden spotter burrower | done (`bug_kit.py` shares idle/walk/hit/die) | 1140/580/728/786/698 |
 | flyers, soldier/wagon units, hive core | todo | |
