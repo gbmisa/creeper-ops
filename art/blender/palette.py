@@ -13,8 +13,8 @@ PALETTE = {
     "bat_wing": ("5e3a78", 0.9, 0.0, 0.0),
     "gas_skin": ("4e3a46", 0.7, 0.0, 0.0),
     "gas_fin": ("8a9a4a", 0.9, 0.0, 0.0),
-    "wyv_skin": ("4a2a22", 0.75, 0.05, 0.0),
-    "wyv_wing": ("7a3a2a", 0.9, 0.0, 0.0),
+    "wyv_skin": ("6e3a2c", 0.75, 0.05, 0.0),
+    "wyv_wing": ("a24a34", 0.9, 0.0, 0.0),
     # Footmen, wagons (structure_meshes.gd PAL) and the hive core.
     "bronze": ("b8843f", 0.38, 0.85, 0.0),
     "bronze_dark": ("7a5428", 0.45, 0.8, 0.0),
