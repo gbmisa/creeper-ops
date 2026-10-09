@@ -14,22 +14,7 @@ from mathutils import Matrix, Quaternion, Vector
 
 FPS = 24
 
-# Linear-ish sRGB hex from the game palette (raider_meshes.gd).
-PALETTE = {
-    "chitin": ("4a3242", 0.85, 0.05, 0.0),
-    "plate": ("6a5a48", 0.95, 0.0, 0.0),
-    "bone": ("cbbd96", 0.7, 0.0, 0.0),
-    "sick": ("6fd820", 0.5, 0.0, 2.0),
-    "glow": ("a8ff5a", 0.4, 0.0, 3.0),
-    "eye": ("ffe27a", 0.3, 0.0, 4.0),
-    "robe": ("6e3a7c", 0.85, 0.0, 0.0),
-    "bat_skin": ("3a2a3e", 0.85, 0.0, 0.0),
-    "bat_wing": ("8a5aa0", 0.9, 0.0, 0.0),
-    "gas_skin": ("6a7a3a", 0.7, 0.0, 0.0),
-    "gas_fin": ("8a9a4a", 0.9, 0.0, 0.0),
-    "wyv_skin": ("4a2a22", 0.75, 0.05, 0.0),
-    "wyv_wing": ("7a3a2a", 0.9, 0.0, 0.0),
-}
+from palette import PALETTE  # noqa: E402
 
 
 def reset():

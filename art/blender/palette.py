@@ -1,0 +1,31 @@
+"""Material palette: name -> (sRGB hex, roughness, metallic, emission strength).
+Game sources: raider_meshes.gd, flyer_meshes.gd, structure_meshes.gd PAL, unit_meshes.gd."""
+
+PALETTE = {
+    "chitin": ("4a3242", 0.85, 0.05, 0.0),
+    "plate": ("6a5a48", 0.95, 0.0, 0.0),
+    "bone": ("cbbd96", 0.7, 0.0, 0.0),
+    "sick": ("6fd820", 0.5, 0.0, 2.0),
+    "glow": ("a8ff5a", 0.4, 0.0, 3.0),
+    "eye": ("ffe27a", 0.3, 0.0, 4.0),
+    "robe": ("6e3a7c", 0.85, 0.0, 0.0),
+    "bat_skin": ("3a2a3e", 0.85, 0.0, 0.0),
+    "bat_wing": ("8a5aa0", 0.9, 0.0, 0.0),
+    "gas_skin": ("6a7a3a", 0.7, 0.0, 0.0),
+    "gas_fin": ("8a9a4a", 0.9, 0.0, 0.0),
+    "wyv_skin": ("4a2a22", 0.75, 0.05, 0.0),
+    "wyv_wing": ("7a3a2a", 0.9, 0.0, 0.0),
+    # Footmen, wagons (structure_meshes.gd PAL) and the hive core.
+    "bronze": ("b8843f", 0.38, 0.85, 0.0),
+    "bronze_dark": ("7a5428", 0.45, 0.8, 0.0),
+    "iron": ("5a554e", 0.45, 0.7, 0.0),
+    "oak": ("5b3c22", 0.8, 0.0, 0.0),
+    "cloth": ("1f5f86", 0.95, 0.0, 0.0),
+    "rune": ("19b4ff", 0.3, 0.0, 2.0),
+    "mail": ("6c717c", 0.5, 0.6, 0.0),
+    "dark": ("2e2c2a", 0.8, 0.2, 0.0),
+    "skin": ("c49478", 0.8, 0.0, 0.0),
+    "unit_glow": ("9dff7a", 0.3, 0.0, 3.0),
+    "core_flesh": ("4a1a26", 0.6, 0.1, 0.0),
+    "core_glow": ("ff3355", 0.3, 0.0, 3.0),
+}
