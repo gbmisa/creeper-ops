@@ -50,6 +50,7 @@ static func run(g) -> void:
 		g.units.kill(u)
 	SmokeAttackMove._clear(g)
 	_castle(g)
+	_crawler_towers(g)
 
 
 ## Steps the sim until `n` point changes were seen (or `limit` s); returns the indices visited.
@@ -95,3 +96,29 @@ static func _castle(g) -> void:
 	um.order([b], Vector2(at.x, at.z), true)
 	SmokeTest._check("patrol: player order overrides the castle patrol", b.patrol.is_empty())
 	w.queue_free()
+
+
+## Crawlers (big bodies) must squeeze past a staggered cluster of towers to their target.
+static func _crawler_towers(g) -> void:
+	SmokeAttackMove._pad(g, X0, Z0, X1, Z1)
+	SmokeAttackMove._clear(g)
+	var sm: StructureManager = g.structures
+	var towers := []
+	for c in [Vector2i(52, 41), Vector2i(52, 43), Vector2i(52, 46), Vector2i(52, 48), Vector2i(55, 42), Vector2i(55, 44), Vector2i(55, 47), Vector2i(58, 43), Vector2i(58, 46), Vector2i(58, 48)]:
+		var s = sm.place("cannon", c.x, c.y, true)
+		if s:
+			towers.append(s)
+	var dest := Vector2(64.5 * Config.CELL, 44.5 * Config.CELL)
+	var u: Unit = g.units.spawn("crawler", 46.5 * Config.CELL, 44.5 * Config.CELL)
+	g.units.order([u], dest, true)
+	var t := 0.0
+	while t < 40.0 and u.alive and not (u.path.is_empty() and t > 1.0):
+		_step(g)
+		t += 0.05
+	var d := Vector2(u.pos.x - dest.x, u.pos.z - dest.y).length()
+	SmokeTest._check("crawler: walks past a cluster of towers to its target", u.alive and d < 4.0 * Config.CELL,
+		"(%d towers, %.1f m short after %.1f s)" % [towers.size(), d, t])
+	if u.alive:
+		g.units.kill(u)
+	for s in towers:
+		sm.remove(s)

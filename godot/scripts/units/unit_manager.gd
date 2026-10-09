@@ -192,7 +192,6 @@ func update(dt: float, enemies: Array) -> void:
 
 
 func _move(u: Unit, dt: float) -> void:
-	var g := world.grid
 	var v := Vector2.ZERO
 	if not u.path.is_empty():
 		var wp: Vector2 = u.path[0]
@@ -211,18 +210,7 @@ func _move(u: Unit, dt: float) -> void:
 			v += d.normalized() * (mn - d.length()) * 2.0
 	var wet := world.creeper.depth_world(u.pos) > Config.DAMAGE_DEPTH
 	var step: float = u.def.speed * (0.6 if wet else 1.0) * dt
-	var nx := u.pos.x + v.x * step
-	var nz := u.pos.z + v.y * step
-	var a := g.world_to_cell(u.pos.x, u.pos.z)
-	var b := g.world_to_cell(nx, nz)
-	var rise := g.walk_height(b.x, b.y, Grid.Faction.PLAYER) - g.walk_height(a.x, a.y, Grid.Faction.PLAYER)
-	var p := u.pos
-	var into_tower: bool = b != a and world.occupied.call(b.x, b.y) and not world.occupied.call(a.x, a.y)
-	if g.in_bounds(b.x, b.y) and rise <= u.def.climb and -rise <= u.def.drop and not into_tower:
-		p.x = nx
-		p.z = nz
-	p.y = g.stand_y(p.x, p.z, Grid.Faction.PLAYER)
-	u.pos = p
+	u.pos = UnitMotion.step(self, u, v * step, dt)
 	CreatureAnim.move(u.node.get_node("Mesh"), v.length() * u.def.speed)
 
 
