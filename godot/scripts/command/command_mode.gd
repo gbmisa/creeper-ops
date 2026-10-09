@@ -87,7 +87,7 @@ func update(dt: float, input: InputState) -> void:
 		return
 	CommandInput.hotkeys(self, input)
 	cam.update(dt, input, world.grid)
-	Sfx.listener = cam.global_position
+	Sfx.listener = cam.target.lerp(cam.global_position, 0.3)  # hear the ground you look at
 	CommandHover.refresh(self, input)
 	overlay.show_selection(selected, group, tool != "")
 	CastleSocketLook.highlight(castles, CommandHover._turret_type(tool) != "", hover)

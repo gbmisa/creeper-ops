@@ -111,6 +111,7 @@ func update(dt: float, list: Array, sender_ready: bool) -> void:
 				if kind == "ammo":
 					fly["grade"] = AmmoGrades.surcharge(s, stockpile)  # Salvage surcharge for improved ammo
 				flying.append(fly)
+				Sfx.play("packet", route[0])
 				_node_launch_anim(list, route)
 		if economy.energy < 1.0:
 			for s in list:

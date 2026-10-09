@@ -42,6 +42,7 @@ var teleport_cooldown := 0.0
 var speed := 1
 var time_scale := 1.0       # debug multiplier on top of speed
 var ignore_capture := false # debug: run the Operative without mouse capture
+var ambience := SfxAmbience.new()
 var _anims_frozen := false  # tracks CreatureAnim freeze state vs the sim gate below
 
 
@@ -236,6 +237,7 @@ func update(dt: float) -> void:
 
 func render(dt: float) -> void:
 	(cave if mode == "cave" else surface).refresh_visuals()
+	ambience.update(self, dt)
 	hud.refresh(self, dt)
 
 
