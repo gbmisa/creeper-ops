@@ -1,4 +1,10 @@
-# Handoff: 2026-10-09 (integration + playtest 3, Opus)
+# Handoff: 2026-10-09 (session 15g: playtest 3 + sound pass, Opus)
+
+## This session
+- Gregory playtests **`integ/2026-10-09`** (worktree `creeper fps td-worktrees/integ`). Log: `docs/tasks/PLAYTEST3_feedback.md` (items 1-27).
+- **`ui/overhaul` merged into integ** (`5cffe27`, 2 small conflicts, smoke OK, screenshot checked). `art/3-models` not merged yet: Gregory checks it later.
+- **Sound pass 1** on `pt3/sound` (worktree `sound`, `c2cfe12`, smoke OK, NOT merged, not heard by a human): `SfxRender` (synth), `SfxVoices` (data + beds), `SfxAmbience` (wind/cave/creeper beds), reverb/limiter bus, pitch jitter; new packet/step/jump/land sounds. Merge into integ when Gregory approves.
+- **Muse briefs pushed** (branches from integ `51f7569`): PT3-A `pt3/spore-spire`, PT3-B `pt3/build-on-creeper`, PT3-C `pt3/pause-button`, PT3-D `pt3/sprayer-emitter` (`docs/tasks/MUSE_PT3*.md`).
 
 ## State
 Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md).
