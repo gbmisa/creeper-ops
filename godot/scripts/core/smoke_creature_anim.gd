@@ -6,7 +6,7 @@ class_name SmokeCreatureAnim
 
 static func run(g) -> void:
 	_no_glb_fallback(g)
-	_anim_logic()
+	_anim_logic(g)
 	_raider_kill_path(g)
 
 
@@ -66,9 +66,10 @@ static func _has_player(n: Node) -> bool:
 
 ## Clip blend and death-delay logic on a hand-built animated node (no .glb needed:
 ## exercises the same wrap path make() uses).
-static func _anim_logic() -> void:
+static func _anim_logic(g) -> void:
 	var glow := StandardMaterial3D.new()
 	var node := Node3D.new()
+	g.add_child(node)  # in the tree: die() can use get_tree() without an engine error
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
 	var gm := StandardMaterial3D.new()
@@ -88,10 +89,21 @@ static func _anim_logic() -> void:
 
 	SmokeTest._check("creature anim: glow material replaced",
 		mi.get_surface_override_material(0) == glow)
+	SmokeTest._check("creature anim: idle/walk loop at load",
+		p.get_animation("idle").loop_mode == Animation.LOOP_LINEAR
+		and p.get_animation("walk").loop_mode == Animation.LOOP_LINEAR)
 	CreatureAnim.move(node, 3.0)
 	SmokeTest._check("creature anim: move fast -> walk at 3x",
 		p.current_animation == "walk" and is_equal_approx(p.speed_scale, 3.0),
 		"(%s x%.1f)" % [p.current_animation, p.speed_scale])
+	node.set_meta("_anim_scale", 2.0)  # Skitter-like: walk authored at 1 m/s, model at u=2
+	CreatureAnim.move(node, 4.0)
+	SmokeTest._check("creature anim: speed_scale divides by model scale",
+		is_equal_approx(p.speed_scale, 2.0), "(x%.1f)" % p.speed_scale)
+	node.set_meta("_anim_scale", 1.0)
+	CreatureAnim.flap(node)
+	SmokeTest._check("creature anim: flap plays walk at 1x",
+		p.current_animation == "walk" and is_equal_approx(p.speed_scale, 1.0))
 	CreatureAnim.move(node, 0.0)
 	SmokeTest._check("creature anim: move stopped -> idle", p.current_animation == "idle")
 	CreatureAnim.attack(node)

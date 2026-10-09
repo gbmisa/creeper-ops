@@ -153,7 +153,7 @@ func fly(f: Dictionary, goal: Vector3, dt: float, speed_mul := 1.0, y_goal := NA
 	var rate := vy if vy > 0.0 else (FLY_UP if want > p.y else FLY_DOWN)
 	p.y = move_toward(p.y, want, rate * dt)
 	node.position = p
-	CreatureAnim.move(node, step / maxf(dt, 0.0001))
+	CreatureAnim.flap(node)  # walk clip is the flap loop, always at 1x
 	return maxf(0.0, dist - step)
 
 

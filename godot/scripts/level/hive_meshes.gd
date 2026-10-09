@@ -16,7 +16,7 @@ static func part(kind: String) -> Node3D:
 	var root := Node3D.new()
 	match kind:
 		"core":
-			var anim := CreatureAnim.make("core", 1.0, StructureMeshes.glow(Color("ff3355"), 1.4))
+			var anim := CreatureAnim.make("hive_core", 1.0, StructureMeshes.glow(Color("ff3355"), 1.4))
 			if anim != null:
 				root.add_child(anim)
 			else:
