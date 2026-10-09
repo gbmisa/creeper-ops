@@ -37,3 +37,15 @@ Bertha 7, Thor 7, Terp 8, Nullifier 7, Outpost 8 (Sonnet grader, up to 3 rounds 
 Hive structures (same grader, 3 rounds): avg 6.7 → 7.3 → 7.75. hive_core 8.5, hive_spitter 8, hive_launcher 8, hive_pit 7.5, hive_mortar 7.5, hive_roost 7, plus a polish pass after round 3 (bigger shell, darker pit lip, thicker cradle, tighter roost collapse). Open: spitter snout/brow, mortar star flash, roost flyer launches up toward the camera.
 Player side + trebuchet (same grader, 3 rounds): totem 6 → 7 → 7.5, drop_pod 4 → 7 → 7.5, trebuchet 7 → 7 → 7.5 (+ flame polish). Open: totem value contrast (teal plinth rim), stronger hit flashes (needs emission animation in game, not bone scale), visible projectile arcs (the game's own projectile covers that).
 Wyvern: neck and tail lengthened, bone ridges (open note). `lathe(cap=False)` for rings: capped lathes made solid discs.
+
+## 2026-10-08 late (Opus)
+- **preview.py fix:** framing and the ground plane now come from the posed idle mesh, not the rest pose. At rest, hidden parts (flames, projectiles, jets) are full size, which shrank every sheet and dropped the ground below the Node and the pod. Older grades were partly limited by this.
+- Wyvern rebuilt: 4 → 5.5 on the old framing, then 5 → 5.8 → 6 on the fixed framing. What's left: flat, thin wings, a small head at distance, and the fire core reads as solid. Judge it in game.
+- Command Node (new, `command_node`): 6 → 6.5 → 7, then 7.5 on the fixed framing. The jets sit under the plane in the preview; in game the Node is lifted.
+
+## 2026-10-08 (late): Art 6, the military restyle of the old player models
+- Restyled to military (bone names and pivots kept): cannon (autocannon on a sandbagged pillbox), mortar, sniper (lattice watchtower and anti-materiel rifle), beam (air-defence laser mast), collector (solar energy mast), relay (lattice radio mast), command_node (armoured HQ tower), totem (teleport beacon), drop_pod, soldier (rifleman, plus a new `flash` bone) and crawler (4x4 armoured car).
+- New glbs using the static-structure contract (struct_kit): miner (drill rig), reactor (field generator), storage (energy tank), barracks (Quonset hut), forge (armoured foundry with the Aether ring). **No game loader yet.**
+- Shared parts are in `mil_kit.py`. `lib.lathe(phase=)` gives square columns. New palette colour: `solar`.
+- Grades (Sonnet, 2 rounds plus a round-3 fix pass): cannon 7.5, mortar 8, sniper 7.5, beam 8.5, collector 7, relay 7, soldier 7, Node 8, totem 7, pod 7.5. Sheets: `docs/art/military/`.
+- Icons: `icons.sh <dir>` renders the build-menu icons (used by branch `ui/overhaul`).

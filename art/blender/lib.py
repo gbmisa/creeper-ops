@@ -82,13 +82,13 @@ class Builder:
         res = bmesh.ops.create_cube(self.bm, size=1.0, matrix=m)
         self._tag(res["verts"], mat, bone, False)
 
-    def lathe(self, profile, mat, bone, at=(0, 0, 0), seg=8, smooth=True, cap=True):
+    def lathe(self, profile, mat, bone, at=(0, 0, 0), seg=8, smooth=True, cap=True, phase=0.0):
         """Surface of revolution round +Z through (radius, height) points, bottom up; open ends are capped
         unless cap=False (rings: pass a closed loop profile)."""
         rings = []
         for r, h in profile:
-            rings.append([self.bm.verts.new((at[0] + r * math.cos(2 * math.pi * k / seg),
-                                             at[1] + r * math.sin(2 * math.pi * k / seg), at[2] + h)) for k in range(seg)])
+            rings.append([self.bm.verts.new((at[0] + r * math.cos(2 * math.pi * k / seg + phase),
+                                             at[1] + r * math.sin(2 * math.pi * k / seg + phase), at[2] + h)) for k in range(seg)])
         for lo, hi in zip(rings, rings[1:]):
             for k in range(seg):
                 self.bm.faces.new((lo[k], lo[(k + 1) % seg], hi[(k + 1) % seg], hi[k]))
