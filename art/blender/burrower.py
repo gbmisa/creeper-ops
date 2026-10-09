@@ -35,9 +35,9 @@ def build():
     b.ball((-0.3, 0, 0.19), 0.15, "chitin", "tail", scale=(1.3, 0.8, 0.6), seg=7, rings=5)
     b.ball((-0.46, 0, 0.21), 0.11, "glow", "tail", seg=7, rings=5)
     for sd, s in (("L", 1), ("R", -1)):
-        b.limb((0.38, s * 0.13, 0.17), (0.72, s * 0.24, 0.1), 0.08, 0.055, "bone", "claw_" + sd)
-        b.limb((0.72, s * 0.24, 0.1), (1.05, s * 0.08, 0.02), 0.055, 0.0, "bone", "claw_" + sd)
-        b.limb((0.7, s * 0.21, 0.08), (0.88, s * 0.2, 0.0), 0.025, 0.0, "bone", "claw_" + sd, seg=4)
+        b.limb((0.38, s * 0.13, 0.17), (0.82, s * 0.3, 0.1), 0.1, 0.07, "bone", "claw_" + sd)
+        b.limb((0.82, s * 0.3, 0.1), (1.25, s * 0.1, 0.02), 0.07, 0.0, "bone", "claw_" + sd)
+        b.limb((0.8, s * 0.27, 0.08), (1.04, s * 0.3, 0.0), 0.035, 0.0, "bone", "claw_" + sd, seg=4)
     LEGS.mesh(b, 0.035, 0.028, 0.012)
     b.finish(arm)
     return Kit(arm, LEGS, walk_frames=14, swing=0.55, lift=0.8, bend=0.5, duty=0.55, bob=0.02, roll_die=2.8, sink=0.05)
