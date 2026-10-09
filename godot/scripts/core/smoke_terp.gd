@@ -26,16 +26,16 @@ static func _locks(g) -> void:
 	g.hud.build.show_tab(2)
 	g.hud.build.level = g.level
 	g.hud.build.refresh(g.economy.energy)
-	var btn := g.hud.build._buttons["terp"] as Button
-	var paint_btn := g.hud.build._buttons["@terp"] as Button
-	SmokeTest._check("terp: menu greys the locked Terp", btn.disabled and btn.text.contains(PHRASE) and paint_btn.disabled and paint_btn.text.contains(PHRASE))
+	var btn := g.hud.build._buttons["terp"] as BuildCard
+	var paint_btn := g.hud.build._buttons["@terp"] as BuildCard
+	SmokeTest._check("terp: menu greys the locked Terp", btn.disabled and btn.summary.contains(PHRASE) and paint_btn.disabled and paint_btn.summary.contains(PHRASE))
 	var denied := Placement.can_place(sm, "terp", sm.command_node().x, sm.command_node().z)
 	SmokeTest._check("terp: placement says the level phrase", denied.reason == PHRASE, denied.reason)
 	StructureDefs.grant_unlock(g.level, "terp")
 	g.hud.build.refresh(g.economy.energy)
 	var spot := _free_near(g)
 	var placed := Placement.can_place(sm, "terp", spot.x, spot.y) if spot.x >= 0 else {"ok": false, "reason": "no free cell"}
-	SmokeTest._check("terp: unlock clears the lock", StructureDefs.lock_reason(g.level, "terp") == "" and not btn.disabled and not btn.text.contains(PHRASE) and placed.ok, placed.reason)
+	SmokeTest._check("terp: unlock clears the lock", StructureDefs.lock_reason(g.level, "terp") == "" and not btn.disabled and not btn.summary.contains(PHRASE) and placed.ok, placed.reason)
 	var keys := {"terp_up": KEY_PAGEUP, "terp_down": KEY_PAGEDOWN, "terp_erase": KEY_C}
 	for id in keys:
 		var row: Array = Keybinds.DEFAULTS[id]

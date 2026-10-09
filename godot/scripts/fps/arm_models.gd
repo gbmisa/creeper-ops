@@ -1,5 +1,5 @@
 class_name ArmModels
-## The Operative's arms: an armoured blue sleeve with a bronze bracer, a leather glove on the
+## The Operative's arms: an olive combat sleeve with a dark armour bracer, a black glove on the
 ## grip, and (for two-handed weapons) the off hand on the foregrip. Built into each weapon's
 ## model node, so the arms kick, sway and hide with the weapon. Model units: the gun node is
 ## scaled 0.4, so the far ends of the sleeves sit off the bottom of the screen.
@@ -25,9 +25,9 @@ static func add(model: Node3D, id: String) -> void:
 
 
 static func _arm(parent: Node3D, hand: Vector3, elbow: Vector3, grips: bool, hand_id: String) -> void:
-	var cloth := StructureMeshes.mat(Color("2c3f5e"), 0.0, 0.8)
-	var leather := StructureMeshes.mat(Color("3a2a1c"), 0.0, 0.65)
-	var bronze := StructureMeshes.mat(Color("c4924a"), 0.8, 0.35)
+	var cloth := StructureMeshes.mat(Color("3b4126"), 0.0, 0.85)
+	var leather := StructureMeshes.mat(Color("1d1e1a"), 0.0, 0.6)
+	var bronze := StructureMeshes.mat(Color("3a3f2c"), 0.3, 0.5)  # armour bracer
 	var dir := (elbow - hand).normalized()
 	var wrist := hand + dir * 0.06
 	ShapeKit.taper(parent, wrist, elbow, 0.04, 0.095, cloth, 8)

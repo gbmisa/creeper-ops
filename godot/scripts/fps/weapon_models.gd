@@ -1,12 +1,13 @@
 class_name WeaponModels
 ## First-person viewmodels. Each looks down -Z and stays inside the old arbalest's
 ## footprint, so the gun node's screen position and scale can stay put.
-## Wood is ~0.7 rough; metal is 0.8 metallic and 0.35 rough.
+## Military palette: furniture is olive polymer (the _wood helpers, ~0.7 rough); metal is
+## gunmetal (the _bronze/_iron helpers, 0.8 metallic, 0.35 rough). Helper names predate it.
 
-const WOOD := Color("6b4428")
-const WOOD_DARK := Color("4a2e1a")
-const BRONZE := Color("c4924a")
-const IRON := Color("6e6862")
+const WOOD := Color("4f5632")
+const WOOD_DARK := Color("33381f")
+const BRONZE := Color("5c5d5b")
+const IRON := Color("2f3236")
 
 
 static func _wood() -> StandardMaterial3D:

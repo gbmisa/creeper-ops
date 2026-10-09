@@ -151,13 +151,14 @@ func set_mode(m: String) -> void:
 
 
 func show_briefing() -> void:
-	g.hud.show_overlay("""[font_size=26][b]%s[/b][/font_size]
+	g.hud.show_overlay("""[color=#e3b21c][font_size=14]MISSION BRIEFING  //  OPERATION ORDER[/font_size][/color]
+[font_size=30][b]%s[/b][/font_size]
 
 Hold the line Creeper World 3 style, and drop an [b]Operative[/b] to finish what turrets can't.
 
 • [b]Land first.[/b] Pick where your Command Node touches down: dry, high ground far from emitters.
 • [b]Energy is packets.[/b] The Node fires a packet whenever a structure asks and the bank has energy. Watch the green (production) and red (demand) numbers.
-• [b]Four build screens[/b] (F1-F4): Structures, Weapons, Titans, Orbital. Weapons and titans can fly to new spots: select, then right-click.
+• [b]Five build screens[/b] (F1-F5): Structures, Weapons, Titans, Orbital, Castle. Weapons and titans can fly to new spots: select, then right-click.
 • [b]Creeper destroys anything it touches,[/b] built or not. Only the Node has armour. Purple [b]Blight[/b] can't be built on.
 • [b]Spore Nests grow.[/b] They raid your base and breed tougher raiders the longer the mission runs. [b]Castles[/b] feed the Forge: the Operative climbs the spire, kills the crown nest and holds the top; raiders come to take them back. Barracks units can enter it, but they run dry and must walk home to restock.
 • Only the [b]Operative[/b] can plant charges or enter the Rift.""" % g.level.name,
@@ -189,7 +190,7 @@ func end_game(won: bool) -> void:
 	Sfx.play("good" if won else "lost")
 	g.metrics.finish("victory" if won else "node_destroyed")
 	var t := "%dm %ds" % [floori(g.time / 60.0), floori(fmod(g.time, 60.0))]
-	var msg := "[font_size=26][b]%s secured[/b][/font_size]\nAll threats neutralised in %s." % [g.level.name, t] if won \
-		else "[font_size=26][b]Command Node lost[/b][/font_size]\nThe creeper overran the Node after %s." % t
+	var msg := "[color=#8ee05a][font_size=14]MISSION COMPLETE[/font_size][/color]\n[font_size=30][b]%s secured[/b][/font_size]\nAll threats neutralised in %s." % [g.level.name, t] if won \
+		else "[color=#ff5a3c][font_size=14]MISSION FAILED[/font_size][/color]\n[font_size=30][b]Command Node lost[/b][/font_size]\nThe creeper overran the Node after %s." % t
 	msg += g.metrics.end_text()
 	g.hud.show_overlay(msg, [{ "label": "Play again", "on_click": func(): g.get_tree().reload_current_scene() }])

@@ -1,21 +1,22 @@
 class_name BuildMenu
 extends PanelContainer
-## CW3-style build panel with four screens: Structures, Weapons, Titans, Orbital.
-## F1-F4 (or Tab) switch screens; 1-9 pick an item on the current screen (all rebindable). Hovering an item
-## shows its full description and numbers.
+## CW3-style build panel: one tab per StructureDefs.TABS (Structures, Weapons, Titans, Orbital, Castle).
+## Tab keys (F1..) or Tab switch screens; 1-9 pick an item on the current screen (all rebindable).
+## Hovering an item shows its full description and numbers on the line under the cards.
 
 var on_pick := Callable()   # func(item: String) — structure type or "@action"
 var level: Dictionary = {}  # live level dict; Hud assigns it before refresh
 var tab := 0
 var _tab_buttons: Array[Button] = []
 var _items: HBoxContainer
-var _buttons := {}          # item -> Button
+var _buttons := {}          # item -> BuildCard
 var _tip: Label
 var _active_tool := ""
+const HINT := "Hover a card for details. Drag a tool to lay Collector and Relay chains or rows. Right-click or Esc cancels."
 
 
 func _init() -> void:
-	add_theme_stylebox_override("panel", UiKit.style())
+	add_theme_stylebox_override("panel", UiKit.style(UiKit.BG, UiKit.EDGE, 1, 8))
 	anchor_left = 0.5
 	anchor_right = 0.5
 	anchor_top = 1.0
@@ -23,20 +24,23 @@ func _init() -> void:
 	grow_horizontal = Control.GROW_DIRECTION_BOTH
 	grow_vertical = Control.GROW_DIRECTION_BEGIN
 	offset_bottom = -10
+	UiKit.brackets(self)
+	custom_minimum_size.x = 7 * BuildCard.SIZE.x + 6 * 6 + 16  # the widest tab, so tabs don't jump
 	var v := UiKit.vbox(6)
 	add_child(v)
-	var tabs := UiKit.hbox(4)
+	var tabs := UiKit.hbox(2)
 	v.add_child(tabs)
 	for i in StructureDefs.TABS.size():
-		var b := UiKit.button("%s  %s" % [Keybinds.short("tab_%d" % (i + 1)), StructureDefs.TABS[i]], func(): show_tab(i), 14)
+		var b := UiKit.button("", func(): show_tab(i), 15)
 		b.toggle_mode = true
 		tabs.add_child(b)
 		_tab_buttons.append(b)
+	relabel()
 	_items = UiKit.hbox(6)
 	v.add_child(_items)
-	_tip = UiKit.label("", 13, UiKit.DIM)
+	_tip = UiKit.label(HINT, 15, Color(UiKit.TEXT, 0.8))
 	_tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_tip.custom_minimum_size = Vector2(640, 34)
+	_tip.custom_minimum_size = Vector2(640, 20)
 	v.add_child(_tip)
 	Bus.tool_changed.connect(_on_tool)
 	show_tab(0)
@@ -57,20 +61,15 @@ func show_tab(i: int) -> void:
 	var list: Array = StructureDefs.MENU[StructureDefs.TABS[i]]
 	for n in list.size():
 		var item: String = list[n]
-		var b := Button.new()
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(118, 58)
-		b.text = "%s  %s\n%s" % [Keybinds.short("build_%d" % (n + 1)) if n < 9 else "", StructureDefs.label(item), StructureDefs.cost_text(item)]
-		b.add_theme_font_size_override("font_size", 14)
-		b.toggle_mode = true
-		b.set_meta("slot", n)
+		var b := BuildCard.new(item, n)
 		b.pressed.connect(func(): _pick(item))
 		b.mouse_entered.connect(func():
 			var why := StructureDefs.lock_reason(level, item)
 			_tip.text = why if why != "" else "%s: %s" % [StructureDefs.label(item), StructureDefs.desc(item)])
-		b.mouse_exited.connect(func(): _tip.text = "")
+		b.mouse_exited.connect(func(): _tip.text = HINT)
 		_items.add_child(b)
 		_buttons[item] = b
+		_fill(b)
 	_highlight()
 
 
@@ -94,7 +93,7 @@ func _highlight() -> void:
 ## Tab captions follow the current keybinds.
 func relabel() -> void:
 	for i in _tab_buttons.size():
-		_tab_buttons[i].text = "%s  %s" % [Keybinds.short("tab_%d" % (i + 1)), StructureDefs.TABS[i]]
+		_tab_buttons[i].text = "%s  %s" % [Keybinds.short("tab_%d" % (i + 1)), StructureDefs.TABS[i].to_upper()]
 
 
 ## Hotkeys (called by Hud while in command mode). Returns true if consumed.
@@ -114,24 +113,21 @@ func handle_key(key: int) -> bool:
 	return false
 
 
+func _fill(b: BuildCard) -> void:
+	var n := int(b.get_meta("slot", 0))
+	var key := Keybinds.short("build_%d" % (n + 1)) if n < 9 else ""
+	var locked := StructureDefs.lock_reason(level, b.item)
+	b.show_info(key, StructureDefs.label(b.item), StructureDefs.cost_text(b.item), locked, locked != "")
+
+
 ## Grey out a locked item, and anything that has to be paid up front (drop pods / lance).
 func refresh(energy: float) -> void:
 	for item in _buttons:
-		var b: Button = _buttons[item]
-		var n := int(b.get_meta("slot", 0))
-		var key := Keybinds.short("build_%d" % (n + 1)) if n < 9 else ""
-		var locked := StructureDefs.lock_reason(level, item)
-		if locked != "":
-			b.disabled = true
-			b.modulate = Color(1, 1, 1, 0.4)
-			b.tooltip_text = locked
-			b.custom_minimum_size = Vector2(230, 58)
-			b.text = "%s  %s\n%s" % [key, StructureDefs.label(item), locked]
+		var b: BuildCard = _buttons[item]
+		_fill(b)
+		if b.disabled:
+			b.modulate = Color(1, 1, 1, 0.55)
 			continue
-		b.disabled = false
-		b.tooltip_text = ""
-		b.custom_minimum_size = Vector2(118, 58)
-		b.text = "%s  %s\n%s" % [key, StructureDefs.label(item), StructureDefs.cost_text(item)]
 		var up_front := 0.0
 		if item == "@lance":
 			up_front = Config.LANCE_COST

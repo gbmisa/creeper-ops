@@ -25,15 +25,17 @@ var _flash := {}  # id -> seconds of hint still showing
 
 
 func _init(rows: Array = LIST) -> void:
-	add_theme_stylebox_override("panel", UiKit.style())
+	add_theme_stylebox_override("panel", UiKit.style(UiKit.BG, UiKit.EDGE, 1, 10))
+	UiKit.brackets(self)
 	position = Vector2(10, 64)
 	custom_minimum_size.x = 330
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var v := UiKit.vbox(4)
 	add_child(v)
-	_head = UiKit.label("OBJECTIVES", 12, UiKit.DIM)
-	v.add_child(_head)
-	_text = UiKit.rich(13)
+	var head := UiKit.header("Objectives", 14)
+	_head = head.get_node("Text")
+	v.add_child(head)
+	_text = UiKit.rich(16)
 	_text.custom_minimum_size.x = 310
 	v.add_child(_text)
 	for o in rows:
@@ -106,7 +108,7 @@ func _render() -> void:
 		if o.done:
 			body = "[color=#5a6a5a][s]%s[/s][/color]" % o.text
 		if _full or flashing:
-			lines.append("%s\n[color=#8899aa][font_size=11]%s[/font_size][/color]" % [body, o.hint])
+			lines.append("%s\n[color=#9a9c84][font_size=14]%s[/font_size][/color]" % [body, o.hint])
 		else:
 			lines.append(body)
 	_text.text = "\n".join(lines)
