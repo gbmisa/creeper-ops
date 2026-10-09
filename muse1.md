@@ -78,6 +78,11 @@ Fetch main and read docs/tasks/MUSE_NOTES.md, note "X and B merged; P needs fixe
 Fetch main and read docs/tasks/MUSE_NOTES.md, note "S review → one fix". Fix the gallery= framing bug on tools/shot-tour, add the smoke check, rerun parse and smoke (0 failures), push, and report.
 ```
 
+## Q: enemy Spitter Towers bug (start now; playtest)
+```
+Clone https://github.com/gbmisa/creeper-ops and check out branch fix/q-spitter-towers. Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/MUSE_Q_spitter_towers.md. Do that brief and nothing else. Commit and push only to fix/q-spitter-towers. Never touch main, never merge. Report in the AGENTS.md format.
+```
+
 ## Rules reminder
 - **Opus leaves notes in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md) on `main`. Fetch `main` and read it before you start or resume any brief.** (Latest: hold-to-fire spread and recoil climb added to B.)
 - Muse has headless Godot 4.7.2: run the parse and smoke checks and headless sims yourself. Screenshots and GPU checks are Opus's job (Muse has no display).

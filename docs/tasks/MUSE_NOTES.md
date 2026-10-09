@@ -64,3 +64,6 @@ Parse is clean, smoke reports `OK: 0 failure(s)`, and a 4-line Xvfb tour saved e
 - The command camera may still be easing toward the previous `select=`/`look=` target, or `cam.update` drifts `target.y` (`smooth_y` lerp) after focus.
 - The pad (43, 87) may be off the playable area or hidden under props.
 **Fix and prove it:** print `[tour] gallery <id> aabb=<size> dist=<d>` per gallery line. Smoke check: after `_apply_gallery` the camera target is within 1 m of the model, and `dist` is ≤ 3 × the AABB size. Push to `tools/shot-tour` and report. Opus re-screenshots.
+
+## 2026-10-08: playtest → brief Q (`fix/q-spitter-towers`)
+Gregory: enemy Spitter Towers on L1 sit underground, shoot from where Snipers can't reach, and pile up. See [MUSE_Q_spitter_towers.md](MUSE_Q_spitter_towers.md). Start now.
