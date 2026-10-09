@@ -481,6 +481,44 @@ Tests:
   (897 P7 + 4 new), 0 script errors. All castle smokes PASS
   (shape/walk/capture/engines/perks + all castles2b files).
 
+## Wrap-up (2026-10-09)
+
+All phases P0–P8 done, one commit per phase. No code after P8 except this log
+and the MASTER_PLAN.md status cell + changelog line.
+
+Commits on `stage/21b-castles-detail`:
+- a6ab9e32 — Stage 21b P0: audit
+- 8834c94e — Stage 21b P1: stone that reads as a castle
+- bdfd637d — Stage 21b P2: light and life
+- 22ad4c16 — Stage 21b P3: interior props
+- 651ffeac — Stage 21b P4: command-view readability
+- 08856cbc — Stage 21b P5: turret variety
+- 2ceb9924 — Stage 21b P6: castle guards
+- bee53c6c — Stage 21b P7: castle-only production
+- c715345e — Stage 21b P8: Stage 21 leftovers
+
+Smoke: 734 PASS / 0 FAIL (P0) → **901 PASS / 0 FAIL** (final), `[smoke] OK:
+0 failure(s)`. Parse clean (0 script errors) after every phase.
+
+Sims vs P0 (detail pass is visual/additive; no balance shift expected):
+- `--demo --units --sim=900`: P0 node survives 900 s → final node survives 900 s.
+- `--autostart --sim=900`: P0 node dies t=341 → final dies t=341 (identical).
+- `--level=2 --demo --sim=900`: P0 dies t=391 → final dies t=382 (sim noise).
+- `--level=2 --autostart --sim=900`: P0 dies t=229 → final dies t=229 (identical).
+
+Final rubric scores vs P0 (code-based; before/after screenshot pairs not run —
+no display; Opus judges visuals):
+1. Fantasy coherence: 4/5 → 4/5 (unchanged).
+4. Scale: 4/5 → 4/5 (unchanged).
+6. Castles: 3/5 → 4/5 (ashlar slabs, parapets, arches, braziers, banners,
+   furnished halls, garrisoned walls — reads inhabited now).
+7. Gameplay readability: 3/5 → 4/5 (roof fade reveals creeper in command view;
+   stage progress bars; trebuchet reach ring still missing — logged Suggestion).
+8. Polish: 3/5 → 4/5 (trim, buttresses, moss, stair lips, portcullis tween).
+(2, 3, 5 n/a — untouched by this stage.)
+
+MASTER_PLAN.md: Stage 21b cell ☐ → ⚠ + one Changelog line.
+
 ## Suggestions (unbriefed, not implemented)
 - (P4) Trebuchet reach ring on hover: add a `ring_c` vec4 (+ `ring_c_color`) uniform to
   terrain.gdshader mirroring `ring_a`, plumb it through CommandOverlay (e.g.
