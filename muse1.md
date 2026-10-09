@@ -26,4 +26,5 @@ Clone https://github.com/gbmisa/creeper-ops and check out branch art/3-fx. Read 
 - Muse has headless Godot 4.7.2: run the parse and smoke checks and headless sims yourself. Screenshots and GPU checks are Opus's job (Muse has no display).
 - All four tasks can run at once, one worker per branch.
 - For brief A: real models are on branch `art/3-models` (`godot/assets/models/*.glb`, made by Opus). Copy `skitter.glb` into your branch **only for testing, then remove it before the final commit**; Opus merges the models from its own branch.
+- **Never commit `godot/.godot/`** (editor cache) or anything else `.gitignore` excludes; the API push doesn't apply `.gitignore`, so check paths yourself. (Playtest 1C P1 committed it; Opus strips it at merge.)
 - If Muse pushes to `main`, rewrites AGENTS.md or merges anything: stop it and tell Opus.

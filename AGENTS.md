@@ -6,6 +6,7 @@
 1. **Do only what your brief (`docs/tasks/<FILE>.md`) or the user explicitly tells you to do.** If something seems worth doing but isn't in the brief, don't do it: list it in your report as a suggestion.
 2. **Never merge, rebase, cherry-pick, reset or push.** Never touch `main` or any other branch. Never create or delete branches or worktrees.
 3. **Commit only on your own worktree's branch**, and only work inside your worktree folder.
+   **Never commit anything `.gitignore` excludes** (`godot/.godot/` caches, logs, `user://` files). If you push through an API that ignores `.gitignore`, check every path against it first.
 4. **Never start the next stage**, even if it looks obvious from MASTER_PLAN.md.
 5. **Don't edit HANDOFF.md.** In MASTER_PLAN.md, change only your own stage's status cell and add one Changelog line.
 6. If the brief is unclear or conflicts with the code, **stop and ask** instead of guessing.
