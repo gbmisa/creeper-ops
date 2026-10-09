@@ -71,8 +71,30 @@ static func button(text: String, cb: Callable, size := 14) -> Button:
 	b.text = text
 	b.focus_mode = Control.FOCUS_NONE
 	b.add_theme_font_size_override("font_size", size)
+	b.add_theme_color_override("font_color", TEXT)
+	b.add_theme_color_override("font_hover_color", Color("eaf6ff"))
+	b.add_theme_color_override("font_pressed_color", Color("ffffff"))
+	b.add_theme_color_override("font_disabled_color", DIM)
+	b.add_theme_stylebox_override("normal", _btn_box(Color(0.10, 0.14, 0.19, 0.95), Color(0.37, 0.83, 1.0, 0.35)))
+	b.add_theme_stylebox_override("hover", _btn_box(Color(0.14, 0.20, 0.27, 0.97), Color(0.37, 0.83, 1.0, 0.7)))
+	b.add_theme_stylebox_override("pressed", _btn_box(Color(0.13, 0.32, 0.45, 0.97), Color(0.37, 0.83, 1.0, 1.0)))
+	b.add_theme_stylebox_override("disabled", _btn_box(Color(0.06, 0.08, 0.11, 0.9), Color(1, 1, 1, 0.08)))
+	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	b.pressed.connect(cb)
 	return b
+
+
+static func _btn_box(bg: Color, edge: Color) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_color = edge
+	s.set_border_width_all(1)
+	s.set_corner_radius_all(6)
+	s.content_margin_left = 12
+	s.content_margin_right = 12
+	s.content_margin_top = 6
+	s.content_margin_bottom = 6
+	return s
 
 
 static func hbox(sep := 8) -> HBoxContainer:
