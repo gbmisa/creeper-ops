@@ -147,6 +147,7 @@ static func run(g) -> void:
 	SmokeCastleRaids.run(g)
 	SmokeSenders.run(g)
 	SmokePt3.run(g)
+	SmokePt3cPause.run(g)
 	SmokeDeploy.run(g)
 	SmokeDeployPick.run(g)
 	SmokeTraps.run(g)
@@ -210,6 +211,8 @@ static func run(g) -> void:
 static func _run_only(g) -> void:
 	for part in only.split(","):
 		match part:
+			"pt3c":
+				SmokePt3cPause.run(g)
 			"engines":
 				SmokeEngines.run(g)
 				SmokeEnginesShip.run(g)

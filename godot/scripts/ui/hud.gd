@@ -17,6 +17,7 @@ var alerts: HudAlerts
 var _selbox: Panel
 var _help: Label
 var _overlay: HudOverlay
+var _paused_box: PanelContainer  # PT3-C: amber PAUSED banner, top centre under the bar
 var _mode := ""
 const LOG_LIFT := 178.0
 
@@ -30,6 +31,14 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	add_child(wheel_view)
 	top = TopBar.new()
 	add_child(top)
+	_paused_box = PanelContainer.new()
+	_paused_box.add_theme_stylebox_override("panel", UiTheme.box(Color(UiKit.WARN, 0.12), Color(UiKit.WARN, 0.6), 1, 4))
+	_paused_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_paused_box.add_child(UiKit.mono("PAUSED", 20, UiKit.WARN))
+	_paused_box.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_paused_box.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_paused_box.visible = false
+	add_child(_paused_box)
 	objectives = Objectives.new(cm.level.get("objectives", Objectives.LIST))
 	add_child(objectives)
 	build = BuildMenu.new()
@@ -201,6 +210,8 @@ func overlay_open() -> bool:
 
 func refresh(g, dt: float) -> void:
 	top.refresh(g)
+	_paused_box.visible = g.paused and g.mode == "command"
+	_paused_box.offset_top = top.size.y + 6
 	objectives.refresh(dt, g.input, g.mode != "command")
 	_tick_log(dt)
 	_help.visible = g.time < Config.HUD_HINT_SECS

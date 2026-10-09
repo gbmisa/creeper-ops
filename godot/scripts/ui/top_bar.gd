@@ -18,6 +18,10 @@ var node_bar: ProgressBar
 var node_lbl: Label
 var time_lbl: Label
 var speed_lbl: Label
+var pause_btn: Button
+var slow_btn: Button
+var fast_btn: Button
+var _game = null  # set in refresh(); button callbacks use it
 const NARROW := 1400.0
 
 
@@ -84,12 +88,39 @@ func _init() -> void:
 	row.add_child(_sep())
 	var t := _gauge(row, "Mission")
 	var th := UiKit.hbox(6)
+	pause_btn = UiKit.button("II", _on_pause_btn, 14)
+	pause_btn.tooltip_text = "Pause / resume (%s)" % Keybinds.short("pause")
+	pause_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	th.add_child(pause_btn)
+	slow_btn = UiKit.button("<<", _on_slow_btn, 14)
+	slow_btn.tooltip_text = "Game speed down (%s)" % Keybinds.short("speed_down")
+	slow_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	th.add_child(slow_btn)
 	time_lbl = UiKit.mono("00:00", 20, UiKit.ACCENT)
 	th.add_child(time_lbl)
+	fast_btn = UiKit.button(">>", _on_fast_btn, 14)
+	fast_btn.tooltip_text = "Game speed up (%s)" % Keybinds.short("speed_up")
+	fast_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	th.add_child(fast_btn)
 	speed_lbl = UiKit.mono("", 14, UiKit.DIM)
 	speed_lbl.size_flags_vertical = Control.SIZE_SHRINK_END
 	th.add_child(speed_lbl)
 	t.add_child(th)
+
+
+func _on_pause_btn() -> void:
+	if _game != null:
+		_game.flow.toggle_pause()
+
+
+func _on_slow_btn() -> void:
+	if _game != null:
+		_game.cycle_speed(-1)
+
+
+func _on_fast_btn() -> void:
+	if _game != null:
+		_game.cycle_speed(1)
 
 
 func _sep() -> VSeparator:
@@ -130,6 +161,7 @@ func _status(text: String, color: Color) -> void:
 
 
 func refresh(g) -> void:
+	_game = g
 	var eco: Economy = g.economy
 	var pk: Packets = g.structures.packets
 	energy_bar.value = eco.energy / eco.max_energy
@@ -172,3 +204,9 @@ func refresh(g) -> void:
 	time_lbl.text = "%02d:%02d" % [floori(t / 60.0), floori(fmod(t, 60.0))]
 	speed_lbl.text = "PAUSED" if g.paused else "%dx" % g.speed
 	speed_lbl.add_theme_color_override("font_color", UiKit.WARN if g.paused else UiKit.DIM)
+	# Pause/speed buttons live only in command mode (FPS mode pauses with Esc).
+	var cmd: bool = g.mode == "command"
+	pause_btn.visible = cmd
+	slow_btn.visible = cmd
+	fast_btn.visible = cmd
+	pause_btn.text = ("> " if g.paused else "II ") + Keybinds.short("pause")

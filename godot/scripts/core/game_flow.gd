@@ -62,9 +62,8 @@ func on_key(k: int) -> void:
 		return
 	if Keybinds.matches("keybinds", k):
 		g.hud.keys.open()
-	elif Keybinds.matches("pause", k) and not g.landing:
-		g.paused = not g.paused
-		Bus.metric.emit("pause", { "paused": g.paused })
+	elif Keybinds.matches("pause", k):
+		toggle_pause()
 	elif Keybinds.matches("speed_up", k):
 		g.cycle_speed(1)
 		Bus.metric.emit("speed", { "speed": g.speed })
@@ -75,6 +74,15 @@ func on_key(k: int) -> void:
 		g.deploy.deploy_totem()
 	elif not g.landing:
 		g.hud.build.handle_key(k)
+
+
+## One shared pause toggle: the pause keybind and the top-bar pause button both call
+## this, so the button always does exactly what the key does. (PT3-C)
+func toggle_pause() -> void:
+	if g.landing:
+		return
+	g.paused = not g.paused
+	Bus.metric.emit("pause", { "paused": g.paused })
 
 
 ## Build menu pick: structure types become tools, "@" items are actions.
