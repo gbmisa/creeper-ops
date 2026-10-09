@@ -87,6 +87,7 @@ static func _no_enemy_no_delay(g) -> void:
 	while t < 30.0 and u.alive and not u.path.is_empty():
 		if u.engaged:
 			ever_engaged = true
+		_clear_creeper(g, 40, 40, 70, 50)  # earlier groups leave creeper that floods the pad
 		SmokeTest._sim(g, 0.5)
 		t += 0.5
 	var d := Vector2(u.pos.x - dest.x, u.pos.z - dest.y).length()
@@ -124,7 +125,7 @@ static func _dry_unit_retreats_past_enemies(g) -> void:
 			break
 	SmokeTest._check("attack-move: dry unit retreats past enemies, never engages",
 		u.alive and not ever_engaged and (u.state == "resupply" or u.state == "return" or u.ammo > 1.0),
-		"(state %s, ammo %.1f, engaged %s)" % [u.state, u.ammo, ever_engaged])
+		"(state %s, ammo %.1f, engaged %s, alive %s, t %.1f)" % [u.state, u.ammo, ever_engaged, u.alive, t])
 	if u.alive:
 		g.units.kill(u)
 	sm.remove(b)

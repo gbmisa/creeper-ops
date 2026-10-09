@@ -120,7 +120,7 @@ static func run(g) -> void:
 	# Barracks population cap.
 	var b: Structure = sm.place("barracks", 37, 72, true)  # on the mesa (Ashmoat's apron took x 31-34)
 	var queued := 0
-	for i in 6:
+	for i in Config.UNITS_PER_BARRACKS + 2:
 		if StructureBehaviors.queue_unit(b, "soldier", g.units.living_for(b)):
 			queued += 1
 	_check("barracks unit cap", queued == Config.UNITS_PER_BARRACKS, "(%d queued)" % queued)
