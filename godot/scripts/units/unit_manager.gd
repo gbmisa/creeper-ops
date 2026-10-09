@@ -31,11 +31,31 @@ func living_for(b: Structure) -> int:
 
 
 func _on_trained(type: String, b: Structure) -> void:
-	var u := spawn(type, b.pos.x + randf_range(-1, 1), b.pos.z + 4.2)
+	var sc := _free_cell(world.grid.world_to_cell(b.pos.x, b.pos.z + 4.2))
+	var sx := (sc.x + 0.5) * Config.CELL + randf_range(-0.6, 0.6)
+	var sz := (sc.y + 0.5) * Config.CELL + randf_range(-0.6, 0.6)
+	var u := spawn(type, sx, sz)
 	u.home = b
 	var rally: Vector3 = b.rally if b.rally != null else b.pos + Vector3(randf_range(-3, 3), 0, 9)
 	order([u], Vector2(rally.x, rally.z))
 	Bus.say("%s ready (%d/%d at this barracks)." % [u.def.label, living_for(b), Config.UNITS_PER_BARRACKS], "good")
+
+
+## Nearest free cell to `prefer` (spiral search), so units never spawn or walk into
+## an occupied cell. Falls back to `prefer` when everything nearby is blocked.
+func _free_cell(prefer: Vector2i) -> Vector2i:
+	var g := world.grid
+	if g.in_bounds(prefer.x, prefer.y) and not world.occupied.call(prefer.x, prefer.y):
+		return prefer
+	for ring in range(1, 6):
+		for dz in range(-ring, ring + 1):
+			for dx in range(-ring, ring + 1):
+				if maxi(absi(dx), absi(dz)) != ring:
+					continue
+				var c := Vector2i(prefer.x + dx, prefer.y + dz)
+				if g.in_bounds(c.x, c.y) and not world.occupied.call(c.x, c.y):
+					return c
+	return prefer
 
 
 func spawn(type: String, x: float, z: float) -> Unit:
@@ -76,9 +96,43 @@ func order(units: Array, dest: Vector2, player := false) -> void:
 func walk_to(u: Unit, goal: Vector2) -> void:
 	var g := world.grid
 	var from := g.world_to_cell(u.pos.x, u.pos.z)
-	u.path = Pathfind.find(g, world.creeper, from, g.world_to_cell(goal.x, goal.y), u.def, 6000, world.occupied)
+	var gc := g.world_to_cell(goal.x, goal.y)
+	if world.occupied.call(gc.x, gc.y):
+		# Goal inside a structure (e.g. rally set on the barracks): step to the
+		# nearest free cell instead of pushing against the wall forever.
+		var nc := _free_cell(gc)
+		goal = Vector2((nc.x + 0.5) * Config.CELL, (nc.y + 0.5) * Config.CELL)
+	var start := from
+	var prefix: Array[Vector2] = []
+	if world.occupied.call(from.x, from.y):
+		# Pathfind can't start inside a solid block (every neighbour is solid):
+		# step out to the nearest free cell first. _move allows leaving an
+		# occupied cell, so the prefix walks out through the wall.
+		var nc := _free_cell(from)
+		if nc == from:
+			u.path = []
+			return
+		prefix = [Vector2((nc.x + 0.5) * Config.CELL, (nc.y + 0.5) * Config.CELL)]
+		start = nc
+	var found := Pathfind.find(g, world.creeper, start, g.world_to_cell(goal.x, goal.y), u.def, 6000, world.occupied)
+	u.path = prefix
+	u.path.append_array(found)
 	if not u.path.is_empty():
 		u.path[u.path.size() - 1] = goal
+
+
+## Backstop: a unit whose path ran out while standing inside an occupied cell
+## (boxed in by new construction, spawned on a blocked cell) re-paths out once
+## instead of idling inside the obstacle forever. Returns true if it re-pathed.
+func unstick(u: Unit) -> bool:
+	if u.post == null:
+		return false
+	var g := world.grid
+	var c := g.world_to_cell(u.pos.x, u.pos.z)
+	if not world.occupied.call(c.x, c.y):
+		return false
+	walk_to(u, u.post)
+	return not u.path.is_empty()
 
 
 func damage(u: Unit, amount: float) -> void:
