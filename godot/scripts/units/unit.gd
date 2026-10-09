@@ -21,6 +21,7 @@ var gun_cd := 0.0
 var clear_cd := 0.0
 var hurt := 0.0
 var state := "idle"
+var engaged := false       # attack-move: a target is in gun range while walking; path paused
 var post: Variant = null        # Vector2 world xz the player sent it to
 var home: Structure = null      # the barracks that trained it (population cap)
 var depot: Structure = null     # the barracks it is walking to for resupply (nearest stocked)

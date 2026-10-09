@@ -85,6 +85,25 @@ static func _resupply(mgr: UnitManager, u: Unit, dt: float) -> void:
 			u.state = "idle"
 
 
+## Nearest targetable enemy inside gun range. Enemies carrying a `targetable`
+## callable that returns false are skipped — e.g. a burrowed Burrower, whose hits
+## RaiderBurrow.filter ignores while "down": acquiring it would only waste ammo.
+static func acquire(u: Unit, enemies: Array) -> Dictionary:
+	var gun: Dictionary = u.def.gun
+	var best: Dictionary = {}
+	var bd: float = gun.range
+	for e in enemies:
+		if not e.alive.call():
+			continue
+		if e.has("targetable") and not (e.targetable as Callable).call():
+			continue
+		var d := (e.node.position as Vector3).distance_to(u.pos)
+		if d < bd:
+			bd = d
+			best = e
+	return best
+
+
 static func _fight(mgr: UnitManager, u: Unit, dt: float, enemies: Array) -> void:
 	u.gun_cd -= dt
 	u.clear_cd -= dt
@@ -93,21 +112,13 @@ static func _fight(mgr: UnitManager, u: Unit, dt: float, enemies: Array) -> void
 	var w := mgr.world
 	var gun: Dictionary = u.def.gun
 	var clear: Dictionary = u.def.clear
-	var best: Dictionary = {}
-	var bd: float = gun.range
-	for e in enemies:
-		if not e.alive.call():
-			continue
-		var d := (e.node.position as Vector3).distance_to(u.pos)
-		if d < bd:
-			bd = d
-			best = e
+	var best := acquire(u, enemies)
 	var muzzle := u.pos + Vector3(0, 1.0 if u.type == "crawler" else 0.9, 0)
 	if not best.is_empty():
 		var ep: Vector3 = best.node.position + Vector3(0, best.get("oy", 0.0), 0)
-		if u.path.is_empty():
+		if u.path.is_empty() or u.engaged:
 			u.heading = atan2(-(ep.z - u.pos.z), ep.x - u.pos.x)
-		if u.gun_cd <= 0.0:
+		if u.gun_cd <= 0.0 and (u.path.is_empty() or u.engaged):
 			u.gun_cd = gun.rate
 			u.ammo -= 1.0
 			AmmoGrades.shoot(best, gun.damage, _grade_round(u), w, ep)

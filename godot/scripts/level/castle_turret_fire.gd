@@ -159,6 +159,9 @@ static func _target_raider(raiders: Raiders, at: Vector3, reach: float) -> Dicti
 	var best: Dictionary = {}
 	var bd := reach
 	for m in raiders.list:
+		var med: Dictionary = m.get("enemy", {})
+		if med.has("targetable") and not (med["targetable"] as Callable).call():
+			continue  # unhittable (e.g. a burrowed Burrower): don't waste the volley
 		var d := (m.node.position as Vector3).distance_to(at)
 		if m.alive and d < bd:
 			bd = d
