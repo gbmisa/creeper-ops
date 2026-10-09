@@ -82,7 +82,7 @@ def die_common(t, debris=()):
     """Base sinks; the turret sinks the same and tips over; the arm droops; debris flies out."""
     s, k = sink(t), lib.ease(min(1.0, t / 0.7))
     p = {"base": {"loc": (0, 0, -s), "scale": (1 + 0.1 * s, 1 + 0.1 * s, max(0.3, 1 - 0.5 * s))},
-         "turret": {"loc": (0, 0, -s), "rot": ((1, 0.3, 0), 0.6 * k)},
+         "turret": {"loc": (0, 0, -s), "rot": ((1, 0.3, 0), 0.35 * k)},
          "arm": {"rot": ((0, 1, 0), 1.0 * k)}}
     for i, (bn, (x, y)) in enumerate(debris):
         d = 3.2 * k
@@ -94,7 +94,7 @@ def die_common(t, debris=()):
 def hit_common(t):
     j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
     return {"turret": {"rot": ((0.3, 0, 1), 0.35 * j * math.sin(14 * t))},
-            "arm": {"rot": ((0, 1, 0), -0.4 * j)}}
+            "arm": {"rot": ((0, 1, 0), -0.35 * j * math.sin(18 * t))}}
 
 
 def run(name, bones, pivots, geometry, clips):
