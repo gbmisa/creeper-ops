@@ -44,6 +44,7 @@ Clone https://github.com/gbmisa/creeper-ops and check out branch art/3-integrati
 ```
 
 ## Rules reminder
+- **Opus leaves notes in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md) on `main`. Fetch `main` and read it before you start or resume any brief.** (Latest: hold-to-fire spread and recoil climb added to B.)
 - Muse has headless Godot 4.7.2: run the parse and smoke checks and headless sims yourself. Screenshots and GPU checks are Opus's job (Muse has no display).
 - All four tasks can run at once, one worker per branch.
 - For brief A: real models are on branch `art/3-models` (`godot/assets/models/*.glb`, made by Opus). Copy `skitter.glb` into your branch **only for testing, then remove it before the final commit**; Opus merges the models from its own branch.

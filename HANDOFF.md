@@ -28,4 +28,4 @@ Average 6.1 → 6.8 → 7.4. At 8: brute, crawler, sentinel, soldier, spore_bat,
 3. New models: hive structures (pit, spitter tower, launcher, mortar, roost), Command Node / Totem / drop pod (plan §3).
 
 ## Open questions for the user
-- The Art 3 feedback was cut off at "Holding down left...": how does it end?
+- (answered) "Holding down left" = held LMB must build spread + recoil climb → MUSE_NOTES.md, brief B.
