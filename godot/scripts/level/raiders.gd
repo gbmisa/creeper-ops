@@ -170,7 +170,7 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 			target.hit.call(dmg)
 			CreatureAnim.attack(r.node)
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
-			r.node.position.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY) + absf(sin(time * 12.0 + r.phase)) * 0.2
+			r.node.position.y = RaiderPerch.y(world, p.x, p.z) + absf(sin(time * 12.0 + r.phase)) * 0.2
 			return
 		# Straight at the target; if a wall is in the way (a garrison inside its castle,
 		# a cliff), follow the flow field round it instead of pressing into the wall.
@@ -244,7 +244,7 @@ func _walk(r: Dictionary, goal: Vector2, dt: float) -> bool:
 	if _step_into(p.x, sz, p.x, nz):
 		moved = moved or absf(nz - sz) > 0.001
 		p.z = nz
-	p.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY)
+	p.y = RaiderPerch.y(world, p.x, p.z)
 	r.node.position = p
 	_face(r, v)
 	# A stuck raider idles instead of chasing an unreachable point in circles.

@@ -262,9 +262,9 @@ func _pay_ore(type: String, x: int, z: int, instant: bool) -> bool:
 	return true
 
 
-## Packets launch while any sender is built, connected and on the ground.
+## Packets launch while any sender is built and connected (a flying Node counts).
 func _sender_ready() -> bool:
 	for s in list:
-		if s.def.get("sender", false) and s.is_built() and s.connected and not s.is_flying():
+		if s.def.get("sender", false) and s.is_built() and s.connected:
 			return true
 	return false

@@ -15,6 +15,7 @@ var weapons: OperativeWeapons
 var stockpile: Stockpile
 var charge := 0.0
 var need := ""
+var _need_for := ""  # weapon held when the unlock hint appeared; switching clears it
 var firing := false
 var showcase := false  # debug: hold the trigger for a firing screenshot
 var demo: DemoCharge
@@ -61,7 +62,12 @@ func hud_need() -> String:
 
 
 func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
+	var before := need
 	_pick(input)
+	if need != before and need.begins_with("Unlock"):
+		_need_for = weapons.current
+	elif need.begins_with("Unlock") and weapons.current != _need_for:
+		need = ""
 	demo.update(dt)
 	if not handles(weapons.current) or not OperativeUpgrades.unlocked(weapons.current):
 		charge = 0.0
@@ -92,10 +98,11 @@ func _pick(input: InputState) -> void:
 			continue
 		if OperativeUpgrades.unlocked(id):
 			weapons.current = id
+			need = ""
 			charge = 0.0
 			_moaned = false
 		else:
-			need = "Unlock the %s (%d Salvage)" % [d.name, OperativeUpgrades.cost("unlock_" + id)]
+			need = "Unlock the %s (%d Salvage) at the Armoury: stand at the Command Node and press %s, or select the Node in command mode" % [d.name, OperativeUpgrades.cost("unlock_" + id), Keybinds.short("use")]
 			Sfx.play("deny")
 
 

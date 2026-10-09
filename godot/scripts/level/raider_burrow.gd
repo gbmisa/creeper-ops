@@ -55,7 +55,7 @@ static func step(host: Raiders, r: Dictionary, dt: float, prey: Array) -> void:
 		r["burrow"] = "up"
 		r["surface_t"] = float(tier.get("surface", 1.5))
 		node.visible = true
-		node.position = Vector3(p.x, host.world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY), p.z)
+		node.position = Vector3(p.x, RaiderPerch.y(host.world, p.x, p.z), p.z)
 		return
 	var step_m: float = minf(dist, RaiderGroups.speed(host, r) * dt)
 	var dir := to / dist
@@ -97,7 +97,7 @@ static func _surface(host: Raiders, r: Dictionary, dt: float, tier: Dictionary, 
 	var node: Node3D = r.node
 	var p: Vector3 = node.position
 	node.visible = true
-	node.position = Vector3(p.x, host.world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY), p.z)
+	node.position = Vector3(p.x, RaiderPerch.y(host.world, p.x, p.z), p.z)
 	var left: float = float(r.get("surface_t", 0.0)) - dt
 	r["surface_t"] = left
 	if left > 0.0:

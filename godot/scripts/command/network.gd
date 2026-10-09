@@ -107,8 +107,8 @@ func rebuild(list: Array) -> void:
 
 ## A flying Command Node keeps its network: everything it reached from the cell it lifted off
 ## stays connected (collectors keep claiming, weapons keep firing from stock) and its links
-## follow it. Nothing routes through it, so it launches no packets until it lands (CW3);
-## an Outpost or castle keep still supplies whatever it reaches.
+## follow it. While connected it is a packet sender (launching from where it hovers) and
+## produces nothing; an Outpost or castle keep still supplies whatever it reaches.
 func _hold_flying_node(list: Array, edges: Array) -> void:
 	var node: Structure = null
 	for s in list:
@@ -118,6 +118,8 @@ func _hold_flying_node(list: Array, edges: Array) -> void:
 		return
 	var from: Vector2i = node.flight.get("from_cell", Vector2i(node.x, node.z))
 	node.connected = true
+	if not _prev.has(node):
+		_prev[node] = null
 	var seen := { node: true }
 	var open: Array = [node]
 	while not open.is_empty():
@@ -131,6 +133,7 @@ func _hold_flying_node(list: Array, edges: Array) -> void:
 				continue
 			seen[b] = true
 			open.append(b)
+			_hold_link(a, b)
 			if a == node or not b.connected:
 				edges.append([a, b])
 			b.connected = true
@@ -141,7 +144,20 @@ func _hold_flying_node(list: Array, edges: Array) -> void:
 			if n != node and _dist(n, s) <= maxf(n.def.link, s.def.link):
 				s.connected = true
 				edges.append([n, s])
+				_hold_link(n, s)
 				break
+
+
+## Route `b` through `a` unless a grounded sender already reaches it.
+func _hold_link(a: Structure, b: Structure) -> void:
+	if _prev.has(b):
+		return
+	_prev[b] = a
+	var r := route(b)
+	var m := 0.0
+	for i in range(1, r.size()):
+		m += r[i - 1].distance_to(r[i])
+	_len[b] = m
 
 
 func _draw(edges: Array) -> void:

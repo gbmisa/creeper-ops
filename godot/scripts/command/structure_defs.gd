@@ -33,7 +33,7 @@ static var ACTIONS := _turret_actions().merged({
 static var DEFS := {
 	"node": { "label": "Command Node", "hp": 500.0, "link": 10.0, "relays": true, "sender": true, "link_y": 3.2, "footprint": 1,
 		"movable": true, "move_speed": 2.5, "wet_time": 90.0, "buildable": false,
-		"desc": "Your base and a packet sender. Turns energy into packets; a request launches from the nearest sender. It can lift off and relocate (this Node sends nothing while flying). If it falls, you lose." },
+		"desc": "Your base and a packet sender. Turns energy into packets; a request launches from the nearest sender. It can lift off and relocate (while flying it still sends packets if connected, but produces nothing). If it falls, you lose." },
 	"collector": { "tab": "Structures", "label": "Collector", "cost": 5, "hp": 30.0, "link": 6.0, "relays": true, "link_y": 0.9,
 		"desc": "Claims the dry land in a 7x7 square around it (green tiles) for energy, ~0.25/s when the field is full. Overlapping fields share tiles, so space them out. Relays packets (link 6)." },
 	"relay": { "tab": "Structures", "label": "Relay", "cost": 10, "hp": 25.0, "link": 13.0, "relays": true, "link_y": 2.9,

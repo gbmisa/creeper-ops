@@ -87,7 +87,7 @@ static func _move(host: Raiders, r: Dictionary, dt: float, target: Dictionary, t
 		return
 	# Holding position to shoot: idle the walk clip instead of leaving a stale
 	# sprint playing while standing still.
-	node.position.y = host.world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY)
+	node.position.y = RaiderPerch.y(host.world, p.x, p.z)
 	CreatureAnim.move(node, 0.0)
 
 
