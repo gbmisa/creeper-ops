@@ -87,8 +87,9 @@ def geometry(k):
     k.ball(W + Vector((-0.17, -0.12, 0.31)), 0.06, "lamp_amber", "gem", seg=6, rings=3)
     k.tube([(W + Vector((x, 0, 0)), r) for x, r in ((-0.55, 0.18), (0.2, 0.18), (0.2, 0.22), (0.95, 0.22), (0.95, 0.14), (1.22, 0.14))],
            "gunmetal", "barrel", seg=10)
-    for x in (0.32, 0.5, 0.68, 0.86):
-        k.limb(W + Vector((x, 0, 0)), W + Vector((x + 0.04, 0, 0)), 0.245, 0.245, "rubber", "barrel", seg=10)
+    k.limb(W + Vector((0.25, 0, 0)), W + Vector((0.9, 0, 0)), 0.25, 0.25, "olive", "barrel", seg=10)
+    for x in (0.3, 0.6, 0.86):
+        k.limb(W + Vector((x, 0, 0)), W + Vector((x + 0.04, 0, 0)), 0.27, 0.27, "hazard" if x == 0.6 else "steel", "barrel", seg=10)
     mk.muzzle_brake(k, M - Vector((0.28, 0, 0)), 0.2, "barrel", length=0.3)
     mk.flash(k, M + Vector((0.02, 0, 0)), 0.26, "flash")
 

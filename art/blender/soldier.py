@@ -49,11 +49,11 @@ def build():
     b.limb((0.3, 0.12, 1.08), (0.5, 0.03, 1.1), 0.05, 0.045, "olive", "arm_L", seg=6, smooth=True)  # support hand
     b.ball((0.5, 0.03, 1.1), 0.045, "rubber", "arm_L", seg=6, rings=4)
     b.box((0.36, 0, 1.1), (0.36, 0.08, 0.13), "gunmetal", "xbow")  # receiver
-    b.box((0.13, 0, 1.08), (0.16, 0.05, 0.1), "rubber", "xbow")  # stock
-    b.box((0.56, 0, 1.1), (0.24, 0.09, 0.1), "olive_dark", "xbow")  # handguard
+    b.box((0.13, 0, 1.08), (0.18, 0.06, 0.12), "khaki", "xbow")  # stock
+    b.box((0.56, 0, 1.1), (0.24, 0.09, 0.1), "khaki", "xbow")  # handguard
     b.limb((0.66, 0, 1.11), (0.9, 0, 1.11), 0.025, 0.025, "gunmetal", "xbow", seg=6)  # barrel
-    b.limb((0.9, 0, 1.11), (1.15, 0, 1.11), 0.07, 0.0, "fire", "flash", seg=6)
-    b.ball((0.93, 0, 1.11), 0.06, "flash_white", "flash", seg=6, rings=3)
+    b.limb((0.9, 0, 1.11), (1.3, 0, 1.11), 0.12, 0.0, "fire", "flash", seg=6)
+    b.ball((0.95, 0, 1.11), 0.1, "flash_white", "flash", seg=6, rings=3)
     b.box((0.4, 0, 1.0), (0.06, 0.04, 0.14), "gunmetal", "xbow", rot=Quaternion((0, 1, 0), 0.25))  # magazine
     b.box((0.36, 0, 1.18), (0.1, 0.04, 0.05), "rubber", "xbow")  # optic
     b.finish(arm)

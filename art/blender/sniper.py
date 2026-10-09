@@ -101,7 +101,7 @@ def geometry(k):
     k.box(BORE + Vector((-1.17, 0, -0.06)), (0.05, 0.16, 0.32), "rubber", "head")
     k.box(BORE + Vector((-0.1, 0, -0.24)), (0.18, 0.12, 0.26), "gunmetal", "head", rot=Quaternion((0, 1, 0), 0.2))
     k.limb(BORE + X * 0.1, BORE + X * 0.95, 0.11, 0.1, "olive", "head", seg=8)
-    k.limb(BORE + X * 0.95, BORE + X * 2.05, 0.08, 0.075, "gunmetal", "head", seg=8)
+    k.limb(BORE + X * 0.95, BORE + X * 2.05, 0.08, 0.075, "steel", "head", seg=8)
     for x in (1.15, 1.45, 1.75):
         k.limb(BORE + X * x, BORE + X * (x + 0.05), 0.095, 0.095, "steel", "head", seg=8)
     mk.muzzle_brake(k, BORE + X * 2.03, 0.12, "head", length=0.22)

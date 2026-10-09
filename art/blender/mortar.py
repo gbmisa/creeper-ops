@@ -86,7 +86,7 @@ def geometry(k):
     k.lathe(TUBE, "olive", "bowl", at=tuple(B), seg=14, smooth=False)
     k.lathe([(0.0, -0.5), (0.5, -0.5), (0.5, -0.1), (0.0, -0.1)], "olive_dark", "bowl", at=tuple(B), seg=14, smooth=False)
     k.lathe([(0.42, 0.48), (0.5, 0.48), (0.5, 0.66), (0.32, 0.66), (0.32, 0.6), (0.42, 0.6)], "steel", "bowl", at=tuple(B), seg=14, smooth=False)
-    k.lathe([(0.42, 0.22), (0.45, 0.22), (0.45, 0.32), (0.42, 0.32), (0.42, 0.22)], "hazard", "bowl", at=tuple(B), seg=14, cap=False)
+    k.lathe([(0.42, 0.36), (0.45, 0.36), (0.45, 0.46), (0.42, 0.46), (0.42, 0.36)], "hazard", "bowl", at=tuple(B), seg=14, cap=False)
     k.limb(B + Vector((0, -0.72, 0)), B + Vector((0, 0.72, 0)), 0.1, 0.1, "steel", "bowl", seg=8)
     k.ball(B + Vector((0, 0, 0.0)), 0.27, "fire", "ember", seg=8, rings=5)
     # fireball and smoke

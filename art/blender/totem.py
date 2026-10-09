@@ -38,21 +38,21 @@ def build():
         b.limb((math.cos(a) * 0.85, math.sin(a) * 0.85, 0.16), (math.cos(a) * 0.85, math.sin(a) * 0.85, 0.4), 0.06, 0.06,
                "olive_dark", "base", seg=6)
         b.ball((math.cos(a) * 0.85, math.sin(a) * 0.85, 0.42), 0.04, "lamp_amber", "base", seg=4, rings=2)
-    mk.square(b, 0.42, 0.22, TOP, "olive", "shaft", top_half=0.26)
-    mk.column_trim(b, 0.42, 0.26, 0.22, TOP, "shaft", seams=(0.25, 0.7), mat="gunmetal", corner="gunmetal")
+    mk.square(b, 0.34, 0.22, TOP, "olive", "shaft", top_half=0.18)
+    mk.column_trim(b, 0.34, 0.18, 0.22, TOP, "shaft", seams=(0.25, 0.7), mat="gunmetal", corner="gunmetal")
     for k in range(4):  # armoured corner ribs
         a = k * math.pi / 2 + math.pi / 4
         c, s = math.cos(a), math.sin(a)
-        b.poly([(c * 0.6, s * 0.6, 0.22), (c * 0.9, s * 0.9, 0.22), (c * 0.45, s * 0.45, 1.4)], ["shaft"] * 3, "olive_dark")
+        b.poly([(c * 0.48, s * 0.48, 0.22), (c * 0.85, s * 0.85, 0.22), (c * 0.36, s * 0.36, 1.3)], ["shaft"] * 3, "olive_dark")
     b.box((0.0, -0.43, 0.5), (0.3, 0.06, 0.24), "olive_dark", "shaft")
     for k in range(4):  # teal signal strips on each face
         a = k * math.pi / 2
         n = (math.cos(a), math.sin(a))
         for z, h in ((0.75, 0.5), (1.32, 0.42), (1.75, 0.2)):
-            r = 0.42 - (z - 0.22) * (0.16 / (TOP - 0.22)) + 0.012
+            r = 0.34 - (z - 0.22) * (0.16 / (TOP - 0.22)) + 0.012
             b.box((n[0] * r, n[1] * r, z), (0.03, 0.08, h), "teal", "runes",
                   rot=Quaternion((0, 0, 1), a) @ Quaternion((0, 1, 0), -0.08))
-    b.lathe([(0.3, TOP), (0.42, TOP + 0.08), (0.42, TOP + 0.2), (0.2, TOP + 0.3), (0.0, TOP + 0.3)], "gunmetal", "shaft",
+    b.lathe([(0.22, TOP), (0.3, TOP + 0.08), (0.3, TOP + 0.2), (0.16, TOP + 0.3), (0.0, TOP + 0.3)], "gunmetal", "shaft",
             seg=8, smooth=False)
     for s in (1, -1):
         b.limb((0, s * 0.36, TOP + 0.1), (0, s * 0.36, TOP + 0.75), 0.025, 0.02, "steel", "shaft", seg=4)

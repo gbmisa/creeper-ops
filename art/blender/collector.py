@@ -26,7 +26,7 @@ def build():
                                      ("wave", (0, 0, 1.7), (0, 0, 1.9), "base")])
     b = lib.Builder("collector")
     for x, y, _z, a in FEET:
-        b.box((x, y, 0.1), (0.62, 0.5, 0.2), "concrete", "base", rot=Quaternion((0, 0, 1), a))
+        b.box((x, y, 0.1), (0.75, 0.6, 0.2), "concrete", "base", rot=Quaternion((0, 0, 1), a))
         b.limb((x * 0.92, y * 0.92, 0.2), (x * 0.3, y * 0.3, 0.95), 0.09, 0.07, "olive_dark", "base", seg=4)
         b.ball((x * 0.9, y * 0.9, 0.22), 0.06, "steel", "base", seg=4, rings=2)
     b.lathe([(0.44, 0.0), (0.44, 0.2), (0.3, 0.32), (0.22, 1.72), (0.3, 1.78), (0.3, 1.86), (0.0, 1.86)],
@@ -51,7 +51,7 @@ def build():
         q = Quaternion((0, 0, 1), a) @ Quaternion((0, 1, 0), -0.5)
         b.box((c * 0.78, s * 0.78, 2.28), (0.07, 0.7, 0.8), "olive", "spin", rot=q)
         b.box((c * 0.8, s * 0.8, 2.29), (0.05, 0.62, 0.72), "solar", "spin", rot=q)
-    b.ball((0, 0, 2.45), 0.19, "rune_green", "gem", scale=(1, 1, 1.6), seg=8, rings=4)
+    b.ball((0, 0, 2.45), 0.22, "rune_green", "gem", scale=(1, 1, 1.5), seg=8, rings=4)
     for z in (2.22, 2.68):
         b.lathe([(0.0, z - 0.03), (0.2, z - 0.03), (0.2, z + 0.03), (0.0, z + 0.03)], "gunmetal", "gem", seg=8, smooth=False)
     for i in range(4):

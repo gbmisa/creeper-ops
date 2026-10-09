@@ -39,7 +39,7 @@ def build():
             (xa, ya), (xb, yb) = legs[i], legs[(i + 1) % 3]
             p, q = (Vector((xa * ra, ya * ra, za)), Vector((xb * rb, yb * rb, zb))) if j % 2 else \
                 (Vector((xb * ra, yb * ra, za)), Vector((xa * rb, ya * rb, zb)))
-            b.limb(p, q, 0.022, 0.022, "steel", "base", seg=4)
+            b.limb(p, q, 0.03, 0.03, "olive", "base", seg=4)
     b.lathe([(0.2, 2.82), (0.2, 2.96), (0.0, 2.96)], "gunmetal", "base", seg=6, smooth=False)
     b.box((0.0, -0.32, 0.55), (0.3, 0.14, 0.4), "olive", "base")
     b.box((0.0, -0.395, 0.62), (0.08, 0.01, 0.06), "arc_blue", "base")
@@ -51,12 +51,12 @@ def build():
     b.box((0, 0, 3.05), (1.6, 0.14, 0.14), "olive", "spin")
     for sx in (-0.8, 0.8):
         b.box((sx, 0, 3.05), (0.16, 0.2, 0.2), "gunmetal", "spin")
-        b.ball((sx, 0, 3.27), 0.12, "arc_blue", "spin", seg=6, rings=3)
+        b.ball((sx, 0, 3.29), 0.15, "arc_blue", "spin", seg=6, rings=3)
         for d in (0.25, 0.45, 0.65):  # yagi elements
             b.box((sx * (1 - d / 0.8 * 0.5), 0, 3.05), (0.03, 0.5 - d * 0.3, 0.03), "steel", "spin")
         b.limb((sx * 0.5, 0, 3.05), (sx, 0, 2.85), 0.025, 0.025, "steel", "spin", seg=4)
         b.ball((sx, 0, 2.82), 0.05, "hazard", "spin", seg=4, rings=2)
-    b.ball((0, 0, 3.45), 0.19, "arc_blue", "gem", scale=(1, 1, 1.5), seg=8, rings=4)
+    b.ball((0, 0, 3.5), 0.23, "arc_blue", "gem", scale=(1, 1, 1.4), seg=8, rings=4)
     b.lathe([(0.0, 3.18), (0.12, 3.18), (0.12, 3.24), (0.0, 3.24)], "gunmetal", "gem", seg=8, smooth=False)
     b.ball((0, 0, 0.5), 0.26, "flash_white", "spark", seg=6, rings=4)
     b.ball((0, 0, 0.5), 0.38, "arc_blue", "spark", scale=(1, 1, 1.8), seg=6, rings=3)
