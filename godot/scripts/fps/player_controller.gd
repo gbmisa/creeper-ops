@@ -69,7 +69,10 @@ func update(dt: float, input: InputState, g: Grid, speed_factor := 1.0) -> void:
 		if can_occupy(g, pos.x, pos.z + dz):
 			pos.z += dz
 		if on_ground:
+			var was := int(bob / PI)
 			bob += dt * speed * 1.6
+			if int(bob / PI) != was:
+				Sfx.play("step")  # one per bob half-cycle: in step with the camera
 	_push_out(g)
 	if input.act("jump"):
 		if on_ground:
@@ -90,6 +93,8 @@ func update(dt: float, input: InputState, g: Grid, speed_factor := 1.0) -> void:
 		vel_y = minf(vel_y, 0.0)
 	var ground := GridRoofs.stand_y(g, pos.x, pos.z, feet0)  # drawbridge decks and roofs count
 	if pos.y <= ground:
+		if not on_ground and vel_y < -4.0:
+			Sfx.play("land")
 		pos.y = ground
 		vel_y = 0.0
 		on_ground = true
@@ -128,6 +133,7 @@ func _push_out(g: Grid) -> void:
 
 
 func _hop() -> void:
+	Sfx.play("jump")
 	vel_y = Config.JUMP_V
 	on_ground = false
 	_air_left = OperativeUpgrades.air_jumps()
