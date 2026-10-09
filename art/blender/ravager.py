@@ -115,8 +115,8 @@ def hit(arm):
     def pose(t):
         j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
         p = LEGS.all(arm, lambda n, s, i: (0.0, 0.1 * j, 0.1 * j))
-        p["thorax"] = (rot(arm, "thorax", (0, 1, 0), -0.3 * j), None)
-        p["body"] = (None, lib.world_loc(arm, "body", (-0.1 * j, 0, 0)))
+        p["thorax"] = (rot(arm, "thorax", (0, 1, 0), -0.6 * j), None)
+        p["body"] = (rot(arm, "body", (1, 0, 0), 0.2 * j), lib.world_loc(arm, "body", (-0.2 * j, 0, 0.04 * j)))
         p.update(arms(arm, 0.5 * j, 0.0, 0.4 * j))
         return p
     lib.action(arm, "hit", 8, pose, step=1)

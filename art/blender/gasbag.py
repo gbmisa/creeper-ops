@@ -16,7 +16,7 @@ TENDRILS = 6
 def tendril(i):
     a = i * 2 * math.pi / TENDRILS
     top = (math.cos(a) * 0.3, math.sin(a) * 0.3, -0.25)
-    bot = (math.cos(a) * 0.45, math.sin(a) * 0.45, -1.0 - 0.15 * (i % 3))
+    bot = (math.cos(a) * 0.75, math.sin(a) * 0.75, -1.35 - 0.2 * (i % 3))
     return top, bot
 
 
@@ -45,8 +45,8 @@ def build():
     for i in range(TENDRILS):
         top, bot = tendril(i)
         mid = tuple((a + b) * 0.5 for a, b in zip(top, bot))
-        b.limb(top, mid, 0.05, 0.03, "sick", "ten%d" % i, seg=5, smooth=True)
-        b.limb(mid, bot, 0.03, 0.008, "sick", "tip%d" % i, seg=5, smooth=True)
+        b.limb(top, mid, 0.085, 0.055, "sick", "ten%d" % i, seg=5, smooth=True)
+        b.limb(mid, bot, 0.055, 0.015, "sick", "tip%d" % i, seg=5, smooth=True)
     fk.wing_mesh(b, SPAN, CHORD, "gas_fin")
     b.finish(arm)
     return arm
@@ -59,7 +59,7 @@ def R(arm, bone, axis, ang):
 def drift(arm, t, amp=1.0, sac=1.0):
     w = 2 * math.pi * t
     p = fk.flap(arm, t * 2 % 1.0, amp=0.45, bias=0.0)
-    p["body"] = (R(arm, "body", (1, 0, 0), 0.05 * amp * math.sin(w)), lib.world_loc(arm, "body", (0, 0, 0.08 * amp * math.sin(w))))
+    p["body"] = (R(arm, "body", (1, 0, 0), 0.08 * amp * math.sin(w)), lib.world_loc(arm, "body", (0, 0, 0.15 * amp * math.sin(w))))
     p["sac"] = (None, None, (sac,) * 3)
     for i in range(TENDRILS):
         ph = w + i * 1.1
@@ -75,14 +75,14 @@ def clips(arm):
     def attack(t):  # squeeze the bladder and vent gas from the sac
         sq = lib.pulse(t, 0.1, 0.7)
         p = drift(arm, t, 1.2, 1 + 0.35 * sq)
-        p["body"] = (p["body"][0], p["body"][1], (1 - 0.1 * sq, 1 + 0.06 * sq, 1 - 0.12 * sq))
+        p["body"] = (p["body"][0], p["body"][1], (1 - 0.2 * sq, 1 + 0.12 * sq, 1 - 0.25 * sq))
         return p
     lib.action(arm, "attack", 20, attack, step=1)
 
     def hit(t):
         j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
         p = drift(arm, 0.0, 1.0)
-        p["body"] = (R(arm, "body", (1, 0, 0), 0.25 * j), lib.world_loc(arm, "body", (-0.1 * j, 0, 0.05 * j)), (1 + 0.08 * j,) * 3)
+        p["body"] = (R(arm, "body", (1, 0, 0), 0.45 * j), lib.world_loc(arm, "body", (-0.2 * j, 0, -0.12 * j)), (1 + 0.15 * j, 1 + 0.15 * j, 1 - 0.2 * j))
         return p
     lib.action(arm, "hit", 10, hit, step=1)
 

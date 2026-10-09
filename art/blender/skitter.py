@@ -11,7 +11,7 @@ from mathutils import Quaternion, Vector  # noqa: E402
 
 HIP_X = [0.14, 0.04, -0.06]
 FOOT_X = [0.44, 0.08, -0.34]
-HIP_Z, FOOT_Y, SWING = 0.33, 0.55, 0.47
+HIP_Z, FOOT_Y, SWING = 0.33, 0.55, 0.6
 SIDES = {"L": 1.0, "R": -1.0}
 TRIPOD_A = {"L0", "R1", "L2"}
 
@@ -59,10 +59,10 @@ def build_mesh(arm):
     for side in SIDES:
         for i in range(3):
             hip, knee, foot = leg_points(side, i)
-            b.limb(hip, knee, 0.045, 0.032, "chitin", "up_%s%d" % (side, i))
+            b.limb(hip, knee, 0.063, 0.045, "chitin", "up_%s%d" % (side, i))
             b.ball(knee, 0.034, "plate", "up_%s%d" % (side, i), seg=5, rings=4, smooth=False)
             claw = foot + (knee - foot).normalized() * 0.06
-            b.limb(knee, claw, 0.032, 0.016, "chitin", "lo_%s%d" % (side, i))
+            b.limb(knee, claw, 0.045, 0.022, "chitin", "lo_%s%d" % (side, i))
             b.limb(claw, foot, 0.016, 0.0, "bone", "lo_%s%d" % (side, i), seg=4)
     return b.finish(arm)
 
@@ -96,7 +96,7 @@ def walk(arm):
             if ph < 0.5:
                 return (SWING * (1.0 - 4.0 * ph), 0.0, 0.0)
             u = (ph - 0.5) * 2.0
-            return (SWING * (-1.0 + 2.0 * lib.ease(u)), 0.55 * math.sin(math.pi * u), 0.35 * math.sin(math.pi * u))
+            return (SWING * (-1.0 + 2.0 * lib.ease(u)), 0.85 * math.sin(math.pi * u), 0.5 * math.sin(math.pi * u))
         p = all_legs(arm, leg)
         bob = 0.018 * math.cos(4.0 * math.pi * t)
         p["body"] = (lib.world_rot(arm, "body", (1, 0, 0), 0.05 * math.sin(2 * math.pi * t)), lib.world_loc(arm, "body", (0, 0, bob)))
@@ -137,8 +137,8 @@ def attack(arm):
 def hit(arm):
     def pose(t):
         j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
-        p = all_legs(arm, lambda side, i: (0.0, 0.3 * j, 0.2 * j))
-        p["body"] = (lib.world_rot(arm, "body", (0, 1, 0), -0.25 * j), lib.world_loc(arm, "body", (-0.08 * j, 0, 0.03 * j)))
+        p = all_legs(arm, lambda side, i: (0.0, 0.6 * j, 0.4 * j))
+        p["body"] = (lib.world_rot(arm, "body", (0, 1, 0), -0.5 * j), lib.world_loc(arm, "body", (-0.16 * j, 0, 0.06 * j)))
         p["abdomen"] = (lib.world_rot(arm, "abdomen", (0, 1, 0), 0.3 * j), None)
         return p
     lib.action(arm, "hit", 8, pose, step=1)

@@ -13,7 +13,7 @@ RIBS = 4
 
 def rib(i):
     a = i * 2 * math.pi / RIBS + math.pi / 4
-    return (math.cos(a) * 0.7, math.sin(a) * 0.7, 0.3), (math.cos(a) * 0.2, math.sin(a) * 0.2, 1.5)
+    return (math.cos(a) * 0.75, math.sin(a) * 0.75, 0.3), (math.cos(a) * 0.32, math.sin(a) * 0.32, 1.85)
 
 
 def build():
@@ -32,6 +32,10 @@ def build():
         mid = tuple((a + c) * 0.5 + (d * 0.25) for a, c, d in zip(lo, hi, (lo[0], lo[1], 0)))
         b.limb(lo, mid, 0.09, 0.07, "bone", "rib%d" % i, seg=6)
         b.limb(mid, hi, 0.07, 0.0, "bone", "rib%d" % i, seg=6)
+    b.lathe([(0.2, 0.36), (0.38, 0.62), (0.48, 0.9), (0.44, 1.02)], "core_flesh", "base", seg=10)  # socket cup
+    for k in range(5):  # veins clutching the heart
+        a = k * 2 * math.pi / 5
+        b.limb((math.cos(a) * 0.42, math.sin(a) * 0.42, 0.95), (math.cos(a) * 0.3, math.sin(a) * 0.3, 1.38), 0.05, 0.02, "sick", "heart", seg=4)
     b.ball((0, 0, 1.15), 0.42, "core_glow", "heart", seg=12, rings=9)
     b.ball((0, 0, 1.15), 0.3, "core_flesh", "heart", scale=(1.5, 0.35, 1.45), seg=8, rings=6)  # dark cleft
     b.finish(arm)
@@ -45,11 +49,11 @@ def beat(t, strong=1.0):
 
 def pose(arm, t, strong=1.0, flex=1.0):
     h = beat(t, strong)
-    p = {"heart": (None, None, (1 + 0.14 * h,) * 3)}
+    p = {"heart": (None, None, (1 + 0.25 * h,) * 3)}
     for i in range(RIBS):
         lo, _hi = rib(i)
         axis = (-lo[1], lo[0], 0)  # tangent: rotating about it opens the rib outward
-        p["rib%d" % i] = (lib.world_rot(arm, "rib%d" % i, axis, 0.06 * h * flex), None)
+        p["rib%d" % i] = (lib.world_rot(arm, "rib%d" % i, axis, 0.15 * h * flex), None)
     return p
 
 

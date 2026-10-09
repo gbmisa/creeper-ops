@@ -54,9 +54,9 @@ def still(arm, fn=None):
 
 def walk(arm):
     def pose(t):
-        p = LEGS.walk(arm, t, 0.28, lift=0.35, bend=0.3, duty=0.7)
+        p = LEGS.walk(arm, t, 0.4, lift=0.6, bend=0.5, duty=0.7)
         p["body"] = (rot(arm, "body", (1, 0, 0), 0.05 * math.sin(2 * math.pi * t)),
-                     lib.world_loc(arm, "body", (0, 0, 0.025 * math.cos(4 * math.pi * t))))
+                     lib.world_loc(arm, "body", (0, 0, 0.06 * math.cos(4 * math.pi * t))))
         p["head"] = (rot(arm, "head", (0, 0, 1), 0.08 * math.sin(2 * math.pi * t)), None)
         return p
     lib.action(arm, "walk", 14, pose, step=1, loop=True)
@@ -66,7 +66,7 @@ def idle(arm):
     def pose(t):
         w = 2 * math.pi * t
         p = still(arm)
-        p["body"] = (None, lib.world_loc(arm, "body", (0, 0, 0.015 * math.sin(w))))
+        p["body"] = (rot(arm, "body", (0, 1, 0), 0.04 * math.sin(w)), lib.world_loc(arm, "body", (0, 0, 0.04 * math.sin(w))))
         p["head"] = (rot(arm, "head", (0, 0, 1), 0.2 * math.sin(w)).normalized() @
                      rot(arm, "head", (0, 1, 0), 0.08 * math.sin(2 * w)), None)
         return p
@@ -89,8 +89,8 @@ def hit(arm):
     def pose(t):
         j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
         p = still(arm)
-        p["body"] = (rot(arm, "body", (1, 0, 0), 0.08 * j), lib.world_loc(arm, "body", (-0.05 * j, 0, 0)))
-        p["head"] = (rot(arm, "head", (0, 0, 1), 0.35 * j), None)
+        p["body"] = (rot(arm, "body", (1, 0, 0), 0.18 * j) @ rot(arm, "body", (0, 1, 0), -0.15 * j), lib.world_loc(arm, "body", (-0.12 * j, 0, 0.04 * j)))
+        p["head"] = (rot(arm, "head", (0, 0, 1), 0.6 * j), None)
         return p
     lib.action(arm, "hit", 10, pose, step=1)
 

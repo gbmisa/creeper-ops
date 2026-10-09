@@ -118,6 +118,12 @@ class Builder:
         self._tag(near_a, mat, bone, smooth)
         self._tag([v for v in res["verts"] if v not in near_a], mat, bone_b, smooth)
 
+    def move(self, bones, delta):
+        """Shift every part already skinned to these bones (raise a body before adding legs)."""
+        for bn in bones:
+            for v in {v for v in self.groups.get(bn, []) if v.is_valid}:
+                v.co += Vector(delta)
+
     def finish(self, arm):
         bmesh.ops.remove_doubles(self.bm, verts=self.bm.verts, dist=1e-5)
         bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces)

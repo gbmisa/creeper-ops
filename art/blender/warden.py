@@ -9,14 +9,14 @@ from legs import Legs  # noqa: E402
 
 LEGS = Legs()
 for n, s, ph in (("L", 1, 0.0), ("R", -1, 0.5)):
-    LEGS.add(n, (-0.05, s * 0.18, 0.36), (0.0, s * 0.3, 0.0), s, ph, knee_up=0.0, knee_out=0.05, pillar=True)
+    LEGS.add(n, (-0.05, s * 0.2, 0.5), (0.0, s * 0.36, 0.0), s, ph, knee_up=0.0, knee_out=0.06, pillar=True)
 
 
 def build():
     arm = lib.armature("warden", [("root", (0, 0, 0), (0, 0, 0.1), None),
-                                  ("body", (-0.05, 0, 0.4), (-0.05, 0, 0.7), "root"),
-                                  ("head", (0.0, 0, 0.88), (0.15, 0, 0.92), "body"),
-                                  ("shield", (0.15, 0, 0.6), (0.32, 0, 0.6), "body")] + LEGS.bones("body"))
+                                  ("body", (-0.05, 0, 0.54), (-0.05, 0, 0.84), "root"),
+                                  ("head", (0.0, 0, 1.02), (0.15, 0, 1.06), "body"),
+                                  ("shield", (0.15, 0, 0.74), (0.32, 0, 0.74), "body")] + LEGS.bones("body"))
     b = lib.Builder("warden")
     b.ball((-0.05, 0, 0.56), 0.34, "chitin", "body", scale=(0.8, 1.15, 1.0), seg=10, rings=7)
     for s in (1, -1):
@@ -35,6 +35,7 @@ def build():
     for s in (1, -1):
         for z in (0.93, 0.22):
             b.limb((0.36, s * 0.34, z), (0.45, s * 0.42, z + (0.12 if z > 0.5 else -0.1)), 0.04, 0.0, "bone", "shield", seg=4)
+    b.move(["body", "head", "shield"], (0, 0, 0.14))
     LEGS.mesh(b, 0.07, 0.06, 0.06, joint="plate", tip="chitin")
     b.finish(arm)
     return Kit(arm, LEGS, walk_frames=16, swing=0.3, lift=0.45, bend=0.7, duty=0.55, bob=0.025,

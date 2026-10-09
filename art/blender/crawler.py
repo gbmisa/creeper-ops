@@ -28,6 +28,9 @@ def build():
         for x in (-0.7, 0.0, 0.7):  # rivets
             b.ball((x, s * 0.66, 0.92), 0.04, "bronze", "hull", seg=5, rings=3, smooth=False)
     b.box((-0.6, 0, 1.1), (0.5, 0.5, 0.06), "cloth", "hull")
+    b.limb((-0.85, 0.45, 1.05), (-0.85, 0.45, 2.0), 0.03, 0.03, "oak", "hull", seg=4)  # banner pole
+    b.box((-0.62, 0.45, 1.8), (0.42, 0.03, 0.34), "cloth", "hull")
+    b.box((-0.62, 0.43, 1.8), (0.12, 0.02, 0.12), "unit_glow", "hull")
     b.limb((0, 0, 0.91), (0, 0, 1.23), 0.4, 0.32, "bronze", "turret", seg=10)
     b.limb((0.1, 0, 1.26), (1.0, 0, 1.32), 0.07, 0.07, "iron", "barrel", seg=8)
     b.limb((1.0, 0, 1.32), (1.2, 0, 1.33), 0.1, 0.0, "unit_glow", "barrel", seg=6)
@@ -68,25 +71,26 @@ def clips(arm):
     def attack(t):
         kick = lib.pulse(t, 0.0, 0.5)
         p = wheels(arm, 0.0)
-        p["barrel"] = (None, lib.world_loc(arm, "barrel", (-0.15 * kick, 0, 0)))
-        p["hull"] = (R(arm, "hull", (0, 1, 0), -0.04 * kick), None)
+        p["barrel"] = (None, lib.world_loc(arm, "barrel", (-0.35 * kick, 0, 0)))
+        p["turret"] = (R(arm, "turret", (0, 1, 0), -0.08 * kick), None)
+        p["hull"] = (R(arm, "hull", (0, 1, 0), -0.12 * kick), lib.world_loc(arm, "hull", (-0.06 * kick, 0, 0)))
         return p
     lib.action(arm, "attack", 12, attack, step=1)
 
     def hit(t):
         j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
         p = wheels(arm, 0.0)
-        p["hull"] = (R(arm, "hull", (1, 0, 0), 0.1 * j), lib.world_loc(arm, "hull", (0, 0, 0.05 * j)))
+        p["hull"] = (R(arm, "hull", (1, 0, 0), 0.25 * j) @ R(arm, "hull", (0, 1, 0), -0.1 * j), lib.world_loc(arm, "hull", (-0.08 * j, 0, 0.12 * j)))
         return p
     lib.action(arm, "hit", 8, hit, step=1)
 
     def die(t):  # a wheel gives way, the hull slumps onto its side and the turret is thrown off
         k = lib.ease(min(1.0, t / 0.5))
         p = wheels(arm, 0.0)
-        p["w2"] = (R(arm, "w2", (1, 0, 0), 1.2 * k), lib.world_loc(arm, "w2", (0.1 * k, -0.4 * k, -0.2 * k)))
+        p["w2"] = (R(arm, "w2", (1, 0, 0), 1.57 * k), lib.world_loc(arm, "w2", (0.1 * k, -0.55 * k, -0.3 * k)))
         p["hull"] = (R(arm, "hull", (1, 0, 0), -0.45 * k) @ R(arm, "hull", (0, 1, 0), 0.15 * k), lib.world_loc(arm, "hull", (0, 0, -0.25 * k)))
         pop = lib.ease(min(1.0, t / 0.7))
-        p["turret"] = (R(arm, "turret", (1, 0, 0), 1.2 * pop), lib.world_loc(arm, "turret", (-0.2 * pop, 0.5 * pop, 0.6 * math.sin(math.pi * pop))))
+        p["turret"] = (R(arm, "turret", (1, 0, 0), 1.2 * pop), lib.world_loc(arm, "turret", (-0.3 * pop, 0.9 * pop, 0.6 * math.sin(math.pi * pop) - 0.85 * pop)))
         return p
     lib.action(arm, "die", 30, die, step=1)
 

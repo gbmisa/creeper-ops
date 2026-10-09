@@ -40,7 +40,7 @@ def wing_mesh(b, span, chord, skin, bone_mat="bone", parent="body"):
             else:
                 bones = [bn for _, bn in panel]
             b.poly(pts, bones, skin)
-        r = 0.035 * span
+        r = 0.05 * span
         b.limb(w["S"], w["E"], r, r * 0.8, bone_mat, up, seg=5)
         b.limb(w["E"], w["W"], r * 0.8, r * 0.6, bone_mat, lo, seg=5)
         for f in ("F1", "F2", "F3"):

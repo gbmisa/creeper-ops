@@ -27,7 +27,8 @@ class Legs:
             out.append(("lo_" + n, knee, foot, "up_" + n))
         return out
 
-    def mesh(self, b, r_hip, r_knee, r_foot, mat="chitin", joint="plate", tip="bone", seg=6):
+    def mesh(self, b, r_hip, r_knee, r_foot, mat="chitin", joint="plate", tip="bone", seg=6, thick=1.4):
+        r_hip, r_knee, r_foot = r_hip * thick, r_knee * thick, r_foot * thick
         for n, (hip, knee, foot, _s, _p) in self.legs.items():
             b.limb(hip, knee, r_hip, r_knee, mat, "up_" + n, seg=seg)
             b.ball(knee, r_knee * 1.1, joint, "up_" + n, seg=5, rings=4, smooth=False)

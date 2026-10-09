@@ -24,15 +24,15 @@ def build():
                                    ("arm_R", (0, -0.25, 1.4), (0.3, -0.12, 1.08), "chest"),
                                    ("xbow", (0.3, 0, 1.08), (0.7, 0, 1.08), "chest")] + LEGS.bones("hips"))
     b = lib.Builder("soldier")
-    LEGS.mesh(b, 0.1, 0.085, 0.075, mat="dark", joint="mail", tip="dark", seg=7)
+    LEGS.mesh(b, 0.075, 0.065, 0.055, mat="mail", joint="bronze", tip="dark", seg=7)
     for n, (_h, _k, foot, _s, _p) in LEGS.legs.items():
         b.box((foot.x + 0.06, foot.y, 0.05), (0.26, 0.12, 0.1), "oak", "lo_" + n)  # boots
     b.lathe([(0.2, 0.82), (0.24, 1.0), (0.2, 1.1)], "mail", "hips", seg=8)
-    b.lathe([(0.2, 1.1), (0.26, 1.2), (0.24, 1.45), (0.1, 1.5), (0.0, 1.5)], "mail", "chest", seg=8)
+    b.lathe([(0.2, 1.1), (0.23, 1.2), (0.22, 1.45), (0.1, 1.5), (0.0, 1.5)], "mail", "chest", seg=8)
     b.box((0.21, 0, 1.08), (0.1, 0.3, 0.62), "cloth", "chest")
     b.box((0.27, 0, 1.3), (0.05, 0.08, 0.08), "unit_glow", "chest")
     b.box((-0.2, 0, 0.95), (0.05, 0.5, 1.0), "cloth", "chest", rot=Quaternion((0, 1, 0), 0.12))  # cloak
-    b.ball((0, 0, 1.6), 0.12, "skin", "head", seg=10, rings=7)
+    b.ball((0, 0, 1.6), 0.14, "skin", "head", seg=10, rings=7)
     b.lathe([(0.15, 1.56), (0.14, 1.7), (0.08, 1.78), (0.0, 1.8)], "bronze", "head", seg=8)
     b.box((-0.02, 0, 1.82), (0.24, 0.03, 0.1), "cloth", "head")
     for sd, s in (("L", 1), ("R", -1)):
@@ -77,17 +77,18 @@ def clips(arm):
         aim = lib.ease(min(1.0, t / 0.25)) * (1.0 - lib.ease(max(0.0, (t - 0.75) / 0.25)))
         kick = lib.pulse(t, 0.3, 0.55)
         p = stand(arm)
-        p["chest"] = (R(arm, "chest", (0, 1, 0), -0.05 * kick), None)
-        p["xbow"] = (R(arm, "xbow", (0, 1, 0), -0.1 * aim - 0.2 * kick), lib.world_loc(arm, "xbow", (-0.08 * kick, 0, 0.1 * aim)))
-        p["arm_R"] = (None, lib.world_loc(arm, "arm_R", (-0.08 * kick, 0, 0.1 * aim)))
+        p["chest"] = (R(arm, "chest", (0, 1, 0), -0.15 * kick) @ R(arm, "chest", (0, 0, 1), 0.1 * kick), None)
+        p["xbow"] = (R(arm, "xbow", (0, 1, 0), -0.1 * aim - 0.35 * kick), lib.world_loc(arm, "xbow", (-0.18 * kick, 0, 0.12 * aim)))
+        p["arm_R"] = (None, lib.world_loc(arm, "arm_R", (-0.18 * kick, 0, 0.12 * aim)))
         return p
     lib.action(arm, "attack", 20, attack, step=1)
 
     def hit(t):
         j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
         p = stand(arm)
-        p["chest"] = (R(arm, "chest", (0, 1, 0), -0.25 * j), None)
-        p["head"] = (R(arm, "head", (0, 1, 0), -0.3 * j), None)
+        p["chest"] = (R(arm, "chest", (0, 1, 0), -0.5 * j), None)
+        p["head"] = (R(arm, "head", (0, 1, 0), -0.5 * j), None)
+        p["hips"] = (None, lib.world_loc(arm, "hips", (-0.12 * j, 0, -0.04 * j)))
         return p
     lib.action(arm, "hit", 10, hit, step=1)
 
