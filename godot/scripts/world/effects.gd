@@ -145,6 +145,7 @@ func lob(a: Vector3, b: Vector3, opts: Dictionary) -> Dictionary:
 	var mi := MeshInstance3D.new()
 	mi.mesh = _sphere
 	mi.material_override = glow_mat(opts.get("color", Color.ORANGE))
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF  # A4: bolt trails cast no shadow
 	mi.scale = Vector3.ONE * opts.get("size", 0.45)
 	mi.position = a
 	add_child(mi)

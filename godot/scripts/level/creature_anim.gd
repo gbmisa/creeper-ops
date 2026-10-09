@@ -23,6 +23,10 @@ const ST_DIE := 4
 
 static var _scenes := {}  # id -> PackedScene (only ids that have a .glb)
 
+## Test/debug switch: when true, make() returns null so callers fall back to
+## procedural meshes. Used by the A4 smoke rules.
+static var disabled := false
+
 
 ## "Spore Bat" -> "spore_bat", "Skitter" -> "skitter".
 static func id_of(def_name: String) -> String:
@@ -32,7 +36,7 @@ static func id_of(def_name: String) -> String:
 ## Instance the model for `id`, scaled by `scale`, glow materials replaced.
 ## Returns null when there is no .glb (caller falls back to procedural).
 static func make(id: String, scale: float, glow: Material) -> Node3D:
-	if id.is_empty():
+	if id.is_empty() or disabled:
 		return null
 	if not _scenes.has(id):
 		var path := MODEL_DIR + id + ".glb"
