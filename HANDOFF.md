@@ -19,8 +19,9 @@ Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** (Fount) codes fr
 | `art/3-models` | Opus | 27 glbs. Latest: rebuilt wyvern, `command_node`. Log: `docs/tasks/ART3M_progress.md`. |
 
 ## Grading this session (Sonnet grader, 3 rounds each)
-- Wyvern rebuild (2.3 m wings, legs, fire breath on a `fire` bone): 4 → 5 → 5.5. It's still dark and small on the sheet; judge it in game once the gallery camera works.
-- Command Node (crown wheel, flight jets, packet ring, shard death): 6 → 6.5 → 7.
+- **preview.py fixed:** it now frames the posed idle mesh plus a margin. Before, hidden parts at full size shrank every sheet and dropped the ground plane, so older grades were partly limited by the camera.
+- Wyvern rebuild: 6 on the fixed framing. Command Node: 7.5. Trebuchet: pot was under ground, now rests in the sling trough, 6.5. Re-check: pod 6 (its fall flame is under the preview ground; fine in game), Totem 7.
+- All of these are on `art/3-hive-models` too (`44a42e7`); Muse hadn't started it.
 - In game, `--creatures --look=40,74,22`: 6/10. The creatures are grounded and well scaled; the glow bleaches to cream (Muse A3 task 0).
 
 ## Next (Opus)
