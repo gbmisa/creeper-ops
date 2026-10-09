@@ -24,3 +24,4 @@ Done on integ: 1, 3, 4, 7 (Muse branches + Spitter range 14), 10 + 13 (pt3/enemy
 18. **Null Sprayer is extremely overpowered** (anti-creeper, feat/anti-creeper). Nerf. (pt3/sprayer-cave)
 19. **Deep Core projectiles go through cave terrain** (standing on a Salvage engine underground): they must be blocked by terrain and path around it sensibly, not clip through. (pt3/sprayer-cave)
 20. **Pulse Rifle still very inaccurate:** bloom 5.5°→1.2°, yaw/climb cut (recoil_defs.gd, Opus).
+21. **Castle turret sockets must be obvious:** the spots on a castle that can take a tower need to read clearly. (pt3/socket-look)
