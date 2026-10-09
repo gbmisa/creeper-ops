@@ -15,6 +15,7 @@ static func run(g) -> void:
 	_shots(g, b)
 	_planner(g, b)
 	_q(g, b)
+	_mortars(g, b)
 	b.clear()
 	b.hold = true
 
@@ -260,6 +261,104 @@ static func _planner(g, b: EnemyBuilder) -> void:
 	b.hold = true
 	g.hazards.nests.time = saved
 	b.clear()
+
+
+static func _mortars(g, b: EnemyBuilder) -> void:
+	var nests: SporeNests = g.hazards.nests
+	var world: World = nests.world
+	var grid: Grid = world.grid
+	var hub := _hub(g)
+	var saved_time: float = nests.time
+	var saved_seal: float = nests.seal
+	var saved_arm: float = nests.seal_arm
+	nests.time = 0.0
+	nests.seal = 0.0
+	nests.seal_arm = 0.0
+	SmokeTest._check("no castle mortar before the pressure gate", not EnemyBuildPlan._mortar_wanted(b, hub))
+	nests.seal = Config.MORTAR_SEAL
+	nests.seal_arm = Config.MORTAR_SEAL_BUILD
+	SmokeTest._check("a sealed node still unlocks the castle mortar", EnemyBuildPlan._mortar_wanted(b, hub))
+	nests.seal = 0.0
+	nests.seal_arm = 0.0
+	nests.time = 3000.0
+	SmokeTest._check("pressure unlocks the castle mortar", EnemyBuildPlan._mortar_wanted(b, hub))
+	var cap := EnemyBuildPlan._mortar_cap(b)
+	SmokeTest._check("the mortar cap is 1 or 2", cap >= 1 and cap <= 2, str(cap))
+	var built: Array = []
+	for i in range(cap):
+		var cell := _cell(g, 6, 10)
+		var s := b.begin(hub, "mortar", cell, false, 0.0)
+		EnemyBuildFight.grew(b, s)
+		built.append(s)
+	SmokeTest._check("finished castle mortars arm and register telegraphs",
+		b.mortars.size() == cap and nests.hub_mortars.size() == cap, str(b.mortars.size()))
+	SmokeTest._check("the cap stops further mortar builds", not EnemyBuildPlan._mortar_wanted(b, hub))
+	var s0: Dictionary = built[0]
+	var c0: Vector2i = s0.cell
+	SmokeTest._check("the mortar sits on the ground",
+		is_equal_approx(s0.pos.y, grid.cell_ground(c0.x, c0.y).y), str(s0.pos.y))
+	# Shells fly as tracked hostile lobs.
+	var m0: Dictionary = b.mortars[0]
+	var tc := Vector2i(mini(c0.x + 10, grid.w - 7), c0.y)
+	var ti := grid.idx(tc.x, tc.y)
+	var floor_h := grid.base_height[ti]
+	TerrainEdit.apply(world, [{ "x": tc.x, "z": tc.y, "height": floor_h + 2.0 }])
+	var at := grid.cell_ground(tc.x, tc.y)
+	m0.telegraph = { "at": at, "t": 0.0, "whistled": false }
+	EnemyMortarFire.advance(nests, m0, Config.MORTAR_TELEGRAPH)
+	var shell := {}
+	for it in world.effects.lobs():
+		if bool(it.get("mortar_shell", false)):
+			shell = it
+	SmokeTest._check("the shell flies as a tracked hostile lob",
+		not shell.is_empty() and bool(shell.get("foe", false)))
+	_drain_shells(world)
+	SmokeTest._check("the shell detonates on arrival", grid.height[ti] < floor_h + 1.5, str(grid.height[ti]))
+	# A swatted shell (dead = what Beam interception sets) never detonates.
+	var tc2 := Vector2i(c0.x, mini(c0.y + 10, grid.h - 7))
+	var ti2 := grid.idx(tc2.x, tc2.y)
+	var floor2 := grid.base_height[ti2]
+	TerrainEdit.apply(world, [{ "x": tc2.x, "z": tc2.y, "height": floor2 + 2.0 }])
+	var at2 := grid.cell_ground(tc2.x, tc2.y)
+	m0.telegraph = { "at": at2, "t": 0.0, "whistled": false }
+	EnemyMortarFire.advance(nests, m0, Config.MORTAR_TELEGRAPH)
+	var shell2 := {}
+	for it in world.effects.lobs():
+		if bool(it.get("mortar_shell", false)):
+			shell2 = it
+	SmokeTest._check("the second shell launched", not shell2.is_empty())
+	if not shell2.is_empty():
+		shell2.dead = true
+	_drain_shells(world)
+	SmokeTest._check("an intercepted shell never detonates",
+		shell2.is_empty() or is_equal_approx(grid.height[ti2], floor2 + 2.0), str(grid.height[ti2]))
+	# The player can destroy built mortars.
+	for raw in b.list.duplicate():
+		var s: Dictionary = raw
+		if str(s.kind) == "mortar" and bool(s.alive):
+			b.hurt(s, 99999.0)
+	SmokeTest._check("player fire destroys castle mortars and unregisters them",
+		b.mortars.is_empty() and nests.hub_mortars.is_empty(),
+		"%d/%d" % [b.mortars.size(), nests.hub_mortars.size()])
+	TerrainEdit.apply(world, [{ "x": tc.x, "z": tc.y, "height": floor_h }])
+	TerrainEdit.apply(world, [{ "x": tc2.x, "z": tc2.y, "height": floor2 }])
+	nests.time = saved_time
+	nests.seal = saved_seal
+	nests.seal_arm = saved_arm
+
+
+static func _drain_shells(world: World) -> void:
+	var guard := 0
+	while guard < 40:
+		var live := false
+		for it in world.effects.lobs():
+			if bool(it.get("mortar_shell", false)):
+				live = true
+				break
+		if not live:
+			return
+		world.effects.update(0.25)
+		guard += 1
 
 
 static func _hub(g) -> Dictionary:

@@ -150,7 +150,8 @@ func lob(a: Vector3, b: Vector3, opts: Dictionary) -> Dictionary:
 	mi.position = a
 	add_child(mi)
 	var it := { "node": mi, "t": 0.0, "life": opts.get("time", 1.0), "kind": "lob", "a": a, "b": b,
-		"arc": opts.get("arc", 8.0), "cb": opts.get("on_arrive", Callable()), "dead": false, "pos": a }
+		"arc": opts.get("arc", 8.0), "cb": opts.get("on_arrive", Callable()), "dead": false, "pos": a,
+		"foe": bool(opts.get("foe", false)), "mortar_shell": bool(opts.get("mortar_shell", false)) }
 	_items.append(it)
 	return it
 
