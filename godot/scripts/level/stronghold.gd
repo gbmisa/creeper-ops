@@ -39,10 +39,22 @@ func _init(w: World, castles: Array, sn: SporeNests) -> void:
 		views[c.id] = v
 		StrongholdHooks.attach(self, c, lay, v)
 		CastleEngines.attach(self, c, v)
+		_trebuchet_markers(w, c, lay, v)
 		StrongholdMeshes.refresh(v, c)
 	nests.raiders.castle_goals = castle_goals
 	nests.raiders.on_march = _assign
 	w.updaters.append(update)
+
+
+## Minor markers on live trebuchets while the bailey stage is the objective, so the
+## "destroy the trebuchets" blocker is findable, not just a nag line.
+func _trebuchet_markers(w: World, c: Dictionary, lay: Dictionary, v: Dictionary) -> void:
+	for i in c.engines.size():
+		var idx: int = i
+		var node: Node3D = v.engines[idx]
+		w.markers.append({ "pos": node.position + Vector3(0, 3, 0), "label": "Trebuchet",
+			"color": Color("ffb347"), "minor": true,
+			"visible": func(): return c.state == "hostile" and CastleStages.current(c, lay) == "bailey" and CastleEngines.alive(c.engines[idx]) })
 
 
 func held() -> int:
