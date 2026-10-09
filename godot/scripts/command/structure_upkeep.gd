@@ -3,8 +3,10 @@ class_name StructureUpkeep
 ## Creeper rule (CW3, docs/CREEPER_SPEC.md §1): depth decides only whether a structure is wet.
 ## Weapons and the Node have a health reserve: wet, they lose max HP / `wet_time` per second
 ## whatever the depth, and an unfinished one loses build progress at the same rate (and asks
-## for no packets) instead. Everything else dies on contact, built or not. A charging weapon
-## (Nullifier) takes nothing. Dry built structures heal to full over HEAL_TIME.
+## for no packets) instead. Everything else dies on contact, built or not — including an
+## unfinished weapon with no build progress to lose (a placed-but-never-started ghost dies
+## on contact like everything else). A charging BUILT weapon (Nullifier) takes nothing.
+## Dry built structures heal to full over HEAL_TIME.
 
 
 static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
@@ -17,11 +19,15 @@ static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
 	if not has_reserve(s):
 		mgr.remove(s, "destroyed")
 		return
-	if s.charge > 0.0:
+	if s.charge > 0.0 and s.is_built():
 		return
 	var rate := dt / float(s.def.get("wet_time", Config.WET_TIME))
 	if s.is_built():
 		mgr.damage(s, s.def.hp * rate)
+	elif float(s.delivered) - s.lost <= 0.0:
+		# No build progress to lose: the progress loss below would be a no-op at zero
+		# delivered, leaving the structure immortal in creeper. Kill it instead.
+		mgr.remove(s, "destroyed")
 	else:
 		s.lost = minf(float(s.delivered), s.lost + s.def.cost * rate)
 

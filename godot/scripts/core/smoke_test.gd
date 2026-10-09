@@ -147,6 +147,7 @@ static func run(g) -> void:
 	SmokeSupplyRules.run(g)
 	SmokeTraversal.run(g)
 	SmokeCw3.run(g)
+	SmokeUnbuiltKill.run(g)
 	SmokeLevel02.run(g)
 	SmokeKeeps.run(g)
 	SmokeTerp.run(g)
@@ -193,6 +194,10 @@ static func _run_only(g) -> void:
 				SmokeTuning.run(g)
 			"creature":
 				SmokeCreatureAnim.run(g)
+			"unbuiltkill":
+				SmokeUnbuiltKill.run(g)
+			"cw3":
+				SmokeCw3.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 
