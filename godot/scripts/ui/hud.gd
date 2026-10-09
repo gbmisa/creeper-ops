@@ -18,6 +18,7 @@ var _help: Label
 var _overlay: Control
 var _overlay_box: VBoxContainer
 var _mode := ""
+const LOG_LIFT := 178.0
 
 
 func setup(cm: CommandMode, um: UnitManager) -> void:
@@ -35,17 +36,20 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	info.setup(cm, um)
 	add_child(info)
 	_log = UiKit.vbox(2)
-	_log.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	_log.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_log.position = Vector2(12, -12)
+	_log.anchor_top = 1.0
+	_log.anchor_bottom = 1.0
+	_log.alignment = BoxContainer.ALIGNMENT_END
+	_log.offset_left = 12
+	_log.offset_right = 452
+	_lift_log(LOG_LIFT)
 	add_child(_log)
 	alerts = HudAlerts.new()
 	alerts.setup(self)
 	_selbox = Panel.new()
-	_selbox.add_theme_stylebox_override("panel", UiKit.style(Color(0.6, 1.0, 0.5, 0.12), Color(0.6, 1.0, 0.5, 0.8), 0, 0))
+	_selbox.add_theme_stylebox_override("panel", UiKit.style(Color(UiKit.ACCENT, 0.1), Color(UiKit.ACCENT, 0.85), 0, 0))
 	_selbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_selbox)
-	_help = UiKit.label("", 12, UiKit.DIM)
+	_help = UiKit.label("", 13, UiKit.DIM)
 	_help.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_help.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_help.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -61,6 +65,11 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	add_child(keys)
 	add_child(ArmouryMenu.new())
 	Bus.log_msg.connect(add_log)
+	var th := UiTheme.build()
+	for c in get_children():  # a CanvasLayer stops theme propagation from the Window
+		if c is Control:
+			(c as Control).theme = th
+	build.show_tab(build.tab)  # rebuild the cards now that the theme fonts are in
 	set_mode("command")
 
 
@@ -72,7 +81,9 @@ func _build_overlay() -> void:
 	var c := CenterContainer.new()
 	c.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_overlay.add_child(c)
-	var p := UiKit.panel(Color(0.05, 0.07, 0.1, 0.96))
+	var p := UiKit.panel(UiKit.BG_SOLID)
+	(p.get_theme_stylebox("panel") as StyleBoxFlat).set_content_margin_all(18)
+	UiKit.brackets(p, UiKit.ACCENT, 16.0)
 	c.add_child(p)
 	_overlay_box = UiKit.vbox(10)
 	_overlay_box.custom_minimum_size.x = 620
@@ -92,7 +103,7 @@ func add_log(text: String, kind: String) -> void:
 		top_l.text = "%s  x%d" % [text, n]
 		top_l.modulate.a = 1.0
 		return
-	var l := UiKit.label(text, 14, UiKit.KIND_COLORS.get(kind, UiKit.TEXT))
+	var l := UiKit.label(text, 16, UiKit.KIND_COLORS.get(kind, UiKit.TEXT))
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size.x = 400  # stays clear of the centred build menu
 	l.set_meta("text", text)
@@ -103,6 +114,12 @@ func add_log(text: String, kind: String) -> void:
 	l.add_theme_constant_override("outline_size", 4)
 	_log.add_child(l)
 	_trim_log()
+
+
+## The log sits above the build menu in command mode so wide card rows never cover it.
+func _lift_log(lift: float) -> void:
+	_log.offset_bottom = -lift
+	_log.offset_top = -lift - 300.0
 
 
 func _log_life(kind: String) -> float:
@@ -158,6 +175,9 @@ func set_mode(mode: String) -> void:
 	build.visible = cmd
 	info.visible = false
 	alerts.set_reason_visible(cmd)
+	_lift_log(LOG_LIFT if cmd else 12.0)
+	_help.offset_bottom = -(LOG_LIFT if cmd else 12.0)
+	_help.offset_top = _help.offset_bottom - 24.0
 	var k := Keybinds.short
 	_help.text = ("%s%s%s%s/edge pan · %s/%s rotate · wheel zoom · right-click move/order · %s move · %s recycle · %s Operative · %s pause · %s/%s speed · %s controls" % [
 		k.call("cam_forward"), k.call("cam_left"), k.call("cam_back"), k.call("cam_right"), k.call("cam_rot_left"), k.call("cam_rot_right"),

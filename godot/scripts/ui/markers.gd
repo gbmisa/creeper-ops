@@ -14,7 +14,7 @@ func _init() -> void:
 
 func _label(i: int) -> Label:
 	while _labels.size() <= i:
-		var l := UiKit.label("", 13)
+		var l := UiKit.label("", 16)
 		l.add_theme_color_override("font_outline_color", Color.BLACK)
 		l.add_theme_constant_override("outline_size", 4)
 		add_child(l)

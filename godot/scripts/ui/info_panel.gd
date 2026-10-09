@@ -17,7 +17,8 @@ var _actions: HFlowContainer
 func setup(cm: CommandMode, um: UnitManager) -> void:
 	command = cm
 	units = um
-	add_theme_stylebox_override("panel", UiKit.style())
+	add_theme_stylebox_override("panel", UiKit.style(UiKit.BG, UiKit.EDGE, 1, 10))
+	UiKit.brackets(self)
 	anchor_left = 1.0
 	anchor_right = 1.0
 	anchor_top = 0.0
@@ -26,15 +27,16 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	offset_top = 64
 	var v := UiKit.vbox(6)
 	add_child(v)
-	_title = UiKit.label("", 18)
-	v.add_child(_title)
+	var head := UiKit.header("", 20, UiKit.TEXT)
+	_title = head.get_node("Text")
+	v.add_child(head)
 	_hp_row = UiKit.hbox(8)
-	_hp_lbl = UiKit.label("", 13)
+	_hp_lbl = UiKit.mono("", 14)
 	_hp_row.add_child(_hp_lbl)
 	_hp_bar = UiKit.bar(170, 10, UiKit.GOOD)
 	_hp_row.add_child(_hp_bar)
 	v.add_child(_hp_row)
-	_body = UiKit.rich(13)
+	_body = UiKit.rich(15)
 	_body.custom_minimum_size.x = 300
 	v.add_child(_body)
 	_actions = HFlowContainer.new()
@@ -46,7 +48,7 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 
 
 func _btn(text: String, cb: Callable) -> void:
-	_actions.add_child(UiKit.button(text, cb, 13))
+	_actions.add_child(UiKit.button(text, cb, 14))
 
 
 func _rebuild_actions() -> void:

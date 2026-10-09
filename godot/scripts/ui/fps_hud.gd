@@ -34,7 +34,7 @@ func _init() -> void:
 	_cross.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_cross.position -= Vector2(8, 18)
 	add_child(_cross)
-	var panel := UiKit.panel(Color(0.04, 0.06, 0.09, 0.55))
+	var panel := UiKit.panel(Color(UiKit.BG_SOLID, 0.6))
 	panel.anchor_left = 0.5
 	panel.anchor_right = 0.5
 	panel.anchor_top = 1.0

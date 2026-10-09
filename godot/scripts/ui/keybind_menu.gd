@@ -23,8 +23,8 @@ func _init() -> void:
 	var v := UiKit.vbox(8)
 	v.mouse_filter = Control.MOUSE_FILTER_PASS
 	p.add_child(v)
-	v.add_child(UiKit.label("CONTROLS", 22))
-	v.add_child(UiKit.label("Click a key to rebind it, then press the new key (Esc cancels). Right-click clears. Saved automatically and kept across updates.", 13, UiKit.DIM))
+	v.add_child(UiKit.header("Controls", 22))
+	v.add_child(UiKit.label("Click a key to rebind it, then press the new key (Esc cancels). Right-click clears. Saved automatically and kept across updates.", 15, UiKit.DIM))
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(640, 560)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -48,14 +48,14 @@ func _init() -> void:
 
 func _build_rows() -> void:
 	for grp in Keybinds.GROUPS:
-		var head := UiKit.label(grp.to_upper(), 15, UiKit.ENERGY)
+		var head := UiKit.label(grp.to_upper(), 16, UiKit.ACCENT)
 		_rows.add_child(head)
 		for id in Keybinds.DEFAULTS:
 			if Keybinds.group(id) != grp:
 				continue
 			var row := UiKit.hbox(8)
 			row.mouse_filter = Control.MOUSE_FILTER_PASS
-			var l := UiKit.label(Keybinds.label(id), 14)
+			var l := UiKit.label(Keybinds.label(id), 16)
 			l.custom_minimum_size.x = 260
 			row.add_child(l)
 			var pair := []
