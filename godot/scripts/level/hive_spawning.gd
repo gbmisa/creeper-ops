@@ -106,7 +106,7 @@ func _escalate() -> void:
 		for n in nests:
 			var g := raiders.list.filter(func(r): return r.nest == n and r.guard)
 			for i in range(Config.NEST_GUARDS, g.size()):
-				g[i].guard = false
+				g[i].guard = g[i].has("guard_post")
 		Bus.say("Spore Nests are sending raiders at your base. Snipers and units can stop them.", "bad")
 	if time >= _tier_time(tier + 1):
 		tier += 1
@@ -201,7 +201,10 @@ func _overrun(dt: float) -> void:
 		for _i in wave:
 			if raiders.list.size() >= Config.RAIDER_MAX_TOTAL:
 				return
-			raiders.spawn(n, pick_tier(), false)
+			var tier_pick := pick_tier()
+			if CastleLancers.is_lancer(tier_pick):
+				tier_pick = RaiderDefs.named("Spitter")  # Lancers hold castles, they never march
+			raiders.spawn(n, tier_pick, false)
 			var r: Dictionary = raiders.list.back()
 			r.guard = false
 			r["overrun"] = true

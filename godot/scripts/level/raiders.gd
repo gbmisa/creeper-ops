@@ -15,6 +15,8 @@ var field: RaiderField
 ## Raiders with mission "castle" follow this field to held castles (Strongholds sets goals).
 var castle_field: RaiderField
 var castle_goals := func() -> Array: return []
+## Lancer posts: returns garrison dicts of hostile castles, or null when no castles exist.
+var castle_posts := func() -> Variant: return null
 var on_march := func(_r: Dictionary) -> void: pass  # injected: may give a marcher a mission
 var time := 0.0
 var next_group := 1
@@ -33,6 +35,12 @@ func _init(w: World) -> void:
 
 
 func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
+	var post: Variant = null
+	if CastleLancers.is_lancer(tier):
+		post = CastleLancers.post(self, nest)
+		if post is Dictionary and post.is_empty():
+			tier = RaiderDefs.named("Spitter")  # every castle has its Lancers
+			post = null
 	var node := HazardMeshes.raider(tier)
 	var a := randf() * TAU
 	node.position = nest.pos + Vector3(cos(a) * 1.8, 0, sin(a) * 1.8)
@@ -56,6 +64,9 @@ func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
 	world.add_target(r.target)
 	list.append(r)
 	nest.count += 1
+	if CastleLancers.is_lancer(tier):
+		CastleLancers.hold(self, r, post if post is Dictionary else nest)
+		guard = true
 	seen[tier.name] = int(seen.get(tier.name, 0)) + 1
 	if not guard:
 		on_march.call(r)
@@ -110,6 +121,8 @@ func _nearest(from: Vector3, prey: Array, max_d: float, leash_home = null) -> Di
 
 
 func _think(r: Dictionary, dt: float, prey: Array) -> void:
+	if r.has("guard_post") and not CastleLancers.tend(self, r):
+		return
 	if float(r.get("gather", 0.0)) > 0.0:
 		r["gather"] = float(r.gather) - dt
 		_walk(r, _patrol(r.nest.pos, r), dt)
