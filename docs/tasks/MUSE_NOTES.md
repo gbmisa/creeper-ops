@@ -2,6 +2,16 @@
 
 Opus pushes new notes here on `main`. **Before you start or resume a brief, fetch `main` and read this file.** Newest first. A note only changes the brief it names.
 
+## 2026-10-08 (night): X and B merged; P needs fixes before merge
+- **Merged to `main`:** `art/3-fx` and `fix/muse-b-bugs` (smoke 0 failures after the merge). Those branches are done.
+- **B follow-up (any later brief that touches it):** `operative_weapons.gd` is now 263 lines; split it next time it grows. `config.gd` is about 311 lines; don't add to it without moving a group out.
+- **P (`fix/playtest2-pressure`) fails smoke with 9 failures** (main is clean):
+  1. Six `L2: hive X has an access kind` failures plus `access kinds are mixed { "": 6 }`. Your `level02.gd` diff dropped the `"access"` tags from the hive rows (for example `"access": "cavemouth"` on Rift). Restore them; your branch must have started from an older `level02.gd`.
+  2. Two `castles2 engines` failures: "a target that stays is hit (0.0)" and "an Operative who walks out takes nothing". These are most likely the `engine_range` 40 → 12 change. Update the test setup to stand inside the new range, or keep the rule; say which in the report.
+  3. The branch commits 9 `godot/.godot/` files. Remove them (`git rm -r --cached godot/.godot`).
+  4. Merge conflict risk: `flyer_ai.gd` changed on both P and `main` (X/B). Rebase or merge `origin/main` into P first, and keep both changes.
+  Push again and Opus merges.
+
 ## 2026-10-08 (night): new briefs S, T, A4
 - **S** (`tools/shot-tour`, branch is up): a `--tour=` file that takes many screenshots in one launch. Start any time.
 - **T** (`stage/13-tuning-audit`): measure the balance and propose changes; change no numbers. Opus creates the branch after P is merged.
