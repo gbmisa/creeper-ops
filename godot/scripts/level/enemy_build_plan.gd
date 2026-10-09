@@ -8,6 +8,8 @@ class_name EnemyBuildPlan
 
 static func pick(b, hub: Dictionary) -> Dictionary:
 	for kind in _kinds(b, hub):
+		if kind == "":
+			continue
 		var cell := _cell(b, hub, kind)
 		if cell.x >= 0:
 			var built: String = "dome" if kind == "hive_dome" else kind
@@ -27,14 +29,29 @@ static func _kinds(b, hub: Dictionary) -> Array:
 		out.append("leech")
 	if not b.has(str(hub.id), "pump") and _leech_near(b, hub):
 		out.append("pump")
-	if not b.has(str(hub.id), "spitter"):
-		out.append("spitter")
-	if not b.has(str(hub.id), "pylon"):
-		out.append("pylon")
-	if not b.has(str(hub.id), "lancer"):
-		out.append("lancer")
-	out.append(_fewest(b, hub))
+	for kind in ["spitter", "pylon", "lancer"]:
+		if not b.has(str(hub.id), kind):
+			out.append(kind)
+	var few := _fewest(b, hub)
+	if few != "":
+		out.append(few)
 	return out
+
+
+## Live + queued structures of a kind for one hub (rubble rebuilds count: a destroyed
+## tower re-queues instead of opening a new site).
+static func _kind_total(b, hub: Dictionary, kind: String) -> int:
+	var n: int = b.count_kind(str(hub.id), kind)
+	for raw in b.queue:
+		if str(raw.hub) == str(hub.id) and str(raw.kind) == kind:
+			n += 1
+	return n
+
+
+## Per-kind cap grows with pressure: base at pressure 0, +2 at full pressure.
+static func _kind_cap(b, hub: Dictionary, kind: String) -> int:
+	var base: int = int(Config.ENEMY_BUILD_MAX_PER_KIND.get(kind, 99))
+	return base + int(b.nests.pressure() * 2.0)
 
 
 static func _cell(b, hub: Dictionary, kind: String) -> Vector2i:
@@ -46,7 +63,7 @@ static func _cell(b, hub: Dictionary, kind: String) -> Vector2i:
 		"leech":
 			return _ore(b, hub)
 		_:
-			return _edge(b, hub)
+			return _edge(b, hub, kind)
 
 
 static func _sealed(b) -> bool:
@@ -54,9 +71,11 @@ static func _sealed(b) -> bool:
 
 
 static func _fewest(b, hub: Dictionary) -> String:
-	var best := "spitter"
+	var best := ""
 	var n := 999
 	for kind in ["spitter", "pylon", "lancer"]:
+		if _kind_total(b, hub, kind) >= _kind_cap(b, hub, kind):
+			continue
 		var count: int = b.count_kind(str(hub.id), kind)
 		if count < n:
 			n = count
@@ -126,7 +145,7 @@ static func _leech_near(b, hub: Dictionary) -> bool:
 	return false
 
 
-static func _edge(b, hub: Dictionary) -> Vector2i:
+static func _edge(b, hub: Dictionary, kind: String) -> Vector2i:
 	var centre := _centre(b, hub)
 	var aim := _nearest_player(b, centre)
 	var to := aim - Vector2(centre)
@@ -145,6 +164,8 @@ static func _edge(b, hub: Dictionary) -> Vector2i:
 			continue
 		if not _reachable(b, hub, cell):
 			continue
+		if kind == "spitter" and not _fair_spitter_site(b, cell):
+			continue
 		var along := Vector2(cell.x - centre.x, cell.y - centre.y).dot(to)
 		var score := along * 2.0 - Vector2(cell.x - aim.x, cell.y - aim.y).length()
 		if score > any_s:
@@ -154,6 +175,26 @@ static func _edge(b, hub: Dictionary) -> Vector2i:
 			far_s = score
 			far = cell
 	return far if far.x >= 0 else any
+
+
+## Fair spitter sites (Q): the player must always have an answer. A spitter only goes
+## where at least one terrain-buildable cell within sniper range has line of sight to
+## it, using the same WeaponLogic.sees the sniper itself uses. Snipers are movable, so
+## only the ground rules are checked here, not the player's current network.
+static func _fair_spitter_site(b, cell: Vector2i) -> bool:
+	var grid: Grid = b.world.grid
+	var eye := grid.cell_ground(cell.x, cell.y) + Vector3(0, 1.0, 0)
+	var rng := Config.ENEMY_SPITTER_FAIR_RANGE
+	for raw in grid.cells_in_radius(cell.x, cell.y, rng):
+		var c: Vector2i = raw
+		if Vector2(c.x - cell.x, c.y - cell.y).length() > rng:
+			continue
+		if Placement._ground_rules(b.structures, "sniper", c.x, c.y, null) != "":
+			continue
+		var from := grid.cell_ground(c.x, c.y) + Vector3(0, 1.8, 0)
+		if WeaponLogic.sees(grid, from, eye):
+			return true
+	return false
 
 
 static func _clear_of_weapons(cell: Vector2i, weapons: Array) -> bool:

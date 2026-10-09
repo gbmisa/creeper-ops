@@ -14,8 +14,70 @@ static func run(g) -> void:
 	_rubble(g, b)
 	_shots(g, b)
 	_planner(g, b)
+	_q(g, b)
 	b.clear()
 	b.hold = true
+
+
+## Q: spitter towers stand on the ground, are capped per kind, and only sit on fair sites.
+static func _q(g, b: EnemyBuilder) -> void:
+	b.clear()
+	_q_height(g, b)
+	_q_cap(g, b)
+	_q_fair(g, b)
+	b.clear()
+
+
+static func _q_height(g, b: EnemyBuilder) -> void:
+	var grid: Grid = g.surface.grid
+	var cell := _cell(g, 12, 12)
+	var s := b.begin(_hub(g), "spitter", cell, false, -1.0)
+	var node := s.node as Node3D
+	var want := grid.stand_y(float(cell.x + 0.5) * Config.CELL, float(cell.y + 0.5) * Config.CELL, Grid.Faction.ENEMY)
+	SmokeTest._check("q: placed structure stands on the ground", absf(node.position.y - want) < 0.2, str(node.position.y - want))
+	TerrainEdit.raise(g.surface, [cell], 2.0)
+	SmokeTest._check("q: terrain edit re-seats the structure", absf(node.position.y - (want + 2.0 * Config.LEVEL_H)) < 0.2, str(node.position.y - want))
+	TerrainEdit.raise(g.surface, [cell], -2.0)
+	SmokeTest._check("q: lowering restores it", absf(node.position.y - want) < 0.2, str(node.position.y - want))
+	b.clear()
+
+
+static func _q_cap(g, b: EnemyBuilder) -> void:
+	var hub := _hub(g)
+	var saved: float = g.hazards.nests.time
+	g.hazards.nests.time = 0.0  # pressure 0 -> cap 2
+	b.begin(hub, "spitter", _cell(g, 10, 0), false, -1.0)
+	b.begin(hub, "spitter", _cell(g, 12, 0), false, -1.0)
+	var kinds := EnemyBuildPlan._kinds(b, hub)
+	SmokeTest._check("q: cap holds at pressure 0 (no third spitter)", not kinds.has("spitter"), str(kinds))
+	SmokeTest._check("q: other kinds still planned", kinds.has("pylon") and kinds.has("lancer"), str(kinds))
+	g.hazards.nests.time = 99999.0  # pressure 1 -> cap 4
+	b.begin(hub, "spitter", _cell(g, 14, 0), false, -1.0)
+	b.begin(hub, "spitter", _cell(g, 16, 0), false, -1.0)
+	kinds = EnemyBuildPlan._kinds(b, hub)
+	SmokeTest._check("q: cap grows with pressure (4 at max, no fifth)", not kinds.has("spitter"), str(kinds))
+	g.hazards.nests.time = saved
+	b.clear()
+
+
+static func _q_fair(g, b: EnemyBuilder) -> void:
+	SmokeTest._check("q: fair range matches the sniper's range",
+		is_equal_approx(Config.ENEMY_SPITTER_FAIR_RANGE, float(StructureDefs.DEFS["sniper"].range)),
+		"%s vs %s" % [str(Config.ENEMY_SPITTER_FAIR_RANGE), str(StructureDefs.DEFS["sniper"].range)])
+	var hubs := 0
+	var sited := 0
+	for raw in g.castles.list:
+		var c: Dictionary = raw
+		if str(c.owner) != "enemy":
+			continue
+		hubs += 1
+		var cell: Vector2i = EnemyBuildPlan._cell(b, c, "spitter")
+		if cell.x < 0:
+			continue
+		sited += 1
+		SmokeTest._check("q: %s spitter site is fair" % str(c.id), EnemyBuildPlan._fair_spitter_site(b, cell), str(cell))
+	SmokeTest._check("q: spitters still placeable (a fair site exists)", sited > 0, "%d of %d hubs" % [sited, hubs])
+	b.clear()
 
 
 static func _rates() -> void:
