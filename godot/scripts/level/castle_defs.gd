@@ -69,6 +69,6 @@ const WARD_HIVE_RADIUS := 30.0
 const WARD_HIVE_SLOW := 0.3  # hives this close to a held castle spawn 30% slower
 const MUSTER := true         # a held castle gets a free barracks in its ward
 
-# ---- Lancer guards and the build ban (CastleLancers, CastleExclusion) ------------------
-const BUILD_BAN_RADIUS := 24.0   # cells from a castle not yours: nothing can be built (about Lancer reach)
+# ---- Lancer guards (CastleLancers) ------------------------------------------------------
+# No artificial build ban (Gregory, playtest 3): the Lancers' fire is what denies the land.
 const LANCERS_PER_CASTLE := 3    # Lancers a hostile castle keeps posted; extra Lancer rolls breed Spitters

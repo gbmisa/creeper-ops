@@ -169,7 +169,6 @@ func update(dt: float) -> void:
 		if o != null and c.state == "hostile":
 			StrongholdRules.crown_push(v, o)
 		StrongholdMeshes.animate(v, c, time)
-	CastleExclusion.refresh(self)
 	EnemyMortarFire.extra = CastleEngines.rings  # trebuchet rings share the mortar-ring shader slots
 
 

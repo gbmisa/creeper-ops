@@ -1,6 +1,6 @@
 class_name SmokeCastleGuard
-## Playtest 3 items 12/14: nothing is built near a castle you do not hold, and Lancers belong
-## to a hostile castle (they stay at their post and are dismissed when it is taken).
+## Playtest 3 item 12: Lancers belong to a hostile castle (they stay at their post and are
+## dismissed when it is taken). No artificial build ban: their fire denies the land.
 
 
 static func run(g) -> void:
@@ -13,29 +13,9 @@ static func run(g) -> void:
 	CastlePerks.attach(castles)
 	c.owner = "enemy"
 	c.state = "hostile"
-	_placement(g, castles, c, lay)
 	_lancer(g, castles, c)
 	c.owner = was[0]
 	c.state = was[1]
-	CastleExclusion.refresh(castles)
-
-
-static func _placement(g, castles: Strongholds, c: Dictionary, lay: Dictionary) -> void:
-	var mid := Vector2i(CastlePerks.centre(lay))
-	var near := Vector2i(mid.x + int(CastleDefs.BUILD_BAN_RADIUS) - 2, mid.y)
-	var far := Vector2i(mid.x + int(CastleDefs.BUILD_BAN_RADIUS) + 3, mid.y)
-	var why: String = Placement.castle_ban.call(near.x, near.y)
-	SmokeTest._check("guard: building near a hostile castle is refused", why == CastleExclusion.REASON, why)
-	var res := Placement.can_place(g.structures, "collector", near.x, near.y)
-	SmokeTest._check("guard: can_place reports the enemy castle", not res.ok and (res.reason == CastleExclusion.REASON or res.reason != ""), str(res.reason))
-	SmokeTest._check("guard: outside the radius is not banned", Placement.castle_ban.call(far.x, far.y) == "")
-	c.state = "capturing"
-	SmokeTest._check("guard: a castle still being captured stays banned", Placement.castle_ban.call(near.x, near.y) != "")
-	c.owner = "player"
-	c.state = "held"
-	SmokeTest._check("guard: land is free once the castle is held", Placement.castle_ban.call(near.x, near.y) == "")
-	c.owner = "enemy"
-	c.state = "hostile"
 
 
 static func _lancer(g, castles: Strongholds, c: Dictionary) -> void:
