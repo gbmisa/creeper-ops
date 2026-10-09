@@ -42,6 +42,7 @@ var teleport_cooldown := 0.0
 var speed := 1
 var time_scale := 1.0       # debug multiplier on top of speed
 var ignore_capture := false # debug: run the Operative without mouse capture
+var _anims_frozen := false  # tracks CreatureAnim freeze state vs the sim gate below
 
 
 func _ready() -> void:
@@ -191,7 +192,15 @@ func _process(delta: float) -> void:
 		command.update(dt, input)  # camera + planning work while paused too
 	var frozen := menu or mode != "command" and fps_paused
 	var scale: float = (speed if mode == "command" else 1) * time_scale
-	if not paused and not over and not frozen and not landing:
+	var running := not paused and not over and not frozen and not landing
+	# Freeze creature clips exactly when the sim gate closes, resume when it
+	# opens. Same condition as the update() gate, so NPCs never walk in place
+	# while the game is paused.
+	var want_frozen := not running
+	if want_frozen != _anims_frozen:
+		_anims_frozen = want_frozen
+		CreatureAnim.set_all_paused(get_tree(), _anims_frozen)
+	if running:
 		update(dt * scale)
 	render(dt)
 	input.end_frame()

@@ -52,6 +52,7 @@ class_name Debug
 ##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
 ##   --fire=rifle|sprayer|rocket  (with --surface) hold the trigger so --shot catches the weapon firing
 ##   --ammo=ap|inc  unlock improved ammo, crossbow loaded with that grade (HUD shows [AP]/[INC])
+##   --cheat-guns  unlock every Operative weapon from the start (cheat; testing only)
 ##   --engine=I[,hold|hooked|top[,S]]  Operative at Salvage Engine I (hold: mid-hook; hooked: all sockets
 ##                 hooked with a relay chain; top: on its roof). See debug_engines.gd
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
@@ -166,6 +167,8 @@ static func apply(g) -> void:
 	if args.has("ammo"):  # --ammo=ap|inc: unlock improved ammo and select that crossbow grade
 		AmmoGrades.unlocked = true
 		AmmoGrades.op.rifle = str(args.ammo) if str(args.ammo) in ["ap", "inc"] else "std"
+	if args.has("cheat-guns"):  # cheat: every Operative weapon unlocked from the start
+		OperativeUpgrades.cheat_guns = true
 	if args.has("engine"):
 		DebugEngines.apply(g, str(args.engine))
 	if args.has("look"):
