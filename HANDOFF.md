@@ -15,15 +15,13 @@ Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHu
   - `art/totem-red`: taller Totem with a red glowing ball, unviewed.
   - `pt3/enemy-builds`: mortars die only to the demo charge (free while `DEMO_CHARGE_FREE`); spitter towers pay 0 Salvage; enemy rebuilds wait `ENEMY_REBUILD_DELAY` 30 s.
   - `pt3/castle-guard`: Lancers garrison hostile castles (`castle_lancers.gd`); no building within `BUILD_BAN_RADIUS` 24 of an unheld castle (`castle_exclusion.gd`, red rings in the shader, unviewed).
+  - `pt3/small-fixes`: raiders stand on creeper (`raider_perch.gd`); a connected flying Node launches packets (CLAUDE.md contract updated); the Railgun prompt names the Armoury and clears on weapon switch.
+- Muse's round 3: drawbridge-solid, rally-point-marker, spawn-pacing, blight-pylon-aura, fps-build-wheel (hold B for the radial wheel, HoldBar). Sabotage prompts show the real payout (0 for spitter towers).
 
 ## Open (playtest 3)
-1. Enemies float on creeper (item 2).
-2. Flying Node launches packets (item 15; update the CLAUDE.md contract).
-3. Railgun prompt says where to buy it and clears on weapon switch (item 6).
-4. Ask Gregory: should E-hold mortar sabotage still kill a mortar and pay 5 Salvage?
-5. The Ashmote Keep over-the-wall Lancer shot is unreproduced; it needs Gregory's replay.
-
-The pt3/small-fixes agent for items 1-3 was stopped by Gregory before it changed anything. Don't restart it unasked.
+1. Ask Gregory: should E-hold mortar sabotage still kill a mortar and pay 5 Salvage? (enemy_mortar.gd:168/209)
+2. The Ashmote Keep over-the-wall Lancer shot is unreproduced; it needs Gregory's replay.
+3. Items 5 (shop/med kits) and 9 (enemy reference) are later.
 
 ## Decisions pending from Gregory
 - UI: `ui/overhaul` (Opus) vs `fix/ui-viewport-fit` (Muse). Screenshots are in the session scratchpad `ui/`; regenerate if gone.
@@ -31,7 +29,7 @@ The pt3/small-fixes agent for items 1-3 was stopped by Gregory before it changed
 - When to merge integ → main and push.
 
 ## Debt
-`raiders.gd` 304 lines, `weapon_logic.gd` 356, `shot_tour.gd` 300: split. A4 `_relay_pass` is O(n) per waypoint.
+`raiders.gd` 304 lines, `weapon_logic.gd` 356, `shot_tour.gd` 300, `smoke_test.gd` 300+: split. A4 `_relay_pass` is O(n) per waypoint.
 
 ## Not verified
 No human look at: the Totem, the build-ban rings, the 21b castles, the anti-creeper fluid, military glb pivots. GPU (Vulkan) path not checked.
