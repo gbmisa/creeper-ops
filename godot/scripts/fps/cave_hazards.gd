@@ -20,9 +20,9 @@ func _init(w: World, c: Dictionary) -> void:
 	world = w
 	cave = c
 	pad_pos = w.place_at(HazardMeshes.pad(), c.pad.x, c.pad.y)
-	w.interactables.append({ "pos": pad_pos, "radius": 2.0, "prompt": func(): return "[E] Return to the surface",
+	w.interactables.append({ "pos": pad_pos, "radius": 2.0, "prompt": func(): return "[%s] Return to the surface" % Keybinds.short("use"),
 		"use": func(): Bus.exit_cave.emit() })
-	w.markers.append({ "pos": pad_pos + Vector3(0, 2.5, 0), "label": "Exit pad [E]", "color": Color("7fa0ff"),
+	w.markers.append({ "pos": pad_pos + Vector3(0, 2.5, 0), "label": func(): return "Exit pad [%s]" % Keybinds.short("use"), "color": Color("7fa0ff"),
 		"visible": func(): return true, "minor": true })
 	_light(pad_pos + Vector3(0, 3, 0), Color("6688ff"), 4.0, 22.0)
 	_build_core()

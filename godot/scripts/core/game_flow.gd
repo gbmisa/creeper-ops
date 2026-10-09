@@ -56,6 +56,8 @@ func on_key(k: int) -> void:
 			g.teleport_cooldown = 0.0
 			to_command("Test recall: back aboard, teleporter ready.")
 		elif k == KEY_ESCAPE:
+			if g.fps.builder != null and g.fps.builder.wheel_open():
+				return  # the build wheel closes itself this frame; don't pause
 			pause_operative()
 		return
 	if Keybinds.matches("keybinds", k):

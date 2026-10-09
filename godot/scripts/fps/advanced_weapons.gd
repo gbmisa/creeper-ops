@@ -32,10 +32,8 @@ func handles(id: String) -> bool:
 
 func label() -> String:
 	var d: Dictionary = WEAPONS[weapons.current]
-	var extra := ""
-	if weapons.current == "railgun" and charge > 0.0:
-		extra = "  %d%%" % roundi(100.0 * charge / float(d.charge))
-	return "[%s] %s%s" % [Keybinds.short(d.key), d.name, extra]
+	# Railgun charge progress shows on the HUD fill bar (charge_ratio), never as a %.
+	return "[%s] %s" % [Keybinds.short(d.key), d.name]
 
 
 func salvage_line() -> String:

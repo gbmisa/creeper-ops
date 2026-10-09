@@ -16,17 +16,24 @@ var tool := ""
 var status := ""  # HUD line: what is armed, where, and why it can't go there
 var drag_from := Vector2i(-1, -1)
 var drag_plan: Array[Dictionary] = []
+var wheel: BuildWheel  # hold-B radial selection; quick-tap B keeps the old toggle
 
 
 func _init(sm: StructureManager, ov: CommandOverlay) -> void:
 	structures = sm
 	overlay = ov
+	wheel = BuildWheel.new()
+
+
+func wheel_open() -> bool:
+	return wheel != null and wheel.is_open()
 
 
 func toggle(on: bool) -> void:
 	active = on
 	_end_drag()
 	if not on:
+		wheel.close()
 		overlay.hide_ghost()
 		status = ""
 	elif tool == "":
@@ -42,10 +49,9 @@ func _end_drag() -> void:
 ## Returns true while building (the caller then skips weapons).
 ## A click places one structure on release. Holding the button and aiming at another cell
 ## drags a chain or row, same rules as command mode; release places it.
-func update(input: InputState, world: World, camera: Camera3D) -> bool:
-	if input.act("op_build"):
-		toggle(not active)
-		Sfx.play("click")
+func update(input: InputState, world: World, camera: Camera3D, dt: float = 1.0 / 60.0) -> bool:
+	if wheel.update(input, self, dt):
+		return true
 	if not active:
 		return false
 	if _keys(input):
