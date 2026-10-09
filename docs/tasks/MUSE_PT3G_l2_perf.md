@@ -30,3 +30,10 @@ Raider pathing rules (one terrace up/down, reachability, castle missions, gates)
 
 ## Report
 AGENTS.md format with before/after bench numbers and the L2 per-frame worst case.
+
+## Addendum (Opus, GPU run on Gregory's RTX 5090, L2 `--autostart`)
+- 25-43 fps, falling as enemies pile up: 67 -> 100 animated skeletons, draw calls 5.4k -> 10k, nodes ~8.5k (L1: 215 fps, 21 skeletons, 3.3k draws).
+- `Game.update` averages 6-12 ms with **150-185 ms single-frame spikes** from `surface_hazards` -> raiders -> `RaiderField` (task 2 above).
+- GPU creeper sim costs ~3.4 ms/frame on the CPU side (readback `to_float32_array` + log replay on 25.6k cells): look at doing the replay in packed ops or every other readback.
+- The rest of the frame grows with enemy count outside `Game.update`: AnimationPlayers/skeleton poses per raider, per-raider meshes. Pause looks smooth because `CreatureAnim.set_all_paused` zeroes `speed_scale` (pose stops changing).
+- Extra tasks: (6) animation LOD: raiders off-screen or farther than ~60 m get `callback_mode_process` manual and are advanced at 10 Hz (or paused); (7) report draw calls per raider and merge static sub-meshes per raider type if > 3; (8) a `--bench-l2` hook that prints avg/worst frame ms after 5 min of `--autostart`, before and after.

@@ -40,3 +40,5 @@ Briefed 2026-10-09: PT3-A (25, 27), PT3-B (22), PT3-C (24), PT3-D (26). 23 done:
 31. **Big Bertha manual targeting (decided):** Bertha can be ordered to fire at a chosen target or spot (e.g. trebuchets on castles), with a very slow fire rate and a very high cost. Not briefed yet.
 30 (cont.): sim-only (smooth when paused). Headless L2: CPU creeper 10.2 ms, RaiderField rebuild 3.9 ms avg as one-frame spikes every 2 s and on each terrain change. Brief PT3-G (`pt3/l2-perf`). Opus still checks the GPU creeper sim on L2 (needs Gregory's display).
 31 (cont.): Brief PT3-H (`pt3/bertha-target`).
+30 (cont.): GPU profile done (Opus). See the PT3-G addendum: RaiderField spikes 150-185 ms, cost scales with enemy count (skeletons/draws), GPU creeper ~3.4 ms CPU side.
+Muse paused until Wed 2026-10-14 (weekly limit; handoff on origin/fount/handoff-2026-10-09). Only PT3-C pushed; A, B, D-H stopped mid-flight.
