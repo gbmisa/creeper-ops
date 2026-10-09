@@ -210,7 +210,7 @@ isolation; rewriting with bracket dict access and precomputed booleans cleared i
 Root cause not identified — worth knowing if it recurs (no behaviour impact).
 ## P4 command-view readability
 
-Done (2026-10-09 ~08:30 UTC). Commit: PENDING (pushed via push_work.py).
+Done (2026-10-09 ~08:30 UTC). Commit: 651ffeac (pushed via push_work.py; 27 changed/new, 0 deleted).
 - `level/castle_readability.gd` (new, `CastleReadability`, 67 lines):
   `set_command_view(on)` sets `fade_alpha` on the shared slab ShaderMaterial;
   `build_markers(root, lay, v)` builds two horizontal progress bars (dark back bar +
@@ -250,7 +250,68 @@ Tests:
   checks PASS: 1 fade + 6 castles x 2 bar checks), castle smokes all PASS.
 
 Unfinished: none for P4.
-## P5 turret variety — FILL
+## P5 turret variety
+
+Done (2026-10-09 ~10:30 UTC):
+- `level/castle_turrets.gd`: two new DEFS rows + ORDER entries.
+  - **Ballista**: costs 35/55/90, HP [80,120,180], range 26, interval 2.5 s, power [6,9,13],
+    targets "raiders" (outranges Spitters at 20).
+  - **Ward Lamp**: costs 30/45/70, HP [80,120,180], `"range": 0.0`, `"targets": "none"`,
+    fires nothing; `CastleTurrets.ward_mult(c)` returns `CastleDefs.WARD_LAMP_MULT`
+    (2.0) while one stands, else 1.0 (never stacks).
+- `level/castle_perks.gd`: `ward` multiplies the drain by `CastleTurrets.ward_mult(c)` —
+  the one P5 rule call allowed (nothing else in that file touched).
+- `level/castle_defs.gd`: `WARD_LAMP_MULT := 2.0`.
+- `level/castle_turret_fire.gd` (151 → ~230 lines, stays under 250, no split needed):
+  `_model` now takes the turret type — Ballista gets a bigger bolt-thrower (long oak
+  rail, heavy bronze arms, fat glowing bolt), the Ward Lamp a lamp post (iron post,
+  caged crystal named "Glow" + a small OmniLight named "GlowLight"); the old
+  ballista-looking head is the Repeater's. New `animate(v, c, t)` pulses the crystal
+  scale and light energy (cheap: only ward-lamp sockets); tick matches
+  `def.targets` with a no-op `"none"` arm. `_ballista` reuses a shared
+  `_target_raider` helper (extracted from `_repeater`, behaviour unchanged): a slow
+  heavy bolt (0.16-wide beam, 0.12 s) for 6/9/13.
+- `level/stronghold_meshes.gd`: `animate` calls `CastleTurretFire.animate(v, c, t)`.
+- `command/structure_defs.gd`: Castle menu gains `"@ballista"`, `"@ward_lamp"`;
+  `_turret_actions` already iterates ORDER so both get label/cost_text/desc for free.
+- `command/command_hover.gd`: the two hardcoded `"@repeater","@lobber","@flak"` match
+  arms replaced by `CommandHover._turret_type(tool)` — any "@<turret>" tool in DEFS.
+  The placement ghost ring reads `.get("range", 0.0)`, so the rangeless Ward Lamp
+  draws no ring instead of crashing.
+- `command/command_input.gd`: the turret click arm generalized the same way (handled
+  before the match so `@repair`/`@terp` arms stay reachable).
+- `core/smoke_castles2b_turrets.gd` (new, `SmokeCastles2bTurrets`, registered): 12
+  checks — Castle tab shows both, rangeless/no-op keys, buy Ballista I + Ward Lamp I,
+  Ballista hits a raider at 24 cells, stays silent at 27, lamp glow node builds,
+  upgrade to Ballista II + second socket, ward_mult 2.0 while the lamp stands (1.0
+  after it falls), `CastlePerks.ward` removes exactly 2x with the lamp, E on an empty
+  socket still arms a Repeater. Leaves castle[0] hostile, sockets cleared, raiders
+  cleared.
+- Screenshots: not run (no display); Opus judges visuals.
+
+Spec gaps filled:
+- Ward Lamp stacking: one lamp doubles; extra lamps don't multiply further.
+- The pulse is scale + light-energy on the lamp's own nodes, driven from
+  `StrongholdMeshes.animate` — no new lights budget entry (the lamp's OmniLight is
+  range 7, energy ~1.1–1.8, one per lamp).
+- First-person E still defaults to Repeater on empty sockets (`use_label` untouched).
+
+Tests:
+- Parse: `--headless --path godot --import` — 0 script errors (two caught during dev:
+  `:=` inference on Variant values in the new smoke).
+- Full suite `-- --smoke --quit=0.1`: first green run 878 PASS / 2 FAIL — both mine:
+  (1) the 27-cell silence check: socket 1's second Ballista (opposite corner) was
+  closer than 26 cells to the test raider and shot it — restructured the smoke so the
+  range test runs with only one Ballista armed; (2) the ward ratio: an earlier smoke's
+  `_sim` left `c.ward_t` at 0.4, so the first measurement drained 0.054 not 0.03 —
+  the smoke now zeroes `ward_t` before each measurement. Second run: 878 PASS / 1
+  FAIL — only the pre-existing flaky "castle: garrison walks out of the gate to its
+  prey" (smoke_castle_build, runs before my smoke; none of my changes touch raider
+  pathing). Re-ran once per the brief: **[smoke] OK: 0 failure(s), 879 PASS**.
+- Castle smokes (shape/walk/capture/engines/perks/turrets) all PASS.
+
+Unfinished: none for P5.
+## P6 castle guards — FILL
 ## P6 castle guards — FILL
 ## P7 castle-only production — FILL
 ## P8 Stage 21 leftovers — FILL

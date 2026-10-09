@@ -54,6 +54,7 @@ const ENGINES_DEFAULT := 2   # concentric rows without an "engines" key
 # ---- held perks (CastlePerks) ----------------------------------------------------------
 const REACH_RADIUS := 28.0   # cells from a held castle's centre
 const REACH_BONUS := 0.25    # weapon range bonus inside it
+const WARD_LAMP_MULT := 2.0  # Ward Lamp: the ward drain is multiplied by this while one stands
 const WARD_DRAIN := 0.03     # creeper depth/s removed per wet cell inside a held castle's outer wall
 const WARD_TICK := 0.5
 const WARD_HIVE_RADIUS := 30.0

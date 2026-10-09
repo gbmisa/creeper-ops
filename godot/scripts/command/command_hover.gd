@@ -26,6 +26,10 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 	var at := cm.world.grid.cell_ground(c.x, c.y)
 	var res := check(cm, c)
 	cm.reason = res.reason if not res.ok else res.get("warn", "")
+	if _turret_type(cm.tool) != "":  # any castle turret (ward lamps have no range: no ring)
+		var rg: float = float(CastleTurrets.DEFS[_turret_type(cm.tool)].get("range", 0.0))
+		cm.overlay.show_ghost("", at, res.ok, 1.2 * Config.CELL, rg * Config.CELL, [])
+		return
 	match cm.tool:
 		"@lance", "@drop":
 			var rad := (Config.LANCE_RADIUS if cm.tool == "@lance" else 1.0) * Config.CELL
@@ -34,8 +38,6 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 			cm.overlay.show_ghost(cm.selected.type, at, res.ok, StructureDefs.radius_m(cm.selected.type), WeaponLogic.def_range(cm.selected.def) * Config.CELL, [])
 		"@land":
 			cm.overlay.show_ghost("node", at, res.ok, StructureDefs.radius_m("node"), StructureDefs.DEFS.node.link * Config.CELL, [])
-		"@repeater", "@lobber", "@flak":
-			cm.overlay.show_ghost("", at, res.ok, 1.2 * Config.CELL, CastleTurrets.DEFS[cm.tool.substr(1)].range * Config.CELL, [])
 		"@repair":
 			cm.overlay.show_ghost("", at, res.ok, 1.2 * Config.CELL, 0.0, [])
 		_:
@@ -46,13 +48,22 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 			cm.overlay.show_ghost(cm.tool, at, res.ok, StructureDefs.radius_m(cm.tool), r, cover)
 
 
+## The turret id for a "@<turret>" tool, or "" (rangeless defs like the Ward Lamp included).
+static func _turret_type(tool: String) -> String:
+	if not tool.begins_with("@"):
+		return ""
+	var t := tool.substr(1)
+	return t if CastleTurrets.DEFS.has(t) else ""
+
+
 static func check(cm: CommandMode, c: Vector2i) -> Dictionary:
+	if _turret_type(cm.tool) != "":
+		return turret_check(cm, c).res
 	match cm.tool:
 		"@lance": return cm.orbital.can_fire()
 		"@drop": return cm.deploy.can_drop(c)
 		"@move": return Placement.can_move(cm.structures, cm.selected, c.x, c.y) if cm.selected else { "ok": false, "reason": "" }
 		"@land": return Placement.can_land(cm.structures, cm.level, c.x, c.y)
-		"@repeater", "@lobber", "@flak": return turret_check(cm, c).res
 		"@repair": return WallRepair.check(cm.castles, c)
 		"@terp":
 			var why := TerpPaint.cell_reason(cm.world.grid, c)

@@ -35,7 +35,7 @@ static func ward(s: Strongholds, c: Dictionary, lay: Dictionary, dt: float) -> v
 	c["ward_t"] = c.get("ward_t", 0.0) + dt
 	if c.ward_t < CastleDefs.WARD_TICK:
 		return
-	var step: float = c.ward_t * CastleDefs.WARD_DRAIN
+	var step: float = c.ward_t * CastleDefs.WARD_DRAIN * CastleTurrets.ward_mult(c)  # P5: Ward Lamp doubles the drain
 	c.ward_t = 0.0
 	var sim := s.world.creeper
 	for cell in lay.courtyard:

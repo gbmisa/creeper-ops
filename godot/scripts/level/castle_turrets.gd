@@ -16,8 +16,14 @@ const DEFS := {
 	"flak": { "label": "Flak", "costs": [25, 40, 70], "hp": [80.0, 120.0, 180.0], "range": 20.0,
 		"interval": 0.8, "power": [3.0, 4.5, 6.0], "targets": "air", "color": Color("ff6b6b"),
 		"desc": "Air only: bursts spore volleys (and flyers, later) in range 20." },
+	"ballista": { "label": "Ballista", "costs": [35, 55, 90], "hp": [80.0, 120.0, 180.0], "range": 26.0,
+		"interval": 2.5, "power": [6.0, 9.0, 13.0], "targets": "raiders", "color": Color("ffd27d"),
+		"desc": "Long-range anti-raider bolt-thrower: a slow heavy bolt every 2.5 s, range 26 (outranges Spitters)." },
+	"ward_lamp": { "label": "Ward Lamp", "costs": [30, 45, 70], "hp": [80.0, 120.0, 180.0], "range": 0.0,
+		"interval": 1.0, "targets": "none", "color": Color("9be8ff"),
+		"desc": "Fires nothing: while it stands, the castle's ward drain doubles. Pulses with light." },
 }
-const ORDER := ["repeater", "lobber", "flak"]
+const ORDER := ["repeater", "lobber", "flak", "ballista", "ward_lamp"]
 
 
 ## 4 wall corners plus the wall cell beside each gate, all on the wall walk (concentric castles:
@@ -93,6 +99,15 @@ static func use_label(c: Dictionary, i: int, salvage: float) -> String:
 	if res.ok:
 		return "[%s] %s %s (%d Salvage)" % [Keybinds.short("use"), DEFS[type].label, _roman(res.level), res.cost]
 	return res.reason
+
+
+## Ward Lamp: while one stands on the castle, the ward drain is multiplied
+## (CastlePerks.ward reads this; the only P5 rule change). Never stacks.
+static func ward_mult(c: Dictionary) -> float:
+	for s in c.get("sockets", []):
+		if s.turret == "ward_lamp" and alive(s):
+			return CastleDefs.WARD_LAMP_MULT
+	return 1.0
 
 
 static func clear(c: Dictionary) -> void:

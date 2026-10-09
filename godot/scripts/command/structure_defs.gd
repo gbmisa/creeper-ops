@@ -14,7 +14,7 @@ const MENU := {
 	"Weapons": ["cannon", "mortar", "beam", "sniper", "nullifier"],
 	"Titans": ["bertha", "thor", "forge", "terp", "@terp"],
 	"Orbital": ["beacon", "@drop", "@lance", "@operative"],
-	"Castle": ["@repeater", "@lobber", "@flak", "@repair"],
+	"Castle": ["@repeater", "@lobber", "@flak", "@ballista", "@ward_lamp", "@repair"],
 }
 
 static var ACTIONS := _turret_actions().merged({

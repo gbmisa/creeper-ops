@@ -66,6 +66,13 @@ static func click(cm: CommandMode, shift: bool) -> void:
 			Bus.say(res.reason, "warn")
 			Sfx.play("deny")
 			return
+		var tt := CommandHover._turret_type(cm.tool)  # any "@<turret>": buy/upgrade it on the socket
+		if tt != "":
+			var t := CommandHover.turret_check(cm, c)
+			CastleTurrets.buy(t.castle, t.i, tt, cm.castles.stockpile)
+			Sfx.play("good")
+			cm.set_tool("")
+			return
 		match cm.tool:
 			"@land":
 				cm.tool = ""
@@ -79,11 +86,6 @@ static func click(cm: CommandMode, shift: bool) -> void:
 				if not shift: cm.set_tool("")
 			"@move":
 				CommandSelect.move_group(cm, c)
-			"@repeater", "@lobber", "@flak":
-				var t := CommandHover.turret_check(cm, c)
-				CastleTurrets.buy(t.castle, t.i, cm.tool.substr(1), cm.castles.stockpile)
-				Sfx.play("good")
-				cm.set_tool("")
 			"@repair":
 				var fixed := WallRepair.apply(cm.castles, c)
 				if fixed.ok:

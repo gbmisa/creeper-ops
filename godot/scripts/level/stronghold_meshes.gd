@@ -144,3 +144,4 @@ static func animate(v: Dictionary, c: Dictionary, t: float) -> void:
 		CastleFires.flicker(f, t)
 	CastleBanners.animate_flags(v, c)
 	CastleReadability.animate_markers(v, c)
+	CastleTurretFire.animate(v, c, t)
