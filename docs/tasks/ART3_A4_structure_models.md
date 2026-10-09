@@ -1,6 +1,6 @@
 # Brief A4 (Muse): player weapons, Collector and Relay use animated models
 
-**Branch:** `art/4-structure-models` (from `main`, with the models already in it: cannon, mortar, sniper and beam in 3 parts each, plus `collector.glb`). `relay.glb` follows on the same branch; until it lands, leave the Relay procedural. **Start now.** A3 runs in parallel, so don't touch the hive, Totem, pod or Node code.
+**Branch:** `art/4-structure-models` (from `main`, with the models already in it: cannon, mortar, sniper and beam in 3 parts each, plus `collector.glb` and `relay.glb`). **Start now.** A3 runs in parallel, so don't touch the hive, Totem, pod or Node code.
 **Read:** AGENTS.md, MUSE_NOTES.md, this brief, `command/weapon_meshes.gd`, `command/support_meshes.gd`, and `creature_anim.gd` plus its use in `hive_meshes` / creatures (the load/play/die pattern to reuse). Change only the mesh files, the code that plays clips, and smoke rules.
 
 ## Models (Opus, `godot/assets/models/`)

@@ -4,7 +4,7 @@ Opus pushes new notes here on `main`. **Before you start or resume a brief, fetc
 
 ## 2026-10-08 (night, later): T, A4 and K start now
 - **T** no longer waits for P: measure L1 now and L2 on whatever `main` has (see the brief).
-- **A4** branch is up with the models: cannon/mortar/sniper/beam (`_base`, `_turret`, `_arm`) and `collector.glb`. `relay.glb` comes later on the same branch. Don't touch A3's files.
+- **A4** branch is up with the models: cannon/mortar/sniper/beam (`_base`, `_turret`, `_arm`) `collector.glb` and `relay.glb` (added in `a4468a5`; pull if you cloned earlier). Don't touch A3's files.
 - **K** (`chore/k-split-files`): small refactor of `operative_weapons.gd` and `config.gd`.
 
 ## 2026-10-08 (night): X and B merged; P needs fixes before merge

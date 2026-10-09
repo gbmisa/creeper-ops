@@ -19,3 +19,8 @@ Contract: u = 1, feet z = 0, faces +X, clips idle/walk/attack/hit/die, material 
 ## Grading (Sonnet grader on contact sheets, 3 iterations, target 8)
 Round 1 avg 6.1, round 2 avg 6.8, round 3 avg 7.4. At 8: brute, crawler, sentinel, soldier, spore_bat, warden. At 7: the rest.
 Open notes for the in-game pass: wyvern head/neck merge into a round body (lengthen neck and tail, bone-tan ridge); burrower claws +30% and wider; gasbag bigger squash and sag, close the body-tendril gap; lancer two-handed angled spear, thicker torso; skitter bigger rear-up attack; behemoth stomp bob; hive_core opening/jaw on attack; idle breath everywhere; tier accents so bugs don't all read as dark purple blobs (the in-game tier glow helps here).
+
+## 2026-10-08 (night): player structures (for A4)
+- `weapon_kit.py`: weapons as 3 glbs (base / turret / arm), pivots from WeaponMeshes; `wreview.sh` previews the assembled weapon.
+- Grades (Sonnet, 3 rounds max): cannon 5→6→7, mortar 5.5→6.5→7, sniper 5→6→6.5, beam 5→6.5→7.5, collector 6→7, relay 6→7.
+- Lessons: a 3-fold spinning part must turn a third of a turn per loop (or 2-fold, half a turn), or the 4 sampled frames alias. Rune slits go on the face apothem, not the corner radius. Emissive flame reads as salmon in the preview, so use the saturated `fire` / `ray_red`.
