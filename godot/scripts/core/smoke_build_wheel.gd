@@ -67,7 +67,7 @@ static func _wheel(g) -> void:
 	SmokeTest._check("wheel: clicking a category opens its item wheel",
 		wheel.items_open and wheel.tab == 1)
 	SmokeTest._check("wheel: item wheel lists exactly the tab's buildable structures",
-		wheel.item_list() == ["cannon", "mortar", "beam", "sniper", "nullifier"],
+		wheel.item_list() == ["cannon", "mortar", "beam", "sniper", "nullifier", "trebuchet"],
 		str(wheel.item_list()))
 	# Click the top segment (cannon).
 	f.mouse = wheel.center + Vector2(0, -120)
@@ -179,10 +179,10 @@ static func _keybind_prompts() -> void:
 	Keybinds.bind("use", 0, KEY_F)
 	SmokeTest._check("keybinds: short('use') follows the rebind",
 		Keybinds.short("use") == "F", Keybinds.short("use"))
-	var s := { "alive": true, "channel": 0.0 }
+	var s := { "alive": true, "channel": 0.0, "kind": "leech" }
 	SmokeTest._check("keybinds: sabotage prompt renders the rebound key",
-		EnemyBuildCrew._prompt(s, "Spitter") == "[F] Sabotage the Spitter (destroys it, +5 Salvage)",
-		EnemyBuildCrew._prompt(s, "Spitter"))
+		EnemyBuildCrew._prompt(s, "Leech") == "[F] Sabotage the Leech (destroys it, +5 Salvage)",
+		EnemyBuildCrew._prompt(s, "Leech"))
 	SmokeTest._check("keybinds: armoury prompt format renders the rebound key",
 		"[%s] Armoury" % Keybinds.short("use") == "[F] Armoury")
 	Keybinds.reset_all()
@@ -193,10 +193,10 @@ static func _keybind_prompts() -> void:
 
 static func _sabotage_bar(g) -> void:
 	var fps: FpsMode = g.fps
-	var s := { "alive": true, "channel": 1.5 }
+	var s := { "alive": true, "channel": 1.5, "kind": "spitter" }
 	var text := EnemyBuildCrew._prompt(s, "Spitter")
 	SmokeTest._check("sabotage: prompt states the effect and shows no countdown/percentage",
-		"destroys it" in text and "+5 Salvage" in text and not "%" in text and not "1.5" in text, text)
+		"destroys it" in text and not "Salvage" in text and not "%" in text and not "1.5" in text, text)
 	var best := {
 		"channel_frac": func() -> float: return 1.0 - 1.5 / Config.MORTAR_SABOTAGE_TIME,
 		"channel_what": "Spitter",

@@ -104,7 +104,7 @@ static func _hold(g, e: Dictionary, s: Dictionary) -> void:
 	Input.flush_buffered_events()
 	for i in 12:  # 1.2 s: not done yet
 		g.fps._interact(g.input, 0.1)
-	SmokeTest._check("ship: holding E shows progress and does not hook early", not s.hooked and g.fps.prompt.contains("%"), g.fps.prompt)
+	SmokeTest._check("ship: holding E shows progress and does not hook early", not s.hooked and g.fps.hold_frac > 0.0 and g.fps.hold_frac < 1.0, "%s %.2f" % [g.fps.prompt, g.fps.hold_frac])
 	for i in 16:
 		g.fps._interact(g.input, 0.1)
 	var up := ev.duplicate() as InputEventKey

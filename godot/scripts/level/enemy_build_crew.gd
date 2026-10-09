@@ -128,7 +128,8 @@ static func _prompt(s: Dictionary, label: String) -> String:
 
 ## The payout note for a prompt, matching EnemyBuilder's payout ("" when it pays nothing).
 static func _pay(s: Dictionary) -> String:
-	var pay := int(EnemyStructures.DEFS[s.kind].get("salvage", Config.MORTAR_SALVAGE))
+	var def: Dictionary = EnemyStructures.DEFS.get(s.get("kind", ""), {})
+	var pay := int(def.get("salvage", Config.MORTAR_SALVAGE))
 	return ", +%d Salvage" % pay if pay > 0 else ""
 
 
