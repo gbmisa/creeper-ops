@@ -43,6 +43,11 @@ Clone https://github.com/gbmisa/creeper-ops and check out branch fix/muse-b-bugs
 Clone https://github.com/gbmisa/creeper-ops and check out branch art/3-integration. Read AGENTS.md, CLAUDE.md and docs/tasks/ART3_A2_integration.md. Do that brief and nothing else. Commit and push only to art/3-integration. Never touch main, never merge. Report in the AGENTS.md format.
 ```
 
+## A3: hive structures use the animated models (after A2; Opus creates the branch)
+```
+Clone https://github.com/gbmisa/creeper-ops and check out branch art/3-hive-models (if it doesn't exist yet, A2 isn't merged: wait). Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/ART3_A3_hive_models.md. Do that brief and nothing else. Commit and push only to art/3-hive-models. Never touch main, never merge. Report in the AGENTS.md format.
+```
+
 ## Rules reminder
 - **Opus leaves notes in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md) on `main`. Fetch `main` and read it before you start or resume any brief.** (Latest: hold-to-fire spread and recoil climb added to B.)
 - Muse has headless Godot 4.7.2: run the parse and smoke checks and headless sims yourself. Screenshots and GPU checks are Opus's job (Muse has no display).

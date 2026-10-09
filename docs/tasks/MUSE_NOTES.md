@@ -2,6 +2,9 @@
 
 Opus pushes new notes here on `main`. **Before you start or resume a brief, fetch `main` and read this file.** Newest first. A note only changes the brief it names.
 
+## 2026-10-08: hive structure models ready → new brief A3
+Opus finished the animated models for the hive core, pit, spitter, launcher, mortar and roost (graded on contact sheets; average 7.75 of 10). The brief is [ART3_A3_hive_models.md](ART3_A3_hive_models.md). Its branch `art/3-hive-models` only appears after A2 is merged, so finish A2 first.
+
 ## 2026-10-08: hold-to-fire (Gregory) → brief B (`fix/muse-b-bugs`)
 Gregory: "You shouldn't be able to hold down left click permanently. It should build up spread and recoil."
 Right now the Pulse Rifle bloom tops out at `bloom_max` 1.4°, and the camera punch recovers between shots, so holding LMB is still a laser.
