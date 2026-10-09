@@ -156,7 +156,7 @@ Tests:
 Unfinished: none for P2.
 ## P3 interior props
 
-Done (2026-10-09 ~07:40 UTC):
+Done (2026-10-09 ~07:40 UTC). Commit: 22ad4c16 (pushed via push_work.py; 22 changed/new, 0 deleted).
 - `level/castle_props.gd` (new, `CastleProps`, 249 lines): `build(root, g, lay)` returns a
   descriptor dict for the smoke test. Keep hall: a two-step stone dais (5.0 m / 3.6 m,
   `CastleDefs.DAIS_H`=0.5) under the crown nest; two long oak tables (top + 4 legs) on
@@ -208,11 +208,59 @@ Unfinished: none for P3. Open question for Opus: the first `smoke_castles2b_prop
 draft failed `--import` with "Expected closing )" at a line that parsed fine in
 isolation; rewriting with bracket dict access and precomputed booleans cleared it.
 Root cause not identified — worth knowing if it recurs (no behaviour impact).
-## P4 command-view readability — FILL
+## P4 command-view readability
+
+Done (2026-10-09 ~08:30 UTC). Commit: PENDING (pushed via push_work.py).
+- `level/castle_readability.gd` (new, `CastleReadability`, 67 lines):
+  `set_command_view(on)` sets `fade_alpha` on the shared slab ShaderMaterial;
+  `build_markers(root, lay, v)` builds two horizontal progress bars (dark back bar +
+  amber fill anchored left) over the gate hall (above the gate-banner pole) and the
+  bailey standard (above the pole), paired with the P2 `gate_banner`/`standard`
+  descriptors; `animate_markers(v, c)` shows a bar only while `c.state == "hostile"`
+  and `c.stage` is that bar's stage, filled by `clampf(c.ring.progress)`. Read-only.
+- `godot/shaders/castle_slab.gdshader`: new `fade_alpha` uniform (default 1.0),
+  `render_mode blend_mix, depth_draw_opaque, cull_back`, `ALPHA = fade_alpha`. (P1
+  created this shader; no other run owns it.)
+- `core/game_flow.gd:139`: one-line `CastleReadability.set_command_view(cmd)` right
+  after `WorldLook.set_command_view` — the hook the brief named.
+- `level/stronghold_meshes.gd`: build merges the markers into `v`; animate calls
+  `animate_markers` after `animate_flags`.
+- `level/castle_defs.gd`: `ROOF_FADE_ALPHA`=0.35, `STAGE_BAR_W`=3.2.
+- `core/smoke_castles2b_readability.gd` (new, `SmokeCastles2bReadability`, registered):
+  the fade uniform toggles 0.35/1.0; per concentric castle both bars build; the bars
+  track the running stage (gate 40% -> gate bar filled 40%, bailey hidden; bailey 70%
+  -> bailey bar 70%; keep stage or held -> both hidden).
+- Trebuchet reach ring on hover: NOT implemented — no free terrain-shader ring uniform
+  (ring_a: placement ghost + selection/weapon range; ring_b: selection ring; shells[8]:
+  enemy mortar + trebuchet telegraphs via `CastleEngines.rings`). Per the brief this
+  goes under Suggestions, not into the tree.
+- Screenshots: not run (no display); Opus judges visuals.
+
+Spec gaps filled:
+- Bars sit above their poles (gate-banner pole top + 1.4 m, standard pole top + 1.4 m)
+  and lie flat — read top-down in command view; invisible in FPS except edge-on.
+- One shared slab material: every castle's roofs fade together. Oak beams stay opaque
+  (thin and structural; visually fine under a faded slab).
+- At `fade_alpha` 1.0 the slab renders in the transparent pass but blends identically
+  to opaque.
+
+Tests:
+- Parse: `--headless --path godot --import` — 0 script errors.
+- Full suite `-- --smoke --quit=0.1`: **[smoke] OK: 0 failure(s)** (13 new readability
+  checks PASS: 1 fade + 6 castles x 2 bar checks), castle smokes all PASS.
+
+Unfinished: none for P4.
 ## P5 turret variety — FILL
 ## P6 castle guards — FILL
 ## P7 castle-only production — FILL
 ## P8 Stage 21 leftovers — FILL
 
 ## Suggestions (unbriefed, not implemented)
-- (append as phases run)
+- (P4) Trebuchet reach ring on hover: add a `ring_c` vec4 (+ `ring_c_color`) uniform to
+  terrain.gdshader mirroring `ring_a`, plumb it through CommandOverlay (e.g.
+  `show_engine_range(x, z, radius_m)` / clear on hover-out), and drive it from
+  CommandHover.refresh when the hover cell falls inside a hostile concentric castle's
+  rect while no tool is armed (radius `CastleDefs.ENGINE.range * Config.CELL`, 40
+  cells, red-amber). Cheaper alternative: reuse a `shells[]` slot through
+  `CastleEngines.rings` with a hover flag — riskier, live telegraphs could stomp it.
+  Deliberately not implemented: the brief forbids adding a shader uniform here.

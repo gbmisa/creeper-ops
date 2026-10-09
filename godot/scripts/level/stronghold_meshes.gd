@@ -95,6 +95,9 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 	var cloth := CastleBanners.build(root, world.grid, lay, v.banners)
 	for k in cloth:
 		v[k] = cloth[k]
+	var marks := CastleReadability.build_markers(root, lay, v)
+	for k in marks:
+		v[k] = marks[k]
 	root.add_child(crown)
 	v["crown"] = crown
 	if not sp.pad.is_empty():
@@ -140,3 +143,4 @@ static func animate(v: Dictionary, c: Dictionary, t: float) -> void:
 	for f in v.get("fires", []):
 		CastleFires.flicker(f, t)
 	CastleBanners.animate_flags(v, c)
+	CastleReadability.animate_markers(v, c)

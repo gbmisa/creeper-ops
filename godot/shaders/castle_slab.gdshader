@@ -3,7 +3,7 @@
 // edges. World-space, no UVs, so it grades exactly like the terrain walls.
 // Undersides (wn.y < -0.5) get flagstones darkened by underside_dark.
 shader_type spatial;
-render_mode cull_back;
+render_mode blend_mix, depth_draw_opaque, cull_back;
 
 #include "res://shaders/noise.gdshaderinc"
 #include "res://shaders/terrain_look.gdshaderinc"
@@ -11,6 +11,7 @@ render_mode cull_back;
 uniform vec3 base_color : source_color = vec3(0.502, 0.541, 0.439); // StrongholdMeshes.DECOR_STONE
 uniform float underside_dark = 0.55;
 uniform float bump_strength = 0.05;
+uniform float fade_alpha = 1.0; // P4: roof fade while the command view is active
 
 varying vec3 wpos;
 varying vec3 wnrm;
@@ -36,5 +37,6 @@ void fragment() {
 	ALBEDO = c;
 	ROUGHNESS = 0.92;
 	SPECULAR = 0.2;
+	ALPHA = fade_alpha;
 	NORMAL = normalize((VIEW_MATRIX * vec4(bumped(wn, wpos, bump, bump_strength), 0.0)).xyz);
 }
