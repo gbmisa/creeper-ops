@@ -165,7 +165,7 @@ static func _launcher(host, part: Dictionary, dt: float) -> void:
 			host.world.creeper.add(target.x, target.z, Config.SPORE_AMOUNT)
 			host.world.effects.burst(to, Color("88ff55"), 3.0 * Config.CELL, 0.6)
 			if not target.dead:
-				sm.damage(target, 15.0),
+				sm.damage(target, 15.0, "hive_spitter"),
 	})
 	it["spore"] = true
 	it["spore_hp"] = Config.SPORE_HP

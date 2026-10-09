@@ -167,7 +167,7 @@ func _fire_spore() -> void:
 			world.effects.burst(to, Color("88ff55"), 3.0 * Config.CELL, 0.6)
 			Sfx.play("boom", to)
 			if not target.dead:
-				structures.damage(target, 15.0) })
+				structures.damage(target, 15.0, "spore_volley") })
 	it["spore"] = true
 	it["spore_hp"] = Config.SPORE_HP
 

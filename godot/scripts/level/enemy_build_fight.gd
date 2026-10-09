@@ -105,7 +105,7 @@ static func beam(b, s: Dictionary, dt: float) -> void:
 	if float(s.charge) < float(def.interval):
 		return
 	s.charge = 0.0
-	b.structures.damage(best, float(def.damage))
+	b.structures.damage(best, float(def.damage), "enemy_lancer")
 	Sfx.play("beam", s.pos)
 
 
@@ -162,7 +162,7 @@ static func blight_dps(b, dt: float) -> void:
 			continue
 		for cell in Placement.footprint_cells(st.type, st.x, st.z):
 			if b.blocks(cell.x, cell.y):
-				b.structures.damage(st, Config.ENEMY_BLIGHT_DPS * dt)
+				b.structures.damage(st, Config.ENEMY_BLIGHT_DPS * dt, "blight")
 				break
 
 

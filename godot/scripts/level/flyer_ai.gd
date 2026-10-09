@@ -121,7 +121,7 @@ static func _bite(fl: Flyers, f: Dictionary, s: Structure, dmg: float) -> void:
 	fl.world.effects.burst(s.pos + Vector3(0, 1, 0), Color("a8ff5a"), 1.2, 0.2)
 	Sfx.play("hurt", s.pos)
 	CreatureAnim.attack(f.node)
-	_sm(fl).damage(s, dmg)
+	_sm(fl).damage(s, dmg, "flyer_" + str(f.type).to_lower())
 	if s.dead:
 		fl.stats.structures += 1
 

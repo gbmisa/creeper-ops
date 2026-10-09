@@ -203,6 +203,8 @@ func impact(at: Vector3) -> void:
 		if Vector2(p.x - at.x, p.z - at.z).length() > Config.GUARD_BOLT_RADIUS + q.radius or absf(p.y - at.y) > 3.0:
 			continue
 		var dmg: float = { "operative": Config.GUARD_DMG_OPERATIVE, "unit": Config.GUARD_DMG_UNIT }.get(q.get("kind", ""), Config.GUARD_DMG_STRUCT)
+		if q.has("struct"):
+			(q.struct as Structure).last_hit_by = "sentinel"
 		q.hit.call(dmg)
 
 

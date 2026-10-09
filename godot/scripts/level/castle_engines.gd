@@ -164,6 +164,8 @@ static func impact(world: World, at: Vector3, prey: Array) -> void:
 		if Vector2(p.x - at.x, p.z - at.z).length() > r + float(q.get("radius", 0.5)) or absf(p.y - at.y) > 3.0:
 			continue
 		var kind: String = q.get("kind", "")
+		if q.has("struct"):
+			(q.struct as Structure).last_hit_by = "engine"
 		q.hit.call(E.dmg_operative if kind == "operative" else (E.dmg_unit if kind == "unit" else E.dmg_struct))
 
 

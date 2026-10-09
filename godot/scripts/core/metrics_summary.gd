@@ -10,6 +10,7 @@ static func build(m: PlayMetrics, cause: String) -> Dictionary:
 	var lost := {}
 	var by_creeper := 0
 	var by_other := 0
+	var lost_by := {}
 	var deaths := 0
 	var incursions := 0
 	var actions := 0
@@ -22,6 +23,7 @@ static func build(m: PlayMetrics, cause: String) -> Dictionary:
 				built[e.type] = int(built.get(e.type, 0)) + 1
 			"structure_lost":
 				lost[e.type] = int(lost.get(e.type, 0)) + 1
+				lost_by[e.get("by", "unknown")] = int(lost_by.get(e.get("by", "unknown"), 0)) + 1
 				if e.wet:
 					by_creeper += 1
 				else:
@@ -48,7 +50,7 @@ static func build(m: PlayMetrics, cause: String) -> Dictionary:
 		"node_killed_by": ("creeper" if node_wet else "raiders") if cause == "node_destroyed" else "",
 		"duration": snappedf(m.t, 0.1), "time_in_mode": modes,
 		"operative_deaths": deaths, "incursions": { "count": incursions, "time": snappedf(away, 0.1) },
-		"built_by_type": built, "lost_by_type": lost,
+		"built_by_type": built, "lost_by_type": lost, "lost_by": lost_by,
 		"lost_to_creeper": by_creeper, "lost_to_other": by_other,
 		"peak_creeper_cells": m.acc.peak_cells, "node_hits": m.acc.node_hits,
 		"full_bank_time": snappedf(m.acc.full, 0.1), "starved_time": snappedf(m.acc.starved, 0.1),

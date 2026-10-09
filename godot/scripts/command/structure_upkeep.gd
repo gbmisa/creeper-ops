@@ -21,7 +21,7 @@ static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
 		return
 	var rate := dt / float(s.def.get("wet_time", Config.WET_TIME))
 	if s.is_built():
-		mgr.damage(s, s.def.hp * rate)
+		mgr.damage(s, s.def.hp * rate, "creeper")
 	else:
 		s.lost = minf(float(s.delivered), s.lost + s.def.cost * rate)
 

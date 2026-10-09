@@ -25,26 +25,28 @@ static func run(g) -> void:
 		and r.lay.engine_posts.has(c.engines[0].post))
 	var e: Dictionary = c.engines[0]
 	c.engines[1].cd = 1e6  # only the first engine shoots in these checks
+	# L2 castle rows shorten engine reach ("engine_range"); the test stands inside the real range.
+	var reach: float = float(e.get("range", CastleDefs.ENGINE.range))
 	var from: Vector3 = (v.engines[0] as Node3D).position
 	var out := (from - grid.cell_center(r.lay.rect.get_center().x, r.lay.rect.get_center().y)).normalized()
 	out.y = 0.0
 	out = out.normalized()
-	var spot := _ground(grid, from + out * 20.0 * Config.CELL)
+	var spot := _ground(grid, from + out * (reach * 0.75) * Config.CELL)
 	var op := Dummy.new()
 	op.node.position = spot
 	var gun := Dummy.new()
-	gun.node.position = _ground(grid, from + out * 24.0 * Config.CELL)
+	gun.node.position = _ground(grid, from + out * (reach * 0.9) * Config.CELL)
 	var far := Dummy.new()
-	far.node.position = _ground(grid, from + out * (CastleDefs.ENGINE.range + 4.0) * Config.CELL)
+	far.node.position = _ground(grid, from + out * (reach + 4.0) * Config.CELL)
 	var list := [_prey(op, "operative"), _prey(gun, "", true), _prey(far, "", true)]
-	var q := CastleEngines.pick(grid, from, list)
+	var q := CastleEngines.pick(grid, from, list, reach)
 	SmokeTest._check("castles2 engines: weapons first, nothing out of range", not q.is_empty() and q.node == gun.node)
-	var q2 := CastleEngines.pick(grid, from, [list[0], list[2]])
+	var q2 := CastleEngines.pick(grid, from, [list[0], list[2]], reach)
 	SmokeTest._check("castles2 engines: the Operative in sight is a target", not q2.is_empty() and q2.node == op.node)
 	var hall: Vector2i = r.lay.zones.gate.cells[4]
 	var hidden := Dummy.new()
 	hidden.node.position = grid.cell_center(hall.x, hall.y)
-	SmokeTest._check("castles2 engines: no shot at an Operative under a roof", CastleEngines.pick(grid, from, [_prey(hidden, "operative")]).is_empty())
+	SmokeTest._check("castles2 engines: no shot at an Operative under a roof", CastleEngines.pick(grid, from, [_prey(hidden, "operative")], reach).is_empty())
 	# Fair: a shot at a standing target lands; one that walks 6 m away during the telegraph doesn't.
 	var stay := Dummy.new()
 	stay.node.position = spot
