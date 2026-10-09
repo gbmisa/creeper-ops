@@ -173,6 +173,7 @@ static func run(g) -> void:
 	SmokeAmmo.run(g)
 	SmokePlacement.run(g)
 	SmokeTuning.run(g)
+	SmokeShotTour.run(g)
 	SmokeSniperLos.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
@@ -189,6 +190,8 @@ static func _run_only(g) -> void:
 				SmokePlacement.run(g)
 			"tuning":
 				SmokeTuning.run(g)
+			"tour":
+				SmokeShotTour.run(g)
 			"creature":
 				SmokeCreatureAnim.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])

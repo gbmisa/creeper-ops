@@ -55,6 +55,10 @@ class_name Debug
 ##   --engine=I[,hold|hooked|top[,S]]  Operative at Salvage Engine I (hold: mid-hook; hooked: all sockets
 ##                 hooked with a relay chain; top: on its roof). See debug_engines.gd
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
+##   --tour=PATH   screenshot tour: one framed shot per line of PATH (see
+##                 docs/tasks/MUSE_S_shot_tour.md); quits after the last line
+##   --tour-orbit=id,N  N shots orbiting gallery model id at 360/N degree steps,
+##                 named <dir>/<id>_<k>.png with --shot giving the directory
 
 const DEMO_BUILD := [
 	["relay", 34, 58], ["relay", 28, 48], ["relay", 27, 36], ["relay", 24, 24], ["relay", 19, 14], ["nullifier", 17, 14],
@@ -84,9 +88,9 @@ static func apply(g) -> void:
 		g.get_tree().quit()
 		return
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
-	if args.has("nocapture") or args.has("shot"):
+	if args.has("nocapture") or args.has("shot") or args.has("tour") or args.has("tour-orbit"):
 		g.ignore_capture = true
-	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "castle2", "engines", "raid", "gallery", "creatures", "sim", "shot", "smoke", "engine"].any(func(k): return args.has(k))
+	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "castle2", "engines", "raid", "gallery", "creatures", "sim", "shot", "tour", "tour-orbit", "smoke", "engine"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
 	elif auto:
@@ -230,7 +234,11 @@ static func apply(g) -> void:
 		DebugFire.run(g, str(args.fire))
 	if args.has("keys"):
 		g.hud.keys.open()
-	if args.has("shot"):
+	if args.has("tour"):
+		ShotTour.start_file(g, str(args.tour))
+	elif args.has("tour-orbit"):
+		ShotTour.start_orbit(g, str(args["tour-orbit"]), str(args.get("shot", "")))
+	elif args.has("shot"):
 		DebugHooks._screenshot_later(g, args.shot)
 	elif args.has("quit"):
 		g.get_tree().create_timer(float(args.quit)).timeout.connect(func(): g.get_tree().quit())
