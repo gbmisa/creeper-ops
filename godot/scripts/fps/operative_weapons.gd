@@ -12,6 +12,8 @@ var spraying := false
 var debug_trigger := false  # --fire: hold the trigger for a screenshot
 var hit_marker := 0.0
 var bloom := 0.0          # Pulse Rifle spread (degrees): grows per shot while firing, recovers on release
+var climb := 0.0          # sustained vertical camera climb (rad): accumulates per shot while held, eases back on release
+var climb_yaw := 0.0      # sustained random yaw drift (rad): same lifecycle as climb
 var feel := HitFeel.new()
 var motion: ViewmodelMotion
 var xbow: CrossbowFx
@@ -94,6 +96,11 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 			current = w
 	advanced.update(dt, input, world, feet)
 	_show_model()
+	var held := debug_trigger or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or advanced.firing
+	if not held:  # sustained climb eases back after release; tap-fire never accumulates
+		var rec := Config.CLIMB_RECOVER * dt
+		climb = move_toward(climb, 0.0, rec)
+		climb_yaw = move_toward(climb_yaw, 0.0, rec)
 	if input.act("ammo_next") and not advanced.handles(current):
 		AmmoGrades.cycle_op(current, 1)
 	if input.act("ammo_prev") and not advanced.handles(current):
@@ -213,9 +220,18 @@ func _fire(world: World) -> void:
 
 
 ## Recoil for any weapon, driven by RecoilDefs (feel only; damage/rate/range untouched).
+## Wires RecoilDefs.cam into the camera punch (rifle cam=1.0 keeps today's feel) and
+## accumulates the sustained hold-to-fire climb (scaled by cam, capped by climb_max).
 func kick(id: String) -> void:
 	var r: Dictionary = RecoilDefs.of(id)
 	motion.kick(r.kick, r.yaw)
+	motion.cam_scale = float(r.cam)
+	var inc: float = float(r.climb) * float(r.cam)
+	if inc > 0.0:
+		climb = minf(climb + inc, float(r.climb_max))
+		var yw := inc * 0.35
+		var cap := float(r.climb_max) * 0.5
+		climb_yaw = clampf(climb_yaw + randf_range(-yw, yw), -cap, cap)
 
 
 ## An enemy was hit by something the Operative fired. Marker + tick, or red cross + crunch.

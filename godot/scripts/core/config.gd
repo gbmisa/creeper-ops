@@ -100,6 +100,7 @@ const VM_KICK_PITCH := 0.12       # rad the muzzle flips up per unit of kick (~7
 const VM_CAM_KICK := 0.016        # rad of camera pitch per unit of kick (~0.9 deg, always returns)
 const VM_YAW_KICK := 0.006        # rad of random camera yaw per unit of kick (recovers, never accumulates)
 const VM_KICK_MAX := 1.7          # stacked kick cap (rapid fire)
+const CLIMB_RECOVER := 0.15       # rad/s the sustained hold-fire climb eases back after release
 const VM_SPRING_K := 1300.0       # recoil spring stiffness; damping below gives a slight overshoot
 const VM_SPRING_DAMP := 34.0
 const VM_STRING_SNAP := 0.07      # m the crossbow string jumps forward on a shot

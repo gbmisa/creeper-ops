@@ -13,6 +13,7 @@ var k := 0.0            # recoil spring displacement (1.0 = one full shot)
 var kv := 0.0
 var ky := 0.0           # camera yaw punch spring (random direction per shot, recovers)
 var kyv := 0.0
+var cam_scale := 1.0    # RecoilDefs.cam: scales the camera punch portion only (gun feel untouched)
 var dip := 0.0          # landing dip spring
 var dipv := 0.0
 var _t := 0.0
@@ -42,7 +43,7 @@ func kick(strength: float, yaw_kick := 0.0) -> void:
 
 
 func cam_pitch() -> float:
-	return k * Config.VM_CAM_KICK
+	return k * Config.VM_CAM_KICK * cam_scale
 
 
 func cam_yaw() -> float:

@@ -146,12 +146,32 @@ static func _gunfeel(g) -> void:
 	SmokeTest._check("gunfeel: yaw punch fires and recovers with no drift",
 		peaked > 0.0005 and absf(ctrl.camera.rotation.y - base_yaw) < 0.001 and w.motion.at_rest(),
 		"(peak %.4f rad)" % peaked)
+	# Brief B2: RecoilDefs.cam scales the camera punch (rifle cam=1.0 keeps today's feel).
+	w.kick("rocket")
+	var cam_rocket := w.motion.cam_scale
+	w.kick("rifle")
+	SmokeTest._check("gunfeel: RecoilDefs.cam wired into camera punch", cam_rocket == 1.4 and w.motion.cam_scale == 1.0,
+		"(rocket %.1f, rifle %.1f)" % [cam_rocket, w.motion.cam_scale])
+	# Hold-to-fire: 10 held rifle shots build ~5.5 deg bloom and a capped climb; both ease back.
+	w.climb = 0.0
+	w.climb_yaw = 0.0
+	for i in 10:
+		w.kick("rifle")
+	var bloom10 := minf(10.0 * float(rd.bloom_add), float(rd.bloom_max))
+	SmokeTest._check("gunfeel: 10 held shots reach ~5.5 deg bloom", absf(bloom10 - 5.5) < 0.01,
+		"(bloom %.1f deg)" % bloom10)
+	SmokeTest._check("gunfeel: hold-fire climb accumulates, capped", w.climb > 0.03 and w.climb <= float(rd.climb_max),
+		"(climb %.4f rad)" % w.climb)
+	w.update(1.0, g.input, g.surface, ctrl.pos)  # trigger released in headless: climb must ease back
+	SmokeTest._check("gunfeel: climb eases back after release", w.climb < 0.03,
+		"(climb %.4f rad after 1 s)" % w.climb)
 	ctrl.kick_pitch = 0.0
 	ctrl.kick_yaw = 0.0
 	_ttk(g)
 
 
-## Full magazine at worst-case bloom still kills the test target in the same 4 shots.
+## Tap-fire (zero bloom) TTK is unchanged: 4 shots kill. At max bloom the rifle is
+## intentionally inaccurate (hold-to-fire spread), so that case is not TTK-tested.
 static func _ttk(g) -> void:
 	var w: OperativeWeapons = g.fps.weapons
 	var world: World = g.surface
@@ -170,10 +190,10 @@ static func _ttk(g) -> void:
 	w.cooldown = 0.0
 	var shots := 0
 	while log.alive and shots < 12:
-		w.bloom = RecoilDefs.of("rifle").bloom_max  # worst case spread on every shot
+		w.bloom = 0.0  # tap-fire: no spread
 		w._fire(world)
 		shots += 1
 	world.targets.erase(target)
 	node.queue_free()
-	SmokeTest._check("gunfeel: rifle TTK unchanged with bloom at max (4 shots kill)",
+	SmokeTest._check("gunfeel: rifle tap-fire TTK unchanged (4 shots kill)",
 		not log.alive and log.hits == 4 and shots == 4, "(%d shots, %d hits)" % [shots, log.hits])

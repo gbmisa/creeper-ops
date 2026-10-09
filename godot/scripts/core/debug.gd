@@ -107,7 +107,9 @@ static func apply(g) -> void:
 		var c: Vector3 = g.level.grid.cell_ground(tgt.x, tgt.y)
 		g.units.order(squad, Vector2(c.x, c.z), true)
 	if args.has("surface"):
-		DebugHooks._drop(g, g.level.rift.x + 12, g.level.rift.z, PI / 2.0)
+		# +16, not +12: rift.x+12 drops the Operative 2.6 m from Engine e5's great
+		# bronze gear (faces it point-blank). +16 keeps the Rift in view with clearance.
+		DebugHooks._drop(g, g.level.rift.x + 16, g.level.rift.z, PI / 2.0)
 	if args.has("spire"):
 		var st: Vector2i = g.level.get("spire_totem", Vector2i(61, 37))
 		DebugHooks._drop(g, st.x, st.y, 0.0)
@@ -227,5 +229,3 @@ static func apply(g) -> void:
 		DebugHooks._screenshot_later(g, args.shot)
 	elif args.has("quit"):
 		g.get_tree().create_timer(float(args.quit)).timeout.connect(func(): g.get_tree().quit())
-
-
