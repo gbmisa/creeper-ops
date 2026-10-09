@@ -4,7 +4,7 @@ extends Button
 ## name, cost line, and a lock/up-front note. `summary` holds the plain text (tests read it).
 
 const ICON_DIR := "res://assets/icons/"
-const SIZE := Vector2(150, 64)
+const SIZE := Vector2(158, 60)
 const LOCKED_W := 250.0
 
 var item := ""
@@ -35,19 +35,20 @@ func _init(id: String, slot: int) -> void:
 	var v := UiKit.vbox(0)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(v)
-	var top := UiKit.hbox(6)
-	_key = UiKit.mono("", 13, UiKit.ACCENT)
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	var top := UiKit.hbox(5)
+	_key = UiKit.mono("", 14, UiKit.ACCENT)
 	top.add_child(_key)
-	_cost = UiKit.mono("", 13, UiKit.ENERGY)
-	_cost.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	top.add_child(_cost)
-	v.add_child(top)
 	_name = UiKit.label("", 17)
 	_name.add_theme_font_override("font", UiTheme.font(UiTheme.FONT_BOLD))
 	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	v.add_child(_name)
-	_note = UiKit.label("", 12, UiKit.DIM)
+	_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(_name)
+	v.add_child(top)
+	_cost = UiKit.mono("", 14, UiKit.ENERGY)
+	_cost.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	v.add_child(_cost)
+	_note = UiKit.label("", 13, UiKit.WARN)
 	_note.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	v.add_child(_note)
 
@@ -70,7 +71,7 @@ func _icon(id: String) -> Control:
 	if ResourceLoader.exists(path):
 		var t := TextureRect.new()
 		t.texture = load(path)
-		t.custom_minimum_size = Vector2(52, 52)
+		t.custom_minimum_size = Vector2(50, 50)
 		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		t.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -91,8 +92,9 @@ func show_info(key: String, title: String, cost: String, note: String, locked: b
 	_key.text = key
 	_name.text = title
 	_cost.text = "" if locked else cost
+	_cost.visible = not locked
 	_note.text = note
-	_note.add_theme_color_override("font_color", UiKit.WARN if locked else UiKit.DIM)
+	_note.visible = locked
 	disabled = locked
 	custom_minimum_size.x = LOCKED_W if locked else SIZE.x
 	summary = "%s  %s\n%s" % [key, title, note if locked else cost]

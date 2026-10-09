@@ -12,6 +12,7 @@ var _items: HBoxContainer
 var _buttons := {}          # item -> BuildCard
 var _tip: Label
 var _active_tool := ""
+const HINT := "Hover a card for details. Drag a tool to lay Collector and Relay chains or rows. Right-click or Esc cancels."
 
 
 func _init() -> void:
@@ -36,9 +37,9 @@ func _init() -> void:
 	relabel()
 	_items = UiKit.hbox(6)
 	v.add_child(_items)
-	_tip = UiKit.label("", 14, UiKit.DIM)
+	_tip = UiKit.label(HINT, 14, UiKit.DIM)
 	_tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_tip.custom_minimum_size = Vector2(640, 36)
+	_tip.custom_minimum_size = Vector2(640, 20)
 	v.add_child(_tip)
 	Bus.tool_changed.connect(_on_tool)
 	show_tab(0)
@@ -64,7 +65,7 @@ func show_tab(i: int) -> void:
 		b.mouse_entered.connect(func():
 			var why := StructureDefs.lock_reason(level, item)
 			_tip.text = why if why != "" else "%s: %s" % [StructureDefs.label(item), StructureDefs.desc(item)])
-		b.mouse_exited.connect(func(): _tip.text = "")
+		b.mouse_exited.connect(func(): _tip.text = HINT)
 		_items.add_child(b)
 		_buttons[item] = b
 		_fill(b)
