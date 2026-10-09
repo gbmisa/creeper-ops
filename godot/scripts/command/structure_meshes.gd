@@ -4,7 +4,8 @@ class_name StructureMeshes
 ## lathes/struts/arches in world/shape_kit.gd. Animated parts are named children:
 ## "Spin" (rotates), "Turret" (yaw, aimed by WeaponLogic), "Arm" (pitch), "Core" (nullifier
 ## charge), "Glow" (Totem pulse), "Muzzle" (where shots leave).
-## Art direction "Arcane Forge": pale stone, bronze, dark oak, cloth, cyan rune crystals.
+## Palette: castles and props keep "Arcane Forge" stone/bronze/oak; player structures are built
+## with MILITARY swapped in (concrete, olive, gunmetal) until their military glbs are loaded.
 
 const METAL := Color("8a96a6")
 const DARK := Color("2f3540")
@@ -25,7 +26,20 @@ const PALETTE := {
 	"rune_deep": [Color("0c86d8"), 0.0, 0.25, 0.55],  # big crystals: lower energy keeps the hue
 }
 
+## Player structures (make/ghost) read these instead: concrete, olive drab, gunmetal. Glows stay.
+const MILITARY := {
+	"stone": [Color("6e7068"), 0.0, 0.92, 0.0],
+	"stone_dark": [Color("4b4d46"), 0.0, 0.95, 0.0],
+	"bronze": [Color("5b6238"), 0.15, 0.7, 0.0],
+	"bronze_dark": [Color("3c4126"), 0.15, 0.75, 0.0],
+	"iron": [Color("3e4347"), 0.8, 0.45, 0.0],
+	"oak": [Color("4a4f30"), 0.0, 0.85, 0.0],
+	"cloth": [Color("3c4126"), 0.0, 0.95, 0.0],
+	"slate": [Color("4a4f54"), 0.6, 0.5, 0.0],
+}
+
 static var _mats := {}
+static var _military := false  # true while make() builds a player structure
 
 
 ## Shared material per colour/style (callers must not mutate it; use mat_new for that).
@@ -50,7 +64,7 @@ static func mat_new(color: Color, metal := 0.6, rough := 0.4, emit := Color.BLAC
 
 ## Palette material by name ("stone", "bronze", "rune", ...).
 static func pal(name: String) -> StandardMaterial3D:
-	var p: Array = PALETTE[name]
+	var p: Array = MILITARY[name] if _military and MILITARY.has(name) else PALETTE[name]
 	return mat(p[0], p[1], p[2], p[0] if p[3] > 0.0 else Color.BLACK, p[3])
 
 
@@ -121,8 +135,10 @@ static func _part(parent: Node3D, part_name: String, y := 0.0) -> Node3D:
 
 static func make(type: String) -> Node3D:
 	var root := Node3D.new()
+	_military = true
 	if not WeaponMeshes.build(type, root):
 		SupportMeshes.build(type, root)
+	_military = false
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	return root
