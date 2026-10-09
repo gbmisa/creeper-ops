@@ -15,11 +15,11 @@ SPAN, CHORD = 1.5, 1.0
 def build():
     arm = lib.armature("wyvern", [("root", (0, 0, 0), (0, 0, 0.1), None),
                                   ("body", (-0.3, 0, 0), (0.3, 0, 0), "root"),
-                                  ("neck", (0.35, 0, 0.05), (0.72, 0, 0.3), "body"),
-                                  ("head", (0.72, 0, 0.3), (1.02, 0, 0.36), "neck"),
-                                  ("jaw", (0.74, 0, 0.27), (0.98, 0, 0.24), "head"),
-                                  ("tail", (-0.35, 0, 0), (-0.8, 0, -0.08), "body"),
-                                  ("tail2", (-0.8, 0, -0.08), (-1.3, 0, -0.15), "tail")] + fk.wing_bones(SPAN, CHORD))
+                                  ("neck", (0.35, 0, 0.05), (0.94, 0, 0.42), "body"),
+                                  ("head", (0.94, 0, 0.42), (1.24, 0, 0.48), "neck"),
+                                  ("jaw", (0.96, 0, 0.39), (1.2, 0, 0.36), "head"),
+                                  ("tail", (-0.35, 0, 0), (-1.0, 0, -0.08), "body"),
+                                  ("tail2", (-1.0, 0, -0.08), (-1.65, 0, -0.15), "tail")] + fk.wing_bones(SPAN, CHORD))
     b = lib.Builder("wyvern")
     b.ball((0, 0, 0), 0.34, "wyv_skin", "body", scale=(1.7, 1.25, 1.15), seg=12, rings=8)
     b.ball((0.05, 0, -0.18), 0.26, "plate", "body", scale=(1.6, 1.0, 0.45), seg=8, rings=5, smooth=False)  # belly plates
@@ -29,18 +29,24 @@ def build():
     for s in (1, -1):  # tucked hind claws
         b.limb((-0.15, s * 0.12, -0.2), (-0.35, s * 0.14, -0.38), 0.05, 0.03, "wyv_skin", "body", seg=5)
         b.limb((-0.35, s * 0.14, -0.38), (-0.45, s * 0.14, -0.42), 0.03, 0.0, "bone", "body", seg=4)
-    b.limb((0.32, 0, 0.04), (0.74, 0, 0.3), 0.2, 0.12, "wyv_skin", "neck", seg=7, smooth=True)
+    b.limb((0.32, 0, 0.04), (0.96, 0, 0.42), 0.19, 0.1, "wyv_skin", "neck", seg=7, smooth=True)
+    for k in range(4):  # neck ridge
+        x, z = 0.4 + 0.15 * k, 0.2 + 0.09 * k
+        b.limb((x, 0, z), (x - 0.1, 0, z + 0.17), 0.05, 0.0, "bone", "neck", seg=4)
     b.ball((0.86, 0, 0.37), 0.18, "wyv_skin", "head", scale=(1.5, 0.9, 0.8), seg=8, rings=6)
     b.limb((0.78, 0, 0.27), (1.0, 0, 0.24), 0.07, 0.03, "wyv_skin", "jaw", seg=5)
     for s in (1, -1):
         b.ball((0.9, s * 0.08, 0.41), 0.05, "glow", "head", seg=5, rings=4)
         b.limb((0.76, s * 0.06, 0.42), (0.62, s * 0.1, 0.55), 0.05, 0.035, "bone", "head", seg=4)
         b.limb((0.62, s * 0.1, 0.55), (0.45, s * 0.14, 0.78), 0.035, 0.0, "bone", "head", seg=4)
-    b.limb((-0.35, 0, 0), (-0.8, 0, -0.08), 0.14, 0.07, "wyv_skin", "tail", seg=6, smooth=True)
-    b.limb((-0.8, 0, -0.08), (-1.3, 0, -0.15), 0.07, 0.01, "wyv_skin", "tail2", seg=6, smooth=True)
-    b.limb((-1.2, 0, -0.14), (-1.5, 0, -0.16), 0.11, 0.0, "bone", "tail2", seg=4)
+    b.limb((-0.35, 0, 0), (-1.0, 0, -0.08), 0.15, 0.07, "wyv_skin", "tail", seg=6, smooth=True)
+    b.limb((-1.0, 0, -0.08), (-1.65, 0, -0.15), 0.07, 0.01, "wyv_skin", "tail2", seg=6, smooth=True)
+    for x in (-0.55, -0.8, -1.05):  # tail ridge
+        b.limb((x, 0, 0.06), (x - 0.1, 0, 0.18), 0.04, 0.0, "bone", "tail" if x > -1.0 else "tail2", seg=4)
+    b.limb((-1.55, 0, -0.14), (-1.85, 0, -0.16), 0.11, 0.0, "bone", "tail2", seg=4)
     for s in (1, -1):  # tail blades
-        b.limb((-1.15, 0, -0.13), (-1.3, s * 0.18, -0.12), 0.05, 0.0, "bone", "tail2", seg=4)
+        b.limb((-1.5, 0, -0.13), (-1.65, s * 0.2, -0.12), 0.05, 0.0, "bone", "tail2", seg=4)
+    b.move(["head", "jaw"], (0.22, 0, 0.12))
     fk.wing_mesh(b, SPAN, CHORD, "wyv_wing")
     b.finish(arm)
     return arm

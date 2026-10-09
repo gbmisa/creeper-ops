@@ -21,7 +21,8 @@ def build():
              ("base", (0, 0, 0), (0, 0, 0.4), "root"),
              ("body", (0, 0, 0.4), (0, 0, 1.7), "base"),
              ("cap", (0, 0, 1.7), (0, 0, 2.3), "body"),
-             ("flame", (0, 0, 0.05), (0, 0, -0.6), "base")]
+             ("flame", (0, 0, 0.05), (0, 0, -0.6), "base"),
+             ("dust", (0, 0, 0.02), (0, 0, 0.2), "root")]
     bones += [("door%d" % i, (x, y, z), (x, y, z + 1.2), "base") for i, (x, y, z, _a) in enumerate(DOORS)]
     bones += [("fin%d" % i, (x, y, z), (x * 1.6, y * 1.6, z + 0.3), "cap") for i, (x, y, z, _a) in enumerate(FINS)]
     arm = lib.armature("drop_pod", bones)
@@ -31,8 +32,8 @@ def build():
     b.lathe([(0.36, 0.4), (0.36, 1.62), (0.0, 1.62)], "unit_glow", "body", seg=8)  # cradle glow, seen when open
     for k in range(4):  # corner ribs between the doors
         a = k * math.pi / 2
-        b.box((math.cos(a) * 0.46, math.sin(a) * 0.46, 1.02), (0.14, 0.14, 1.25), "bronze_dark", "body", rot=Quaternion((0, 0, 1), a))
-    b.lathe([(0.56, 1.6), (0.52, 1.85), (0.36, 2.1), (0.12, 2.28), (0.0, 2.3)], "bronze", "cap", seg=8, smooth=False)
+        b.box((math.cos(a) * 0.46, math.sin(a) * 0.46, 1.02), (0.14, 0.14, 1.25), "iron", "body", rot=Quaternion((0, 0, 1), a))
+    b.lathe([(0.56, 1.6), (0.52, 1.85), (0.36, 2.1), (0.12, 2.28), (0.0, 2.3)], "brass", "cap", seg=8, smooth=False)
     b.lathe([(0.58, 1.6), (0.58, 1.68), (0.0, 1.68)], "bronze_dark", "cap", seg=8, smooth=False)
     b.limb((0, 0, 2.25), (0, 0, 2.55), 0.03, 0.0, "iron", "cap", seg=4)  # antenna
     b.ball((0, 0, 2.56), 0.04, "teal", "cap", seg=5, rings=3)
@@ -40,10 +41,14 @@ def build():
         b.box((x * 1.25, y * 1.25, z + 0.05), (0.32, 0.05, 0.42) if i % 2 == 0 else (0.05, 0.32, 0.42), "iron", "fin%d" % i)
     for i, (x, y, z, a) in enumerate(DOORS):
         q = Quaternion((0, 0, 1), a)
-        b.box((x, y, z + 0.6), (0.06, 0.62, 1.18), "bronze", "door%d" % i, rot=q)
-        b.box((x * 1.04, y * 1.04, z + 0.75), (0.03, 0.08, 0.6), "teal", "door%d" % i, rot=q)  # rune strip
-        b.box((x * 1.03, y * 1.03, z + 0.15), (0.05, 0.5, 0.06), "bronze_dark", "door%d" % i, rot=q)
-    b.limb((0, 0, 0.0), (0, 0, -1.3), 0.4, 0.0, "flame", "flame", seg=8)
+        b.box((x + math.cos(a) * 0.04, y + math.sin(a) * 0.04, z + 0.6), (0.14, 0.64, 1.18), "brass", "door%d" % i, rot=q)
+        b.box((x * 1.2, y * 1.2, z + 0.62), (0.04, 0.1, 0.9), "teal", "door%d" % i, rot=q)  # rune strip
+        for dz in (0.12, 1.1):
+            b.box((x * 1.18, y * 1.18, z + dz), (0.05, 0.66, 0.08), "iron", "door%d" % i, rot=q)
+    b.limb((0, 0, 0.0), (0, 0, -2.2), 0.66, 0.0, "flame", "flame", seg=10)
+    b.lathe([(0.3, -0.02), (0.55, -0.1), (0.3, -0.18), (0.2, -0.1), (0.3, -0.02)], "teal", "flame", seg=12, cap=False)  # nozzle ring
+    b.limb((0, 0, -1.6), (0, 0, -2.3), 0.12, 0.0, "flame", "flame", seg=6)  # flicker tip
+    b.lathe([(0.7, 0.02), (0.9, 0.12), (0.7, 0.2), (0.55, 0.1), (0.7, 0.02)], "dust", "dust", seg=16, cap=False)
     b.finish(arm)
     return arm
 
@@ -52,7 +57,7 @@ HIDE = (None, None, (0.01, 0.01, 0.01))
 
 
 def doors(arm, o):
-    return {"door%d" % i: (lib.world_rot(arm, "door%d" % i, sk.tangent(x, y), 1.5 * o), None)
+    return {"door%d" % i: (lib.world_rot(arm, "door%d" % i, sk.tangent(x, y), 0.85 * o), None)
             for i, (x, y, _z, _a) in enumerate(DOORS)}
 
 
@@ -63,7 +68,7 @@ def fins(arm, amt):
 
 def idle(arm, t):  # landed, doors open, cradle breathing, vents puffing
     p = doors(arm, 1.0)
-    p["flame"] = HIDE
+    p["flame"] = p["dust"] = HIDE
     s = 1 + 0.03 * math.sin(2 * math.pi * t)
     p["body"] = (None, None, (1, s, 1))
     return p
@@ -72,6 +77,7 @@ def idle(arm, t):  # landed, doors open, cradle breathing, vents puffing
 def walk(arm, t):  # falling
     w = 2 * math.pi * t
     p = doors(arm, 0.0)
+    p["dust"] = HIDE
     p.update(fins(arm, 0.06 * math.sin(3 * w)))
     f = 1 + 0.25 * math.sin(4 * w) + 0.1 * math.sin(7 * w)
     p["flame"] = (None, None, (1 + 0.1 * math.sin(5 * w), f, 1 + 0.1 * math.sin(5 * w)))
@@ -84,10 +90,27 @@ def attack(arm, t):  # touchdown
     o = lib.ease(min(1.0, max(0.0, (t - 0.2) / 0.5)))
     p = doors(arm, o)
     p["flame"] = (None, None, (max(0.01, 1 - t * 6),) * 3)
-    p["base"] = (None, None, (1 + 0.12 * hit, 1 - 0.18 * hit, 1 + 0.12 * hit))
+    p["base"] = (None, None, (1 + 0.15 * hit, 1 - 0.25 * hit, 1 + 0.15 * hit))
+    d = min(1.0, t / 0.6)
+    p["dust"] = (None, None, (1 + 2.2 * d, 1 - 0.5 * d, 1 + 2.2 * d) if t < 0.9 else (0.01,) * 3)
     pop = lib.pulse(t, 0.25, 0.65)
     p["cap"] = (None, lib.world_loc(arm, "cap", (0, 0, 0.18 * pop)))
     p.update(fins(arm, 0.4 * pop))
+    return p
+
+
+def hit(arm, t):
+    j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
+    p = idle(arm, 0.0)
+    p["base"] = (lib.world_rot(arm, "base", (1, 0, 0), 0.25 * j * math.sin(9 * t)), lib.world_loc(arm, "base", (0.12 * j, 0, 0.08 * j)))
+    return p
+
+
+def die(arm, t):  # recall: doors fold back up, then it sinks into the ground
+    p = doors(arm, 1.0 - lib.ease(min(1.0, t / 0.35)))
+    p["flame"] = p["dust"] = HIDE
+    s = lib.ease(max(0.0, (t - 0.3) / 0.7))
+    p["base"] = (None, lib.world_loc(arm, "base", (0, 0, -2.4 * s)), (1 - 0.3 * s,) * 3)
     return p
 
 
@@ -98,6 +121,6 @@ if __name__ == "__main__":
     lib.action(a, "idle", 48, lambda t: idle(a, t), step=2, loop=True)
     lib.action(a, "walk", 12, lambda t: walk(a, t), step=1, loop=True)
     lib.action(a, "attack", 30, lambda t: attack(a, t), step=1)
-    lib.action(a, "hit", 10, lambda t: sk.hit_pose(a, idle, t, "cap"), step=1)
-    lib.action(a, "die", 40, lambda t: sk.die_pose(a, idle, t, {}, (), {}), step=1)
+    lib.action(a, "hit", 10, lambda t: hit(a, t), step=1)
+    lib.action(a, "die", 40, lambda t: die(a, t), step=1)
     lib.export(out)
