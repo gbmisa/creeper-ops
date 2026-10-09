@@ -16,12 +16,15 @@ Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHu
   - `pt3/enemy-builds`: mortars die only to the demo charge (free while `DEMO_CHARGE_FREE`); spitter towers pay 0 Salvage; enemy rebuilds wait `ENEMY_REBUILD_DELAY` 30 s.
   - `pt3/castle-guard`: Lancers garrison hostile castles (`castle_lancers.gd`); no building within `BUILD_BAN_RADIUS` 24 of an unheld castle (`castle_exclusion.gd`, red rings in the shader, unviewed).
   - `pt3/small-fixes`: raiders stand on creeper (`raider_perch.gd`); a connected flying Node launches packets (CLAUDE.md contract updated); the Railgun prompt names the Armoury and clears on weapon switch.
+- Later pt3 (2026-10-09, items 16-21 in PLAYTEST3): planted demo charge (Armoury, 15 Salvage, max 3; kills mortars, Trebuchets, enemy builds); network: only finished collectors/relays relay, senders feed in-range pieces directly (reverts planned-relay transit); castle build-ban ring REMOVED (Lancer fire denies land); Pulse Rifle small bloom + vertical climb; Null Sprayer ~1/3 removal, 8 s tank; cave mites steer around rock; unit patrols (P) + castle auto-patrol; turret socket fixtures; deploy-site pick.
+- Muse's round 4: unit-attack-move, bailey-capture-broken, barracks-cap-spawn (cap 8), troops-into-castle, burrower-telegraph.
 - Muse's round 3: drawbridge-solid, rally-point-marker, spawn-pacing, blight-pylon-aura, fps-build-wheel (hold B for the radial wheel, HoldBar). Sabotage prompts show the real payout (0 for spitter towers).
 
 ## Open (playtest 3)
-1. Ask Gregory: should E-hold mortar sabotage still kill a mortar and pay 5 Salvage? (enemy_mortar.gd:168/209)
-2. The Ashmote Keep over-the-wall Lancer shot is unreproduced; it needs Gregory's replay.
-3. Items 5 (shop/med kits) and 9 (enemy reference) are later.
+1. Towers can't be built in anti-creeper: placement only checks `depth`, so the cause is unknown; waiting for Gregory's symptom (red ghost vs. places-then-fails).
+2. Ashmote Keep over-the-wall Lancer shot unreproduced. Crawler-stuck fix untested vs. the real symptom.
+3. Socket look: gems hard to see from the ground, rings hidden under towers, off-screen labels pile up. Deploy-pick visuals unviewed.
+4. Items 5 (shop/med kits), 9 (enemy reference) later.
 
 ## Decisions pending from Gregory
 - UI: `ui/overhaul` (Opus) vs `fix/ui-viewport-fit` (Muse). Screenshots are in the session scratchpad `ui/`; regenerate if gone.
