@@ -173,6 +173,7 @@ static func run(g) -> void:
 	SmokeEngines.run(g)
 	SmokeEnginesShip.run(g)
 	SmokeAmmo.run(g)
+	SmokeAttackMove.run(g)
 	SmokePlacement.run(g)
 	SmokeTuning.run(g)
 	SmokeSniperLos.run(g)
@@ -187,6 +188,8 @@ static func _run_only(g) -> void:
 				SmokeEnginesShip.run(g)
 			"ammo":
 				SmokeAmmo.run(g)
+			"attackmove":
+				SmokeAttackMove.run(g)
 			"placement":
 				SmokePlacement.run(g)
 			"tuning":

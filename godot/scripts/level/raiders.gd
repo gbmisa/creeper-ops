@@ -51,7 +51,8 @@ func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
 			kill(r)
 		else:
 			CreatureAnim.hit(r.node)
-	r["enemy"] = { "node": node, "oy": tier.size * 0.6, "radius": tier.size, "alive": func(): return r.alive, "hit": hit, "tier": tier }
+	r["enemy"] = { "node": node, "oy": tier.size * 0.6, "radius": tier.size, "alive": func(): return r.alive, "hit": hit, "tier": tier,
+		"targetable": func(): return str(r.get("burrow", "")) != "down" }
 	r["target"] = { "node": node, "radius": tier.size, "oy": tier.size * 0.6, "alive": func(): return r.alive, "on_hit": hit, "tier": tier }
 	world.add_target(r.target)
 	list.append(r)

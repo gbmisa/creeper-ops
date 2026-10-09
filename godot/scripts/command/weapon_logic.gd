@@ -195,6 +195,9 @@ static func _snipe(s: Structure, mgr) -> bool:
 	var best_ranged := false
 	var p := Vector3.ZERO
 	for m in foes:
+		var med: Dictionary = m.get("enemy", {})
+		if med.has("targetable") and not (med["targetable"] as Callable).call():
+			continue  # unhittable (e.g. a burrowed Burrower): don't waste the shot
 		# Stage 9b rule change: range is measured on the ground, like the enemy ranged weapons it answers
 		# (a Spitter on the flat used to out-reach a Sniper standing a mesa above it).
 		var mp: Vector3 = m.node.position

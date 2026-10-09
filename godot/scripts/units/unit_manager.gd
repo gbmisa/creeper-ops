@@ -114,7 +114,18 @@ func select(units: Array, additive := false) -> void:
 
 func update(dt: float, enemies: Array) -> void:
 	for u in list.duplicate():
-		_move(u, dt)
+		if (u.state == "move" or u.state == "return") and not u.path.is_empty() and u.ammo >= 1.0:
+			# Attack-move: hold the route and fight anything already in gun range.
+			# No chasing — the unit never leaves its path for a target. Dry units
+			# keep walking (their retreat is handled in UnitSupply.update).
+			u.engaged = not UnitSupply.acquire(u, enemies).is_empty()
+		else:
+			u.engaged = false
+		if u.engaged:
+			# Stand and fight: idle the walk clip instead of freezing mid-stride.
+			CreatureAnim.move(u.node.get_node("Mesh"), 0.0)
+		else:
+			_move(u, dt)
 		UnitSupply.update(self, u, dt, enemies)
 		if u.alive:
 			_sync(u)
