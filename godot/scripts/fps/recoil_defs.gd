@@ -9,8 +9,10 @@ class_name RecoilDefs
 ## the climb (1.0 = normal, 0.0 = deterministic vertical climb only).
 
 const DEFS := {
-	"rifle": { "kick": 0.85, "cam": 1.0, "yaw": 1.0, "bloom_add": 0.8, "bloom_max": 5.5, "bloom_recover": 6.0,
-		"climb": 0.004, "climb_max": 0.045 },
+	# Playtest 3: "some spread, but recoil instead of being inaccurate": small bloom; the
+	# kick is a readable vertical climb the player pulls down against (mild sideways drift).
+	"rifle": { "kick": 1.0, "cam": 1.1, "yaw": 0.3, "bloom_add": 0.15, "bloom_max": 1.5, "bloom_recover": 8.0,
+		"climb": 0.007, "climb_max": 0.07, "drift": 0.25 },
 	"crossbow": { "kick": 2.0, "cam": 1.2, "yaw": 1.3, "bloom_add": 0.0, "bloom_max": 0.0, "bloom_recover": 0.0,
 		"climb": 0.006, "climb_max": 0.02 },
 	"rocket": { "kick": 2.4, "cam": 1.4, "yaw": 2.0, "bloom_add": 0.0, "bloom_max": 0.0, "bloom_recover": 0.0,
