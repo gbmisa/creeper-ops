@@ -13,7 +13,7 @@ static func update(mgr: UnitManager, u: Unit, dt: float, enemies: Array) -> void
 		return
 	match u.state:
 		"move", "return":
-			if u.path.is_empty():
+			if u.path.is_empty() and not mgr.unstick(u):
 				u.state = "idle"
 		"resupply":
 			_resupply(mgr, u, dt)

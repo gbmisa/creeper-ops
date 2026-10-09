@@ -302,7 +302,7 @@ const METRICS_MIN_QUIT := 60.0 # a quit/level change writes a partial file only 
 const METRICS_HIT_GAP := 5.0   # Node-hit events are throttled to one per this many seconds
 
 # ---- units (barracks) --------------------------------------------------------------
-const UNITS_PER_BARRACKS := 4  # population cap: more barracks, more (dependent) units
+const UNITS_PER_BARRACKS := 8  # population cap: more barracks, more (dependent) units
 const RESUPPLY_RANGE := 4.0    # metres from a barracks to draw supply
 const RESUPPLY_RATE := 8.0     # ammo/s transferred while docked
 const UNIT_CREEPER_BASE_DPS := 6.0

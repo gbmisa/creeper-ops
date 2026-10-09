@@ -193,6 +193,8 @@ static func _run_only(g) -> void:
 				SmokeTuning.run(g)
 			"creature":
 				SmokeCreatureAnim.run(g)
+			"barracks":
+				SmokeBarracks.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 
