@@ -15,6 +15,7 @@ const WHO_COLORS := { "Operative": "#ffc857", "Network": "#5fd4ff", "Units": "#9
 
 var items: Array[Dictionary] = []
 var expanded := false  # command mode; first person has its own flag and starts closed
+var _head: Label
 var _text: RichTextLabel
 var _fps_open := false
 var _in_fps := false
@@ -30,7 +31,8 @@ func _init(rows: Array = LIST) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var v := UiKit.vbox(4)
 	add_child(v)
-	v.add_child(UiKit.label("OBJECTIVES", 12, UiKit.DIM))
+	_head = UiKit.label("OBJECTIVES", 12, UiKit.DIM)
+	v.add_child(_head)
 	_text = UiKit.rich(13)
 	_text.custom_minimum_size.x = 310
 	v.add_child(_text)
@@ -91,6 +93,7 @@ func refresh(dt: float, input: InputState, in_fps: bool) -> void:
 
 
 func _render() -> void:
+	_head.text = "OBJECTIVES  [%s]" % Keybinds.short("objectives_toggle")
 	var lines: PackedStringArray = []
 	for o in items:
 		var flashing := float(_flash.get(o.id, 0.0)) > 0.0

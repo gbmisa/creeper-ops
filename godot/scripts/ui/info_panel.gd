@@ -7,6 +7,9 @@ var command: CommandMode
 var units: UnitManager
 var stockpile: Stockpile
 var _title: Label
+var _hp_row: HBoxContainer
+var _hp_lbl: Label
+var _hp_bar: ProgressBar
 var _body: RichTextLabel
 var _actions: HFlowContainer
 
@@ -25,6 +28,12 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	add_child(v)
 	_title = UiKit.label("", 18)
 	v.add_child(_title)
+	_hp_row = UiKit.hbox(8)
+	_hp_lbl = UiKit.label("", 13)
+	_hp_row.add_child(_hp_lbl)
+	_hp_bar = UiKit.bar(170, 10, UiKit.GOOD)
+	_hp_row.add_child(_hp_bar)
+	v.add_child(_hp_row)
 	_body = UiKit.rich(13)
 	_body.custom_minimum_size.x = 300
 	v.add_child(_body)
@@ -89,10 +98,16 @@ func refresh() -> void:
 		visible = true
 		var more: int = command.group.size() - 1
 		_title.text = s.def.label if more <= 0 else "%s + %d more selected" % [s.def.label, more]
+		_hp_row.visible = true
+		var frac := clampf(s.hp / s.def.hp, 0.0, 1.0)
+		_hp_bar.value = frac
+		UiKit.set_bar_color(_hp_bar, UiKit.BAD if frac < 0.35 else (UiKit.WARN if frac < 0.7 else UiKit.GOOD))
+		_hp_lbl.text = "HP %d / %d" % [ceili(s.hp), s.def.hp]
 		_body.text = _structure_text(s)
 		return
 	if not units.selected.is_empty():
 		visible = true
+		_hp_row.visible = false
 		_title.text = "%d unit%s selected" % [units.selected.size(), "" if units.selected.size() == 1 else "s"]
 		_body.text = _units_text()
 		for c in _actions.get_children():
@@ -105,7 +120,6 @@ func _structure_text(s: Structure) -> String:
 	var lines := []
 	if not s.is_built():
 		lines.append("[color=#5fd4ff]Building: %d / %d packets[/color]" % [s.delivered - s.lost, s.def.cost])
-	lines.append("HP %d / %d" % [ceili(s.hp), s.def.hp])
 	if s.is_flying():
 		lines.append("[color=#ffc857]In flight: no packets, no firing[/color]")
 	elif not s.connected:
