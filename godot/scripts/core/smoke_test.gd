@@ -29,6 +29,8 @@ static func run(g) -> void:
 
 	SmokeDeploy._spawn_cam(g)  # Brief B1: spawn camera clear of world geometry (runs before dynamic checks)
 
+	SmokeNetwork.run(g)  # Planned relays route immediately; cutting one darkens downstream.
+
 	# CW3 packets: no launch cap. 12 unbuilt relays at once should all be served at REQ_BUILD.
 	var relays := []
 	for i in 12:
@@ -222,6 +224,8 @@ static func _run_only(g) -> void:
 				SmokeStructureAnim.run(g)
 			"circ":
 				SmokeRaiderCirc.run(g)
+			"network":
+				SmokeNetwork.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

@@ -1,10 +1,11 @@
 class_name Network
 extends MeshInstance3D
-## Energy network (CW3 style). Every pair of finished relaying nodes within link range is
-## connected. Packets take the SHORTEST path from the nearest sender: Dijkstra starts at
-## every built sender that is not flying, all at distance 0. Non-relaying structures hang
-## off their nearest finished relaying node. Cut a relay and everything that only routed
-## through it goes dark.
+## Energy network. Every pair of relaying nodes within link range is connected, and
+## planned (unfinished) relays relay too, so a chain you just laid out carries packets
+## along the shortest path immediately. Dijkstra starts at every built sender that is
+## not flying, all at distance 0; planned relays never send, they only relay.
+## Non-relaying structures hang off their nearest relaying node. Cut a relay, built or
+## planned, and everything that only routed through it goes dark.
 
 var _prev := {}          # Structure -> upstream Structure (null for a sender)
 var _len := {}           # Structure -> route length in metres (packet transit distance)
@@ -31,7 +32,10 @@ static func linked(a: Structure, b: Structure) -> bool:
 
 
 static func _relaying(s: Structure) -> bool:
-	return s.def.get("relays", false) and s.is_built() and not s.is_flying()
+	# Planned (unfinished) relays relay too: a chain you just laid out carries packets
+	# along the shortest path immediately, matching in_range/cover_discs which already
+	# count planned relays. They are never senders (see _sender) and never count as built.
+	return s.def.get("relays", false) and not s.is_flying() and not s.dead
 
 
 static func _sender(s: Structure) -> bool:
