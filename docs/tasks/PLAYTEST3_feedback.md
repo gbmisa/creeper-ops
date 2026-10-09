@@ -11,3 +11,8 @@ Logged by Opus. Not briefed yet. Items marked (branch) may already be covered by
 7. **Routing (clarified):** while a relay is unfinished, the Node routes packets through *finished* structures instead of directly to targets in its own range. Once the relay is built it switches to the direct route. The desired behaviour is a direct route from the start. fix/network-planned-relays may have misread this.
 8. **Trebuchets:** take too long to kill. Add a plantable explosive the Operative places to destroy one. Infinite for testing; it will take inventory space later.
 9. **Info:** Gregory wants a player-readable reference for enemies (stats live in raider_defs.gd, flyer_defs.gd, castle_defs.gd, and config.gd NEST_*).
+10. **Demolition charge vs siege engines:** a mortar died without a demo charge. Trebuchets and enemy mortars should keep high HP and be killable *only* by a demolition charge (Salvage-paid), which destroys one in a single plant. Gun damage should not finish them.
+11. **Totems look like Collectors:** the Totem (beacon) model needs a clearly different silhouette and colour.
+12. **Lancer range (open question):** Lancer beams reach 32 cells against Sniper 20 (raider_defs.gd:21). Same problem as item 3 unless Lancers are meant to be the Operative's job.
+
+Done: item 3 (Spitter range 14, smoke rule in smoke_rules.gd `_balance`).

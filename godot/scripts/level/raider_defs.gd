@@ -2,7 +2,7 @@ class_name RaiderDefs
 extends RefCounted
 ## Enemy roster (§4.2). Replaces Config.RAIDER_TIERS.
 ## Brute, Ravager and Behemoth keep today's stats. Skitter dps is the Stage 8 balance pass.
-## The Spitter is the spec lobber: 10 HP, range 20. Unlock is a pressure, not a clock time.
+## The Spitter is the spec lobber: 10 HP, range 14. Unlock is a pressure, not a clock time.
 ## `special` rows are not in the ordinary weighted pick: Spotter arrives with a mortar (phase 7).
 ## Loot numbers are the Salvage pickup when that raider dies (Loot).
 ## Weight among the ordinary unlocked rows is 2^order (oldest 1, next 2, ...), so the newest
@@ -13,7 +13,7 @@ const ROWS := [
 	{ "name": "Skitter", "hp": 4.0, "dps": 6.0, "speed": 4.2, "size": 0.45, "color": Color("a8ff5a"),
 		"attack": "melee", "range": 0.5, "unlock": 0.0, "loot": 1, "loot_p": 0.1, "role": "front" },
 	{ "name": "Spitter", "hp": 10.0, "dps": 0.0, "speed": 3.0, "size": 0.6, "color": Color("d6ff3a"),
-		"attack": "acid", "range": 20.0, "interval": 2.0, "damage": 6.0, "splash": 1.5,
+		"attack": "acid", "range": 14.0, "interval": 2.0, "damage": 6.0, "splash": 1.5,
 		"unlock": 0.10, "loot": 1, "loot_p": 1.0, "role": "ranged" },
 	{ "name": "Brute", "hp": 16.0, "dps": 8.0, "speed": 3.4, "size": 0.75, "color": Color("ffd24a"),
 		"attack": "melee", "range": 0.6, "wall_mult": 3.0, "unlock": 0.20, "loot": 2, "loot_p": 1.0, "role": "front" },
