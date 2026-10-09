@@ -2,6 +2,12 @@
 
 Opus pushes new notes here on `main`. **Before you start or resume a brief, fetch `main` and read this file.** Newest first. A note only changes the brief it names.
 
+## 2026-10-08 (night): new briefs S, T, A4
+- **S** (`tools/shot-tour`, branch is up): a `--tour=` file that takes many screenshots in one launch. Start any time.
+- **T** (`stage/13-tuning-audit`): measure the balance and propose changes; change no numbers. Opus creates the branch after P is merged.
+- **A4** (`art/4-structure-models`): weapons, Collector and Relay use Opus models. Opus creates the branch after A3 and the models are done.
+- P, B and X are pushed; Opus is reviewing them now.
+
 ## 2026-10-08 (late): A3 task 9 added (Command Node)
 `command_node.glb` and task 9 are on `art/3-hive-models` (`997942b`). If you cloned before that commit, pull first.
 

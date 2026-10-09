@@ -5,7 +5,7 @@ Muse works from the private repo **https://github.com/gbmisa/creeper-ops** (no S
 ## Status (Opus, 2026-10-08 evening)
 - **Merged:** Playtest 1C hive sites (stripped the `.godot` cache; Opus ran the sims: no balance change).
 - **Merged:** `art/3-gun-feel` and `fount/ui-pass` (reviewed; parse/smoke clean). The UI pass wasn't briefed: next time, list ideas as suggestions instead (AGENTS.md rule 1).
-- **Not started, please run now (in this order of priority): P, A, X.** Then **C** below.
+- **Queue now (late 2026-10-08):** A3 and C are open; **S** can start now; **T** waits for P to merge; **A4** waits for A3 and the Opus models.
 - Your P3 log for 1C had `<numbers>` placeholders and claimed Xvfb shots you can't take. Write "not run (no display)" instead; Opus takes the screenshots.
 
 ## P: L2 raider pressure + trebuchets (playtest 2, top priority: the game is currently unfair)
@@ -46,6 +46,21 @@ Clone https://github.com/gbmisa/creeper-ops and check out branch art/3-integrati
 ## A3: hive structures, Totem and drop pod use the animated models (after A2; Opus creates the branch)
 ```
 Clone https://github.com/gbmisa/creeper-ops and check out branch art/3-hive-models (if it doesn't exist yet, A2 isn't merged: wait). Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/ART3_A3_hive_models.md. Do that brief and nothing else. Commit and push only to art/3-hive-models. Never touch main, never merge. Report in the AGENTS.md format.
+```
+
+## S: screenshot tour hook (start now; independent)
+```
+Clone https://github.com/gbmisa/creeper-ops and check out branch tools/shot-tour. Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/MUSE_S_shot_tour.md. Do that brief and nothing else. Commit and push only to tools/shot-tour. Never touch main, never merge. Report in the AGENTS.md format.
+```
+
+## T: Stage 13 tuning audit (after P is merged; Opus creates the branch)
+```
+Clone https://github.com/gbmisa/creeper-ops and check out branch stage/13-tuning-audit (if it doesn't exist yet, P isn't merged: wait). Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/STAGE13_tuning_audit.md. Do that brief and nothing else: measure and propose, change no numbers. Commit and push only to stage/13-tuning-audit. Never touch main, never merge. Report in the AGENTS.md format.
+```
+
+## A4: player weapons, Collector and Relay models (after A3; Opus creates the branch)
+```
+Clone https://github.com/gbmisa/creeper-ops and check out branch art/4-structure-models (if it doesn't exist yet: wait). Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/ART3_A4_structure_models.md. Do that brief and nothing else. Commit and push only to art/4-structure-models. Never touch main, never merge. Report in the AGENTS.md format.
 ```
 
 ## Rules reminder
