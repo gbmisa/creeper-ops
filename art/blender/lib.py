@@ -22,6 +22,7 @@ PALETTE = {
     "sick": ("6fd820", 0.5, 0.0, 2.0),
     "glow": ("a8ff5a", 0.4, 0.0, 3.0),
     "eye": ("ffe27a", 0.3, 0.0, 4.0),
+    "robe": ("6e3a7c", 0.85, 0.0, 0.0),
 }
 
 
@@ -90,18 +91,38 @@ class Builder:
         res = bmesh.ops.create_cube(self.bm, size=1.0, matrix=m)
         self._tag(res["verts"], mat, bone, False)
 
-    def limb(self, a, b, r0, r1, mat, bone, seg=6, smooth=False):
-        """Tapered cylinder (cone when r1 == 0) from a to b."""
+    def lathe(self, profile, mat, bone, at=(0, 0, 0), seg=8, smooth=True):
+        """Surface of revolution round +Z through (radius, height) points, bottom up; open ends are capped."""
+        rings = []
+        for r, h in profile:
+            rings.append([self.bm.verts.new((at[0] + r * math.cos(2 * math.pi * k / seg),
+                                             at[1] + r * math.sin(2 * math.pi * k / seg), at[2] + h)) for k in range(seg)])
+        for lo, hi in zip(rings, rings[1:]):
+            for k in range(seg):
+                self.bm.faces.new((lo[k], lo[(k + 1) % seg], hi[(k + 1) % seg], hi[k]))
+        for ring, (r, _h) in ((rings[0], profile[0]), (rings[-1], profile[-1])):
+            if r > 1e-4:
+                self.bm.faces.new(ring if ring is rings[-1] else list(reversed(ring)))
+        self._tag([v for ring in rings for v in ring], mat, bone, smooth)
+
+    def limb(self, a, b, r0, r1, mat, bone, seg=6, smooth=False, bone_b=None):
+        """Tapered cylinder (cone when r1 == 0) from a to b; bone_b skins the b half to another bone."""
         a, b = Vector(a), Vector(b)
         d = b - a
         rot = Vector((0, 0, 1)).rotation_difference(d.normalized())
         m = Matrix.Translation((a + b) * 0.5) @ rot.to_matrix().to_4x4()
         res = bmesh.ops.create_cone(self.bm, cap_ends=True, cap_tris=False, segments=seg,
                                     radius1=r0, radius2=max(r1, 0.0), depth=d.length, matrix=m)
-        self._tag(res["verts"], mat, bone, smooth)
+        if bone_b is None:
+            self._tag(res["verts"], mat, bone, smooth)
+            return
+        near_a = [v for v in res["verts"] if (v.co - a).dot(d) < d.length_squared * 0.5]
+        self._tag(near_a, mat, bone, smooth)
+        self._tag([v for v in res["verts"] if v not in near_a], mat, bone_b, smooth)
 
     def finish(self, arm):
         bmesh.ops.remove_doubles(self.bm, verts=self.bm.verts, dist=1e-5)
+        bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces)
         self.bm.verts.index_update()
         me = bpy.data.meshes.new(self.name)
         groups = {b: sorted({v.index for v in vs if v.is_valid}) for b, vs in self.groups.items()}

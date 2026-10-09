@@ -10,6 +10,6 @@ Contract: u = 1, feet z = 0, faces +X, clips idle/walk/attack/hit/die, material 
 | brute | done | 1120 |
 | ravager | done | 1200 |
 | behemoth | done | 1686 |
-| sentinel | todo (fixed size, robed archer, bow on its left = Blender +Y) | |
+| sentinel | done (fixed size: game scale 1) | 595 |
 | spitter lancer warden spotter burrower | done (`bug_kit.py` shares idle/walk/hit/die) | 1140/580/728/786/698 |
 | flyers, soldier/wagon units, hive core | todo | |
