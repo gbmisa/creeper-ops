@@ -3,7 +3,8 @@ extends Control
 ## Operative HUD: crosshair, suit and sprayer-tank bars, weapon name, interaction prompt,
 ## creeper warning, recall progress, damage flash and in-creeper tint.
 
-var _cross: Label
+var _cross: Crosshair
+var _suit_lbl: Label
 var _suit: ProgressBar
 var _shield_lbl: Label
 var _shield: ProgressBar
@@ -29,32 +30,37 @@ func _init() -> void:
 	_flash = _rect(Color(1.0, 0.1, 0.05, 0.0))
 	_hit = HitOverlay.new()
 	add_child(_hit)
-	_cross = UiKit.label("+", 26)
-	_cross.set_anchors_preset(Control.PRESET_CENTER)
-	_cross.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_cross.position -= Vector2(8, 18)
+	_cross = Crosshair.new()
 	add_child(_cross)
 	var panel := UiKit.panel(Color(UiKit.BG_SOLID, 0.6))
 	panel.anchor_left = 0.5
 	panel.anchor_right = 0.5
 	panel.anchor_top = 1.0
 	panel.anchor_bottom = 1.0
-	panel.position = Vector2(-146, -192)  # bottom centre: the event log owns bottom-left
+	panel.position = Vector2(-146, -206)  # bottom centre: the event log owns bottom-left
 	add_child(panel)
-	var box := UiKit.vbox(4)
+	UiKit.brackets(panel)
+	var box := UiKit.vbox(3)
 	panel.add_child(box)
-	box.add_child(UiKit.label("SUIT", 11, UiKit.DIM))
+	_weapon = UiKit.label("", 18, UiKit.ACCENT)
+	_weapon.add_theme_font_override("font", UiTheme.header_font())
+	box.add_child(_weapon)
+	var sr := UiKit.hbox(6)
+	sr.add_child(UiKit.caption("Suit"))
+	_suit_lbl = UiKit.mono("", 13)
+	_suit_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_suit_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	sr.add_child(_suit_lbl)
+	box.add_child(sr)
 	_suit = UiKit.bar(260, 14, UiKit.GOOD)
 	box.add_child(_suit)
-	_shield_lbl = UiKit.label("SHIELD", 11, UiKit.ENERGY)
+	_shield_lbl = UiKit.caption("Shield")
 	box.add_child(_shield_lbl)
 	_shield = UiKit.bar(260, 10, UiKit.ENERGY)
 	box.add_child(_shield)
-	box.add_child(UiKit.label("SPRAYER TANK", 11, UiKit.DIM))
+	box.add_child(UiKit.caption("Sprayer tank"))
 	_tank = UiKit.bar(260, 10, Color("9ff6ff"))
 	box.add_child(_tank)
-	_weapon = UiKit.label("", 16)
-	box.add_child(_weapon)
 	_salvage = UiKit.label("", 14, UiKit.WARN)
 	box.add_child(_salvage)
 	_charge = UiKit.bar(260, 8, Color("e8fbff"))
@@ -93,6 +99,7 @@ func _centered(l: Label, y: float) -> Label:
 	l.position.y = (-y if y < 0 else y)
 	l.add_theme_color_override("font_outline_color", Color.BLACK)
 	l.add_theme_constant_override("outline_size", 5)
+	l.add_theme_font_override("font", UiTheme.header_font())
 	add_child(l)
 	return l
 
@@ -105,6 +112,7 @@ func refresh(fps: FpsMode, spotted := false) -> void:
 	var cap := maxf(1.0, OperativeUpgrades.suit_max())
 	var suit := clampf(maxf(0.0, fps.suit) / cap, 0.0, 1.0)
 	_suit.value = suit
+	_suit_lbl.text = "%d / %d" % [ceili(maxf(0.0, fps.suit)), roundi(cap)]
 	UiKit.set_bar_color(_suit, UiKit.BAD if suit < 0.35 else UiKit.GOOD)
 	var smax := OperativeUpgrades.shield_max()
 	_shield_lbl.visible = smax > 0.0
@@ -129,7 +137,7 @@ func refresh(fps: FpsMode, spotted := false) -> void:
 	_spotted.text = "SPOTTED" if spotted else ""
 	if spotted:
 		_spotted.modulate.a = 0.55 + 0.45 * absf(sin(Time.get_ticks_msec() * 0.006))
-	_cross.add_theme_color_override("font_color", UiKit.BAD if fps.weapons.hit_marker > 0.0 else UiKit.TEXT)
+	_cross.color = UiKit.BAD if fps.weapons.hit_marker > 0.0 else UiKit.TEXT
 	var holding := fps.recall_hold > 0.0
 	_recall.visible = holding
 	_recall.value = fps.recall_hold / Config.RECALL_HOLD
