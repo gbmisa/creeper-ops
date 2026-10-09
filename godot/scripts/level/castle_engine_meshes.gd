@@ -5,14 +5,17 @@ class_name CastleEngineMeshes
 ## a target (model: plays the attack clip; procedural: a short tween).
 
 
-static func trebuchet() -> Node3D:
-	var glow := StructureMeshes.glow(StrongholdMeshes.ENEMY, 1.8)
+## `tint` is the glow colour: enemy engines by default, player blue for the Trebuchet.
+static func trebuchet(tint: Color = StrongholdMeshes.ENEMY) -> Node3D:
+	var glow := StructureMeshes.glow(tint, 1.8)
 	var anim := CreatureAnim.make("trebuchet", 1.0, glow)
 	if anim != null:
 		anim.name = "Trebuchet"
+		anim.set_meta("tint", tint)
 		return anim
 	var root := Node3D.new()
 	root.name = "Trebuchet"
+	root.set_meta("tint", tint)
 	var oak := StructureMeshes.pal("oak")
 	var bronze := StructureMeshes.pal("bronze")
 	var stone := StructureMeshes.mat(StrongholdMeshes.DECOR_STONE, 0.0, 0.92)
@@ -29,7 +32,7 @@ static func trebuchet() -> Node3D:
 	ShapeKit.strut(arm, Vector3(0, 0, 1.0), Vector3(0, 0, -3.4), 0.11, oak)
 	StructureMeshes.box(arm, Vector3(0.9, 0.9, 0.9), bronze, Vector3(0, -0.5, 1.1))
 	StructureMeshes.ball(arm, 0.32, stone, Vector3(0, -0.4, -3.4), 8)
-	var glow_ball := StructureMeshes.ball(root, 0.22, StructureMeshes.glow(StrongholdMeshes.ENEMY, 1.8), Vector3(0, 3.5, 0), 8)
+	var glow_ball := StructureMeshes.ball(root, 0.22, glow, Vector3(0, 3.5, 0), 8)
 	glow_ball.name = "Glow"
 	return root
 

@@ -30,7 +30,7 @@ static func run(g) -> void:
 	var from: Vector3 = (v.engines[0] as Node3D).position
 	var out := (from - grid.cell_center(r.lay.rect.get_center().x, r.lay.rect.get_center().y)).normalized()
 	out.y = 0.0
-	out = out.normalized()
+	out = _open_bearing(grid, from, out.normalized(), reach * 0.75)
 	var spot := _ground(grid, from + out * (reach * 0.75) * Config.CELL)
 	var op := Dummy.new()
 	op.node.position = spot
@@ -42,7 +42,8 @@ static func run(g) -> void:
 	var q := CastleEngines.pick(grid, from, list, reach)
 	SmokeTest._check("castles2 engines: weapons first, nothing out of range", not q.is_empty() and q.node == gun.node)
 	var q2 := CastleEngines.pick(grid, from, [list[0], list[2]], reach)
-	SmokeTest._check("castles2 engines: the Operative in sight is a target", not q2.is_empty() and q2.node == op.node)
+	SmokeTest._check("castles2 engines: the Operative in sight is a target", not q2.is_empty() and q2.node == op.node,
+		"(reach %.1f, %.1f cells, sees %s, sight %.1f)" % [reach, Vector2(spot.x - from.x, spot.z - from.z).length() / Config.CELL, CastleEngines._sees(grid, from, spot), CastleDefs.ENGINE.sight])
 	var hall: Vector2i = r.lay.zones.gate.cells[4]
 	var hidden := Dummy.new()
 	hidden.node.position = grid.cell_center(hall.x, hall.y)
@@ -81,6 +82,17 @@ static func run(g) -> void:
 	for d in [op, gun, far, hidden, stay, mover]:
 		d.node.free()
 	r.w.queue_free()
+
+
+## The bearing nearest `out` from which the engine sees a target `cells` away:
+## the castle's own stone hides some bearings, depending on the level's layout.
+static func _open_bearing(grid: Grid, from: Vector3, out: Vector3, cells: float) -> Vector3:
+	for i in 24:
+		var turn := ceili(i / 2.0) * (PI / 12.0) * (1.0 if i % 2 == 0 else -1.0)
+		var dir := out.rotated(Vector3.UP, turn)
+		if CastleEngines._sees(grid, from, _ground(grid, from + dir * cells * Config.CELL)):
+			return dir
+	return out
 
 
 static func _ground(grid: Grid, p: Vector3) -> Vector3:

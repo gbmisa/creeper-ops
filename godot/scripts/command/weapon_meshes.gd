@@ -129,11 +129,8 @@ static func mortar(root: Node3D) -> void:
 ## Player Trebuchet (castle_only): the enemy war engine's model in player blue, plus a
 ## Muzzle node so shot effects start at the arm. WeaponLogic throws the arm on each shot.
 static func trebuchet_p(root: Node3D) -> void:
-	var t := CastleEngineMeshes.trebuchet()
+	var t := CastleEngineMeshes.trebuchet(StrongholdMeshes.PLAYER)
 	root.add_child(t)
-	var glow := t.get_node_or_null("Glow") as MeshInstance3D
-	if glow:
-		glow.material_override = StructureMeshes.glow(StrongholdMeshes.PLAYER, 1.8)
 	var m := Node3D.new()
 	m.name = "Muzzle"
 	m.position = Vector3(0, 3.5, 0)

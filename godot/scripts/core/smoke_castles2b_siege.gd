@@ -92,7 +92,8 @@ static func _placed(g, sm: StructureManager, castles: Strongholds, c: Dictionary
 		cell.x >= 0 and res.ok, "(%s)" % res.get("reason", ""))
 	var treb: Structure = sm.place("trebuchet", cell.x, cell.y, true)
 	SmokeTest._check("castles2b siege: the Trebuchet builds with the player-coloured engine model",
-		treb != null and treb.body.get_node_or_null("Trebuchet/Glow") != null)
+		treb != null and treb.body.get_node_or_null("Trebuchet") != null
+		and treb.body.get_node("Trebuchet").get_meta("tint", Color.BLACK) == StrongholdMeshes.PLAYER)
 	return treb
 
 
