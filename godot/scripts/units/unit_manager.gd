@@ -209,7 +209,7 @@ func _move(u: Unit, dt: float) -> void:
 	var nz := u.pos.z + v.y * step
 	var a := g.world_to_cell(u.pos.x, u.pos.z)
 	var b := g.world_to_cell(nx, nz)
-	var rise := g.height_at(b.x, b.y) - g.height_at(a.x, a.y)
+	var rise := g.walk_height(b.x, b.y, Grid.Faction.PLAYER) - g.walk_height(a.x, a.y, Grid.Faction.PLAYER)
 	var p := u.pos
 	var into_tower: bool = b != a and world.occupied.call(b.x, b.y) and not world.occupied.call(a.x, a.y)
 	if g.in_bounds(b.x, b.y) and rise <= u.def.climb and -rise <= u.def.drop and not into_tower:

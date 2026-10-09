@@ -249,6 +249,8 @@ static func _run_only(g) -> void:
 				SmokeBuildWheel.run(g)
 			"barracks":
 				SmokeBarracks.run(g)
+			"troops":
+				SmokeTroopsCastle.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

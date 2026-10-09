@@ -63,8 +63,9 @@ static func tick(s: Strongholds, c: Dictionary, lay: Dictionary, p: Variant, dt:
 		var n := CastleEngines.alive_count(c)
 		var treb := "the trebuchet" if n == 1 else "%d trebuchets" % n
 		Bus.say("%s: the gatehouse is yours. To take the bailey: destroy %s on the corner towers, then hold the bailey standard." % [c.name, treb], "good")
+		Bus.say("%s: the gatehouse is yours. The outer gate opens for your units — select troops and right-click to order them in." % c.name, "good")
 	else:
-		Bus.say("%s: the bailey is yours: build in it. The crown nest in the keep is exposed." % c.name, "good")
+		Bus.say("%s: the bailey is yours: build in it and right-click to order troops in. The crown nest in the keep is exposed." % c.name, "good")
 
 
 ## Raiders back on the last ring you took, with nobody to stop them, take it back.
