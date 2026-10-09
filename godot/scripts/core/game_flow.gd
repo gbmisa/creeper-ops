@@ -47,7 +47,13 @@ func on_key(k: int) -> void:
 				ArmouryMenu.suppress_use = true
 			ArmouryMenu.close_menu()
 		return
-	if g.over or g.hud.keys.visible or g.hud.overlay_open() and not g.fps_paused:
+	if pause_open:
+		if g.hud.keys.visible:
+			return  # the Controls panel handles its own keys
+		if Keybinds.matches("pause", k) or k == KEY_ESCAPE:
+			resume_from_pause()
+		return
+	if g.over or g.hud.keys.visible or g.hud.overlay_open():
 		return
 	if Keybinds.matches("mute", k):
 		Bus.say("Sound muted." if Sfx.toggle_mute() else "Sound on.", "info")
@@ -56,13 +62,12 @@ func on_key(k: int) -> void:
 			g.teleport_cooldown = 0.0
 			to_command("Test recall: back aboard, teleporter ready.")
 		elif k == KEY_ESCAPE:
-			pause_operative()
+			open_pause_menu()
 		return
 	if Keybinds.matches("keybinds", k):
 		g.hud.keys.open()
 	elif Keybinds.matches("pause", k) and not g.landing:
-		g.paused = not g.paused
-		Bus.metric.emit("pause", { "paused": g.paused })
+		open_pause_menu()
 	elif Keybinds.matches("speed_up", k):
 		g.cycle_speed(1)
 		Bus.metric.emit("speed", { "speed": g.speed })
@@ -99,23 +104,90 @@ func land(cell: Vector2i) -> void:
 		g.get_tree().create_timer(i * 3.0).timeout.connect(func(): Bus.say(lines[i][0], lines[i][1]))
 
 
-func pause_operative() -> void:
-	g.fps_paused = true
+## Unified pause menu (both modes). The pause keybind opens it in command mode,
+## Esc in Operative mode. Never during landing, the briefing, or game over.
+var pause_open := false
+var _keys_prev_close := Callable()
+
+
+func open_pause_menu() -> void:
+	if g.over or g.landing or pause_open:
+		return
+	pause_open = true
+	if g.mode == "command":
+		g.paused = true
+		Bus.metric.emit("pause", { "paused": true })
+	else:
+		g.fps_paused = true
+	_show_pause_main()
+
+
+func _show_pause_main() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	var cd: float = g.deploy.preview_recall()
-	var recall := "Recall to Node" if cd <= 0.0 else "Recall to Node (teleporter %ds)" % ceili(cd)
-	g.hud.show_overlay("[b]Operative paused[/b]\nThe battle is frozen.", [
-		{ "label": "Resume", "on_click": resume_operative },
-		{ "label": recall, "on_click": func(): g.deploy.commit_recall() },
-		{ "label": "Controls", "on_click": g.hud.keys.open },
+	var buttons: Array = [
+		{ "label": "Resume", "on_click": resume_from_pause },
+		{ "label": "Restart mission", "on_click": _confirm_restart },
+	]
+	if g.mode != "command":
+		var cd: float = g.deploy.preview_recall()
+		var recall := "Recall to Node" if cd <= 0.0 else "Recall to Node (teleporter %ds)" % ceili(cd)
+		buttons.append({ "label": recall, "on_click": _recall_from_pause })
+	buttons.append({ "label": "Level select", "on_click": _show_level_select })
+	buttons.append({ "label": "Controls", "on_click": _open_keys_from_pause })
+	buttons.append({ "label": "Mute sound: ON" if Sfx.muted else "Mute sound: OFF", "on_click": _toggle_mute_from_pause })
+	buttons.append({ "label": "Quit to desktop", "on_click": func(): g.get_tree().quit() })
+	g.hud.show_overlay("[font_size=26][b]Paused[/b][/font_size]\n%s" % g.level.name, buttons)
+
+
+func resume_from_pause() -> void:
+	if not pause_open:
+		return
+	pause_open = false
+	g.hud.hide_overlay()
+	if g.mode == "command":
+		g.paused = false
+		Bus.metric.emit("pause", { "paused": false })
+	else:
+		g.fps_paused = false
+		if not g.ignore_capture:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func _recall_from_pause() -> void:
+	g.deploy.commit_recall()
+	if g.mode == "command":
+		pause_open = false  # to_command already hid the overlay and unpaused
+
+
+func _confirm_restart() -> void:
+	g.hud.show_overlay("[font_size=26][b]Restart mission[/b][/font_size]\nStart [b]%s[/b] over from the beginning? All progress in this mission will be lost." % g.level.name, [
+		{ "label": "Yes, restart it", "on_click": func(): g.get_tree().reload_current_scene() },
+		{ "label": "Cancel", "on_click": _show_pause_main },
 	])
 
 
-func resume_operative() -> void:
-	g.fps_paused = false
-	g.hud.hide_overlay()
-	if not g.ignore_capture:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+func _show_level_select() -> void:
+	var buttons := _level_buttons()
+	buttons.append({ "label": "Back", "on_click": _show_pause_main })
+	g.hud.show_overlay("[font_size=26][b]Level select[/b][/font_size]\nPick a mission (restarts the scene).", buttons)
+
+
+func _open_keys_from_pause() -> void:
+	_keys_prev_close = g.hud.keys.on_close
+	g.hud.keys.on_close = _on_keys_closed_from_pause
+	g.hud.keys.open()
+
+
+func _on_keys_closed_from_pause() -> void:
+	g.hud.keys.on_close = _keys_prev_close
+	if _keys_prev_close.is_valid():
+		_keys_prev_close.call()
+	_show_pause_main()
+
+
+func _toggle_mute_from_pause() -> void:
+	Bus.say("Sound muted." if Sfx.toggle_mute() else "Sound on.", "info")
+	_show_pause_main()
 
 
 func to_command(message: String, kind := "info") -> void:
