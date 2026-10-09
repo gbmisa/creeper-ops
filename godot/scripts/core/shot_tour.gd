@@ -12,11 +12,15 @@ class_name ShotTour
 ## "[tour] skip LINE: reason" and the tour goes on.
 
 const KNOWN_KEYS := ["out", "look", "fps", "select", "gallery", "clip", "t", "wait"]
-const GALLERY_PAD := Vector2i(43, 87)  # flattened pad for gallery= lines
+# Flattened pad for gallery= lines. Kept clear of the --gallery=anim strip
+# (CreatureGallery lays out z 82..91), so the tour's model never overlaps it.
+const GALLERY_PAD := Vector2i(43, 74)
 const GALLERY_PAD_R := 4
 const ORBIT_WAIT := 0.5  # game seconds between orbit shots
 
 static var _prev_gallery: Node3D = null
+static var _reframe_g = null  # game object while a gallery shot is tracked
+static var _reframe_node: Node3D = null  # gallery model being re-aimed at
 
 
 ## Parse tour text into shot dicts. Each dict has "line", "wait", "out" and the
@@ -72,11 +76,14 @@ static func _run(g, shots: Array) -> void:
 		await _draw_sync(g)
 		_save(g, str(shot["out"]))
 		print("[tour] saved ", shot["out"])
+	_untrack_gallery()
 	g.get_tree().quit()
 
 
 ## Frame one shot (move cameras, spawn/pose the gallery model). "" or a skip reason.
 static func _frame(g, shot: Dictionary) -> String:
+	if not shot.has("gallery"):
+		_untrack_gallery()  # a later look=/fps= shot must not fight the gallery re-aim
 	if shot.has("look") or shot.has("select") or shot.has("gallery"):
 		g.flow.set_mode("command")
 	if shot.has("look"):
@@ -155,10 +162,46 @@ static func _apply_gallery(g, spec: String, clip: String, t: float) -> String:
 	var box := _world_aabb(node)
 	if box.size.length() <= 0.01:
 		return "empty AABB for '%s'" % id
+	_aim_gallery(g, box)
+	_track_gallery(g, node)
+	return ""
+
+
+## Aim the command camera at a gallery model's box: the AABB centre (flyers
+## hover — never the base), distance fitting the box diagonal.
+static func _aim_gallery(g, box: AABB) -> void:
 	g.command.cam.focus(box.get_center())
 	g.command.cam.dist = clampf(box.size.length() * 2.2, 12.0, 90.0)
 	g.command.cam.pitch = 0.55
-	return ""
+
+
+## Keep re-aiming at the gallery model's live AABB centre every process frame.
+## CommandCamera.update lerps target.y back to the terrain height each frame,
+## which drags the aim off hovering flyers during the wait before the shot;
+## process_frame fires before the camera's _process, so the re-aim wins.
+static func _track_gallery(g, node: Node3D) -> void:
+	_untrack_gallery()
+	_reframe_g = g
+	_reframe_node = node
+	g.get_tree().process_frame.connect(_reframe_tick)
+
+
+static func _untrack_gallery() -> void:
+	if _reframe_g != null:
+		var tree: SceneTree = _reframe_g.get_tree()
+		if tree != null and tree.process_frame.is_connected(_reframe_tick):
+			tree.process_frame.disconnect(_reframe_tick)
+	_reframe_g = null
+	_reframe_node = null
+
+
+static func _reframe_tick() -> void:
+	if _reframe_g == null or _reframe_node == null or not is_instance_valid(_reframe_node):
+		_untrack_gallery()
+		return
+	var box := _world_aabb(_reframe_node)
+	if box.size.length() > 0.01:
+		_aim_gallery(_reframe_g, box)
 
 
 static func _flatten_pad(grid: Grid, w: World) -> void:
@@ -239,4 +282,5 @@ static func _orbit(g, spec: String, shot_arg: String) -> void:
 		var out := "%s/%s_%d.png" % [dir, id, k]
 		_save(g, out)
 		print("[tour] saved ", out)
+	_untrack_gallery()
 	g.get_tree().quit()
