@@ -157,7 +157,7 @@ func _structure_text(s: Structure) -> String:
 func _units_text() -> String:
 	var lines := []
 	for u in units.selected.slice(0, 8):
-		var st := { "idle": "holding", "move": "moving", "resupply": "returning to resupply", "return": "returning to post" }
+		var st := { "idle": "holding", "move": "moving", "resupply": "returning to resupply", "return": "returning to post", "patrol": "patrolling" }
 		lines.append("%s  HP %d  Ammo %d/%d  %s" % [u.def.label, ceili(u.hp), roundi(u.ammo), u.def.ammo, st.get(u.state, u.state)])
-	lines.append("[color=#8899aa]Right-click to move. Units run dry and walk home to restock.[/color]")
+	lines.append("[color=#8899aa]Right-click to move, [%s] to set a patrol route. Units run dry and walk home to restock.[/color]" % Keybinds.short("patrol"))
 	return "\n".join(lines)

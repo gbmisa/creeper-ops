@@ -15,6 +15,9 @@ static func update(mgr: UnitManager, u: Unit, dt: float, enemies: Array) -> void
 		"move", "return":
 			if u.path.is_empty() and not mgr.unstick(u):
 				u.state = "idle"
+		"patrol":
+			if u.path.is_empty():
+				UnitPatrol.advance(mgr, u, dt)
 		"resupply":
 			_resupply(mgr, u, dt)
 			return
@@ -78,7 +81,9 @@ static func _resupply(mgr: UnitManager, u: Unit, dt: float) -> void:
 	_take_grade(u, b, take)
 	u.hp = minf(u.def.hp, u.hp + UnitDefs.DOCK_HEAL * dt)
 	if u.ammo >= u.def.ammo - 0.01 and u.hp >= u.def.hp * 0.9:
-		if u.post != null:
+		if not u.patrol.is_empty():
+			UnitPatrol.resume(mgr, u)
+		elif u.post != null:
 			u.state = "return"
 			mgr.walk_to(u, u.post)
 		else:

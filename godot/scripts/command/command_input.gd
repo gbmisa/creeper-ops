@@ -17,6 +17,8 @@ static func hotkeys(cm: CommandMode, input: InputState) -> void:
 		if input.act("hold_fire"): cm.toggle_hold()
 		if input.act("ammo_next"): AmmoGrades.cycle_structure(cm.selected, 1)
 		if input.act("ammo_prev"): AmmoGrades.cycle_structure(cm.selected, -1)
+	if input.act("patrol"):
+		CommandPatrol.toggle(cm)
 	if input.act("select_units"):
 		CommandSelect.select_units(cm, null)
 	if input.act("cam_home") and cm.structures.command_node():
@@ -60,6 +62,9 @@ static func left_mouse(cm: CommandMode, input: InputState) -> void:
 
 static func click(cm: CommandMode, shift: bool) -> void:
 	var c: Vector2i = cm.hover.cell
+	if cm.tool == "@patrol":
+		CommandPatrol.add_point(cm, cm.hover.point)
+		return
 	if cm.tool != "":
 		var res := CommandHover.check(cm, c)
 		if not res.ok:
@@ -114,6 +119,9 @@ static func click(cm: CommandMode, shift: bool) -> void:
 
 
 static func right_click(cm: CommandMode) -> void:
+	if cm.tool == "@patrol":
+		CommandPatrol.finish(cm)
+		return
 	if cm.tool != "" and cm.tool != "@land":
 		cm.set_tool("")
 		return

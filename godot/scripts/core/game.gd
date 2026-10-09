@@ -78,6 +78,7 @@ func _ready() -> void:
 	cave_engines = SalvageEngines.new(cave, cave_data.get("engines", []), structures, stockpile)
 	cave_engines.cash_mode = true
 	castles = Strongholds.new(surface, level.castles, hazards.nests)
+	units.castles = castles
 	castle_raids = CastleRaids.new(castles, level.get("castle_rules", {}))
 	guards = CastleGuards.new(surface, castles, level.castles)
 	hazards.guards = guards
