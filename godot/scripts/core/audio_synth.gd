@@ -43,6 +43,10 @@ const VOICES := {
 	"drip": [0.3, 90.0, [["sin", 0.0, 0.35, 900, 180, 0.3], ["noise", 0.3, 0.08, 500, 0, 0.12]]],
 	"roar": [1.5, 120.0, [["saw", 0.0, 0.9, 140, 60, 0.3], ["noise", 0.0, 0.9, 700, 0, 0.3]]],
 	"screech": [1.2, 80.0, [["sq", 0.0, 0.25, 1800, 2600, 0.12], ["sq", 0.3, 0.2, 2400, 1500, 0.1]]],
+	# Burrower surfacing warning: rising low rumble at its position (counterplay cue).
+	"burrower_rumble": [0.8, 130.0, [["sin", 0.0, 0.45, 48, 110, 0.55], ["noise", 0.0, 0.4, 250, 0, 0.3]]],
+	# Burrower detonation: deep sub thump + crack, distinct from "boom"/mortar, audible across the base.
+	"burrower_blast": [0.4, 170.0, [["sin", 0.0, 0.6, 65, 25, 0.75], ["noise", 0.0, 0.55, 1100, 0, 0.55], ["noise", 0.1, 0.4, 250, 0, 0.4]]],
 }
 const POOL := 12
 
