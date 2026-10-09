@@ -159,8 +159,9 @@ static func _make(host, hive: Dictionary, index: int) -> Dictionary:
 	}
 	node.scale = Vector3.ONE * 0.15
 	var hit := func(dmg: float, _p = null): _hurt(host, m, dmg)
+	var boom := func(): _kill(host, m, false)
 	m["enemy"] = { "node": node, "oy": 0.9, "radius": 1.1, "alive": func(): return m.alive, "hit": hit }
-	m["target"] = { "node": node, "oy": 0.9, "radius": 1.15, "alive": func(): return m.alive, "on_hit": hit }
+	m["target"] = { "node": node, "oy": 0.9, "radius": 1.15, "alive": func(): return m.alive, "on_hit": hit, "charge_kill": boom }
 	host.world.add_target(m.target)
 	var it := {
 		"pos": pos, "radius": Config.MORTAR_SABOTAGE_RANGE,
@@ -187,11 +188,12 @@ static func _cell(hive: Dictionary, index: int) -> Vector2i:
 
 
 static func _hurt(host, m: Dictionary, dmg: float) -> void:
+	## Only a demolition charge (target "charge_kill") destroys a mortar: guns just flash it.
 	if not m.alive:
 		return
-	m.hp = float(m.hp) - dmg
-	if float(m.hp) <= 0.0:
-		_kill(host, m, false)
+	var node := m.node as Node3D
+	if node != null and is_instance_valid(node) and dmg > 0.0:
+		host.world.effects.burst(m.pos + Vector3.UP, Color("ffcc88"), 0.5, 0.15)
 
 
 static func _kill(host, m: Dictionary, pay: bool) -> void:

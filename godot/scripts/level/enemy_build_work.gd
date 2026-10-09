@@ -87,7 +87,7 @@ static func growing(b, hub_id: String) -> int:
 static func take(b, c: Dictionary) -> Dictionary:
 	for raw in b.queue:
 		var q: Dictionary = raw
-		if str(q.hub) == str(c.id):
+		if str(q.hub) == str(c.id) and b.time >= float(q.get("ready", 0.0)):
 			b.queue.erase(q)
 			return q
 	return {}
