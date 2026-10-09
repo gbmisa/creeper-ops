@@ -60,7 +60,7 @@ static func _model_awareness(g) -> void:
 
 	var core := HiveMeshes.part("core")
 	SmokeTest._check("creature anim: hive core matches .glb presence",
-		core != null and _has_player(core) == ResourceLoader.exists(CreatureAnim.MODEL_DIR + "core.glb"))
+		core != null and _has_player(core) == ResourceLoader.exists(CreatureAnim.MODEL_DIR + "hive_core.glb"))
 	core.queue_free()
 
 	# move/attack/hit drive the player when one exists, no-op otherwise.
