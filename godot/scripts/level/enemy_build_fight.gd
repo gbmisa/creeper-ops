@@ -35,6 +35,8 @@ static func grew(b, s: Dictionary) -> void:
 	(s.node as Node3D).scale = Vector3.ONE
 	if str(s.kind) == "pylon":
 		paint(b, s)
+		var aura := HazardMeshes.blight_aura(float(EnemyStructures.DEFS["pylon"].radius) * Config.CELL)
+		(s.node as Node3D).add_child(aura)
 	elif str(s.kind) == "mortar":
 		arm_mortar(b, s)
 	var hub: Dictionary = b.castle(str(s.hub))

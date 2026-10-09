@@ -237,6 +237,8 @@ static func _run_only(g) -> void:
 				SmokeEnemyLos.run(g)
 			"pacing":
 				SmokeSpawnPacing.run(g)
+			"enemybuild":
+				SmokeEnemyBuild.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

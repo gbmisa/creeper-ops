@@ -152,6 +152,47 @@ static func pylon() -> Node3D:
 	return r
 
 
+## Blight Pylon danger-zone aura: a faint purple ground disc plus a brighter
+## perimeter ring at the pylon's damage radius (world units). Added to the
+## pylon's node when it finishes growing; it dies with the node.
+static func blight_aura(radius_world: float) -> Node3D:
+	var r := Node3D.new()
+	r.name = "Aura"
+	var disc := MeshInstance3D.new()
+	var dm := CylinderMesh.new()
+	dm.top_radius = radius_world
+	dm.bottom_radius = radius_world
+	dm.height = 0.06
+	dm.radial_segments = 48
+	disc.mesh = dm
+	var dmat := StandardMaterial3D.new()
+	dmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	dmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	dmat.albedo_color = Color(0.42, 0.23, 0.54, 0.10)
+	dmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	disc.material_override = dmat
+	disc.position = Vector3(0, 0.12, 0)
+	disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	r.add_child(disc)
+	var ring := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = radius_world - 0.5
+	tm.outer_radius = radius_world
+	tm.rings = 48
+	tm.ring_segments = 8
+	ring.mesh = tm
+	var rmat := StandardMaterial3D.new()
+	rmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	rmat.albedo_color = Color(0.55, 0.32, 0.72, 0.55)
+	rmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	ring.material_override = rmat
+	ring.position = Vector3(0, 0.25, 0)
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	r.add_child(ring)
+	return r
+
+
 static func pad() -> Node3D:
 	var r := Node3D.new()  # rune circle: stone disc, bronze rim, glowing sigil ring, four rune stones
 	StructureMeshes.cyl(r, 1.4, 1.5, 0.2, StructureMeshes.pal("stone_dark"), 0.0, 12)
