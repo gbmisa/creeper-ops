@@ -55,7 +55,7 @@ cam_data = bpy.data.cameras.new("cam")
 cam = bpy.data.objects.new("cam", cam_data)
 sc.collection.objects.link(cam)
 sc.camera = cam
-cam.location = centre + Vector((1.1, -1.5, 0.9)) * size * 1.0
+cam.location = centre + Vector((1.1, -1.5, 0.9)) * size * 1.3  # margin: attacks swing past the idle bounds
 cam.rotation_euler = (centre - cam.location).to_track_quat("-Z", "Y").to_euler()
 cam_data.lens = 40
 
