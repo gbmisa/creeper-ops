@@ -27,7 +27,7 @@ const RING_RETAKE := 15.0    # raiders on the last ring you took, nobody there: 
 const ENGINE := {
 	"range": 40.0, "min_range": 8.0, "interval": 11.0, "telegraph": 3.0, "whistle": 1.0,
 	"blast": 2.5, "dmg_struct": 45.0, "dmg_unit": 25.0, "dmg_operative": 22.0,
-	"hp": 140.0, "respawn": 150.0, "sight": 80.0,
+	"hp": 55.0, "respawn": 150.0, "sight": 80.0,
 }
 const ENGINES_DEFAULT := 2   # concentric rows without an "engines" key
 

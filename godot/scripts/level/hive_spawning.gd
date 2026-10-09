@@ -153,6 +153,7 @@ func try_spawn(n: Dictionary) -> int:
 		RaiderGroups.spawn(raiders, n, RaiderGroups.compose(batch, pressure(), int(n.x) + int(time)))
 	else:
 		raiders.spawn(n, pick_tier(), guard)
+	n["spawned"] = int(n.get("spawned", 0)) + raiders.list.size() - before
 	return raiders.list.size() - before
 
 

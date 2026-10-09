@@ -7,7 +7,7 @@ const W := 160
 const H := 160
 ## Raids start early and the nests toughen fast: turtling loses.
 const RAID_SCHEDULE := {
-	"raid_delay": 180.0,
+	"raid_delay": 180.0,   # nothing marches before this (grace: first raid is a few Skitters),
 	"tier_times": [0.0, 300.0, 600.0, 900.0],
 }
 ## Harder clock: Brute ~5 min, Ravager ~10, Behemoth ~15. Grace matches the raid start.
@@ -25,9 +25,9 @@ const PRESSURE_POINTS := [
 ## `yield` scales Aether/Salvage.
 const CASTLES := [
 	{ "id": "ashgate", "name": "Ashgate Hold", "x": 6, "z": 104, "size": 35, "floor": 2, "variant": "ground", "plan": "concentric",
-		"moat": true, "gates": ["e"], "inner_gate": "n", "climbs": ["s"], "spire_h": 20, "guards": 5 },
+		"moat": true, "gates": ["e"], "inner_gate": "n", "climbs": ["s"], "spire_h": 20, "guards": 5, "engine_range": 12.0 },
 	{ "id": "thornwall", "name": "Thornwall", "x": 121, "z": 121, "size": 35, "floor": 3, "variant": "raised", "plan": "concentric",
-		"bridge": true, "gates": ["w"], "inner_gate": "n", "climbs": ["n"], "spire_h": 20, "guards": 5 },
+		"bridge": true, "gates": ["w"], "inner_gate": "n", "climbs": ["n"], "spire_h": 20, "guards": 5, "engine_range": 12.0 },
 	{ "id": "crown", "name": "Crown Keep", "x": 61, "z": 61, "size": 39, "floor": 3, "variant": "ground", "plan": "concentric",
 		"bailey": 7, "moat": true, "gates": ["s", "n"], "inner_gate": "e", "climbs": ["e"], "inner_climbs": ["w"], "spire_h": 24,
 		"guards": 8, "yield": 2.0 },
@@ -51,7 +51,7 @@ const ENGINES := [
 	{ "id": "e10", "x": 116, "z": 117, "kind": "bore", "castle": "thornwall" },
 	{ "id": "e11", "x": 112, "z": 25, "kind": "wreck", "castle": "stormcrown" },
 ]
-const CASTLE_RULES := { "aggression": 1.1, "reprisal_warn": 60.0, "nest_buff": 0.2 }
+const CASTLE_RULES := { "aggression": 1.1, "reprisal_warn": 120.0, "nest_buff": 0.2 }
 const SHIELD_HINT := "Its shield is powered from underground: send the Operative into the Rift and destroy the Deep Core."
 const OBJECTIVES := [
 	{ "id": "spire", "who": "Operative", "text": "Destroy the Spore Spire", "hint": "East Blight plateau: ramp on its south side. Totem (Orbital tab) near the ramp foot, then press E at the Spire." },
@@ -98,12 +98,12 @@ static func build() -> Dictionary:
 			{ "x": 62, "z": 118, "amount": 1.4, "interval": 1.0 },
 		],
 		"hives": [
-			{ "name": "Rift", "x": 15, "z": 60, "access": "cavemouth" },
-			{ "name": "Spire Heights", "x": 133, "z": 64, "access": "plateau" },
-			{ "name": "North Knoll", "x": 82, "z": 40, "access": "chokepoint" },
-			{ "name": "West Moor", "x": 44, "z": 66, "access": "blight" },
-			{ "name": "East Moor", "x": 112, "z": 104, "access": "creeper" },
-			{ "name": "Southern Barrows", "x": 34, "z": 151, "access": "plateau" },
+			{ "name": "Rift", "x": 15, "z": 60 },
+			{ "name": "Spire Heights", "x": 133, "z": 64 },
+			{ "name": "North Knoll", "x": 82, "z": 40 },
+			{ "name": "West Moor", "x": 44, "z": 66 },
+			{ "name": "East Moor", "x": 112, "z": 104 },
+			{ "name": "Southern Barrows", "x": 34, "z": 151 },
 		],
 		"raid_schedule": RAID_SCHEDULE,
 		"pressure": PRESSURE,

@@ -97,7 +97,7 @@ func place(type: String, x: int, z: int, instant := false) -> Structure:
 	else:
 		s.body.scale.y = 0.15
 	s.prey = { "node": s.node, "radius": 2.5 if big else 1.0, "alive": func(): return not s.dead,
-		"hit": func(d): damage(s, d) }
+		"hit": func(d): damage(s, d), "struct": s }
 	occupy(s)
 	list.append(s)
 	dirty = true
@@ -117,8 +117,9 @@ func remove(s: Structure, reason := "") -> void:
 	if selected_beacon == s:
 		selected_beacon = null
 	if reason == "destroyed" or reason == "recycled":
+		var by := s.last_hit_by if s.last_hit_by != "" else ("creeper" if s.wet > Config.MIN_DEPTH else "unknown")
 		Bus.metric.emit("structure_lost" if reason == "destroyed" else "recycled",
-			{ "type": s.type, "reason": reason, "wet": s.wet > Config.MIN_DEPTH, "built": s.is_built() })
+			{ "type": s.type, "reason": reason, "wet": s.wet > Config.MIN_DEPTH, "built": s.is_built(), "by": by })
 	if reason != "":
 		world.effects.burst(s.node.position + Vector3.UP, Color("ff5533"), 2.5)
 	if reason == "destroyed":
@@ -140,9 +141,11 @@ func recycle(s: Structure) -> void:
 	remove(s, "recycled")
 
 
-func damage(s: Structure, amount: float) -> void:
+func damage(s: Structure, amount: float, source := "") -> void:
 	if s.dead:
 		return
+	if source != "":
+		s.last_hit_by = source
 	s.hp -= amount
 	s.hurt = 0.25
 	if s.type == "node":

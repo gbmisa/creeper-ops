@@ -147,6 +147,8 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 				dmg *= float(tier.get("wall_mult", 1.0))
 			if target.get("kind", "") == "operative":
 				HitFeel.note_source(p)
+			if target.has("struct"):
+				(target.struct as Structure).last_hit_by = str(tier.get("name", "raider"))
 			target.hit.call(dmg)
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
 			r.node.position.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY) + absf(sin(time * 12.0 + r.phase)) * 0.2

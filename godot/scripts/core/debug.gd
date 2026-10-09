@@ -14,6 +14,9 @@ class_name Debug
 ##   --look=x,z[,d[,p]] point the command camera at a cell (d = zoom distance, p = pitch rad)   --rocket  Operative fires a rocket
 ##                 just before --shot
 ##   --sim=N       fast-forward N seconds, print a [sim] report
+##   --seed=N      seed the global RNG first (deterministic sims)
+##   --snipe3      playtest-2 defence script: lean economy at once, 3 snipers by the Node at t=180
+##   --raidprobe   during --sim, print [probe] lines every 5 s: raider counts, first contact, per-nest spawns
 ##   --metrics=PATH  write this run's play metrics (a .json file or a folder)
 ##   --metrics-report[=N] [--metrics-dir=D]  print the last N recorded missions and per-level averages
 ##   --smoke       run scripted mechanics checks (smoke_test.gd)
@@ -74,6 +77,9 @@ static func apply(g) -> void:
 	print("[debug] ", args)
 	PlayMetrics.persist = false  # debug runs never write to the player's metrics folder
 	PlayMetrics.out_path = str(args.get("metrics", ""))
+	if args.has("seed"):  # --seed=N: deterministic sims (nest timers, spawn picks, shots)
+		seed(int(args.seed))
+		print("[debug] seed ", int(args.seed))
 	if args.has("metrics-report"):
 		MetricsReport.run(args)
 		g.get_tree().quit()
@@ -94,6 +100,15 @@ static func apply(g) -> void:
 		for b in g.level.get("demo", DEMO_BUILD):  # --demo=slow: unbuilt, so every packet must really be delivered
 			g.structures.place(b[0], b[1], b[2], args.demo != "slow")
 		DebugEngines.demo(g)  # scripted: hooks the nearest safe Salvage Engine after DEMO_HOOK_AT seconds
+	if args.has("snipe3"):  # --snipe3: playtest-2 defence script: working economy now, 3 snipers by the Node at t=180
+		var hint3: Vector2i = g.level.landing_hint  # mesa top is ~(80,146) r10: keep everything within 8 cells of it
+		for b in [["collector", 74, 146], ["collector", 86, 146], ["collector", 80, 141], ["collector", 80, 151],
+				["collector", 76, 143], ["collector", 84, 143], ["collector", 76, 149], ["collector", 84, 149],
+				["reactor", 78, 144], ["reactor", 82, 144], ["reactor", 78, 148], ["reactor", 82, 148],
+				["storage", 80, 150], ["beam", 78, 140], ["beam", 82, 140]]:
+			var s = g.structures.place(b[0], int(b[1]), int(b[2]), true)
+		g.set_meta("snipe3", { "placed": false,
+			"snipers": [["sniper", 76, 140], ["sniper", 84, 140], ["sniper", 80, 138]] })
 	if args.has("units"):
 		var p: Vector3 = g.structures.command_node().pos
 		var squad := []

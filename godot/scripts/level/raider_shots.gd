@@ -110,15 +110,16 @@ static func _launch(world: World, r: Dictionary, target: Dictionary, prey: Array
 	var tier: Dictionary = r.tier
 	var dmg := float(tier.damage)
 	var color: Color = tier.color
+	var src := str(tier.get("name", "raider")).to_lower() + "_shot"  # "spitter_shot", "lancer_shot"
 	world.effects.lob(from, aim, {
 		"color": color, "size": size, "time": maxf(dist / speed, 0.35),
 		"arc": clampf(dist * arc_k, 1.2, 8.0),
-		"on_arrive": func(): _impact(world, aim, radius, dmg, color, prey, from),
+		"on_arrive": func(): _impact(world, aim, radius, dmg, color, prey, from, src),
 	})
 	Sfx.play("mortar", from)
 
 
-static func _impact(world: World, at: Vector3, radius: float, dmg: float, color: Color, prey: Array, from := Vector3.INF) -> void:
+static func _impact(world: World, at: Vector3, radius: float, dmg: float, color: Color, prey: Array, from := Vector3.INF, src := "raider_shot") -> void:
 	world.effects.burst(at + Vector3.UP * 0.3, color, maxf(radius, 1.2), 0.35)
 	Sfx.play("boom", at)
 	for q in prey:
@@ -129,6 +130,8 @@ static func _impact(world: World, at: Vector3, radius: float, dmg: float, color:
 			continue
 		if from != Vector3.INF and str(q.get("kind", "")) == "operative":
 			HitFeel.note_source(from)
+		if q.has("struct"):
+			(q.struct as Structure).last_hit_by = src
 		(q.hit as Callable).call(dmg)
 
 
