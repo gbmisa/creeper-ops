@@ -46,6 +46,8 @@ class_name Debug
 ##   --gallery=anim  every creature model id in a row with labels, cycling animation
 ##                 clips every 2 s (art screenshots of the .glb work; procedural fallback
 ##                 when no .glb is present)
+##   --creatures   one of each raider tier in a row near the command node, idle clips
+##                 playing (in-situ art screenshots of the .glb work; A2)
 ##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
 ##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
 ##   --fire=rifle|sprayer|rocket  (with --surface) hold the trigger so --shot catches the weapon firing
@@ -84,7 +86,7 @@ static func apply(g) -> void:
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
 	if args.has("nocapture") or args.has("shot"):
 		g.ignore_capture = true
-	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "castle2", "engines", "raid", "gallery", "sim", "shot", "smoke", "engine"].any(func(k): return args.has(k))
+	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "castle2", "engines", "raid", "gallery", "creatures", "sim", "shot", "smoke", "engine"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
 	elif auto:
@@ -145,6 +147,8 @@ static func apply(g) -> void:
 		g.cave_hazards.kill_all()
 	if args.has("gallery"):
 		Gallery.run(g, args.gallery)
+	if args.has("creatures"):
+		CreatureGallery.spawn_near_base(g)
 	if args.has("ranged"):
 		RaiderShots.demo(g)
 	if args.has("burrow"):

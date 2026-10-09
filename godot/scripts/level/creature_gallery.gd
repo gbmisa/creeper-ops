@@ -49,6 +49,23 @@ static func run(g) -> void:
 	g.command.cam.dist = 70.0
 
 
+## `--creatures`: one of each raider tier in a row near the command node, idle
+## clips playing — for art screenshots of the .glb work in situ (A2).
+static func spawn_near_base(g) -> void:
+	var w: World = g.surface
+	var grid: Grid = w.grid
+	var n0 = g.structures.command_node()
+	var z0: int = int(n0.z) + 8
+	var x: int = int(n0.x) - RaiderDefs.ROWS.size() * 2
+	for tier in RaiderDefs.ROWS:
+		var node := RaiderMeshes.make(tier)
+		node.position = grid.cell_ground(x, z0)
+		node.rotation.y = -PI / 2.0 + 0.7  # three-quarter view toward the command camera
+		w.add_child(node)
+		CreatureAnim.move(node, 0.0)  # idle clip when a model is present
+		x += 4
+
+
 static func _label_h(id: String) -> float:
 	match id:
 		"behemoth", "sentinel":

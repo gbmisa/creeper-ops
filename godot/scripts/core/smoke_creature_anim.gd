@@ -5,63 +5,96 @@ class_name SmokeCreatureAnim
 
 
 static func run(g) -> void:
-	_no_glb_fallback(g)
+	_model_awareness(g)
 	_anim_logic()
 	_raider_kill_path(g)
 
 
-## With no .glb files present, every maker falls back to procedural meshes and
-## CreatureAnim.make returns null for every known id.
-static func _no_glb_fallback(g) -> void:
-	var all_null := true
+## CreatureAnim.make returns an animated node exactly when the .glb exists,
+## null otherwise (procedural fallback). This invariant holds with and without
+## model files present, so the checks pass on a bare checkout and on the
+## art/3-integration branch alike.
+static func _model_awareness(g) -> void:
+	var ok := true
 	for id in CreatureGallery.IDS:
-		if CreatureAnim.make(id, 1.0, null) != null:
-			all_null = false
-	SmokeTest._check("creature anim: no .glb -> make returns null", all_null)
+		var has_glb := ResourceLoader.exists(CreatureAnim.MODEL_DIR + id + ".glb")
+		var n := CreatureAnim.make(id, 1.0, null)
+		var got := n != null
+		if got != has_glb or (got and _has_player(n)) != has_glb:
+			ok = false
+		if n != null:
+			n.queue_free()
+	SmokeTest._check("creature anim: make matches .glb presence", ok)
 	SmokeTest._check("creature anim: empty id -> null", CreatureAnim.make("", 1.0, null) == null)
 
-	var ok := true
+	ok = true
 	for tier in RaiderDefs.ROWS:
+		var want := ResourceLoader.exists(CreatureAnim.MODEL_DIR + CreatureAnim.id_of(str(tier.get("name", ""))) + ".glb")
 		var n := RaiderMeshes.make(tier)
-		if n == null or _has_player(n):
+		if n == null or _has_player(n) != want:
 			ok = false
 		n.queue_free()
 	var sent := RaiderMeshes.make({ "name": "Sentinel", "size": 1.0, "color": Color("d04aff") })
-	if sent == null or _has_player(sent):
+	if sent == null or _has_player(sent) != ResourceLoader.exists(CreatureAnim.MODEL_DIR + "sentinel.glb"):
 		ok = false
 	sent.queue_free()
-	SmokeTest._check("creature anim: all raider tiers procedural", ok)
+	SmokeTest._check("creature anim: raider mesh matches .glb presence", ok)
 
 	ok = true
 	for row in FlyerDefs.ROWS:
+		var want := ResourceLoader.exists(CreatureAnim.MODEL_DIR + CreatureAnim.id_of(str(row.get("name", ""))) + ".glb")
 		var n := FlyerMeshes.make(row)
-		if n == null or _has_player(n):
+		if n == null or _has_player(n) != want:
 			ok = false
 		n.queue_free()
-	SmokeTest._check("creature anim: all flyer types procedural", ok)
+	SmokeTest._check("creature anim: flyer mesh matches .glb presence", ok)
 
 	var s := UnitMeshes.make("soldier")
 	var c := UnitMeshes.make("crawler")
-	ok = s != null and c != null and not _has_player(s) and not _has_player(c)
+	ok = s != null and c != null \
+		and _has_player(s) == ResourceLoader.exists(CreatureAnim.MODEL_DIR + "soldier.glb") \
+		and _has_player(c) == ResourceLoader.exists(CreatureAnim.MODEL_DIR + "crawler.glb")
 	s.queue_free()
 	c.queue_free()
-	SmokeTest._check("creature anim: units procedural", ok)
+	SmokeTest._check("creature anim: unit mesh matches .glb presence", ok)
 
 	var core := HiveMeshes.part("core")
-	SmokeTest._check("creature anim: hive core procedural", core != null and not _has_player(core))
+	SmokeTest._check("creature anim: hive core matches .glb presence",
+		core != null and _has_player(core) == ResourceLoader.exists(CreatureAnim.MODEL_DIR + "core.glb"))
 	core.queue_free()
 
-	# move/attack/hit are safe no-ops on procedural nodes (no player).
+	# move/attack/hit drive the player when one exists, no-op otherwise.
 	var p := RaiderMeshes.make(RaiderDefs.named("Skitter"))
+	var p_want := ResourceLoader.exists(CreatureAnim.MODEL_DIR + "skitter.glb")
 	CreatureAnim.move(p, 3.0)
 	CreatureAnim.attack(p)
 	CreatureAnim.hit(p)
-	SmokeTest._check("creature anim: hooks no-op without player", true)
+	var pp := _find_player(p)
+	ok = (pp != null) == p_want
+	if pp != null:
+		ok = ok and pp.current_animation == "hit"
+	SmokeTest._check("creature anim: hooks drive player or no-op", ok)
 	p.queue_free()
+
+	# Trebuchet: animated .glb when present, procedural fallback otherwise.
+	var treb := CastleEngineMeshes.trebuchet()
+	var treb_want := ResourceLoader.exists(CreatureAnim.MODEL_DIR + "trebuchet.glb")
+	ok = treb != null and treb.name == "Trebuchet" and (_find_player(treb) != null) == treb_want
+	CastleEngineMeshes.throw(treb, treb.position + Vector3(10, 0, 0))
+	var tp := _find_player(treb)
+	if treb_want:
+		ok = ok and tp != null and tp.current_animation == "attack"
+	SmokeTest._check("creature anim: trebuchet model + throw clip", ok)
+	treb.queue_free()
 
 
 static func _has_player(n: Node) -> bool:
-	return n.find_children("*", "AnimationPlayer", true, false).size() > 0
+	return _find_player(n) != null
+
+
+static func _find_player(n: Node) -> AnimationPlayer:
+	var found := n.find_children("*", "AnimationPlayer", true, false)
+	return found[0] as AnimationPlayer if not found.is_empty() else null
 
 
 ## Clip blend and death-delay logic on a hand-built animated node (no .glb needed:
@@ -130,7 +163,15 @@ static func _raider_kill_path(g) -> void:
 	var before: int = nests.raiders.list.size()
 	nests.raiders.kill(r)
 	# queue_free() applies at frame end; queued-for-deletion is the observable proof.
-	SmokeTest._check("creature anim: kill frees node (procedural)", node.is_queued_for_deletion())
+	# With a model, the death clip plays first (freed when it finishes); procedural
+	# frees immediately.
+	var modeled := _find_player(node) != null
+	if modeled:
+		var kp := _find_player(node)
+		SmokeTest._check("creature anim: kill plays death clip",
+			kp != null and kp.current_animation == "die")
+	else:
+		SmokeTest._check("creature anim: kill frees node (procedural)", node.is_queued_for_deletion())
 	SmokeTest._check("creature anim: kill drops targeting",
 		not g.surface.targets.has(target) and not r.alive)
 	SmokeTest._check("creature anim: kill erases from list", nests.raiders.list.size() == before - 1)
