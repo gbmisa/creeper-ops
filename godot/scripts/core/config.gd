@@ -81,6 +81,7 @@ const DROP_BASE := 20.0          # energy to drop on a Totem's own cell
 const DROP_PER_CELLS := 4.0      # +1 energy per this many cells from the nearest Totem
 const DROP_MAX := 80.0
 const DROP_TIME := 3.0           # seconds the pod is visible before the Operative spawns
+const POD_LINGER := 6.0          # seconds the drop pod sits after touchdown before sinking
 const RECALL_COOLDOWN_MULT := 2.0  # teleporter cooldown = this × path metres / WALK
 const RECALL_NO_PATH_MULT := 1.4   # straight-line factor when no walkable path exists
 const RESPAWN_ENERGY := 100.0

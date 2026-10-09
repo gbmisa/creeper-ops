@@ -8,6 +8,10 @@ static func run(g) -> void:
 	_model_awareness(g)
 	_anim_logic(g)
 	_raider_kill_path(g)
+	_hive_models(g)
+	_structure_models(g)
+	_drop_pod(g)
+	_gallery_strip(g)
 
 
 ## CreatureAnim.make returns an animated node exactly when the .glb exists,
@@ -187,3 +191,93 @@ static func _raider_kill_path(g) -> void:
 	SmokeTest._check("creature anim: kill drops targeting",
 		not g.surface.targets.has(target) and not r.alive)
 	SmokeTest._check("creature anim: kill erases from list", nests.raiders.list.size() == before - 1)
+
+
+## A3: each of the 6 hive kinds loads a model with all 5 clips; with
+## CreatureAnim.disabled the procedural fallback is returned.
+static func _hive_models(g) -> void:
+	var kinds := ["core", "pit", "spitter", "launcher", "mortar", "roost"]
+	var clips := ["idle", "walk", "attack", "hit", "die"]
+	var ok := true
+	for kind in kinds:
+		var want := ResourceLoader.exists(CreatureAnim.MODEL_DIR + "hive_" + kind + ".glb")
+		var node := HiveMeshes.part(kind)
+		var model := CreatureAnim.of(node)
+		if (model != null) != want:
+			ok = false
+		elif model != null:
+			var p := _find_player(model)
+			if p == null:
+				ok = false
+			else:
+				for clip in clips:
+					if not p.has_animation(clip):
+						ok = false
+		node.queue_free()
+	SmokeTest._check("hive models: 6 kinds load with 5 clips", ok)
+	CreatureAnim.disabled = true
+	var ok2 := true
+	for kind in kinds:
+		var node := HiveMeshes.part(kind)
+		if CreatureAnim.of(node) != null:
+			ok2 = false
+		node.queue_free()
+	CreatureAnim.disabled = false
+	SmokeTest._check("hive models: disabled -> procedural", ok2)
+
+
+## A3 tasks 7/9: the Command Node and the Totem use their models when the
+## .glb exists, the procedural mesh otherwise.
+static func _structure_models(g) -> void:
+	var nroot := Node3D.new()
+	SupportMeshes.node(nroot)
+	var nwant := ResourceLoader.exists(CreatureAnim.MODEL_DIR + "command_node.glb")
+	SmokeTest._check("command node: model when .glb exists",
+		(CreatureAnim.of(nroot) != null) == nwant)
+	nroot.queue_free()
+	var broot := Node3D.new()
+	SupportMeshes.beacon(broot)
+	var bwant := ResourceLoader.exists(CreatureAnim.MODEL_DIR + "totem.glb")
+	SmokeTest._check("totem: model when .glb exists",
+		(CreatureAnim.of(broot) != null) == bwant)
+	broot.queue_free()
+
+
+## A3 task 8: the pod node exists while the drop is pending and is gone after
+## linger + die. Drives the lifecycle directly (payment is covered by SmokeDeploy).
+static func _drop_pod(g) -> void:
+	var cell := Vector2i(40, 60)
+	g.deploy._begin_pod(cell)
+	var pod := g.deploy._pod.get("node") as Node3D
+	SmokeTest._check("drop pod: node exists while pending",
+		pod != null and is_instance_valid(pod) and pod.is_inside_tree())
+	var t := 0.0
+	while str(g.deploy._pod.get("phase", "")) == "fall" and t < Config.DROP_TIME + 2.0:
+		g.deploy._tick_pod(0.05)
+		t += 0.05
+	SmokeTest._check("drop pod: touchdown -> linger",
+		str(g.deploy._pod.get("phase", "")) == "linger", "(t=%.2f)" % t)
+	t = 0.0
+	while str(g.deploy._pod.get("phase", "")) == "linger" and t < Config.POD_LINGER + 2.0:
+		g.deploy._tick_pod(0.05)
+		t += 0.05
+	var dying := str(g.deploy._pod.get("phase", "")) == "die"
+	var p := _find_player(pod)
+	if p != null:
+		p.animation_finished.emit("die")  # the headless sim has no frames: end the clip now
+	SmokeTest._check("drop pod: gone after linger + die",
+		dying and (not is_instance_valid(pod) or pod.is_queued_for_deletion()) and g.deploy._pod.is_empty())
+
+
+## A3 task 0: the gallery strip is flattened — every gallery node's ground cell
+## sits at the flattened level (the strip is clear of castles/hives on L1).
+static func _gallery_strip(g) -> void:
+	var w: World = g.surface
+	var level := CreatureGallery.flatten(w)
+	var ok := true
+	var xi := int(CreatureGallery.X0)
+	for id in CreatureGallery.IDS:
+		if not is_equal_approx(w.grid.height_at(xi, int(CreatureGallery.Z)), level):
+			ok = false
+		xi += int(CreatureGallery.SPACING)
+	SmokeTest._check("gallery strip flattened", ok)

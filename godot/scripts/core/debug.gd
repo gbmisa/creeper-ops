@@ -49,8 +49,10 @@ class_name Debug
 ##   --gallery=anim  every creature model id in a row with labels, cycling animation
 ##                 clips every 2 s (art screenshots of the .glb work; procedural fallback
 ##                 when no .glb is present)
+##   --gallery=anim:<id>  close-up of one model id, camera on its AABB centre
 ##   --creatures   one of each raider tier in a row near the command node, idle clips
 ##                 playing (in-situ art screenshots of the .glb work; A2)
+##   --creatures=near  also a row of the six hive part models behind them (A3)
 ##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
 ##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
 ##   --fire=rifle|sprayer|rocket  (with --surface) hold the trigger so --shot catches the weapon firing
@@ -170,7 +172,7 @@ static func apply(g) -> void:
 	if args.has("gallery"):
 		Gallery.run(g, args.gallery)
 	if args.has("creatures"):
-		CreatureGallery.spawn_near_base(g)
+		CreatureGallery.spawn_near_base(g, str(args.creatures))
 	if args.has("ranged"):
 		RaiderShots.demo(g)
 	if args.has("burrow"):

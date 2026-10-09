@@ -153,8 +153,26 @@ func try_spawn(n: Dictionary) -> int:
 		RaiderGroups.spawn(raiders, n, RaiderGroups.compose(batch, pressure(), int(n.x) + int(time)))
 	else:
 		raiders.spawn(n, pick_tier(), guard)
-	n["spawned"] = int(n.get("spawned", 0)) + raiders.list.size() - before
-	return raiders.list.size() - before
+	var spawned := raiders.list.size() - before
+	n["spawned"] = int(n.get("spawned", 0)) + spawned
+	if spawned > 0:
+		_spawn_attack(n)
+	return spawned
+
+
+## The core pulses and a grown pit heaves when the nest breeds (models only).
+static func _spawn_attack(n: Dictionary) -> void:
+	var core := Hives.find(n, "core")
+	if not core.is_empty():
+		HiveParts.attack_anim(core)
+	var pits := []
+	for part in n.parts:
+		var p: Dictionary = part
+		if p.alive and p.grown and str(p.kind) == "pit":
+			pits.append(p)
+	if not pits.is_empty():
+		var pit: Dictionary = pits[randi() % pits.size()]
+		HiveParts.attack_anim(pit)
 
 
 func _wait(n: Dictionary, guard: bool) -> float:

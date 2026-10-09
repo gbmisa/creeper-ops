@@ -57,12 +57,25 @@ static func hurt(host, hive: Dictionary, part: Dictionary, dmg: float, source: S
 	if str(part.kind) == "core":
 		hive.hp = part.hp
 	if float(part.hp) > 0.0:
+		_hit_anim(part)
 		return
 	if str(part.kind) == "core":
 		Hives.raze(host, hive)
 	else:
 		Loot.drop(host.world, part.pos, Config.LOOT_PART, host.stockpile, host.operative)
 		forget(host.world, part)
+
+
+## Hit flinch on the model, at most one clip every 0.3 s.
+static func _hit_anim(part: Dictionary) -> void:
+	var model := CreatureAnim.of(part.get("node") as Node3D)
+	if model == null:
+		return
+	var now := Time.get_ticks_msec()
+	if now - int(part.get("hit_t", 0)) < 300:
+		return
+	part["hit_t"] = now
+	CreatureAnim.hit(model)
 
 
 static func forget(world: World, part: Dictionary) -> void:
@@ -72,9 +85,15 @@ static func forget(world: World, part: Dictionary) -> void:
 	if part.has("target"):
 		world.remove_target(part.target)
 	var node := part.get("node") as Node3D
-	if node != null and is_instance_valid(node):
-		node.queue_free()
 	part["node"] = null
+	if node != null and is_instance_valid(node):
+		var model := CreatureAnim.of(node)
+		if model != null:
+			CreatureAnim.die(model, func() -> void:
+				if is_instance_valid(node):
+					node.queue_free())
+		else:
+			node.queue_free()
 
 
 static func lance(host, ats: Array) -> void:
@@ -95,6 +114,23 @@ static func lance(host, ats: Array) -> void:
 					if host.builder != null:
 						dmg *= host.builder.lance_scale(p)
 					hurt(host, h, q, dmg, "lance")
+
+
+## Yaw the model to face a target. The model's +X is forward.
+static func face_at(part: Dictionary, at: Vector3) -> void:
+	var model := CreatureAnim.of(part.get("node") as Node3D)
+	if model == null:
+		return
+	var from: Vector3 = (part.get("node") as Node3D).position
+	var d: Vector3 = at - from
+	model.rotation.y = atan2(-d.z, d.x)
+
+
+## One attack swing on the part's model (no-op for the procedural fallback).
+static func attack_anim(part: Dictionary) -> void:
+	var model := CreatureAnim.of(part.get("node") as Node3D)
+	if model != null:
+		CreatureAnim.attack(model)
 
 
 static func combat(host, hive: Dictionary, dt: float) -> void:
@@ -130,6 +166,8 @@ static func _spitter(host, part: Dictionary, dt: float, prey: Array) -> void:
 		return
 	part.cd = Config.HIVE_SPITTER_INTERVAL
 	var aim: Vector3 = (best.node as Node3D).position
+	face_at(part, aim)
+	attack_anim(part)
 	var splash := Config.HIVE_SPITTER_SPLASH * Config.CELL
 	var dmg := Config.HIVE_SPITTER_DMG
 	host.world.effects.lob(from + Vector3(0, 0.9, 0), aim, {
@@ -158,6 +196,7 @@ static func _launcher(host, part: Dictionary, dt: float) -> void:
 		return
 	part.cd = Config.SPIRE_INTERVAL
 	var to: Vector3 = target.pos
+	attack_anim(part)
 	Bus.say("Spore volley incoming at your %s! (Beams can shoot it down)" % target.def.label, "warn")
 	var it: Dictionary = host.world.effects.lob((part.node as Node3D).position + Vector3(0, 1.6, 0), to, {
 		"color": Color("88ff55"), "size": 0.9, "time": 4.0, "arc": 28.0,
