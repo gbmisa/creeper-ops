@@ -28,7 +28,12 @@
       "Bash(git branch *)",
       "Bash(timeout 400 art/blender/review.sh ravager /tmp/claude-1000/-home-gregory-milligan-AI-projects-creeper-fps-td/af2721bc-7ab0-4309-89d6-f8a359128d8b/scratchpad/ravager.png)",
       "Bash(sed -i 's/\\\\* size \\\\* 1.4$/* size * 1.1/' art/blender/preview.py)",
-      "Bash(timeout 400 art/blender/review.sh behemoth /tmp/claude-1000/-home-gregory-milligan-AI-projects-creeper-fps-td/af2721bc-7ab0-4309-89d6-f8a359128d8b/scratchpad/behemoth.png)"
+      "Bash(timeout 400 art/blender/review.sh behemoth /tmp/claude-1000/-home-gregory-milligan-AI-projects-creeper-fps-td/af2721bc-7ab0-4309-89d6-f8a359128d8b/scratchpad/behemoth.png)",
+      "Bash(timeout 400 art/blender/review.sh spitter /tmp/claude-1000/-home-gregory-milligan-AI-projects-creeper-fps-td/af2721bc-7ab0-4309-89d6-f8a359128d8b/scratchpad/spitter.png)",
+      "Bash(timeout 400 art/blender/review.sh sentinel /tmp/claude-1000/-home-gregory-milligan-AI-projects-creeper-fps-td/af2721bc-7ab0-4309-89d6-f8a359128d8b/scratchpad/sentinel.png)",
+      "Bash(sed -i \"s/bug_kit\\)/bug_kit|flyer_kit\\)/\" art/blender/build_all.sh)",
+      "Bash(sed -i 's/^bpy.ops.mesh.primitive_plane_add\\(size=6\\)/bpy.ops.mesh.primitive_plane_add\\(size=6, location=\\(0, 0, min\\(0.0, min\\(\\(mesh.matrix_world @ __import__\\(\"mathutils\"\\).Vector\\(c\\)\\).z for c in mesh.bound_box\\)\\)\\)\\)/' art/blender/preview.py)",
+      "Bash(timeout 400 art/blender/review.sh spore_bat /tmp/claude-1000/-home-gregory-milligan-AI-projects-creeper-fps-td/af2721bc-7ab0-4309-89d6-f8a359128d8b/scratchpad/bat.png)"
     ],
     "additionalDirectories": [
       "/home/gregory-milligan/AI projects/creeper fps td-worktrees/art3-models/art/blender"
