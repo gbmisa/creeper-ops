@@ -1,8 +1,9 @@
 class_name StrongholdMeshes
 ## Decoration on top of castle terrain (the walls, spire and plateau are terrain cells).
-## Gates and the drawbridge are hard-light fields tinted by who may pass: red for the enemy,
-## cyan for you, amber when the winch is down and anyone can cross. Builds the castle's
-## `view` (Nodes only, keyed like the state) and refreshes it from the state.
+## Gates and the drawbridge are hard-light fields tinted by owner: red for the enemy,
+## cyan for you, amber when the winch is down. A lowered deck is solid for every faction;
+## the gate is the defense, not the bridge. Builds the castle's `view` (Nodes only, keyed
+## like the state) and refreshes it from the state.
 
 const ENEMY := Color("ff3a6a")
 const PLAYER := Color("5fd4ff")
