@@ -20,11 +20,11 @@ static func add(model: Node3D, id: String) -> void:
 	var arms := Node3D.new()
 	arms.name = "arms"
 	model.add_child(arms)
-	_arm(arms, pose.grip, RIGHT_ELBOW, true)
-	_arm(arms, pose.fore, LEFT_ELBOW, false)
+	_arm(arms, pose.grip, RIGHT_ELBOW, true, "hand_r")
+	_arm(arms, pose.fore, LEFT_ELBOW, false, "hand_l")
 
 
-static func _arm(parent: Node3D, hand: Vector3, elbow: Vector3, grips: bool) -> void:
+static func _arm(parent: Node3D, hand: Vector3, elbow: Vector3, grips: bool, hand_id: String) -> void:
 	var cloth := StructureMeshes.mat(Color("2c3f5e"), 0.0, 0.8)
 	var leather := StructureMeshes.mat(Color("3a2a1c"), 0.0, 0.65)
 	var bronze := StructureMeshes.mat(Color("c4924a"), 0.8, 0.35)
@@ -34,9 +34,14 @@ static func _arm(parent: Node3D, hand: Vector3, elbow: Vector3, grips: bool) -> 
 	ShapeKit.taper(parent, wrist, wrist + dir * 0.15, 0.044, 0.05, bronze, 8)  # bracer
 	var cuff := ShapeKit.taper(parent, wrist + dir * 0.15, wrist + dir * 0.17, 0.056, 0.056, bronze, 8)
 	cuff.name = "cuff"
-	# Glove: palm block, fingers wrapped over the grip, thumb.
-	StructureMeshes.box(parent, Vector3(0.07, 0.055, 0.085), leather, hand)
-	var f := StructureMeshes.box(parent, Vector3(0.075, 0.02, 0.07), leather, hand + Vector3(0, 0.0, -0.05))
+	# Glove: palm block, fingers wrapped over the grip, thumb. Wrapped in a named node so
+	# CrossbowFx can animate the off hand drawing the string during a reload.
+	var hn := Node3D.new()
+	hn.name = hand_id
+	hn.position = hand
+	parent.add_child(hn)
+	StructureMeshes.box(hn, Vector3(0.07, 0.055, 0.085), leather, Vector3.ZERO)
+	var f := StructureMeshes.box(hn, Vector3(0.075, 0.02, 0.07), leather, Vector3(0, 0.0, -0.05))
 	f.rotation.x = 0.15 if grips else 0.0
-	var thumb := StructureMeshes.box(parent, Vector3(0.022, 0.02, 0.06), leather, hand + Vector3(0.0, 0.04, -0.01))
+	var thumb := StructureMeshes.box(hn, Vector3(0.022, 0.02, 0.06), leather, Vector3(0.0, 0.04, -0.01))
 	thumb.rotation.x = -0.3

@@ -9,6 +9,8 @@ const GLINT_TIME := 0.09
 
 var _string: Node3D
 var _bolt: Node3D
+var _hand: Node3D
+var _hand_base := Vector3.ZERO
 var _crystal: MeshInstance3D
 var _glint: MeshInstance3D
 var _s := 0.0
@@ -21,6 +23,9 @@ var _reload := -1.0   # reload progress 0..1, -1 = loaded
 func _init(model: Node3D, crystal: MeshInstance3D) -> void:
 	_string = model.get_node_or_null("string")
 	_bolt = model.get_node_or_null("bolt")
+	_hand = model.get_node_or_null("arms/hand_l")
+	if _hand:
+		_hand_base = _hand.position
 	_crystal = crystal
 	var sm := SphereMesh.new()
 	sm.radius = 0.5
@@ -59,6 +64,15 @@ func update(dt: float) -> void:
 	if _string:
 		var slack := 0.0 if _reload < 0.0 else -0.05 * (1.0 - smoothstep(0.0, 0.7, _reload))
 		_string.position.z = -_s * Config.VM_STRING_SNAP + slack
+	# Reload hand: the off hand grabs the slack string, draws it back with it, then
+	# returns to the foregrip as the bolt is placed (bolt appears at reload > 0.75).
+	if _hand:
+		if _reload < 0.0:
+			_hand.position = _hand_base
+		else:
+			var slack := -0.05 * (1.0 - smoothstep(0.0, 0.7, _reload))
+			var draw := 1.0 - smoothstep(0.55, 0.78, _reload)
+			_hand.position = _hand_base + Vector3(0, 0.02 * draw, slack * draw)
 	_gone = maxf(0.0, _gone - dt)
 	if _bolt:
 		_bolt.visible = _gone <= 0.0 and (_reload < 0.0 or _reload > 0.75)

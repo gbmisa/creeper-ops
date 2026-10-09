@@ -11,6 +11,8 @@ const BASE := Vector3(0.18, -0.16, -0.5)
 var gun: Node3D
 var k := 0.0            # recoil spring displacement (1.0 = one full shot)
 var kv := 0.0
+var ky := 0.0           # camera yaw punch spring (random direction per shot, recovers)
+var kyv := 0.0
 var dip := 0.0          # landing dip spring
 var dipv := 0.0
 var _t := 0.0
@@ -29,18 +31,28 @@ func _init(g: Node3D) -> void:
 
 
 ## A shot: strength 1.0 = crossbow. Rapid fire stacks up to VM_KICK_MAX.
-func kick(strength: float) -> void:
+## yaw_kick: random-direction yaw punch factor (0 = none), scaled by VM_YAW_KICK.
+func kick(strength: float, yaw_kick := 0.0) -> void:
 	k = minf(k + strength, Config.VM_KICK_MAX)
 	kv = 0.0
+	if yaw_kick > 0.0:
+		var s := 1.0 if randf() < 0.5 else -1.0
+		ky = clampf(ky + s * strength * Config.VM_YAW_KICK * yaw_kick, -0.06, 0.06)
+		kyv = 0.0
 
 
 func cam_pitch() -> float:
 	return k * Config.VM_CAM_KICK
 
 
+func cam_yaw() -> float:
+	return ky
+
+
 ## True when every spring has settled (smoke test and idle checks).
 func at_rest() -> bool:
-	return absf(k) < 0.01 and absf(kv) < 0.05 and absf(dip) < 0.01
+	return absf(k) < 0.01 and absf(kv) < 0.05 and absf(dip) < 0.01 \
+		and absf(ky) < 0.005 and absf(kyv) < 0.02
 
 
 func update(dt: float, ctrl: PlayerController, input: InputState) -> void:
@@ -73,6 +85,8 @@ func _springs(dt: float) -> void:
 		left -= h
 		kv += (-Config.VM_SPRING_K * k - Config.VM_SPRING_DAMP * kv) * h
 		k += kv * h
+		kyv += (-Config.VM_SPRING_K * ky - Config.VM_SPRING_DAMP * kyv) * h
+		ky += kyv * h
 		dipv += (-Config.VM_SPRING_K * 0.25 * dip - Config.VM_SPRING_DAMP * 0.5 * dipv) * h
 		dip += dipv * h
 
