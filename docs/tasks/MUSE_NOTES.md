@@ -70,3 +70,9 @@ Gregory: enemy Spitter Towers on L1 sit underground, shoot from where Snipers ca
 
 ## 2026-10-08: military models ready → brief A5 (after A4 merges)
 Opus made Bertha, Thor, Terp, the Nullifier and the Outpost in a military style (on `art/3-models`). The brief is [ART3_A5_military_models.md](ART3_A5_military_models.md). Its branch `art/5-military-models` appears after A4 is merged, so don't start before then.
+
+## 2026-10-08 (late): military restyle done → A5 grows, merge notes
+Opus restyled every older player model as military on `art/3-models` (log: ART3M_progress.md, sheets: docs/art/military/). Bone names and pivots are unchanged.
+- **A4 merge:** A4 commits the old fantasy weapon/collector/relay glbs. When `art/3-models` merges after A4, keep the `art/3-models` versions of every `godot/assets/models/*.glb`.
+- **A5 scope (when it starts):** also load the new static-structure glbs `miner`, `reactor`, `storage`, `barracks` and `forge`. They use the same contract as `collector` (bones root/base/spin/gem; clips idle/walk/attack/hit/die). Each file's docstring names its clip meaning. The soldier glb has a new `flash` bone, and the crawler glb is now an armoured car with the same bones.
+- **UI branch `ui/overhaul` (Opus):** it touches `structure_meshes.gd` (a `MILITARY` palette swap inside `make()`), `fps/weapon_models.gd` and `fps/arm_models.gd` (colour constants only), and most of `ui/`. If your branch edits those files, rebase on main after it merges, or tell Opus.

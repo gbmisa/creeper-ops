@@ -1,29 +1,35 @@
-# Handoff: 2026-10-08 (session 15e: X+B merged, 5 new Muse briefs, player structure models)
+# Handoff: 2026-10-08 (session 15f: military restyle + UI overhaul, Opus, unmerged)
 
 ## State
-Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). **Opus long-horizon plan: [docs/tasks/ART3_OPUS_plan.md](docs/tasks/ART3_OPUS_plan.md).**
-Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** (Fount) codes from GitHub branches; **Opus** orchestrates, merges, and does visual work only. Prompts for the user: [muse1.md](muse1.md). Memory: `muse-does-coding` (never move a branch Muse has started; strip `godot/.godot/` at merge). **Opus → Muse messages go in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md) on main.**
+Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) (new Stage 25 row). Run: [RUN.md](RUN.md). Opus long-horizon plan: [docs/tasks/ART3_OPUS_plan.md](docs/tasks/ART3_OPUS_plan.md).
+Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHub branches; **Opus** orchestrates, merges and does the visuals. Opus → Muse notes go in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md); the latest note covers A4/A5 merge order and the new glbs.
 
-## Merged to main this session
-- `art/3-fx` (X) and `fix/muse-b-bugs` (B: spawn off the gear, hold-fire bloom max 5.5° plus climb, RecoilDefs.cam, hud split). Parse is clean; smoke 0 failures after the merge.
+## Done this session (Gregory: "military models + UI overhaul, work continuously")
+**`art/3-models`** (pushed, worktree `art3-models`; log in `docs/tasks/ART3M_progress.md`; sheets in `docs/art/military/`):
+- Restyled as military, with bone names and pivots kept: cannon, mortar, sniper, beam, collector, relay, command_node, totem, drop_pod, soldier (rifleman, new `flash` bone) and crawler (4x4 armoured car).
+- New glbs: miner, reactor, storage, barracks and forge (static-structure contract). **No loader in game yet.**
+- `mil_kit.py` (shared parts). `icons.sh` renders the build-menu icons.
+- Sonnet grades: cannon 7.5, mortar 8, sniper 7.5, beam 8.5, collector 7, relay 7, soldier 7, Node 8, totem 7, pod 7.5 (all at or above the old fantasy grades).
 
-## Branches
-| Branch | Owner | Status |
-|---|---|---|
-| `fix/playtest2-pressure` | Muse P | **Not mergeable yet: 9 smoke failures.** L2 hive `access` tags dropped, 2 castles2 engine tests, `.godot` files, `flyer_ai.gd` overlap with main. Fix list is in MUSE_NOTES; the fix-up prompt is in muse1.md. |
-| `art/3-hive-models` | Muse A3 | running |
-| `stage/21b-castles-detail` | Muse C | running (P0–P8) |
-| `tools/shot-tour` | Muse S | Reviewed: smoke OK; `look=`/`select=`/`fps=` work. **The `gallery=` framing is broken**, so there's a fix-up (MUSE_NOTES). |
-| `fix/q-spitter-towers` | Muse Q | up: enemy Spitter Towers on L1 (underground, out of Sniper reach, no cap) |
-| `stage/13-tuning-audit` | Muse T | up: measure and propose only, writes STAGE13_report.md |
-| `art/4-structure-models` | Muse A4 | up (`a4468a5`, models included): weapons as 3 glbs, plus collector and relay |
-| `chore/k-split-files` | Muse K | up: split operative_weapons.gd (263 lines) and one group out of config.gd (~311) |
-| `art/3-models` | Opus | Latest `941c08f`: also the military Bertha 7, Thor 7, Terp 8, Nullifier 7, Outpost 8 (`weapon_kit.run(parts=)`). Brief A5 is on main; **Opus creates `art/5-military-models` after A4 merges.** Log: `docs/tasks/ART3M_progress.md`. |
+**`ui/overhaul`** (pushed, worktree `ui-overhaul`, branched from main `7913773`; smoke reports `OK: 0 failure(s)`, parse is clean):
+- `UiTheme`: Barlow Condensed and Share Tech Mono (OFL, in `assets/fonts`), olive/charcoal panels, amber accents, square corners. It is set on every HUD child, because a CanvasLayer blocks the Window theme.
+- `UiKit`: new palette, plus `header`, `caption`, `mono` and `brackets` (corner marks drawn from the panel's draw signal).
+- Top bar: captioned gauges, a Node HP bar, and a status chip that truncates. Packets and Field are hidden below 1400 px.
+- `BuildCard` (icon, key, name, cost, lock note; `summary` is for tests) with icons in `assets/icons`; the menu keeps a stable width across tabs.
+- `HudOverlay` modals with an amber primary button. The briefing now says five build screens.
+- `Crosshair`, bracketed FPS vitals, tag plates on markers and log lines, and markers clamped on screen.
+- Stopgaps: a `StructureMeshes.MILITARY` palette for the procedural player meshes (castles unchanged), and military colours on the viewmodels and arms.
+- Debug hooks: `--briefing` and `--ended=won|lost`. Screens: `docs/art/ui/` (before/after).
+- UI grader: old HUD about 4/10, new HUD about 7/10.
 
-## Grading this session (Sonnet grader, up to 3 rounds)
-Cannon 7, mortar 7, sniper 6.5, beam 7.5, collector 7, relay 7. Each weapon is 3 glbs (`_base`, `_turret`, `_arm`) whose pivots match WeaponMeshes' Turret and Arm, so the aim code is unchanged. Preview: `art/blender/wreview.sh <id> <png>` (assembled weapon). Recurring grader note: the hit clips are subtle on static structures; X's hit flash covers that in game.
+## Not verified
+No human playtest of the new HUD or the colours. GPU (Vulkan) rendering not checked, only Xvfb GL. The new glbs are not visible in game until A4/A5 loaders merge.
+
+## Branches waiting (unchanged from 15e)
+P (9 smoke failures, fix-up out), A3, C, S (gallery fix-up), Q, T, A4, K: see MUSE_NOTES.
 
 ## Next (Opus)
-1. Re-review P after the fix-up and merge it. Then review S, T, K, A3, A4 and C as they land: Sonnet for code; for visuals, Opus takes screenshots and a grader judges them, using S's tour once it's merged.
-2. In game: hives, Totem, pod and Node (A3), and the weapons, collector and relay (A4).
-3. **Restyle as military (Gregory approved; don't start until asked):** redo cannon, mortar, sniper, beam, collector and relay in the military palette (olive, gunmetal, concrete, sandbags, hazard; glow only for gameplay cues), so they match the titans. Keep the pivots and bone names so A4's loader still works. Same grading loop, and push to `art/3-models`.
+1. Gregory reviews `ui/overhaul` and `art/3-models`. On approval, merge `ui/overhaul` to main (strip `godot/.godot/`), then re-run smoke.
+2. Merge A4, then `art/3-models`, keeping the `art/3-models` glbs. Then start A5, which now also loads miner/reactor/storage/barracks/forge.
+3. UI follow-ups: icons for `@lance` and the castle turrets (they fall back to stencil glyphs); an info-panel stat grid; FPS ammo readout.
+4. Re-review the Muse branches as they land.
