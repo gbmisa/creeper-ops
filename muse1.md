@@ -73,6 +73,11 @@ Clone https://github.com/gbmisa/creeper-ops and check out branch chore/k-split-f
 Fetch main and read docs/tasks/MUSE_NOTES.md, note "X and B merged; P needs fixes before merge". Fix the 4 items on fix/playtest2-pressure, rerun parse and smoke (0 failures), push, and report.
 ```
 
+## S fix-up (same S worker, branch tools/shot-tour)
+```
+Fetch main and read docs/tasks/MUSE_NOTES.md, note "S review → one fix". Fix the gallery= framing bug on tools/shot-tour, add the smoke check, rerun parse and smoke (0 failures), push, and report.
+```
+
 ## Rules reminder
 - **Opus leaves notes in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md) on `main`. Fetch `main` and read it before you start or resume any brief.** (Latest: hold-to-fire spread and recoil climb added to B.)
 - Muse has headless Godot 4.7.2: run the parse and smoke checks and headless sims yourself. Screenshots and GPU checks are Opus's job (Muse has no display).

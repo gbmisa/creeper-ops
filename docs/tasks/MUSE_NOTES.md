@@ -56,3 +56,11 @@ Right now the Pulse Rifle bloom tops out at `bloom_max` 1.4°, and the camera pu
 - Apply the same idea to any other weapon that auto-fires on hold (check plasma and sprayer; the sprayer can stay forgiving).
 - **Unchanged:** damage, fire interval, ammo. Time-to-kill when tap-firing must stay the same. Say in your report what the hold-fire accuracy is after 10 shots.
 - Ammo reserves are a later design. Don't build them.
+
+## 2026-10-08: S review → one fix (`tools/shot-tour`)
+Parse is clean, smoke reports `OK: 0 failure(s)`, and a 4-line Xvfb tour saved every PNG. `look=`, `select=` and `fps=` frame correctly.
+**Bug:** `gallery=anim:wyvern clip=attack t=0.5` (after `--demo --sim=60`) saves a wide battlefield view, not a close-up of the wyvern. No `[tour] skip` is printed, so the model is spawned. Likely causes (check, don't guess):
+- `_world_aabb` uses `get_aabb()` on skinned meshes; that can be bind-space or huge, which pushes `dist` to the 90 clamp. Print the box size and `dist`.
+- The command camera may still be easing toward the previous `select=`/`look=` target, or `cam.update` drifts `target.y` (`smooth_y` lerp) after focus.
+- The pad (43, 87) may be off the playable area or hidden under props.
+**Fix and prove it:** print `[tour] gallery <id> aabb=<size> dist=<d>` per gallery line. Smoke check: after `_apply_gallery` the camera target is within 1 m of the model, and `dist` is ≤ 3 × the AABB size. Push to `tools/shot-tour` and report. Opus re-screenshots.
