@@ -2,7 +2,7 @@ class_name UiKit
 ## Small helpers so every HUD file builds controls the same way. The look itself (fonts, button
 ## and panel boxes) is the root theme from UiTheme; these add per-widget accents.
 
-const BG := Color(0.055, 0.062, 0.048, 0.9)
+const BG := Color(0.055, 0.062, 0.048, 0.95)
 const BG_SOLID := Color(0.045, 0.05, 0.04, 0.97)
 const EDGE := Color(0.46, 0.49, 0.33, 0.55)
 const TEXT := Color("e6e4d2")
