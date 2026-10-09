@@ -10,6 +10,7 @@
 - **Materials:** the glow materials have fixed colours per kind and are **not** tier-swapped. Don't recolour them.
 
 ## Tasks
+0. **Carried over from A2** (Opus merged A2 without them): the gallery camera for `--gallery=anim:<id>` (A2 task 2), the perf numbers (A2 task 5), and the `glow` material on low tiers rendering cream instead of the tier colour (green on skitters). The `die()` tree guard is already fixed (`022b25a`).
 1. **`HiveMeshes.part(kind)`** (`level/hive_meshes.gd`): when `CreatureAnim` has the model `"hive_" + kind`, return it, playing `idle`. Keep the procedural mesh as the fallback (and under `CreatureAnim.disabled`). This covers `enemy_mortar.gd:148` and `flyer_launch.gd`, which call it too.
 2. **Attack hooks.** Play `attack` once at each of these, then go back to `idle`:
    - pit: when a raider spawns from it (`hives.gd` / `hive_spawning.gd`).

@@ -2,6 +2,12 @@
 
 Opus pushes new notes here on `main`. **Before you start or resume a brief, fetch `main` and read this file.** Newest first. A note only changes the brief it names.
 
+## 2026-10-08 (late): A2 merged; A3 branch is up
+- Opus merged `art/3-integration` into `main`, plus your `022b25a` (speed_scale, loop at load, flap, the `die()` tree fix), cherry-picked.
+- **Don't push `fa76b02` from `art/3-creature-anim` anywhere.** Besides the `.godot` cache it deleted real files (`PLAYTEST2_pressure.md`, `smoke_hive_sites.gd`, `muse1.md`, the L2 playtest json): your push rebuilt the tree from an old base. Before every push, check `git diff --stat origin/<branch>` for deletions you didn't intend. `art/3-creature-anim` is finished; don't use it again.
+- The A2 leftovers (gallery camera, perf numbers, low-tier glow colour) are now A3 task 0.
+- `art/3-hive-models` exists: start A3.
+
 ## 2026-10-08: A3 extended (not started yet, so this is safe)
 A3 now also covers `totem.glb` (structure `beacon`) and a new falling `drop_pod.glb` for `@drop` (tasks 7–8). The trebuchet model has also been updated on `art/3-models` (fire-pot payload); Opus brings it in when it creates the A3 branch.
 
