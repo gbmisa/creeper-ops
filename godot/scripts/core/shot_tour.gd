@@ -217,7 +217,7 @@ static func _world_aabb(n: Node3D) -> AABB:
 	var box := AABB()
 	var first := true
 	for mi in n.find_children("*", "MeshInstance3D", true, false):
-		var xform: Transform3D = (mi as MeshInstance3D).global_transform
+		var xform := _xform_to(mi as Node3D, n)
 		var b: AABB = xform * (mi as MeshInstance3D).get_aabb()
 		if first:
 			box = b
@@ -225,6 +225,20 @@ static func _world_aabb(n: Node3D) -> AABB:
 		else:
 			box = box.merge(b)
 	return box
+
+
+## World transform of `node` built from local transforms up to `root`, so it holds
+## even before `root` enters the tree (global_transform is identity then).
+static func _xform_to(node: Node3D, root: Node3D) -> Transform3D:
+	var base := root.global_transform if root.is_inside_tree() else root.transform
+	if node == root:
+		return base
+	var t := node.transform
+	var p := node.get_parent() as Node3D
+	while p != null and p != root:
+		t = p.transform * t
+		p = p.get_parent() as Node3D
+	return base * t
 
 
 ## Wait for a drawn frame. frame_post_draw never fires on some headless GL

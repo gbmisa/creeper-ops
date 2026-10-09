@@ -46,4 +46,4 @@ out=/tmp/d.png look=1,2 bogus=1
 	ShotTour._untrack_gallery()
 	holder.queue_free()
 	SmokeTest._check("tour: gallery re-aim targets hovering AABB centre, not ground",
-		got.distance_to(Vector3(0, 5, 0)) < 0.05)
+		got.distance_to(Vector3(0, 5, 0)) < 0.05, "(%s)" % got)
