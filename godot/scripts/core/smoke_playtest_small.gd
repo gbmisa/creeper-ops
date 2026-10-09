@@ -11,14 +11,14 @@ static func run(g) -> void:
 static func _cheat_guns(g) -> void:
 	OperativeUpgrades.cheat_guns = true
 	var ok := true
-	for id in ["railgun", "plasma", "demo"]:
+	for id in ["railgun", "plasma"]:
 		ok = ok and OperativeUpgrades.unlocked(id)
 	SmokeTest._check("playtest-small: cheat-guns unlocks all weapons", ok)
 	OperativeUpgrades.cheat_guns = false
 	# With the cheat off, unlocked() must follow the real upgrade levels again,
 	# whatever earlier smoke files left behind.
 	ok = true
-	for id in ["railgun", "plasma", "demo"]:
+	for id in ["railgun", "plasma"]:
 		ok = ok and OperativeUpgrades.unlocked(id) == (OperativeUpgrades.level("unlock_" + id) > 0)
 	SmokeTest._check("playtest-small: cheat off restores normal gating", ok)
 

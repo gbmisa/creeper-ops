@@ -1,15 +1,13 @@
 class_name AdvancedWeapons
 extends RefCounted
-## Operative slots 4/5/6. Usable only after OperativeUpgrades unlocks them. Each shot or
+## Operative slots 4/5. Usable only after OperativeUpgrades unlocks them. Each shot or
 ## second of fire spends Salvage from the shared Stockpile. Numbers live in WEAPONS.
 
 const WEAPONS := {
 	"railgun": { "name": "Railgun", "key": "adv_railgun", "salvage": 2.0, "charge": 1.5, "damage": 30.0 },
 	"plasma": { "name": "Plasma Thrower", "key": "adv_plasma", "salvage": 1.0, "dps": 6.0, "rate_mult": 3.0 },
-	"demo": { "name": "Demolition Charge", "key": "adv_demo", "salvage": 8.0, "range": 20.0,
-		"speed": 18.5, "loft": 0.61, "fuse": 2.0, "damage": 120.0, "radius": 2.0 },
 }
-const IDS := ["railgun", "plasma", "demo"]
+const IDS := ["railgun", "plasma"]
 
 var weapons: OperativeWeapons
 var stockpile: Stockpile
@@ -18,13 +16,11 @@ var need := ""
 var _need_for := ""  # weapon held when the unlock hint appeared; switching clears it
 var firing := false
 var showcase := false  # debug: hold the trigger for a firing screenshot
-var demo: DemoCharge
 var _moaned := false
 
 
 func _init(host: OperativeWeapons) -> void:
 	weapons = host
-	demo = DemoCharge.new(WEAPONS.demo)
 
 
 func handles(id: String) -> bool:
@@ -56,8 +52,7 @@ func hud_need() -> String:
 	if not handles(weapons.current) or stockpile == null:
 		return ""
 	var cost := float(WEAPONS[weapons.current].salvage)
-	var free: bool = weapons.current == "demo" and Config.DEMO_CHARGE_FREE
-	var short := not free and stockpile.salvage <= 0.0001 if weapons.current == "plasma" else not stockpile.can_afford("salvage", cost)
+	var short := stockpile.salvage <= 0.0001 if weapons.current == "plasma" else not stockpile.can_afford("salvage", cost)
 	return "Need %d Salvage" % int(cost) if short else ""
 
 
@@ -68,7 +63,6 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 		_need_for = weapons.current
 	elif need.begins_with("Unlock") and weapons.current != _need_for:
 		need = ""
-	demo.update(dt)
 	if not handles(weapons.current) or not OperativeUpgrades.unlocked(weapons.current):
 		charge = 0.0
 		firing = false
@@ -85,10 +79,6 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 			_rail(dt, trigger, world)
 		"plasma":
 			_plasma(dt, trigger, world, feet)
-		"demo":
-			if trigger and not _moaned:
-				_throw(world)
-				_moaned = true  # one charge per click
 
 
 func _pick(input: InputState) -> void:
@@ -115,8 +105,6 @@ func _deny(id: String) -> void:
 
 func _pay(id: String) -> bool:
 	var cost := float(WEAPONS[id].salvage)
-	if id == "demo" and Config.DEMO_CHARGE_FREE:
-		return true
 	if stockpile != null and stockpile.spend("salvage", cost):
 		return true
 	_deny(id)
@@ -220,11 +208,3 @@ func _in_cone(feet: Vector3, fwd: Vector3, p: Vector3, range_m: float, cos_a: fl
 	if len > range_m:
 		return false
 	return len < Config.CELL * 0.9 or (dx * fwd.x + dz * fwd.z) / len >= cos_a
-
-
-func _throw(world: World) -> void:
-	if _pay("demo"):
-		var dir := -weapons.camera.global_transform.basis.z
-		demo.launch(world, weapons.gun.global_position, dir)
-		weapons.kick("demo")
-		weapons.muzzle.flash(Color("ff8844"), 0.3, 0.08, 2.0)

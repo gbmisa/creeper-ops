@@ -110,17 +110,6 @@ static func sees(host, m: Dictionary, at: Vector3) -> bool:
 	return false
 
 
-static func watch(host, hive: Dictionary, dt: float) -> void:
-	var feet: Variant = _feet(host)
-	for item in hive.get("mortars", []):
-		var m: Dictionary = item
-		if feet == null:
-			if float(m.get("channel", 0.0)) > 0.0:
-				m.channel = 0.0
-			continue
-		EnemyMortars.sabotage(host, m, feet as Vector3, dt)
-
-
 static func spotter(host, m: Dictionary) -> void:
 	var hive: Dictionary = m.hive
 	host.raiders.spawn(hive, RaiderDefs.named("Spotter"), true)
@@ -186,12 +175,3 @@ static func any_spotted(host) -> bool:
 			if m.alive and bool(m.spotted):
 				return true
 	return false
-
-
-static func _feet(host) -> Variant:
-	if host.operative == null:
-		return null
-	var fps := host.operative.call() as FpsMode
-	if fps == null or fps.world == null:
-		return null
-	return fps.controller.pos

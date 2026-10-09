@@ -50,7 +50,7 @@ static func attach(s: Strongholds, c: Dictionary, v: Dictionary) -> void:
 		v.engines.append(node)
 		var hit := func(d, _p = null): _hurt(s, c, c.engines[i], node, d)
 		var live := func(): return alive(c.engines[i]) and active(c)
-		s.world.add_target({ "node": node, "radius": 1.6, "oy": 1.5, "alive": live, "on_hit": hit })
+		s.world.add_target({ "node": node, "radius": 1.6, "oy": 1.5, "alive": live, "on_hit": hit, "max_hp": E.hp })
 		var foe := { "node": node, "oy": 1.5, "radius": 1.6, "alive": live, "hit": hit }
 		v.engine_foes.append({ "node": node, "enemy": foe, "alive": live })
 

@@ -16,12 +16,12 @@ const DEFS := {
 		"desc": "Unlocks the Railgun on 4. Each shot costs 2 Salvage." },
 	"unlock_plasma": { "label": "Plasma Thrower", "costs": [60],
 		"desc": "Unlocks the Plasma Thrower on 5. Firing costs 1 Salvage per second." },
-	"unlock_demo": { "label": "Demolition Charge", "costs": [40],
-		"desc": "Unlocks the Demolition Charge on 6. Each charge costs 8 Salvage." },
 }
-const ORDER := ["firepower", "armour", "mobility", "unlock_railgun", "unlock_plasma", "unlock_demo"]
+const ORDER := ["firepower", "armour", "mobility", "unlock_railgun", "unlock_plasma"]
 
 static var levels := {}
+## Demolition charges carried (bought one at a time; Config.DEMO_CHARGE_COST each).
+static var charges := 0
 
 ## Cheat path (debug only): --cheat-guns unlocks every Operative weapon from the
 ## start so Gregory can test them. Off by default; never advertised in the UI.
@@ -30,6 +30,7 @@ static var cheat_guns := false
 
 static func reset() -> void:
 	levels = {}
+	charges = 0
 
 
 static func level(id: String) -> int:
@@ -111,3 +112,27 @@ static func buy(id: String, stockpile: Stockpile) -> String:
 	stockpile.spend("salvage", price)
 	levels[id] = level(id) + 1
 	return ""
+
+
+static func charge_text() -> String:
+	if charges >= Config.DEMO_CHARGE_MAX:
+		return "Demolition Charge %d/%d: FULL" % [charges, Config.DEMO_CHARGE_MAX]
+	return "Demolition Charge %d/%d (%d Salvage)" % [charges, Config.DEMO_CHARGE_MAX, int(Config.DEMO_CHARGE_COST)]
+
+
+## Returns "" on success, or why it failed.
+static func buy_charge(stockpile: Stockpile) -> String:
+	if charges >= Config.DEMO_CHARGE_MAX:
+		return "You can only carry %d demolition charges" % Config.DEMO_CHARGE_MAX
+	if stockpile == null or not stockpile.can_afford("salvage", Config.DEMO_CHARGE_COST):
+		return "Need %d Salvage" % int(Config.DEMO_CHARGE_COST)
+	stockpile.spend("salvage", Config.DEMO_CHARGE_COST)
+	charges += 1
+	return ""
+
+
+static func take_charge() -> bool:
+	if charges <= 0:
+		return false
+	charges -= 1
+	return true

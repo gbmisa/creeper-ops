@@ -95,7 +95,7 @@ static func arm(b, s: Dictionary, label: String) -> void:
 	var hit := func(dmg: float, _p = null) -> void:
 		b.hurt(s, float(dmg))
 	s["enemy"] = {"node": s.node, "oy": 1.0, "radius": 1.0, "alive": func() -> bool: return bool(s.alive), "hit": hit}
-	s["target"] = {"node": s.node, "oy": 1.0, "radius": 1.1, "alive": func() -> bool: return bool(s.alive), "on_hit": hit}
+	s["target"] = {"node": s.node, "oy": 1.0, "radius": 1.1, "alive": func() -> bool: return bool(s.alive), "on_hit": hit, "max_hp": float(s.max_hp)}
 	b.world.add_target(s.target)
 	var it := {
 		"pos": s.pos, "radius": Config.MORTAR_SABOTAGE_RANGE,
@@ -108,6 +108,12 @@ static func arm(b, s: Dictionary, label: String) -> void:
 		"channel_frac": func() -> float: return 1.0 - float(s.channel) / Config.MORTAR_SABOTAGE_TIME,
 		"channel_what": label,
 	}
+	if str(s.kind) == "mortar":
+		it = DemoCharge.interactable(b.world, s.pos, Config.MORTAR_SABOTAGE_RANGE, func() -> bool: return bool(s.alive), s.target)
+		s.target["charge_kill"] = func() -> void: b.kill(s, true)
+		var flash := func(_d: float, _p = null) -> void: b.world.effects.burst(s.pos + Vector3.UP, Color("ffcc88"), 0.5, 0.15)
+		s.target["on_hit"] = flash  # guns only flash a mortar; a planted charge destroys it
+		s.enemy["hit"] = flash
 	s["interact"] = it
 	b.world.interactables.append(it)
 	var marker := {

@@ -2,7 +2,7 @@ class_name EnemyMortars
 ## Enemy mortars (§4.3). Stage 3 builds one, stage 4 a second. Any active hive also builds
 ## one within 60 s after the Node has had no walking route for 60 s. Each mortar keeps a
 ## Spotter. A shell is a growing red ring on the terrain shader, then a blast.
-## Killed mortars are not rebuilt. Sabotage (hold E, 3 s, within 2 m) pays 5 Salvage.
+## Killed mortars are not rebuilt. Only a planted demolition charge (DemoCharge) destroys one; no payout.
 
 
 static func tick(host, dt: float) -> void:
@@ -12,7 +12,6 @@ static func tick(host, dt: float) -> void:
 		reconcile(host, hive)
 		_grow(host, hive, dt)
 		EnemyMortarFire.volley(host, hive, dt)
-		EnemyMortarFire.watch(host, hive, dt)
 	EnemyMortarFire.shells(host)
 
 
@@ -41,7 +40,7 @@ static func reconcile(host, hive: Dictionary) -> void:
 		var last: Dictionary = list.back()
 		if bool(last.alive) and bool(last.grown):
 			break
-		_kill(host, last, false)
+		_kill(host, last)
 		list.pop_back()
 	_boost(hive, list)
 	while list.size() < need:
@@ -53,7 +52,7 @@ static func clear(host, hive: Dictionary) -> void:
 		hive["mortars"] = []
 		return
 	for item in hive.mortars:
-		_kill(host, item, false)
+		_kill(host, item)
 	hive.mortars = []
 
 
@@ -68,21 +67,6 @@ static func ready(host, m: Dictionary) -> void:
 
 static func aim(host, m: Dictionary) -> Dictionary:
 	return EnemyMortarFire.aim(host, m)
-
-
-## Hold E started the channel. Returns true the frame the mortar comes down.
-static func sabotage(host, m: Dictionary, feet: Vector3, dt: float) -> bool:
-	if not m.alive or float(m.channel) <= 0.0:
-		return false
-	var p: Vector3 = m.pos
-	if Vector2(feet.x - p.x, feet.z - p.z).length() > Config.MORTAR_SABOTAGE_RANGE:
-		m.channel = 0.0
-		return false
-	m.channel = float(m.channel) - dt
-	if float(m.channel) > 0.0:
-		return false
-	_kill(host, m, true)
-	return true
 
 
 static func demo(g) -> void:
@@ -159,19 +143,11 @@ static func _make(host, hive: Dictionary, index: int) -> Dictionary:
 	}
 	node.scale = Vector3.ONE * 0.15
 	var hit := func(dmg: float, _p = null): _hurt(host, m, dmg)
-	var boom := func(): _kill(host, m, false)
+	var boom := func(): _kill(host, m)
 	m["enemy"] = { "node": node, "oy": 0.9, "radius": 1.1, "alive": func(): return m.alive, "hit": hit }
 	m["target"] = { "node": node, "oy": 0.9, "radius": 1.15, "alive": func(): return m.alive, "on_hit": hit, "charge_kill": boom }
 	host.world.add_target(m.target)
-	var it := {
-		"pos": pos, "radius": Config.MORTAR_SABOTAGE_RANGE,
-		"prompt": func(): return "[%s] Sabotage the mortar (destroys it, +%d Salvage)" % [Keybinds.short("use"), int(Config.MORTAR_SALVAGE)] if m.alive else "",
-		"use": func():
-			if m.alive:
-				m.channel = Config.MORTAR_SABOTAGE_TIME,
-		"channel_frac": func() -> float: return 1.0 - float(m.channel) / Config.MORTAR_SABOTAGE_TIME,
-		"channel_what": "mortar",
-	}
+	var it := DemoCharge.interactable(host.world, pos, Config.MORTAR_SABOTAGE_RANGE, func(): return m.alive, m.target)
 	m["interact"] = it
 	host.world.interactables.append(it)
 	return m
@@ -198,16 +174,12 @@ static func _hurt(host, m: Dictionary, dmg: float) -> void:
 		host.world.effects.burst(m.pos + Vector3.UP, Color("ffcc88"), 0.5, 0.15)
 
 
-static func _kill(host, m: Dictionary, pay: bool) -> void:
+static func _kill(host, m: Dictionary) -> void:
 	if not bool(m.get("alive", false)) and m.get("node") == null:
 		return
 	m.alive = false
-	m.channel = 0.0
 	m.telegraph = null
 	m.spotted = false
-	if pay and host.stockpile != null:
-		host.stockpile.add("salvage", Config.MORTAR_SALVAGE)
-		host.world.effects.burst(m.pos + Vector3.UP, Color("ff8844"), 2.5, 0.4)
 	if m.has("target"):
 		host.world.remove_target(m.target)
 	if m.has("interact"):

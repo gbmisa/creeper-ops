@@ -19,11 +19,9 @@ static func _mortar(g) -> void:
 	(m.target as Dictionary).on_hit.call(99999.0, m.pos)
 	(m.enemy as Dictionary).hit.call(99999.0)
 	SmokeTest._check("mortar survives heavy gun damage", m.alive and float(m.hp) > 0.0)
-	var charge := DemoCharge.new(AdvancedWeapons.WEAPONS.demo)
-	charge.plant(nests.world, m.pos)
-	charge.update(float(AdvancedWeapons.WEAPONS.demo.fuse) + 0.1)
+	DemoCharge.plant(nests.world, m.pos)
+	DemoCharge.tick(nests.world, Config.DEMO_FUSE + 0.1)
 	SmokeTest._check("a planted charge destroys the mortar", not m.alive)
-	SmokeTest._check("demolition charge is free while testing", Config.DEMO_CHARGE_FREE)
 	EnemyMortars.clear(nests, hive)
 
 

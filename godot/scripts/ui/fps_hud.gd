@@ -120,6 +120,8 @@ func refresh(fps: FpsMode, spotted := false) -> void:
 	UiKit.set_bar_color(_tank, UiKit.BAD if low else (Color("5fffd0") if fps.weapons.spraying else Color("9ff6ff")))
 	_weapon.text = fps.weapons.label()
 	_salvage.text = fps.weapons.advanced.salvage_line()
+	if OperativeUpgrades.charges > 0:
+		_salvage.text += ("  |  " if _salvage.text != "" else "") + "Demo charges %d/%d" % [OperativeUpgrades.charges, Config.DEMO_CHARGE_MAX]
 	_salvage.visible = _salvage.text != ""
 	var ch := fps.weapons.advanced.charge_ratio()
 	_charge.visible = ch >= 0.0
