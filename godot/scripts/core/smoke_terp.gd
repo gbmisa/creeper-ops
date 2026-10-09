@@ -21,6 +21,18 @@ static func run(g) -> void:
 
 static func _locks(g) -> void:
 	var sm: StructureManager = g.structures
+	# Standalone runs (--smoke=terp) reach this group with the node still landing;
+	# placement needs a connected network, so wait for touchdown + link-up first.
+	var node: Structure = sm.command_node()
+	var wait := 0.0
+	while not node.connected and wait < 60.0:
+		g.update(0.05)
+		wait += 0.05
+	SmokeTest._check("terp: node landed", not node.is_flying() and node.connected)
+	# Level dicts now ship the terp unlock; simulate a level that never granted it
+	# so the gating mechanism itself stays covered.
+	var saved: Array = (g.level.get("unlocks", []) as Array).duplicate()
+	g.level["unlocks"] = []
 	var why := StructureDefs.lock_reason(g.level, "terp")
 	SmokeTest._check("terp: locked without unlock", why == PHRASE and StructureDefs.lock_reason(g.level, "@terp") == PHRASE, why)
 	g.hud.build.show_tab(2)
@@ -31,8 +43,13 @@ static func _locks(g) -> void:
 	SmokeTest._check("terp: menu greys the locked Terp", btn.disabled and btn.text.contains(PHRASE) and paint_btn.disabled and paint_btn.text.contains(PHRASE))
 	var denied := Placement.can_place(sm, "terp", sm.command_node().x, sm.command_node().z)
 	SmokeTest._check("terp: placement says the level phrase", denied.reason == PHRASE, denied.reason)
-	StructureDefs.grant_unlock(g.level, "terp")
+	var probe := {"unlocks": []}
+	StructureDefs.grant_unlock(probe, "terp")
+	SmokeTest._check("terp: grant_unlock still gates", StructureDefs.lock_reason(probe, "terp") == "")
+	# Restore the level's real unlocks: Terp must be open from the start now.
+	g.level["unlocks"] = saved
 	g.hud.build.refresh(g.economy.energy)
+	SmokeTest._check("terp: level ships the unlock", saved.has("terp"))
 	var spot := _free_near(g)
 	var placed := Placement.can_place(sm, "terp", spot.x, spot.y) if spot.x >= 0 else {"ok": false, "reason": "no free cell"}
 	SmokeTest._check("terp: unlock clears the lock", StructureDefs.lock_reason(g.level, "terp") == "" and not btn.disabled and not btn.text.contains(PHRASE) and placed.ok, placed.reason)

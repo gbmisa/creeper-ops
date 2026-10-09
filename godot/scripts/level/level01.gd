@@ -229,6 +229,7 @@ static func build() -> Dictionary:
 			{ "x": 33, "z": 66 },  # under Ashmoat's east wall
 		],
 		"ammo_unlock": "e1",  # improved ammo (AmmoGrades) once this objective completes
+		"unlocks": ["terp"],  # Terp + Terp Paint available from the start (StructureDefs.lock_reason)
 		"engines": ENGINES.duplicate(true),
 		"rift": { "x": 14, "z": 42 },
 		"demo": DEMO,

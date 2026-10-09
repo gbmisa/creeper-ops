@@ -112,6 +112,7 @@ static func build() -> Dictionary:
 		"castles": castles,
 		"castle_rules": CASTLE_RULES,
 		"ammo_unlock": "e1",
+		"unlocks": ["terp"],  # Terp + Terp Paint available from the start (StructureDefs.lock_reason)
 		"engines": ENGINES.duplicate(true),  # improved ammo (AmmoGrades) once this objective completes
 		"ores": [
 			{ "x": 96, "z": 124 },
