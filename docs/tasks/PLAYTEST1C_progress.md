@@ -55,8 +55,10 @@ Access kinds (written as `"access"` on each hive row): `plateau`, `blight`,
 - **Southern Barrows (34,151) → `plateau`:** rect (28,145)-(40,157) set to
   level 6 with a single west stair (ramp (28,151) -> (20,151)). Repeats the
   `plateau` kind (documented above).
-- Parse: clean. Smoke: full suite PASS, 0 failures.
-- Commit: <hash>
+- Parse: clean. Smoke: full suite PASS, 734 checks, 0 failures (includes all 29
+  `SmokeHiveSites` checks: 6 L2 hives tagged, Operative reaches every core,
+  raiders leave every hive; L2 kinds mixed 5 distinct with `plateau` x2).
+- Pushed: <hash>
 
 ## P3 — verify (done)
 - `--autostart --sim=600` and `--demo --units --sim=900` on both levels,

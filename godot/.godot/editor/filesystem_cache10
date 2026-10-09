@@ -35,7 +35,7 @@ titan_meshes.gd::GDScript::2055530944525771703::1791502591::0::1::::TitanMeshes<
 upgrades.gd::GDScript::1741923632129173373::1791502591::0::1::::Upgrades<>RefCounted<><>0<>0<><>::
 weapon_logic.gd::GDScript::8508178333303404362::1791502591::0::1::::WeaponLogic<>RefCounted<><>0<>0<><>::
 weapon_meshes.gd::GDScript::8955010831046008887::1791502591::0::1::::WeaponMeshes<>RefCounted<><>0<>0<><>::
-::res://scripts/core/::1791503097
+::res://scripts/core/::1791503673
 audio_synth.gd::GDScript::3000258651540621131::1791502591::0::1::::<>Node<><>0<>0<><>::
 bus.gd::GDScript::4139493134949292339::1791502591::0::1::::<>Node<><>0<>0<><>::
 config.gd::GDScript::832819873242265805::1791502592::0::1::::Config<>RefCounted<><>0<>0<><>::
@@ -173,8 +173,8 @@ hive_shape.gd::GDScript::2344971124428710697::1791502605::0::1::::HiveShape<>Ref
 hive_site.gd::GDScript::5860953306598687982::1791502605::0::1::::HiveSite<>RefCounted<><>0<>0<><>::
 hive_spawning.gd::GDScript::3906273370908557274::1791502606::0::1::::SporeNests<>RefCounted<><>0<>0<><>::
 level01.gd::GDScript::2764054976810280508::1791503014::0::1::::Level01<>RefCounted<><>0<>0<><>::
-level02.gd::GDScript::7309980363719347931::1791502606::0::1::::Level02<>RefCounted<><>0<>0<><>::
-level02_terrain.gd::GDScript::2813811128355992794::1791502606::0::1::::Level02Terrain<>RefCounted<><>0<>0<><>::
+level02.gd::GDScript::7309980363719347931::1791503784::0::1::::Level02<>RefCounted<><>0<>0<><>::
+level02_terrain.gd::GDScript::2813811128355992794::1791503779::0::1::::Level02Terrain<>RefCounted<><>0<>0<><>::
 levels.gd::GDScript::4064232831581867821::1791502606::0::1::::Levels<>RefCounted<><>0<>0<><>::
 level_ramps.gd::GDScript::1780413076226493358::1791502606::0::1::::LevelRamps<>RefCounted<><>0<>0<><>::
 level_shape.gd::GDScript::7756381085103475496::1791502606::0::1::::LevelShape<>RefCounted<><>0<>0<><>::
