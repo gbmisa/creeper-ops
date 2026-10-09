@@ -4,7 +4,7 @@ Logged by Opus. Not briefed yet. Items marked (branch) may already be covered by
 
 1. **Enemy LOS:** enemies must not shoot through terrain. (fix/enemy-los)
 2. **Submerged enemies:** enemies that can move in creeper must float on its surface. Right now they shoot from fully submerged and can't be seen.
-3. **Spitters:** destroy everything and outrange Snipers. Unclear whether the answer is barracks troops. Need a clear counter that the player can read. (fix/spitter-vs-structures is related, not a fix)
+3. **Spitters (rule from Gregory):** a Spitter must never outrange a Sniper. They level the base while the Operative is away. Today both have range 20 cells (raider_defs.gd:16, structure_defs.gd:69), and acid splash (1.5) lets a Spitter at the edge hit things a Sniper at the same edge can't reach. Fix: Spitter range clearly below Sniper range (e.g. 14), and add a smoke check that `spitter.range + splash < sniper.range`. Not covered by any open branch; fix/spitter-vs-structures only pauses healing on acid hits.
 4. **Beam relevance:** beams go idle once the map's only mortar dies (~3 min into L1). Enemies building mortars as pressure rises should keep beams useful. (feat/enemy-castle-mortars, fix/beam-intercept-lobs)
 5. **Operative survivability:** too tanky and HP regenerates. Fine for testing. Later: med kits and ammo bought with Salvage (not packets) in a shop UI. Down the road.
 6. **Railgun UX:** pressing 4 shows "Unlock the Railgun (60 Salvage)" with no hint of where to buy it. The prompt stays on screen after switching guns. The Armoury is at the Command Node (walk up and press E, or select the Node in command mode). The prompt should say so and clear on weapon switch.
