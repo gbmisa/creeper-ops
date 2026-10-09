@@ -15,12 +15,20 @@ var plan_ghosts: Array[Node3D] = []
 var plan_mats: Array = []
 var plan_type := ""
 
+## Rally-point marker for the selected barracks: a green flag at the rally point plus a
+## line back to the barracks (standard RTS). Built once, repositioned in show_selection
+## (which runs every frame), so it tracks live rally changes and hides on deselect.
+var rally_root: Node3D = null
+var _rally_line: MeshInstance3D = null
+var _rally_mat: StandardMaterial3D = null
+
 
 func _init(w: World) -> void:
 	world = w
 	mat = w.terrain_mat
 	if w.has_meta("terp_tint"):
 		paint = w.get_meta("terp_tint") as TerpPaint
+	_build_rally()
 
 
 func _set_ghost_model(type: String) -> void:
@@ -134,6 +142,7 @@ func hide_plan() -> void:
 
 ## Selection ring + (for weapons) its firing range, drawn as ring_b / ring_a.
 func show_selection(s: Structure, group: Array[Structure], tool_active: bool) -> void:
+	_update_rally(s if group.size() <= 1 else null)
 	var rings := PackedVector4Array()
 	if group.size() > 1:  # a box-selected group: one ring each, no range ring
 		for g in group.slice(0, 48):
@@ -163,3 +172,65 @@ func set_overlay_visible(on: bool) -> void:
 		hide_plan()
 		mat.set_shader_parameter("ring_b", Vector4.ZERO)
 		mat.set_shader_parameter("sel_count", 0)
+		rally_root.visible = false
+		_rally_line.visible = false
+
+
+## Rally-point flag + line. Only the single-selected barracks shows one, and only while
+## it has a rally point set (Structure.rally is null until the player right-clicks).
+func _build_rally() -> void:
+	_rally_mat = StandardMaterial3D.new()
+	_rally_mat.albedo_color = Color(0.616, 1.0, 0.478)  # 9dff7a: matches the "rally point set" burst
+	_rally_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rally_root = Node3D.new()
+	rally_root.name = "RallyMarker"
+	var pole := MeshInstance3D.new()
+	var pm := CylinderMesh.new()
+	pm.top_radius = 0.06
+	pm.bottom_radius = 0.06
+	pm.height = 2.4
+	pole.mesh = pm
+	pole.position = Vector3(0, 1.2, 0)
+	var flag := MeshInstance3D.new()
+	var fm := BoxMesh.new()
+	fm.size = Vector3(0.85, 0.5, 0.06)
+	flag.mesh = fm
+	flag.position = Vector3(0.48, 2.05, 0)
+	var disc := MeshInstance3D.new()
+	var dm := CylinderMesh.new()
+	dm.top_radius = 0.55
+	dm.bottom_radius = 0.55
+	dm.height = 0.08
+	disc.mesh = dm
+	disc.position = Vector3(0, 0.04, 0)
+	for mi in [pole, flag, disc]:
+		(mi as MeshInstance3D).material_override = _rally_mat
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		rally_root.add_child(mi)
+	rally_root.visible = false
+	world.add_child(rally_root)
+	_rally_line = MeshInstance3D.new()
+	_rally_line.name = "RallyLine"
+	_rally_line.mesh = ImmediateMesh.new()
+	_rally_line.material_override = _rally_mat
+	_rally_line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_rally_line.visible = false
+	world.add_child(_rally_line)
+
+
+func _update_rally(s: Structure) -> void:
+	var rp: Variant = s.rally if (s != null and s.type == "barracks") else null
+	if rp == null:
+		rally_root.visible = false
+		_rally_line.visible = false
+		return
+	var p: Vector3 = rp
+	rally_root.visible = true
+	rally_root.position = Vector3(p.x, p.y + 0.05, p.z)
+	_rally_line.visible = true
+	var im := _rally_line.mesh as ImmediateMesh
+	im.clear_surfaces()
+	im.surface_begin(Mesh.PRIMITIVE_LINES)
+	im.surface_add_vertex(s.pos + Vector3(0, 1.2, 0))
+	im.surface_add_vertex(Vector3(p.x, p.y + 0.5, p.z))
+	im.surface_end()
