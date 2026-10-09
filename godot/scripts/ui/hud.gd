@@ -11,6 +11,7 @@ var objectives: Objectives
 var markers: Markers
 var fps: FpsHud
 var keys: KeybindMenu
+var wheel_view: BuildWheelView
 var _log: VBoxContainer
 var alerts: HudAlerts
 var _selbox: Panel
@@ -25,6 +26,8 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	add_child(markers)
 	fps = FpsHud.new()
 	add_child(fps)
+	wheel_view = BuildWheelView.new()
+	add_child(wheel_view)
 	top = TopBar.new()
 	add_child(top)
 	objectives = Objectives.new(cm.level.get("objectives", Objectives.LIST))

@@ -169,6 +169,7 @@ static func run(g) -> void:
 	SmokeLoot.run(g)
 	SmokeFpsFeel.run(g)
 	SmokeFpsArms.run(g)
+	SmokeBuildWheel.run(g)
 	SmokeFlyers.run(g)
 	SmokeFlyers2.run(g)
 	SmokeCreatureAnim.run(g)
@@ -239,6 +240,8 @@ static func _run_only(g) -> void:
 				SmokeSpawnPacing.run(g)
 			"enemybuild":
 				SmokeEnemyBuild.run(g)
+			"wheel":
+				SmokeBuildWheel.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

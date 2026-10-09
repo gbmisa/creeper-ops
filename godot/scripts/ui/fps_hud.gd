@@ -20,6 +20,7 @@ var _recall_note: Label
 var _flash: ColorRect
 var _tint: ColorRect
 var _hit: HitOverlay
+var hold_bar: HoldBar
 
 
 func _init() -> void:
@@ -75,6 +76,8 @@ func _init() -> void:
 	_recall_note.position = Vector2(-160, 116)
 	_recall_note.custom_minimum_size.x = 320
 	add_child(_recall_note)
+	hold_bar = HoldBar.new()
+	add_child(hold_bar)
 
 
 func _rect(c: Color) -> ColorRect:
@@ -135,5 +138,9 @@ func refresh(fps: FpsMode, spotted := false) -> void:
 	_recall.value = fps.recall_hold / Config.RECALL_HOLD
 	_recall_note.visible = holding
 	_recall_note.text = "Free recall" if fps.recall_cd <= 0.0 else "Teleporter cooldown %ds" % ceili(fps.recall_cd)
+	if fps.hold_frac >= 0.0:
+		hold_bar.show_hold(fps.hold_label, fps.hold_frac)
+	else:
+		hold_bar.hide_hold()
 	_flash.color.a = 0.12 if fps.hurt_flash > 0.0 else (0.12 if fps.in_creeper else 0.0)
 	_tint.color.a = minf(0.45, 0.15 + fps.creeper_depth * 0.15) if fps.in_creeper else 0.0

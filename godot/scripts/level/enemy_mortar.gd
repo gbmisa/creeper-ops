@@ -165,10 +165,12 @@ static func _make(host, hive: Dictionary, index: int) -> Dictionary:
 	host.world.add_target(m.target)
 	var it := {
 		"pos": pos, "radius": Config.MORTAR_SABOTAGE_RANGE,
-		"prompt": func(): return "[E] Sabotage the mortar" if m.alive else "",
+		"prompt": func(): return "[%s] Sabotage the mortar (destroys it, +%d Salvage)" % [Keybinds.short("use"), int(Config.MORTAR_SALVAGE)] if m.alive else "",
 		"use": func():
 			if m.alive:
 				m.channel = Config.MORTAR_SABOTAGE_TIME,
+		"channel_frac": func() -> float: return 1.0 - float(m.channel) / Config.MORTAR_SABOTAGE_TIME,
+		"channel_what": "mortar",
 	}
 	m["interact"] = it
 	host.world.interactables.append(it)

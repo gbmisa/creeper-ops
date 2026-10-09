@@ -104,7 +104,9 @@ static func arm(b, s: Dictionary, label: String) -> void:
 			if bool(s.alive) and float(s.channel) <= 0.0:
 				s.channel = Config.MORTAR_SABOTAGE_TIME
 				Sfx.play("lift")
-				Bus.say("Sabotaging the %s: stay close for %ds." % [label, ceili(Config.MORTAR_SABOTAGE_TIME)], "info"),
+				Bus.say("Sabotaging the %s: stay close for %ds — destroys it (+%d Salvage)." % [label, ceili(Config.MORTAR_SABOTAGE_TIME), int(Config.MORTAR_SALVAGE)], "info"),
+		"channel_frac": func() -> float: return 1.0 - float(s.channel) / Config.MORTAR_SABOTAGE_TIME,
+		"channel_what": label,
 	}
 	s["interact"] = it
 	b.world.interactables.append(it)
@@ -120,8 +122,8 @@ static func _prompt(s: Dictionary, label: String) -> String:
 	if not bool(s.alive):
 		return ""
 	if float(s.channel) > 0.0:
-		return "Sabotaging the %s... %.1fs" % [label, float(s.channel)]
-	return "[%s] Sabotage the %s" % [Keybinds.short("use"), label]
+		return "Sabotaging the %s — destroys it (+%d Salvage)..." % [label, int(Config.MORTAR_SALVAGE)]
+	return "[%s] Sabotage the %s (destroys it, +%d Salvage)" % [Keybinds.short("use"), label, int(Config.MORTAR_SALVAGE)]
 
 
 static func onsite(b, s: Dictionary) -> bool:

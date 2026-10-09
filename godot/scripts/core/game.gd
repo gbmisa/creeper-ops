@@ -145,6 +145,8 @@ func _ready() -> void:
 	hud.setup(command, units)
 	hud.info.stockpile = stockpile
 	ArmouryMenu.bind(self)
+	hud.wheel_view.wheel = fps.builder.wheel
+	fps.builder.wheel.host = self
 	hud.build.on_pick = func(item): flow.pick(item)
 	input.on_key = func(k): flow.on_key(k)
 	flow = GameFlow.new(self)
