@@ -3,6 +3,14 @@ class_name SmokeDeployPick
 
 
 static func run(g) -> void:
+	# Earlier groups may leave the Operative down, a pod falling, or the game paused.
+	g.deploy.down = false
+	g.deploy.respawn_left = 0.0
+	g.deploy.pods.st = {}
+	g.deploy.pick._end()
+	g.deploy.pick.last_id = -1
+	g.landing = false
+	g.paused = false
 	for s in g.structures.beacons():
 		g.structures.remove(s)
 	g.flow.to_command("")
