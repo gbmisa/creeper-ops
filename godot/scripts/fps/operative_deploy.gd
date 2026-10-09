@@ -1,7 +1,8 @@
 class_name OperativeDeploy
 extends RefCounted
 ## Totem deploy, drop pods, recall cooldown, death and respawn (design §5.4).
-## drop_blocked is the Shield Dome hook. No Totem: measure to the Command Node.
+## drop_blocked is the Shield Dome hook. No finished Totem: deploy from the
+## Command Node instead. No Totem: recall cooldown is measured to the Command Node.
 
 var g
 var down := false
@@ -46,11 +47,51 @@ func deploy_totem() -> void:
 		return
 	var b := _chosen_totem()
 	if b == null:
-		_deny("No finished Totem. Drop one (Orbital tab) outside Blight, then press T.")
+		_deploy_from_node()
 		return
 	_spawn(Vector2i(b.x, b.z - 1), 0.0)
 	Bus.metric.emit("deploy", { "how": "totem" })
 	Bus.say("Operative deployed. The creeper won't wait for you.", "radio")
+
+
+## No finished Totem: fall back to the Command Node, so the Operative can get
+## boots on the ground before any base exists. Spawns on a free cell beside it.
+func _deploy_from_node() -> void:
+	var node: Structure = g.structures.command_node()
+	if node == null:
+		_deny("No Command Node.")
+		return
+	var cell := _free_cell_near(node)
+	if cell.x < 0:
+		_deny("No free ground beside the Command Node.")
+		return
+	_spawn(cell, 0.0)
+	Bus.metric.emit("deploy", { "how": "node" })
+	Bus.say("Operative deployed from the Command Node.", "radio")
+
+
+## First walkable, unoccupied cell on rings around the node's footprint.
+func _free_cell_near(node: Structure) -> Vector2i:
+	var grid: Grid = g.surface.grid
+	var fr: int = StructureDefs.footprint("node")
+	var busy := {}
+	for c in Placement.footprint_cells("node", node.x, node.z):
+		busy[c] = true
+	for ring in range(1, 5):
+		var r := fr + ring
+		for dz in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				if maxi(absi(dx), absi(dz)) != r:
+					continue
+				var c := Vector2i(node.x + dx, node.z + dz)
+				if busy.has(c) or not grid.in_bounds(c.x, c.y):
+					continue
+				if g.structures.structure_at(c.x, c.y) != null:
+					continue
+				if not grid.step_ok(node.x, node.z, c.x, c.y, Config.CLIMB, 99.0, Grid.Faction.PLAYER):
+					continue
+				return c
+	return Vector2i(-1, -1)
 
 
 func can_drop(cell: Vector2i) -> Dictionary:

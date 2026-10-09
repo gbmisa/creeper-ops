@@ -69,8 +69,8 @@ static func can_place(mgr, type: String, x: int, z: int, planned: Array[Vector3]
 		var pile: Stockpile = mgr.stockpile
 		if pile == null or not pile.can_afford("ore", Config.OUTPOST_ORE):
 			return { "ok": false, "reason": "Outpost needs %d Ore up front" % int(Config.OUTPOST_ORE) }
-	if def.get("drop_pod", false) and mgr.economy.energy < def.cost:
-		return { "ok": false, "reason": "Drop pod needs %d energy up front" % def.cost }
+	if def.get("self_build", false) and mgr.economy.energy < def.cost:
+		return { "ok": false, "reason": "%s needs %d energy up front" % [def.label, def.cost] }
 	if def.get("needs_network", true) and not mgr.network.in_range(mgr.list, x, z, def.link, null) \
 			and not planned.any(func(p: Vector3): return Vector2(p.x - x, p.y - z).length() <= maxf(p.z, def.link)):
 		return { "ok": false, "reason": "Out of network range: build a Relay or Collector closer" }

@@ -35,8 +35,8 @@ static func has_reserve(s: Structure) -> bool:
 static func construction(mgr, s: Structure, dt: float) -> void:
 	if s.is_built():
 		return
-	if s.def.get("drop_pod", false):
-		s.built = minf(1.0, s.built + dt / mgr.DROP_POD_TIME)
+	if s.def.get("self_build", false):
+		s.built = minf(1.0, s.built + dt / mgr.SELF_BUILD_TIME)
 	else:
 		s.built = minf(1.0, (s.delivered - s.lost) / s.def.cost)
 	s.body.scale.y = 0.15 + 0.85 * s.built
