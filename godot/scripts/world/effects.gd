@@ -105,13 +105,13 @@ func flash_light(p: Vector3, color: Color, energy := 6.0) -> void:
 	_flash_e = energy
 
 
-## Gravity debris chunks for structure deaths. Count is capped by Config.FX_MAX_DEBRIS.
+## Gravity debris chunks for structure deaths. Count is capped by FxConfig.FX_MAX_DEBRIS.
 func debris(p: Vector3, color: Color, n := 8, spread := 6.0) -> void:
 	var live := 0
 	for it in _items:
 		if it.kind == "debris":
 			live += 1
-	n = mini(n, Config.FX_MAX_DEBRIS - live)
+	n = mini(n, FxConfig.FX_MAX_DEBRIS - live)
 	if n <= 0:
 		return
 	var rng := RandomNumberGenerator.new()
@@ -156,7 +156,7 @@ func lob(a: Vector3, b: Vector3, opts: Dictionary) -> Dictionary:
 
 func update(dt: float) -> void:
 	# Perf cap (P6): lobs are gameplay-relevant and are never culled, only other fx.
-	var over := _items.size() - Config.FX_MAX_ITEMS
+	var over := _items.size() - FxConfig.FX_MAX_ITEMS
 	while over > 0:
 		var idx := -1
 		for i in range(_items.size()):

@@ -147,7 +147,7 @@ func _pierce(world: World, dmg: float) -> void:
 		if not t.alive.call():
 			continue
 		var c: Vector3 = (t.node as Node3D).global_position + Vector3(0, t.get("oy", 0.0), 0)
-		var dist := OperativeWeapons.ray_sphere(origin, dir, c, t.radius)
+		var dist := RifleFire.ray_sphere(origin, dir, c, t.radius)
 		if dist < reach and dist < gd:
 			hits.append({ "t": t, "dist": dist })
 	hits.sort_custom(func(a, b): return float(a.dist) < float(b.dist))

@@ -190,8 +190,8 @@ static func _ttk(g) -> void:
 	w.cooldown = 0.0
 	var shots := 0
 	while log.alive and shots < 12:
-		w.bloom = 0.0  # tap-fire: no spread
-		w._fire(world)
+		w.rifle.bloom = 0.0  # tap-fire: no spread
+		w.rifle.fire(world)
 		shots += 1
 	world.targets.erase(target)
 	node.queue_free()

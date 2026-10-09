@@ -28,7 +28,7 @@ static func _crown(castles: Strongholds, c: Dictionary) -> void:
 	var o := { "pos": cp + Vector3(0.1, 0.0, 0.0) }
 	StrongholdRules.crown_push(castles.views[c.id], o)
 	SmokeTest._check("crown nest is solid", Vector2(o.pos.x - cp.x, o.pos.z - cp.z).length() >= Config.CROWN_RADIUS)
-	var t := OperativeWeapons.ray_sphere(cp, Vector3.FORWARD, cp, 1.9)
+	var t := RifleFire.ray_sphere(cp, Vector3.FORWARD, cp, 1.9)
 	SmokeTest._check("rifle hits a target point-blank (muzzle inside it)", t < 1.0, "(t %s)" % t)
 
 
