@@ -4,7 +4,7 @@ Muse works from the private repo **https://github.com/gbmisa/creeper-ops** (no S
 
 ## Status (Opus, 2026-10-08 evening)
 - **Merged:** Playtest 1C hive sites (stripped the `.godot` cache; Opus ran the sims: no balance change).
-- **In review:** `art/3-gun-feel` and `fount/ui-pass`. The UI pass wasn't briefed: next time, list ideas as suggestions instead (AGENTS.md rule 1).
+- **Merged:** `art/3-gun-feel` and `fount/ui-pass` (reviewed; parse/smoke clean). The UI pass wasn't briefed: next time, list ideas as suggestions instead (AGENTS.md rule 1).
 - **Not started, please run now (in this order of priority): P, A, X.** Then **C** below.
 - Your P3 log for 1C had `<numbers>` placeholders and claimed Xvfb shots you can't take. Write "not run (no display)" instead; Opus takes the screenshots.
 
@@ -31,6 +31,11 @@ Clone https://github.com/gbmisa/creeper-ops and check out branch art/3-fx. Read 
 ## C: Castles 21b detail pass (after P, A and X are pushed)
 ```
 Clone https://github.com/gbmisa/creeper-ops and check out branch stage/21b-castles-detail. Read AGENTS.md, CLAUDE.md, docs/tasks/LONG_RUN_RULES.md and docs/tasks/STAGE21b_castles_detail_long.md, plus the files it links. Do that brief and nothing else, phase by phase, with one commit per phase. You have no display: skip every "screenshot / look at it" step and write "screenshots: Opus" in the progress log; Opus judges the visuals after you push. Commit and push only to stage/21b-castles-detail. Never touch main, never merge. Report in the AGENTS.md format.
+```
+
+## B: small bug fixes (any time; independent of the others)
+```
+Clone https://github.com/gbmisa/creeper-ops and check out branch fix/muse-b-bugs. Read AGENTS.md, CLAUDE.md and docs/tasks/MUSE_B_bugs.md. Do that brief and nothing else. Commit and push only to fix/muse-b-bugs. Never touch main, never merge. Report in the AGENTS.md format.
 ```
 
 ## Rules reminder
