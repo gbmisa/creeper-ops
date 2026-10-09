@@ -137,6 +137,7 @@ static func run(g) -> void:
 	_forge_and_operative(g)
 	SmokeRules.run(g)
 	SmokeRaiders.run(g)
+	SmokeSpitterSiege.run(g)
 	SmokeTerrain.run(g)
 	SmokeStrongholds.run(g)
 	SmokeCastleRaids.run(g)

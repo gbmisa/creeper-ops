@@ -145,6 +145,7 @@ func damage(s: Structure, amount: float) -> void:
 		return
 	s.hp -= amount
 	s.hurt = 0.25
+	s.regen_delay = StructureUpkeep.REGEN_DELAY  # hits pause passive healing so chip damage sticks
 	if s.type == "node":
 		Bus.node_hit.emit()
 	if s.hp <= 0.0:

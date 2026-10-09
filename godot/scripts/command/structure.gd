@@ -31,6 +31,7 @@ var ore_acc := 0.0          # Miner: seconds toward the next ore
 var dead := false
 var wet := 0.0
 var hurt := 0.0
+var regen_delay := 0.0  # seconds until passive healing resumes after taking damage
 var warned := false
 var grade := "std"       # selected ammo grade (AmmoGrades; snipers and barracks)
 var grade_ammo := 0.0      # rounds of that grade in the magazine / stock
