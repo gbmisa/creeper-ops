@@ -43,6 +43,8 @@ static func _plasma(g) -> void:
 	w.tank = Config.TANK_MAX
 	for i in 8:
 		w._spray(0.05, g.surface, feet)
+	# The sprayer lays anti-creeper; it annihilates on the sim tick (none ran above).
+	g.surface.creeper._annihilate()
 	var spray := _pool(g, saved)
 	for c in saved:
 		g.surface.creeper.set_depth(c.x, c.y, 8.0)

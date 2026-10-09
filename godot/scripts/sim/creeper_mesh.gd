@@ -25,6 +25,26 @@ var _depth_tex: ImageTexture
 var _last_tick := -1
 
 
+## Color ramp for the rendered fluid (creeper blue; anti-creeper overrides with teal).
+func _fluid_colors() -> Dictionary:
+	return {
+		"shallow": Color(0.07, 0.2, 0.52),
+		"deep": Color(0.008, 0.025, 0.11),
+		"glow": Color(0.12, 0.40, 1.0),
+		"sheen": Color(0.45, 0.6, 0.95),
+	}
+
+
+## The simulated field this mesh renders (creeper depth; anti-creeper overrides).
+func _fluid_field() -> PackedFloat32Array:
+	return sim.depth
+
+
+## Sample the GPU sim textures directly, or upload from the CPU copy each tick.
+func _wants_gpu_tex() -> bool:
+	return sim.is_gpu()
+
+
 func setup(creeper: CreeperSim, height_tex: Texture2D) -> void:
 	sim = creeper
 	var g := creeper.grid
@@ -55,15 +75,20 @@ func setup(creeper: CreeperSim, height_tex: Texture2D) -> void:
 	mat.set_shader_parameter("cell", Config.CELL)
 	mat.set_shader_parameter("level_h", Config.LEVEL_H)
 	mat.set_shader_parameter("band", Config.TERRACE_BAND)
+	var col := _fluid_colors()
+	mat.set_shader_parameter("shallow", col["shallow"])
+	mat.set_shader_parameter("deep", col["deep"])
+	mat.set_shader_parameter("glow", col["glow"])
+	mat.set_shader_parameter("sheen", col["sheen"])
 	material_override = mat
-	if sim.is_gpu():
+	if _wants_gpu_tex():
 		mat.set_shader_parameter("surf_tex", sim.surf_tex)
 		mat.set_shader_parameter("depth_tex", sim.depth_tex)
 		return
 	_surf.resize(g.w * g.h)
 	_surf_img = Image.create_from_data(g.w, g.h, false, Image.FORMAT_RF, _surf.to_byte_array())
 	_surf_tex = ImageTexture.create_from_image(_surf_img)
-	_depth_img = Image.create_from_data(g.w, g.h, false, Image.FORMAT_RF, sim.depth.to_byte_array())
+	_depth_img = Image.create_from_data(g.w, g.h, false, Image.FORMAT_RF, _fluid_field().to_byte_array())
 	_depth_tex = ImageTexture.create_from_image(_depth_img)
 	mat.set_shader_parameter("surf_tex", _surf_tex)
 	mat.set_shader_parameter("depth_tex", _depth_tex)
@@ -71,14 +96,14 @@ func setup(creeper: CreeperSim, height_tex: Texture2D) -> void:
 
 ## Push the latest surface to the GPU (only for the world being rendered, once per sim tick).
 func refresh() -> void:
-	if sim.is_gpu() or sim.ticks == _last_tick:
+	if _wants_gpu_tex() or sim.ticks == _last_tick:
 		return
 	_last_tick = sim.ticks
 	_build_surface()
 	var g := sim.grid
 	_surf_img.set_data(g.w, g.h, false, Image.FORMAT_RF, _surf.to_byte_array())
 	_surf_tex.update(_surf_img)
-	_depth_img.set_data(g.w, g.h, false, Image.FORMAT_RF, sim.depth.to_byte_array())
+	_depth_img.set_data(g.w, g.h, false, Image.FORMAT_RF, _fluid_field().to_byte_array())
 	_depth_tex.update(_depth_img)
 
 
@@ -87,7 +112,7 @@ func _build_surface() -> void:
 	var w := g.w
 	var hh := g.h
 	var height := g.height
-	var depth := sim.depth
+	var depth := _fluid_field()
 	var wet_min := Config.MIN_DEPTH
 	for z in hh:
 		for x in w:

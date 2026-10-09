@@ -71,6 +71,8 @@ static func _spray(g) -> void:
 		before += world.creeper.depth_at(c.x, c.y)
 	var kids := world.get_child_count()
 	w._spray(0.1, world, feet)
+	# The sprayer lays anti-creeper; it annihilates on the sim tick (none ran above).
+	world.creeper._annihilate()
 	var after := 0.0
 	for c in wet:
 		after += world.creeper.depth_at(c.x, c.y)

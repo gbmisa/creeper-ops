@@ -6,6 +6,7 @@ class_name SmokeCw3
 
 static func run(g) -> void:
 	_flow()
+	_anti()
 	_emitters()
 	_strikes()
 	_heal(g)
@@ -43,6 +44,32 @@ static func _flow() -> void:
 	for i in 30:
 		hill._flow()
 	SmokeTest._check("CW3 flow: creeper doesn't climb a step taller than its head", hill.depth_at(1, 0) == 0.0)
+
+
+static func _anti() -> void:
+	var sim := _flat()
+	sim.set_depth(2, 2, 4.0)
+	sim.anti_add(2, 2, 1.5)
+	sim._annihilate()
+	SmokeTest._check("anti-creeper annihilates creeper 1:1",
+		is_equal_approx(sim.depth_at(2, 2), 2.5) and is_equal_approx(sim.anti_at(2, 2), 0.0),
+		"(creeper %.2f anti %.2f)" % [sim.depth_at(2, 2), sim.anti_at(2, 2)])
+	sim.set_depth(3, 3, 1.0)
+	sim.anti_add(3, 3, 3.0)
+	sim._annihilate()
+	SmokeTest._check("annihilation leaves the remainder of the larger fluid",
+		sim.depth_at(3, 3) == 0.0 and is_equal_approx(sim.anti_at(3, 3), 2.0))
+	# Anti-creeper flows with the same CW3 rule and persists without creeper around.
+	var box := _flat(8)
+	box.anti_add(4, 4, 6.0)
+	for i in 60:
+		box.update(Config.CREEPER_TICK)
+	var spread := box.anti_at(5, 4) + box.anti_at(3, 4) + box.anti_at(4, 5) + box.anti_at(4, 3)
+	var total := 0.0
+	for a in box.anti:
+		total += a
+	SmokeTest._check("anti-creeper spreads to neighbours and keeps its volume",
+		spread > 0.5 and absf(total - 6.0) < 0.3, "(spread %.2f total %.2f)" % [spread, total])
 
 
 static func _emitters() -> void:

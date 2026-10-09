@@ -10,6 +10,9 @@ extends RefCounted
 
 var grid: Grid
 var depth := PackedFloat32Array()
+## Anti-creeper fluid (null sprayer): same CW3 flow as creeper, CPU-only even on the GPU
+## path, annihilates creeper 1:1 wherever they share a cell (see _annihilate).
+var anti := PackedFloat32Array()
 var _delta := PackedFloat32Array()
 var sources: Array[Dictionary] = []
 var _acc := 0.0
@@ -25,6 +28,7 @@ static func create(g: Grid) -> CreeperSim:
 func _init(g: Grid) -> void:
 	grid = g
 	depth.resize(g.w * g.h)
+	anti.resize(g.w * g.h)
 	_delta.resize(g.w * g.h)
 
 
@@ -45,6 +49,7 @@ func update(dt: float) -> void:
 		_acc -= Config.CREEPER_TICK
 		_emit(Config.CREEPER_TICK)
 		_flow()
+		_anti_tick()
 		ticks += 1
 
 
@@ -60,10 +65,11 @@ func _emit(dt: float) -> void:
 			raise(s.x, s.z, s.amount)
 
 
-## CW3 flow: each east and south edge is handled once from a snapshot. The move is
-## FLOW_RATE x head difference, clamped so neither side gives more than FLOW_RATE of its own
-## depth; the same amount leaves one cell and enters the other, so volume is conserved.
-func _flow() -> void:
+## CW3 flow for one fluid field (creeper or anti-creeper): each east and south edge is
+## handled once from a snapshot. The move is FLOW_RATE x head difference, clamped so neither
+## side gives more than FLOW_RATE of its own depth; the same amount leaves one cell and
+## enters the other, so volume is conserved.
+func _flow_field(f: PackedFloat32Array) -> void:
 	var w := grid.w
 	var hh := grid.h
 	var height := grid.height
@@ -73,24 +79,52 @@ func _flow() -> void:
 		var row := z * w
 		for x in w:
 			var i := row + x
-			var d := depth[i]
+			var d := f[i]
 			var head := height[i] + d
 			if x + 1 < w:
-				var de := depth[i + 1]
+				var de := f[i + 1]
 				if d > 0.0 or de > 0.0:
-					var f := clampf(mu * (head - height[i + 1] - de), -mu * de, mu * d)
-					_delta[i] -= f
-					_delta[i + 1] += f
+					var fe := clampf(mu * (head - height[i + 1] - de), -mu * de, mu * d)
+					_delta[i] -= fe
+					_delta[i + 1] += fe
 			if z + 1 < hh:
-				var ds := depth[i + w]
+				var ds := f[i + w]
 				if d > 0.0 or ds > 0.0:
-					var f := clampf(mu * (head - height[i + w] - ds), -mu * ds, mu * d)
-					_delta[i] -= f
-					_delta[i + w] += f
+					var fs := clampf(mu * (head - height[i + w] - ds), -mu * ds, mu * d)
+					_delta[i] -= fs
+					_delta[i + w] += fs
 	var dry := Config.CREEPER_DRY
+	for i in f.size():
+		var v := f[i] + _delta[i]
+		f[i] = 0.0 if v < dry else minf(v, Config.MAX_DEPTH)
+
+
+## Creeper flow (kept as the named method: CLAUDE.md keeps it in step with the shader).
+func _flow() -> void:
+	_flow_field(depth)
+
+
+## Anti-creeper tick: same CW3 flow, then 1:1 annihilation wherever it meets creeper.
+func _anti_tick() -> void:
+	_flow_field(anti)
+	_annihilate()
+
+
+## Where anti-creeper shares a cell with creeper, equal amounts cancel (CW3); the remainder
+## of the larger stays. Creeper leaves through remove() so the GPU texture is updated too;
+## anti is CPU-only, so its side is exact.
+func _annihilate() -> void:
+	var w := grid.w
 	for i in depth.size():
-		var v := depth[i] + _delta[i]
-		depth[i] = 0.0 if v < dry else minf(v, Config.MAX_DEPTH)
+		var a := anti[i]
+		if a <= 0.0:
+			continue
+		var c := depth[i]
+		if c <= 0.0:
+			continue
+		var m := minf(c, a)
+		anti[i] = a - m
+		remove(i % w, i / w, m)
 
 
 func is_gpu() -> bool:
@@ -121,6 +155,18 @@ func add(x: int, z: int, amount: float) -> void:
 	if grid.in_bounds(x, z):
 		var i := z * grid.w + x
 		depth[i] = minf(depth[i] + amount, Config.MAX_DEPTH)
+
+
+## Deposit anti-creeper (null sprayer). CPU-only field; it flows like creeper and
+## annihilates it 1:1 in _anti_tick.
+func anti_add(x: int, z: int, amount: float) -> void:
+	if grid.in_bounds(x, z):
+		var i := z * grid.w + x
+		anti[i] = minf(anti[i] + amount, Config.MAX_DEPTH)
+
+
+func anti_at(x: int, z: int) -> float:
+	return anti[z * grid.w + x] if grid.in_bounds(x, z) else 0.0
 
 
 ## Raise a cell to at least `v` (CW3 emitter burst). Adds only the gap.

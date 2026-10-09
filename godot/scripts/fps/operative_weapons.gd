@@ -258,6 +258,8 @@ func _spray(dt: float, world: World, feet: Vector3) -> void:
 		var len := Vector2(dx, dz).length()
 		if len < Config.CELL * 0.9 or (dx * fwd.x + dz * fwd.z) / len >= cos_a:
 			var dist := Vector2(c.x - here.x, c.y - here.y).length()
-			if world.creeper.remove(c.x, c.y, Config.SPRAYER.remove_per_sec * dt * (1.0 - 0.5 * dist / range_cells)) > 0.0:
-				steamed.append(c)
+			# CW3: the sprayer lays down anti-creeper fluid (persistent, flows); it
+			# annihilates creeper 1:1 on contact in the sim tick, instead of deleting it.
+			world.creeper.anti_add(c.x, c.y, Config.SPRAYER.anti_per_sec * dt * (1.0 - 0.5 * dist / range_cells))
+			steamed.append(c)
 	spray_fx.fizz(world, steamed, dt)
