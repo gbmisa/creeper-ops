@@ -94,6 +94,7 @@ static func _zap(s: Structure, mgr) -> bool:
 	w.effects.beam(_fx(s), b, col, 0.07, 0.08)
 	w.effects.burst(b, Color("fff6b0"), 0.6, 0.12)
 	Sfx.play("blaster", s.pos)
+	WeaponFx.fire(s, w.effects)  # P1: recoil + muzzle flash (visual only)
 	return true
 
 
@@ -117,6 +118,7 @@ static func _lob(s: Structure, mgr) -> bool:
 			w.effects.burst(b, Color("ffaa33"), splash * Config.CELL * 0.7, 0.45)
 			Sfx.play("boom", b) })
 	Sfx.play("mortar", s.pos)
+	WeaponFx.fire(s, w.effects)  # P1: recoil + muzzle flash (visual only)
 	return true
 
 
@@ -136,12 +138,14 @@ static func _beam(s: Structure, mgr) -> bool:
 				w.effects.burst(it.pos, Color("88ff55"), 2.5, 0.4)
 				Sfx.play("pop", it.pos)
 			Sfx.play("beam", s.pos)
+			WeaponFx.fire(s, w.effects)  # P1: recoil + muzzle flash (visual only)
 			return true
 	var fp = Flyers.strike(w, a, reach, s.def.power)  # Stage 19: flyers
 	if fp != null:
 		_aim(s, fp)
 		w.effects.beam(_fx(s), fp, Color("ff5050"), 0.06, 0.07)
 		Sfx.play("beam", s.pos)
+		WeaponFx.fire(s, w.effects)  # P1: recoil + muzzle flash (visual only)
 		return true
 	return false
 
@@ -218,4 +222,5 @@ static func _snipe(s: Structure, mgr) -> bool:
 	var grade := AmmoGrades.take_shot(s)
 	AmmoGrades.shoot(best.enemy, s.def.power, grade, w, p)
 	Sfx.play("rifle", s.pos)
+	WeaponFx.fire(s, w.effects)  # P1: recoil + muzzle flash (visual only)
 	return true

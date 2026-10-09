@@ -120,7 +120,7 @@ func remove(s: Structure, reason := "") -> void:
 		Bus.metric.emit("structure_lost" if reason == "destroyed" else "recycled",
 			{ "type": s.type, "reason": reason, "wet": s.wet > Config.MIN_DEPTH, "built": s.is_built() })
 	if reason != "":
-		world.effects.burst(s.node.position + Vector3.UP, Color("ff5533"), 2.5)
+		WeaponFx.death(world.effects, s, reason)  # P2: debris + dust for kills (visual only)
 	if reason == "destroyed":
 		Sfx.play("lost", s.pos)
 		if s.type == "node":

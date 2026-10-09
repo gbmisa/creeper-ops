@@ -306,3 +306,7 @@ const RESUPPLY_RANGE := 4.0    # metres from a barracks to draw supply
 const RESUPPLY_RATE := 8.0     # ammo/s transferred while docked
 const UNIT_CREEPER_BASE_DPS := 6.0
 const UNIT_CREEPER_DPS := 12.0
+
+# ---- effects (visual only; perf caps) -------------------------------------------------
+const FX_MAX_ITEMS := 400  # live fx items; lobs are gameplay-relevant and are never culled
+const FX_MAX_DEBRIS := 48  # live debris chunks from structure deaths
