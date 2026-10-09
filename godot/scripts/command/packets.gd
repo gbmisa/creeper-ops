@@ -20,6 +20,7 @@ var stockpile: Stockpile
 var flying: Array[Dictionary] = []
 var _cursor := 0
 var _node_atk := {}  # structure id -> last launch-attack msec (0.5 s rate limit)
+var _structs: Array = []  # latest structure list, for relay pass-through (A4)
 
 # Rolling stats (packets/s) for the HUD.
 var sent_rate := 0.0
@@ -67,6 +68,7 @@ static func rate(kind: String) -> float:
 
 
 func update(dt: float, list: Array, sender_ready: bool) -> void:
+	_structs = list  # A4: relay pass-through lookup for the packet attack clip
 	var sent := 0
 	var wanted := 0.0
 	var unmet := 0.0
@@ -138,6 +140,7 @@ func _fly(dt: float) -> void:
 				move -= left
 				p.seg += 1
 				p.t = 0.0
+				_relay_pass(route, p)
 			else:
 				p.t += move / len
 				move = 0.0
@@ -151,6 +154,19 @@ func _fly(dt: float) -> void:
 			mm.set_instance_color(shown, COLORS.get(p.kind, Color.WHITE))
 			shown += 1
 	mm.visible_instance_count = shown
+
+
+## A4: a packet passing through a relay plays its attack clip (at most once per 0.5 s).
+## Route waypoints are the chain structures' link_points, so the intermediate relay
+## is the structure whose link_point matches the waypoint the packet just reached.
+func _relay_pass(route: PackedVector3Array, p: Dictionary) -> void:
+	if int(p.seg) >= route.size() - 1:
+		return  # final arrival is handled by _arrive
+	var wp: Vector3 = route[int(p.seg)]
+	for s in _structs:
+		if s.type == "relay" and not s.dead and s.link_point().distance_to(wp) < 0.6:
+			StructureMeshes.model_packet(s)
+			return
 
 
 func _arrive(p: Dictionary) -> void:

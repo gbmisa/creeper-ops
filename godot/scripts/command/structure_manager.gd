@@ -130,14 +130,18 @@ func remove(s: Structure, reason := "") -> void:
 			Bus.node_destroyed.emit()
 		else:
 			Bus.say("%s destroyed%s" % [s.def.label, " by creeper" if s.wet > Config.MIN_DEPTH else ""], "bad")
-	var model: Node3D = CreatureAnim.of(s.body) if reason == "destroyed" else null
-	if model != null:
-		var sn := s.node
-		CreatureAnim.die(model, func() -> void:
-			if is_instance_valid(sn):
-				sn.queue_free())
+	if not StructureMeshes.model_parts(s).is_empty():
+		# A4: die clip on the multi-part models; free the node when the base clip ends.
+		StructureMeshes.model_die(s, func(): if is_instance_valid(s.node): s.node.queue_free())
 	else:
-		s.node.queue_free()
+		var model: Node3D = CreatureAnim.of(s.body) if reason == "destroyed" else null
+		if model != null:
+			var sn := s.node
+			CreatureAnim.die(model, func() -> void:
+				if is_instance_valid(sn):
+					sn.queue_free())
+		else:
+			s.node.queue_free()
 	dirty = true
 	Bus.structure_removed.emit(s)
 
@@ -157,12 +161,15 @@ func damage(s: Structure, amount: float, source := "") -> void:
 		s.last_hit_by = source
 	s.hp -= amount
 	s.hurt = 0.25
-	var model := CreatureAnim.of(s.body)
-	if model != null:
-		var now := Time.get_ticks_msec()
-		if now - int(_anim_hit.get(s.id, 0)) >= 300:
-			_anim_hit[s.id] = now
-			CreatureAnim.hit(model)
+	if not StructureMeshes.model_parts(s).is_empty():
+		StructureMeshes.model_hit(s)  # A4: multi-part models rate-limit their own hit clip
+	else:
+		var model := CreatureAnim.of(s.body)
+		if model != null:
+			var now := Time.get_ticks_msec()
+			if now - int(_anim_hit.get(s.id, 0)) >= 300:
+				_anim_hit[s.id] = now
+				CreatureAnim.hit(model)
 	if s.type == "node":
 		Bus.node_hit.emit()
 	if s.hp <= 0.0:

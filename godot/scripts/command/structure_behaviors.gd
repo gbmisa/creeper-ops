@@ -4,7 +4,8 @@ class_name StructureBehaviors
 
 static func update(s: Structure, dt: float, mgr, time: float) -> void:
 	var spin := s.body.get_node_or_null("Spin") as Node3D
-	if spin:
+	# A4: the collector/relay models turn their own vanes via clips; drop the code Spin then.
+	if spin and not s.body.has_meta("_anim_parts"):
 		spin.rotation.y += dt * (4.0 if s.type == "barracks" else 1.6)
 	match s.type:
 		"beacon":
