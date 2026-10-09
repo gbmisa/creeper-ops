@@ -48,7 +48,11 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	_selbox.add_theme_stylebox_override("panel", UiKit.style(Color(UiKit.ACCENT, 0.1), Color(UiKit.ACCENT, 0.85), 0, 0))
 	_selbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_selbox)
-	_help = UiKit.label("", 13, UiKit.DIM)
+	_help = UiKit.label("", 14, Color(UiKit.TEXT, 0.85))
+	var hp := UiTheme.box(Color(0.03, 0.035, 0.025, 0.7), UiKit.EDGE, 0, 0)
+	hp.content_margin_left = 8
+	hp.content_margin_right = 8
+	_help.add_theme_stylebox_override("normal", hp)
 	_help.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_help.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_help.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -90,8 +94,7 @@ func add_log(text: String, kind: String) -> void:
 		return
 	var l := UiKit.label(text, 16, UiKit.KIND_COLORS.get(kind, UiKit.TEXT))
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	var w := UiTheme.font().get_string_size(text + "  x99", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 16.0
-	l.custom_minimum_size.x = minf(w, 430.0)  # plate hugs short lines; long ones wrap
+	l.custom_minimum_size.x = 430.0  # one strip width for every line; long ones wrap
 	l.set_meta("text", text)
 	l.set_meta("count", 1)
 	l.set_meta("age", 0.0)

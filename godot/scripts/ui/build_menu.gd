@@ -25,6 +25,7 @@ func _init() -> void:
 	grow_vertical = Control.GROW_DIRECTION_BEGIN
 	offset_bottom = -10
 	UiKit.brackets(self)
+	custom_minimum_size.x = 7 * BuildCard.SIZE.x + 6 * 6 + 16  # the widest tab, so tabs don't jump
 	var v := UiKit.vbox(6)
 	add_child(v)
 	var tabs := UiKit.hbox(2)
@@ -37,7 +38,7 @@ func _init() -> void:
 	relabel()
 	_items = UiKit.hbox(6)
 	v.add_child(_items)
-	_tip = UiKit.label(HINT, 14, UiKit.DIM)
+	_tip = UiKit.label(HINT, 15, Color(UiKit.TEXT, 0.8))
 	_tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_tip.custom_minimum_size = Vector2(640, 20)
 	v.add_child(_tip)

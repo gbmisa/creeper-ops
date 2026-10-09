@@ -18,6 +18,7 @@ var node_bar: ProgressBar
 var node_lbl: Label
 var time_lbl: Label
 var speed_lbl: Label
+const NARROW := 1400.0
 
 
 func _init() -> void:
@@ -142,9 +143,9 @@ func refresh(g) -> void:
 	elif g.deploy.down:
 		_status("Operative down: %s" % g.deploy.status_text(), UiKit.BAD)
 	elif pk.unmet_rate > 0.15:
-		_status("STARVING  %.1f/s of requests unpaid" % pk.unmet_rate, UiKit.BAD)
+		_status("STARVING  %.1f/s unpaid" % pk.unmet_rate, UiKit.BAD)
 	elif eco.wasted > 0.1:
-		_status("BANK FULL  %.1f/s wasted. Build or store more." % eco.wasted, UiKit.WARN)
+		_status("BANK FULL  %.1f/s wasted" % eco.wasted, UiKit.WARN)
 	else:
 		_status("", UiKit.WARN)
 	var nests: SporeNests = g.hazards.nests
@@ -152,6 +153,9 @@ func refresh(g) -> void:
 	var air := "  AIR %d" % nests.flyers.count() if nests.flyers.count() > 0 else ""
 	_chips["Æther"].text = str(Upgrades.aether)
 	_chips["Castles"].text = str(g.castles.held())
+	var wide := get_viewport_rect().size.x >= NARROW  # small screens drop the least-read gauges
+	for c in ["Packets", "Field"]:
+		_chips[c].get_parent().visible = wide
 	_chips["Packets"].text = str(pk.count())
 	_chips["Field"].text = str(eco.field_cells)
 	_chips["Units"].text = str(g.units.list.size())
