@@ -1,7 +1,8 @@
 class_name EnemyBuildPlan
 ## Picks the next structure for one enemy-held castle (§4.5).
 ## The spec names the structures and the site rules, not the build order. Order here:
-## seal mortar, shield this castle, shield a hive in reach, leech an ore deposit,
+## mortar (sealed Node, or pressure >= ENEMY_MORTAR_PRESSURE, cap 1, 2 at high
+## pressure), shield this castle, shield a hive in reach, leech an ore deposit,
 ## creeper pump, then spitter / blight pylon / lancer, repeating the last three.
 ## Ore deposits are Stage 9a, so leeches and pumps wait until a deposit exists.
 
@@ -17,7 +18,7 @@ static func pick(b, hub: Dictionary) -> Dictionary:
 
 static func _kinds(b, hub: Dictionary) -> Array:
 	var out: Array = []
-	if _sealed(b) and not b.has(str(hub.id), "mortar"):
+	if _mortar_wanted(b, hub):
 		out.append("mortar")
 	if not b.has(str(hub.id), "dome"):
 		out.append("dome")
@@ -51,6 +52,26 @@ static func _cell(b, hub: Dictionary, kind: String) -> Vector2i:
 
 static func _sealed(b) -> bool:
 	return float(b.nests.seal) >= Config.MORTAR_SEAL and float(b.nests.seal_arm) >= Config.MORTAR_SEAL_BUILD
+
+
+## Castle mortars: the sealed-Node turtle-breaker, plus a pressure-gated one so
+## mortars (and Beam interception targets) appear in the normal mid/late game.
+static func _mortar_wanted(b, hub: Dictionary) -> bool:
+	if _mortar_count(b, hub) >= _mortar_cap(b):
+		return false
+	return _sealed(b) or float(b.nests.pressure()) >= Config.ENEMY_MORTAR_PRESSURE
+
+
+static func _mortar_count(b, hub: Dictionary) -> int:
+	var n: int = b.count_kind(str(hub.id), "mortar")
+	for raw in b.queue:
+		if str(raw.hub) == str(hub.id) and str(raw.kind) == "mortar":
+			n += 1
+	return n
+
+
+static func _mortar_cap(b) -> int:
+	return 2 if float(b.nests.pressure()) >= Config.ENEMY_MORTAR_CAP_PRESSURE else 1
 
 
 static func _fewest(b, hub: Dictionary) -> String:

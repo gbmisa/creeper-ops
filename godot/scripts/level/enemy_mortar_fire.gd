@@ -42,7 +42,22 @@ static func advance(host, m: Dictionary, dt: float) -> void:
 		return
 	var at: Vector3 = shot.at
 	m.telegraph = null
-	EnemyMortarHit.detonate(host, at)
+	_launch_shell(host, m, at)
+
+
+## The shell flies as a tracked lob (visible arc, interceptable) instead of
+## detonating instantly at the end of the telegraph. Total warning time grows
+## by the flight time; that flight is the Beam interception window.
+static func _launch_shell(host, m: Dictionary, at: Vector3) -> void:
+	var from: Vector3 = (m.pos as Vector3) + Vector3(0, 2.0, 0)
+	var flight := maxf(from.distance_to(at) / Config.MORTAR_SHELL_SPEED, 0.4)
+	var world: World = host.world
+	var lob: Dictionary = world.effects.lob(from, at, {
+		"color": Color("ff6a3a"), "size": 0.5, "time": flight, "arc": 6.0,
+		"foe": true, "mortar_shell": true,
+		"on_arrive": func() -> void: EnemyMortarHit.detonate(host, at),
+	})
+	m.shell = lob
 
 
 static func aim(host, m: Dictionary) -> Dictionary:
@@ -143,6 +158,16 @@ static func shells(host) -> void:
 		var hk := clampf(float(hub_shot.t) / Config.MORTAR_TELEGRAPH, 0.0, 1.0)
 		var hat: Vector3 = hub_shot.at
 		packed[i] = Vector4(hat.x, hat.z, lerpf(0.6, blast, hk), 1.0)
+		i += 1
+	# In-flight shells keep their warning ring until they land (or are intercepted).
+	for it in host.world.effects.lobs():
+		if i >= 8:
+			break
+		if not bool(it.get("mortar_shell", false)):
+			continue
+		var bpos: Vector3 = it.b
+		var fk := clampf(float(it.t) / maxf(float(it.life), 0.001), 0.0, 1.0)
+		packed[i] = Vector4(bpos.x, bpos.z, lerpf(0.6, blast, fk), 1.0)
 		i += 1
 	for v in extra:
 		if i < 8:

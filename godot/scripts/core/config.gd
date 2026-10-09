@@ -266,6 +266,9 @@ const SNIPER_LOS_SLACK := 1.0   # metres: a ray hit this close to the target sti
 const SNIPER_LOS_RETRY := 0.25  # seconds a Sniper waits before looking again when no foe is in sight
 const MORTAR_SALVAGE := 5.0
 const MORTAR_SPOTTER_RESPAWN := 30.0
+const MORTAR_SHELL_SPEED := 30.0  # m/s; shells fly as tracked lobs so Beams can intercept them
+const ENEMY_MORTAR_PRESSURE := 0.5  # castles build mortars in the normal rotation from this pressure
+const ENEMY_MORTAR_CAP_PRESSURE := 0.75  # second castle mortar allowed from this pressure
 ## Overrun (§4.1): at pressure 1, every OVERRUN_INTERVAL each active nest sends this many
 ## straight at the Node. "Tier" is Pressure.legacy_tier (0..3), so a capped wave is 12.
 const OVERRUN_INTERVAL := 45.0
