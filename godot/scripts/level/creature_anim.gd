@@ -171,3 +171,21 @@ static func die(node: Node3D, then: Callable) -> void:
 	var tree := node.get_tree()
 	if tree != null:
 		tree.create_timer(DIE_MAX).timeout.connect(func() -> void: fire.call())
+
+
+## Freeze (paused=true) or resume every creature AnimationPlayer in the tree.
+## The game drives pause itself (g.paused) rather than get_tree().paused, so the
+## engine keeps advancing the players' clips while the sim is frozen — this stops
+## that. Only creature models have AnimationPlayers, so the walk is safe.
+## speed_scale is used (not pause()/play()) so in-flight clips resume exactly
+## where they froze; the next move()/flap() call recomputes the right scale.
+static func set_all_paused(tree: SceneTree, paused: bool) -> void:
+	if tree == null or tree.root == null:
+		return
+	var stack: Array[Node] = [tree.root]
+	while not stack.is_empty():
+		var n := stack.pop_back() as Node
+		if n is AnimationPlayer:
+			(n as AnimationPlayer).speed_scale = 0.0 if paused else 1.0
+		for c in n.get_children():
+			stack.push_back(c)

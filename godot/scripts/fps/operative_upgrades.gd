@@ -23,6 +23,10 @@ const ORDER := ["firepower", "armour", "mobility", "unlock_railgun", "unlock_pla
 
 static var levels := {}
 
+## Cheat path (debug only): --cheat-guns unlocks every Operative weapon from the
+## start so Gregory can test them. Off by default; never advertised in the UI.
+static var cheat_guns := false
+
 
 static func reset() -> void:
 	levels = {}
@@ -75,7 +79,7 @@ static func jet_rate() -> float:
 
 
 static func unlocked(weapon_id: String) -> bool:
-	return level("unlock_" + weapon_id) > 0
+	return cheat_guns or level("unlock_" + weapon_id) > 0
 
 
 ## One free tier. Debug screenshots; a normal buy still spends Salvage.

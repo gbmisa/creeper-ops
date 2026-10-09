@@ -164,6 +164,7 @@ static func run(g) -> void:
 	SmokeFlyers.run(g)
 	SmokeFlyers2.run(g)
 	SmokeCreatureAnim.run(g)
+	SmokePlaytestSmall.run(g)
 	SmokeCastles2Shape.run(g)
 	SmokeCastles2Walk.run(g)
 	SmokeCastles2Capture.run(g)
@@ -193,6 +194,8 @@ static func _run_only(g) -> void:
 				SmokeTuning.run(g)
 			"creature":
 				SmokeCreatureAnim.run(g)
+			"playtest-small":
+				SmokePlaytestSmall.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 
