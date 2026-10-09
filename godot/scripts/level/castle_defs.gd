@@ -23,6 +23,11 @@ const GATE_TIME := 10.0      # seconds in the gate hall
 const BAILEY_TIME := 12.0    # seconds at the bailey standard
 const RING_RETAKE := 15.0    # raiders on the last ring you took, nobody there: it's theirs again
 
+# ---- 21b detail: stonework, fires, banners (CastleStonework, CastleInteriorMeshes) ----
+const SLAB_BEAM_EVERY := 2   # oak beams under roof slabs, one row every N cells
+const ARCH_SPRING := 1.7     # tower door-arch spring line above the door floor (m)
+const KEEP_ARCH_SPRING := 2.0  # keep door-arch spring line above the hall floor (m)
+
 # ---- war engines: trebuchets on the outer corner towers (CastleEngines) --------------
 const ENGINE := {
 	"range": 40.0, "min_range": 8.0, "interval": 11.0, "telegraph": 3.0, "whistle": 1.0,

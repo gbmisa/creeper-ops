@@ -48,10 +48,58 @@ phases have a natural build dependency (stone → light → props → readabilit
 No reorder justified.
 
 ## P0 done
-- Commit: FILL (pushed via push_work.py; branch `stage/21b-castles-detail` created).
+- Commit: a6ab9e32 (pushed via push_work.py; branch `stage/21b-castles-detail` created).
 - No code changed. Log written; phase order kept as briefed.
 
-## P1 stone that reads as a castle — FILL
+## P1 stone that reads as a castle
+
+Done (2026-10-09 ~04:40 UTC):
+- `godot/shaders/castle_slab.gdshader` (new): roof-slab look reusing the terrain's
+  castle-stone logic verbatim — `#include`s `noise.gdshaderinc` +
+  `terrain_look.gdshaderinc`, calls `castle_stone(base, wp, wn, cliff, bump)` with the
+  same slope→cliff rule as `ground_look` (flagstones on tops, ashlar courses on edges),
+  derivative bump via `bumped()` like the terrain shader. Undersides get flagstones
+  darkened ×0.55. No existing shader touched.
+- `level/castle_interior_meshes.gd`: slabs now use the slab ShaderMaterial (one cached
+  instance) for both surfaces instead of flat StandardMaterials; oak beams (thin boxes)
+  under the slab on every `CastleDefs.SLAB_BEAM_EVERY`=2nd cell row.
+- `level/castle_stairs.gd`: `CastleStairs.tower` returns `"doors": [cells]` (data only,
+  no terrain change).
+- `level/castle_stonework.gd` (new, `CastleStonework`): `parapets()` — merlons on every
+  gatehouse/keep roof edge whose neighbour cell is 2+ levels below the roof (open air);
+  tower slabs skipped (crowns already have merlons). `door_arches()` — a `ShapeKit.arch`
+  over every tower door (span 2.6, spring `ARCH_SPRING`=1.7 m above the door floor,
+  oriented along the wall) and one wide arch (span 6.6) over the keep's 3-wide door from
+  `lay.keep.door` (spring `KEEP_ARCH_SPRING`=2.0 m). `wall_trim()` — per-segment trim
+  parented under the segment node (hides with breached walls): merlons at the segment's
+  real grid top (fixes inner-ring merlons sitting a level low), inner ring in darker
+  `StrongholdMeshes.INNER_STONE` + dark string course + tapered buttresses every 4
+  cells, outer ring gets a moss band just above the moat waterline (moat rows only).
+- `level/stronghold_meshes.gd`: segment loop delegates to `CastleStonework.wall_trim`;
+  `CastleStonework.build` called after interiors; added `INNER_STONE`.
+- `level/castle_defs.gd`: `SLAB_BEAM_EVERY`, `ARCH_SPRING`, `KEEP_ARCH_SPRING`.
+- `core/smoke_castles2b_stone.gd` (new, `SmokeCastles2bStone`, registered in
+  `smoke_test.gd`): 7 checks per concentric castle (Level 1 + Level 2).
+- Screenshots: not run (no display); Opus judges visuals.
+
+Spec gaps filled:
+- "Undersides darker": done in-shader (×0.55) rather than a second material.
+- Parapet placement derived from open-air edges, not hand-listed — the keep slab only
+  gets merlons above its door; the stair hatch is excluded (neighbour 1 below roof).
+- Tower crowns (`CastleDecor._tower_crown`) fit the 5x5 towers: merlons sit 0.25 m
+  inside the wall edge at roof-top level. No change needed.
+- Inner-wall merlons were a level too low (used `lay.wall_top` for both rings); fixed
+  to per-cell grid height as part of wall_trim.
+
+Tests:
+- Parse: `--headless --path godot --import` — 0 script errors.
+- Full suite `-- --smoke --quit=0.1`: first run 770 PASS / 6 FAIL — all 6 my new
+  "stone arches" check, one root cause: `Vector2i.dot` doesn't exist in Godot 4
+  (script error in the keep-door branch). Fixed with manual arithmetic; final run:
+  **[smoke] OK: 0 failure(s), 776 PASS** (734 baseline + 42 new), 0 script errors.
+- Castle smokes (shape/walk/capture/engines/perks) all PASS in both runs.
+
+Unfinished: none for P1. P2 next.
 ## P2 light and life — FILL
 ## P3 interior props — FILL
 ## P4 command-view readability — FILL

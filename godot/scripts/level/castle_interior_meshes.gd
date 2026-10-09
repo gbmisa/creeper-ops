@@ -1,28 +1,49 @@
 class_name CastleInteriorMeshes
 ## Roof slabs over castle interiors (lay.interiors, Grid.roof) and the warm light inside them.
 ## One merged mesh per interior: a top face at the roof level, an underside GridRoofs.ROOF_THICK
-## lower, and edge faces where the roof ends. Decoration only: walkers read Grid.roof.
+## lower, and edge faces where the roof ends. The slab uses the castle ashlar shader
+## (shaders/castle_slab.gdshader), the same stone logic as the terrain walls; oak beams run
+## under it every CastleDefs.SLAB_BEAM_EVERY cells. Decoration only: walkers read Grid.roof.
 
 const LIGHT := Color("ffb46b")
-const UNDERSIDE := Color("4a4038")
+
+static var _slab_mat: ShaderMaterial
 
 
-static func build(root: Node3D, g: Grid, lay: Dictionary) -> Array:
+static func slab_mat() -> ShaderMaterial:
+	if _slab_mat == null:
+		_slab_mat = ShaderMaterial.new()
+		_slab_mat.shader = load("res://shaders/castle_slab.gdshader")
+	return _slab_mat
+
+
+static func build(root: Node3D, g: Grid, lay: Dictionary, banners: Array = []) -> Array:
 	var out := []
-	var top_mat := StructureMeshes.mat(StrongholdMeshes.DECOR_STONE, 0.0, 0.92)
-	var under_mat := StructureMeshes.mat(UNDERSIDE, 0.0, 0.95)
 	for it in lay.get("interiors", []):
 		var node := Node3D.new()
 		node.name = "Interior_%s" % it.kind
 		root.add_child(node)
 		var mi := MeshInstance3D.new()
-		mi.mesh = _slab(it.cells, float(it.roof) * Config.LEVEL_H)
-		mi.set_surface_override_material(0, top_mat)
-		mi.set_surface_override_material(1, under_mat)
+		var top: float = float(it.roof) * Config.LEVEL_H
+		mi.mesh = _slab(it.cells, top)
+		mi.set_surface_override_material(0, slab_mat())
+		mi.set_surface_override_material(1, slab_mat())
 		node.add_child(mi)
+		_beams(node, it.cells, top - GridRoofs.ROOF_THICK)
 		_light(node, g, it)
 		out.append(node)
 	return out
+
+
+## Oak beams under the slab, one per cell row every SLAB_BEAM_EVERY cells.
+static func _beams(node: Node3D, cells: Array, under: float) -> void:
+	var oak := StructureMeshes.pal("oak")
+	var step: int = CastleDefs.SLAB_BEAM_EVERY
+	for c in cells:
+		if int(c.y) % step != 0:
+			continue
+		StructureMeshes.box(node, Vector3(Config.CELL + 0.06, 0.28, 0.28), oak,
+			Vector3((c.x + 0.5) * Config.CELL, under - 0.14, (c.y + 0.5) * Config.CELL))
 
 
 ## Brazier glow at the interior's light cell, standing on its floor.

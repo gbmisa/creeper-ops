@@ -11,6 +11,8 @@ const STONE := Color("8a8478")
 ## Decor stone graded like terrain.gdshader grades the terrain walls, so merlons and towers
 ## match the wall tone under the dusk sun.
 const DECOR_STONE := Color("808a70")
+## Inner ring trim: a shade darker than the outer wall.
+const INNER_STONE := Color("6b7560")
 
 
 static func cell_pos(x: int, z: int, level: float) -> Vector3:
@@ -57,10 +59,7 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 		var a := Node3D.new()
 		a.position = b[0]
 		root.add_child(a)
-		for i in range(0, seg.cells.size(), 2):  # even cells are the outer row: merlons
-			var c: Vector2i = seg.cells[i]
-			var off: Vector3 = cell_pos(c.x, c.y, top) - a.position + outward[seg.side] * 0.6
-			StructureMeshes.box(a, Vector3(0.8, 0.9, 0.8), stone, off + Vector3(0, 0.45, 0))
+		CastleStonework.wall_trim(a, world.grid, seg, lay, outward[seg.side])
 		v.segs.append(a)
 	for gt in lay.gates:
 		var b := _bounds(gt.cells, lay.yard)
@@ -88,6 +87,7 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 	var ca: Dictionary = lay.crown_at  # spire top (Stage 7) or the keep hall (concentric)
 	crown.position = cell_pos(ca.cell.x, ca.cell.y, ca.level)
 	v["interiors"] = CastleInteriorMeshes.build(root, world.grid, lay)
+	CastleStonework.build(root, world.grid, lay)
 	root.add_child(crown)
 	v["crown"] = crown
 	if not sp.pad.is_empty():
