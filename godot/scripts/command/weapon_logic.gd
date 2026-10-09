@@ -270,6 +270,31 @@ static func sees(grid: Grid, a: Vector3, b: Vector3) -> bool:
 	return hit == null or (hit as Vector3).distance_to(a) >= d - Config.SNIPER_LOS_SLACK
 
 
+## Where a lobbed arc (effects.lob from a to b with apex `arc`) first enters solid
+## ground or a castle roof slab; b itself when the arc is clear. Lets acid and spit
+## splash on keep walls instead of passing through them. Low arcs over low walls
+## still clear. Fire-time only: 12 short raycasts.
+static func clip_lob(grid: Grid, a: Vector3, b: Vector3, arc: float) -> Vector3:
+	var prev := a
+	var n := 12
+	for i in range(1, n + 1):
+		var t := float(i) / n
+		var p := a.lerp(b, t)
+		p.y += sin(t * PI) * arc
+		var d := prev.distance_to(p)
+		if d > 0.01:
+			var hit: Variant = grid.raycast(prev, (p - prev) / d, d)
+			if hit != null:
+				var hp := hit as Vector3
+				# The target stands on the ground: a hit at the very end of the arc
+				# is the impact itself, not a blocker.
+				if i == n and hp.distance_to(b) <= Config.SNIPER_LOS_SLACK:
+					return b
+				return hp
+		prev = p
+	return b
+
+
 static func _snipe(s: Structure, mgr) -> bool:
 	if mgr.hazards == null:
 		return false

@@ -170,16 +170,18 @@ static func _spitter(host, part: Dictionary, dt: float, prey: Array) -> void:
 	attack_anim(part)
 	var splash := Config.HIVE_SPITTER_SPLASH * Config.CELL
 	var dmg := Config.HIVE_SPITTER_DMG
-	host.world.effects.lob(from + Vector3(0, 0.9, 0), aim, {
+	var from3: Vector3 = from + Vector3(0, 0.9, 0)
+	var end := WeaponLogic.clip_lob(host.world.grid, from3, aim, 2.5)
+	host.world.effects.lob(from3, end, {
 		"color": Color("d6ff3a"), "size": 0.28, "time": maxf(from.distance_to(aim) / Config.RAIDER_SHOT_SPEED, 0.35),
 		"arc": 2.5,
 		"on_arrive": func():
-			host.world.effects.burst(aim, Color("d6ff3a"), splash, 0.35)
+			host.world.effects.burst(end, Color("d6ff3a"), splash, 0.35)
 			for q in prey:
 				if not (q.alive as Callable).call():
 					continue
 				var p: Vector3 = (q.node as Node3D).position
-				if Vector2(p.x - aim.x, p.z - aim.z).length() <= splash:
+				if Vector2(p.x - end.x, p.z - end.z).length() <= splash:
 					if str(q.get("kind", "")) == "operative":
 						HitFeel.note_source(from)
 					(q.hit as Callable).call(dmg),

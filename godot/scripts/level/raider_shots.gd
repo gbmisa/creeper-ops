@@ -8,7 +8,8 @@ class_name RaiderShots
 static func step(host: Raiders, r: Dictionary, dt: float, prey: Array) -> void:
 	var tier: Dictionary = r.tier
 	var beam := str(tier.attack) == "beam"
-	var target := _pick(r, prey, beam)
+	var grid: Grid = host.world.grid
+	var target := _pick(r, prey, beam, grid)
 	_move(host, r, dt, target, tier)
 	var cd: float = float(r.get("shot_cd", 0.0))
 	if cd > 0.0:
@@ -26,7 +27,9 @@ static func step(host: Raiders, r: Dictionary, dt: float, prey: Array) -> void:
 
 
 ## Sniper (band 0), then other weapons (band 1), then anyone else. Nearest inside a band.
-static func _pick(r: Dictionary, prey: Array, prefer: bool) -> Dictionary:
+## Beam attackers (Lancers) throw a near-flat bolt: no line of sight, no target, so they
+## reposition instead of shooting through walls. Spitters keep lobbing over low walls.
+static func _pick(r: Dictionary, prey: Array, beam: bool, grid: Grid) -> Dictionary:
 	var tier: Dictionary = r.tier
 	var reach: float = float(tier.range) * Config.CELL
 	var from: Vector3 = (r.node as Node3D).position
@@ -41,14 +44,19 @@ static func _pick(r: Dictionary, prey: Array, prefer: bool) -> Dictionary:
 		if d > reach:
 			continue
 		var b := 2
-		if prefer and str(q.get("type", "")) == "sniper":
+		if beam and str(q.get("type", "")) == "sniper":
 			b = 0
-		elif prefer and bool(q.get("weapon", false)):
+		elif beam and bool(q.get("weapon", false)):
 			b = 1
 		if b < band or (b == band and d < bd):
 			band = b
 			bd = d
 			best = q
+	if beam and not best.is_empty():
+		var eye: Vector3 = (r.node as Node3D).position + Vector3(0, float(r.size), 0)
+		var chest: Vector3 = (best.node as Node3D).position
+		if not WeaponLogic.sees(grid, eye, chest):
+			best = {}
 	return best
 
 
@@ -114,10 +122,12 @@ static func _launch(world: World, r: Dictionary, target: Dictionary, prey: Array
 	var dmg := float(tier.damage)
 	var color: Color = tier.color
 	var src := str(tier.get("name", "raider")).to_lower() + "_shot"  # "spitter_shot", "lancer_shot"
-	world.effects.lob(from, aim, {
+	var arc := clampf(dist * arc_k, 1.2, 8.0)
+	var end := WeaponLogic.clip_lob(world.grid, from, aim, arc)
+	world.effects.lob(from, end, {
 		"color": color, "size": size, "time": maxf(dist / speed, 0.35),
-		"arc": clampf(dist * arc_k, 1.2, 8.0),
-		"on_arrive": func(): _impact(world, aim, radius, dmg, color, prey, from, src),
+		"arc": arc,
+		"on_arrive": func(): _impact(world, end, radius, dmg, color, prey, from, src),
 	})
 	Sfx.play("mortar", from)
 

@@ -161,6 +161,7 @@ static func run(g) -> void:
 	SmokeEnemyMortar.run(g)
 	SmokeEconomy.run(g)
 	SmokeEnemyBuild.run(g)
+	SmokeEnemyLos.run(g)
 	SmokeLoot.run(g)
 	SmokeFpsFeel.run(g)
 	SmokeFpsArms.run(g)
@@ -226,6 +227,8 @@ static func _run_only(g) -> void:
 				SmokeRaiderCirc.run(g)
 			"network":
 				SmokeNetwork.run(g)
+			"los":
+				SmokeEnemyLos.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 
