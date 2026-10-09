@@ -67,7 +67,7 @@ static func spit(b, s: Dictionary, dt: float, prey: Array) -> void:
 	var dmg := Config.HIVE_SPITTER_DMG
 	var from3: Vector3 = from + Vector3(0, 1.1, 0)
 	var end := WeaponLogic.clip_lob(b.world.grid, from3, aim, 2.5)
-	b.world.effects.lob(from3, end, {
+	var it: Dictionary = b.world.effects.lob(from3, end, {
 		"color": Color("d6ff3a"), "size": 0.28, "time": maxf(from.distance_to(aim) / Config.RAIDER_SHOT_SPEED, 0.35),
 		"arc": 2.5,
 		"on_arrive": func() -> void:
@@ -80,6 +80,7 @@ static func spit(b, s: Dictionary, dt: float, prey: Array) -> void:
 				if Vector2(p.x - end.x, p.z - end.z).length() <= splash:
 					(item.hit as Callable).call(dmg),
 	})
+	it["foe"] = true  # hostile lob: Beams shoot these down (enemy spitter acid)
 
 static func beam(b, s: Dictionary, dt: float) -> void:
 	var def: Dictionary = EnemyStructures.DEFS["lancer"]

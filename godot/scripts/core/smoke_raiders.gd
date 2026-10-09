@@ -5,6 +5,11 @@ class_name SmokeRaiders
 
 static func run(g) -> void:
 	_beam_ignores_raider(g)
+	_beam_kills_acid_in_range(g)
+	_beam_ignores_acid_out_of_range(g)
+	_beam_ignores_friendly_lob(g)
+	_beam_lob_costs_one_shot(g)
+	_beam_spore_before_acid(g)
 	_mortar_nicks_raider(g)
 	_cliff(g)
 	_schedule(g)
@@ -51,6 +56,129 @@ static func _beam_ignores_raider(g) -> void:
 	SmokeTest._check("beam ignores raider", dist <= reach and r.alive and r.hp == hp and beam.ammo == ammo,
 		"(dist %.1f/%.0f hp %.1f ammo %.0f)" % [dist, reach, r.hp, beam.ammo])
 	nests.raiders.kill(r)
+	sm.remove(beam)
+
+
+## Beam interception of spitter acid (fix/beam-intercept-lobs). A foe lob inside beam
+## range is popped mid-flight: dead, and its on_arrive never fires.
+static func _beam_kills_acid_in_range(g) -> void:
+	var sm: StructureManager = g.structures
+	var grid: Grid = g.level.grid
+	var fx = g.surface.effects
+	_clear_lobs(g)
+	var spot := _free(sm, grid, 6, 6)
+	var beam := sm.place("beam", spot.x, spot.y, true)
+	beam.cooldown = 0.0
+	beam.ammo = 20.0
+	var m: Vector3 = WeaponLogic._muzzle(beam)
+	var arrived := [false]
+	var it: Dictionary = fx.lob(m + Vector3(12, 6, 0), m + Vector3(-40, 0, 0),
+		{ "color": Color("d6ff3a"), "size": 0.4, "time": 2.0, "arc": 4.0,
+		"on_arrive": func(): arrived[0] = true })
+	it["foe"] = true
+	WeaponLogic.update(beam, 0.2, sm)
+	SmokeTest._check("beam kills acid in range", bool(it.dead), "dead=%s" % str(it.dead))
+	fx.update(3.0)  # fly past the arrival time: the impact must never happen
+	SmokeTest._check("acid on_arrive never fires", not arrived[0], "arrived=%s" % str(arrived[0]))
+	sm.remove(beam)
+
+
+## A foe lob outside beam range is untouched and still lands.
+static func _beam_ignores_acid_out_of_range(g) -> void:
+	var sm: StructureManager = g.structures
+	var grid: Grid = g.level.grid
+	var fx = g.surface.effects
+	_clear_lobs(g)
+	var spot := _free(sm, grid, 6, 6)
+	var beam := sm.place("beam", spot.x, spot.y, true)
+	beam.cooldown = 0.0
+	beam.ammo = 20.0
+	var m: Vector3 = WeaponLogic._muzzle(beam)
+	var reach: float = WeaponLogic.range_cells(beam) * Config.CELL
+	var arrived := [false]
+	var frm := m + Vector3(reach + 60.0, 6, 0)
+	var it: Dictionary = fx.lob(frm, frm + Vector3(-30, -4, 0),
+		{ "color": Color("d6ff3a"), "size": 0.4, "time": 1.0, "arc": 3.0,
+		"on_arrive": func(): arrived[0] = true })
+	it["foe"] = true
+	WeaponLogic.update(beam, 0.2, sm)
+	SmokeTest._check("beam ignores acid out of range", not bool(it.dead), "dead=%s" % str(it.dead))
+	fx.update(2.0)
+	SmokeTest._check("acid out of range still lands", arrived[0], "arrived=%s" % str(arrived[0]))
+	sm.remove(beam)
+
+
+## Friendly lobs (player mortar/bertha shells: no "foe" key) are never intercepted.
+static func _beam_ignores_friendly_lob(g) -> void:
+	var sm: StructureManager = g.structures
+	var grid: Grid = g.level.grid
+	var fx = g.surface.effects
+	_clear_lobs(g)
+	var spot := _free(sm, grid, 6, 6)
+	var beam := sm.place("beam", spot.x, spot.y, true)
+	beam.cooldown = 0.0
+	beam.ammo = 20.0
+	var m: Vector3 = WeaponLogic._muzzle(beam)
+	var it: Dictionary = fx.lob(m + Vector3(12, 6, 0), m + Vector3(-40, 0, 0),
+		{ "color": Color("ffb347"), "size": 0.45, "time": 2.0, "arc": 6.0 })
+	WeaponLogic.update(beam, 0.2, sm)
+	SmokeTest._check("beam ignores friendly lob", not bool(it.dead), "dead=%s" % str(it.dead))
+	sm.remove(beam)
+
+
+## Intercepting a glob costs exactly one firing cycle: one per_shot of ammo, and a
+## ground raider in range is still untouched (beams never hit ground raiders).
+static func _beam_lob_costs_one_shot(g) -> void:
+	var sm: StructureManager = g.structures
+	var grid: Grid = g.level.grid
+	var nests: SporeNests = g.hazards.nests
+	var fx = g.surface.effects
+	_clear_lobs(g)
+	var spot := _free(sm, grid, 6, 6)
+	var beam := sm.place("beam", spot.x, spot.y, true)
+	beam.cooldown = 0.0
+	beam.ammo = 20.0
+	var m: Vector3 = WeaponLogic._muzzle(beam)
+	var r := _spawn(nests)
+	r.node.position = grid.cell_ground(spot.x, spot.y) + Vector3(4.0, 0, 0)
+	r.node.position.y = grid.smooth_y(r.node.position.x, r.node.position.z)
+	var it: Dictionary = fx.lob(m + Vector3(12, 6, 0), m + Vector3(-40, 0, 0),
+		{ "color": Color("d6ff3a"), "size": 0.4, "time": 2.0, "arc": 4.0 })
+	it["foe"] = true
+	var hp: float = r.hp
+	var ammo: float = beam.ammo
+	var spent: float = beam.per_shot()
+	WeaponLogic.update(beam, 0.2, sm)
+	SmokeTest._check("acid killed with raider nearby", bool(it.dead), "dead=%s" % str(it.dead))
+	SmokeTest._check("raider still unharmed", r.alive and r.hp == hp, "hp %.1f" % r.hp)
+	SmokeTest._check("exactly one shot spent", absf(beam.ammo - (ammo - spent)) < 0.001,
+		"ammo %.1f" % beam.ammo)
+	nests.raiders.kill(r)
+	sm.remove(beam)
+
+
+## Priority: spore volleys take the zap before acid globs (unified interception rule).
+static func _beam_spore_before_acid(g) -> void:
+	var sm: StructureManager = g.structures
+	var grid: Grid = g.level.grid
+	var fx = g.surface.effects
+	_clear_lobs(g)
+	var spot := _free(sm, grid, 6, 6)
+	var beam := sm.place("beam", spot.x, spot.y, true)
+	beam.cooldown = 0.0
+	beam.ammo = 20.0
+	var m: Vector3 = WeaponLogic._muzzle(beam)
+	var spore: Dictionary = fx.lob(m + Vector3(14, 6, 0), m + Vector3(-40, 0, 0),
+		{ "color": Color("88ff55"), "size": 0.9, "time": 4.0, "arc": 8.0 })
+	spore["spore"] = true
+	spore["spore_hp"] = Config.SPORE_HP
+	var acid: Dictionary = fx.lob(m + Vector3(12, 7, 2), m + Vector3(-38, 0, 2),
+		{ "color": Color("d6ff3a"), "size": 0.4, "time": 2.0, "arc": 4.0 })
+	acid["foe"] = true
+	WeaponLogic.update(beam, 0.2, sm)
+	SmokeTest._check("spore takes the zap first",
+		float(spore.spore_hp) < Config.SPORE_HP and not bool(acid.dead),
+		"spore_hp %.1f acid_dead=%s" % [float(spore.spore_hp), str(acid.dead)])
 	sm.remove(beam)
 
 

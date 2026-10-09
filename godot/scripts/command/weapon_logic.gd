@@ -213,14 +213,17 @@ static func _treb_impact(mgr, at: Vector3, splash: float, power: float) -> void:
 				(foe.hit as Callable).call(power)
 
 
-## Beam: surface-to-air. Burns flying enemies: spore volleys first, then Flyers. Ground
-## raiders are left to Snipers.
+## Beam: surface-to-air. Burns flying enemies: hostile lobs first (spore volleys, then
+## spitter acid globs), then Flyers. Ground raiders are left to Snipers. One zap per
+## firing cycle: a beam swatting spit is not also hitting something else that tick.
 static func _beam(s: Structure, mgr) -> bool:
 	var w: World = mgr.world
 	var a := _muzzle(s)
 	var reach: float = range_cells(s) * Config.CELL
 	for it in w.effects.lobs():
-		if it.has("spore") and (it.pos as Vector3).distance_to(a) <= reach:
+		if (it.pos as Vector3).distance_to(a) > reach:
+			continue
+		if it.has("spore"):
 			it.spore_hp -= s.def.power
 			_aim(s, it.pos)
 			w.effects.beam(_fx(s), it.pos, Color("ff5050"), 0.06, 0.07)
@@ -228,6 +231,17 @@ static func _beam(s: Structure, mgr) -> bool:
 				it.dead = true
 				w.effects.burst(it.pos, Color("88ff55"), 2.5, 0.4)
 				Sfx.play("pop", it.pos)
+			Sfx.play("beam", s.pos)
+			WeaponFx.fire(s, w.effects)  # P1: recoil + muzzle flash (visual only)
+			return true
+		if it.get("foe", false):
+			# Spitter acid glob: one zap pops it mid-flight; its on_arrive never fires.
+			# Friendly lobs (player mortar/bertha shells) carry no "foe" key and are ignored.
+			_aim(s, it.pos)
+			w.effects.beam(_fx(s), it.pos, Color("ff5050"), 0.06, 0.07)
+			it.dead = true
+			w.effects.burst(it.pos, Color("d6ff3a"), 2.0, 0.3)
+			Sfx.play("pop", it.pos)
 			Sfx.play("beam", s.pos)
 			WeaponFx.fire(s, w.effects)  # P1: recoil + muzzle flash (visual only)
 			return true

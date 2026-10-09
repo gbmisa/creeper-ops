@@ -124,11 +124,12 @@ static func _launch(world: World, r: Dictionary, target: Dictionary, prey: Array
 	var src := str(tier.get("name", "raider")).to_lower() + "_shot"  # "spitter_shot", "lancer_shot"
 	var arc := clampf(dist * arc_k, 1.2, 8.0)
 	var end := WeaponLogic.clip_lob(world.grid, from, aim, arc)
-	world.effects.lob(from, end, {
+	var it: Dictionary = world.effects.lob(from, end, {
 		"color": color, "size": size, "time": maxf(dist / speed, 0.35),
 		"arc": arc,
 		"on_arrive": func(): _impact(world, end, radius, dmg, color, prey, from, src),
 	})
+	it["foe"] = true  # hostile lob: Beams shoot these down (spitter acid)
 	Sfx.play("mortar", from)
 
 
