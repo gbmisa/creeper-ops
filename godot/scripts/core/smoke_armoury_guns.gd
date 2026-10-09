@@ -78,6 +78,14 @@ static func _demo(g) -> void:
 	var before: int = g.fps.weapons.advanced.demo.charges.size()
 	g.fps.weapons.advanced._moaned = false
 	g.fps.weapons.advanced._throw(g.surface)
+	if Config.DEMO_CHARGE_FREE:
+		SmokeTest._check("armoury: free demo throws with no Salvage", g.fps.weapons.advanced.demo.charges.size() == before + 1 and g.stockpile.salvage <= 0.001)
+		g.fps.weapons.advanced.demo.clear()
+		return
+	if Config.DEMO_CHARGE_FREE:
+		SmokeTest._check("armoury: free demo throws with no Salvage", g.fps.weapons.advanced.demo.charges.size() == before + 1 and g.stockpile.salvage <= 0.001)
+		g.fps.weapons.advanced.demo.clear()
+		return
 	SmokeTest._check("armoury: demo dry does not throw", g.fps.weapons.advanced.demo.charges.size() == before and "Salvage" in g.fps.weapons.advanced.need)
 	g.stockpile.salvage = 8.0
 	g.fps.weapons.advanced._moaned = false

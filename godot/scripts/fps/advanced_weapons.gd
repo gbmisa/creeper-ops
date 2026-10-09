@@ -57,7 +57,8 @@ func hud_need() -> String:
 	if not handles(weapons.current) or stockpile == null:
 		return ""
 	var cost := float(WEAPONS[weapons.current].salvage)
-	var short := stockpile.salvage <= 0.0001 if weapons.current == "plasma" else not stockpile.can_afford("salvage", cost)
+	var free: bool = weapons.current == "demo" and Config.DEMO_CHARGE_FREE
+	var short := not free and stockpile.salvage <= 0.0001 if weapons.current == "plasma" else not stockpile.can_afford("salvage", cost)
 	return "Need %d Salvage" % int(cost) if short else ""
 
 
@@ -109,6 +110,8 @@ func _deny(id: String) -> void:
 
 func _pay(id: String) -> bool:
 	var cost := float(WEAPONS[id].salvage)
+	if id == "demo" and Config.DEMO_CHARGE_FREE:
+		return true
 	if stockpile != null and stockpile.spend("salvage", cost):
 		return true
 	_deny(id)

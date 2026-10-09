@@ -224,7 +224,7 @@ func kill(s: Dictionary, sabotage: bool) -> void:
 	s.node = null
 	if not sabotage:
 		var def: Dictionary = EnemyStructures.DEFS[s.kind]
-		queue.append({"hub": s.hub, "kind": s.kind, "cell": s.cell, "rubble": true, "cost": float(def.cost) * 0.5})
+		queue.append({"hub": s.hub, "kind": s.kind, "cell": s.cell, "rubble": true, "ready": time + Config.ENEMY_REBUILD_DELAY, "cost": float(def.cost) * 0.5})
 	list.erase(s)
 	world.effects.burst(s.pos + Vector3.UP, Color("c45cff"), 2.2, 0.4)
 
@@ -267,8 +267,9 @@ func apply_channel(s: Dictionary, feet: Vector3, dt: float) -> bool:
 	s.channel = float(s.channel) - dt
 	if float(s.channel) > 0.0:
 		return false
-	if stockpile != null:
-		stockpile.add("salvage", Config.MORTAR_SALVAGE)
+	var pay := float(EnemyStructures.DEFS[s.kind].get("salvage", Config.MORTAR_SALVAGE))
+	if stockpile != null and pay > 0.0:
+		stockpile.add("salvage", pay)
 	kill(s, true)
-	Bus.say("Sabotaged the %s. +%d Salvage." % [EnemyStructures.DEFS[s.kind].label, int(Config.MORTAR_SALVAGE)], "good")
+	Bus.say("Sabotaged the %s.%s" % [EnemyStructures.DEFS[s.kind].label, " +%d Salvage." % int(pay) if pay > 0.0 else ""], "good")
 	return true

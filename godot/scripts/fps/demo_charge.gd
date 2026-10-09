@@ -86,6 +86,9 @@ func _explode(w: World, pos: Vector3) -> void:
 			continue
 		var c: Vector3 = (t.node as Node3D).global_position + Vector3(0, t.get("oy", 0.0), 0)
 		if c.distance_to(pos) - float(t.radius) <= reach:
-			t.on_hit.call(dmg, pos)
+			if t.has("charge_kill"):
+				(t.charge_kill as Callable).call()
+			else:
+				t.on_hit.call(dmg, pos)
 	w.effects.burst(pos, Color("ff8844"), reach, 0.45)
 	Sfx.play("boom", pos)
