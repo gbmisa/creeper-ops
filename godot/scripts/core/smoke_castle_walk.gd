@@ -1,7 +1,8 @@
 class_name SmokeCastleWalk
 ## Stage 7 movement checks: the Operative really climbs a castle's pillar route and the
 ## spire (scripted PlayerController with fake keys), raiders can't, and drawbridge decks
-## carry only their owner. Called from SmokeStrongholds.run.
+## are solid for every faction (the gate is the defense, not the bridge). Called from
+## SmokeStrongholds.run.
 
 
 ## Holds keys for the controller instead of reading the keyboard.
@@ -119,15 +120,25 @@ static func _bridge(g, castles: Strongholds, grid: Grid, lay: Dictionary) -> voi
 	var head: Vector2i = lay.winch + Vector2i(-2, 0)
 	var gate: Vector2i = lay.gates[0].cells[0] + Vector2i(1, 0)
 	var deck: Vector2i = lay.bridge[0]
+	var deck_w := grid.cell_center(deck.x, deck.y)
 	SmokeTest._check("bridge: enemy deck carries raiders", _reach(grid, head, Config.RAIDER_CLIMB,
 		Config.RAIDER_DROP, Grid.Faction.ENEMY).has(gate))
-	SmokeTest._check("bridge: Operative can't cross an enemy deck", not _reach(grid, head, Config.CLIMB, 99.0, Grid.Faction.PLAYER).has(gate))
+	# Lowered decks are solid for every faction now (Gregory: "that should be a solid object").
+	var pop: Dictionary = _reach(grid, head, Config.CLIMB, 99.0, Grid.Faction.PLAYER)
+	SmokeTest._check("bridge: Operative walks an enemy deck", pop.has(deck))
+	SmokeTest._check("bridge: intact enemy gate still stops the Operative", not pop.has(lay.gates[0].cells[0]))
+	SmokeTest._check("bridge: deck stands at deck level for the Operative",
+		absf(grid.stand_y(deck_w.x, deck_w.z, Grid.Faction.PLAYER) - lay.yard * Config.LEVEL_H) < 0.01)
+	SmokeTest._check("bridge: on_deck ignores faction",
+		grid.on_deck(grid.idx(deck.x, deck.y), Grid.Faction.PLAYER)
+		and grid.on_deck(grid.idx(deck.x, deck.y), Grid.Faction.ENEMY))
 	StrongholdRules.damage(g.surface, c, lay, "winch", 0, 1e6)
-	SmokeTest._check("bridge: winch down opens the deck to all", grid.deck_owner[grid.idx(deck.x, deck.y)] == Grid.Faction.ALL
-		and absf(grid.stand_y(grid.cell_center(deck.x, deck.y).x, grid.cell_center(deck.x, deck.y).z, Grid.Faction.PLAYER) - lay.yard * Config.LEVEL_H) < 0.01)
+	SmokeTest._check("bridge: winch down still writes deck_owner ALL",
+		grid.deck_owner[grid.idx(deck.x, deck.y)] == Grid.Faction.ALL)
 	StrongholdRules.set_owner(g.surface, c, lay, "player")
-	SmokeTest._check("bridge: re-hung for the new owner", grid.deck_owner[grid.idx(deck.x, deck.y)] == Grid.Faction.PLAYER
-		and not _reach(grid, head, Config.RAIDER_CLIMB, Config.RAIDER_DROP, Grid.Faction.ENEMY).has(gate))
+	SmokeTest._check("bridge: re-hung for the new owner",
+		grid.deck_owner[grid.idx(deck.x, deck.y)] == Grid.Faction.PLAYER
+		and not _reach(grid, head, Config.RAIDER_CLIMB, Config.RAIDER_DROP, Grid.Faction.ENEMY).has(lay.gates[0].cells[0]))
 	StrongholdRules.set_owner(g.surface, c, lay, "enemy")
 
 

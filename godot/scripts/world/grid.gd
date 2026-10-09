@@ -22,7 +22,7 @@ var base_height := PackedFloat32Array()  # heights as the level was built (snaps
 var material := PackedByteArray()        # Mat per cell
 var gate := PackedByteArray()            # Faction owning a gate on this cell (NONE = no gate)
 var deck := PackedFloat32Array()         # drawbridge deck level over this cell (castle_shape)
-var deck_owner := PackedByteArray()      # Faction that may walk the deck (NONE = no deck, ALL)
+var deck_owner := PackedByteArray()      # deck owner for tinting (NONE = no deck); decks are solid for all
 var terp_target := PackedFloat32Array()  # -1 = not painted; else the level the Terp works toward
 var terp_mat := PackedByteArray()         # material to lay (Earth now; 11b: Metal)
 var roof := PackedFloat32Array()          # walkable roof level over the floor (0 = none); Operative only (GridRoofs)
@@ -70,7 +70,7 @@ func snapshot_base() -> void:
 
 
 ## Height as a walker of `faction` feels it: someone else's gate is a wall, and a
-## drawbridge deck it may cross is solid ground over the gap.
+## lowered drawbridge deck is solid ground over the gap for every faction.
 func walk_height(x: int, z: int, faction: int) -> float:
 	if not in_bounds(x, z):
 		return 99.0
@@ -80,13 +80,16 @@ func walk_height(x: int, z: int, faction: int) -> float:
 	return hh + (GATE_H if g != Faction.NONE and g != faction else 0.0)
 
 
-func on_deck(i: int, faction: int) -> bool:
+func on_deck(i: int, _faction: int) -> bool:
 	var o := deck_owner[i]
-	return o != Faction.NONE and (o == faction or o == Faction.ALL) and deck[i] > height[i]
+	# A lowered deck is a physical object: solid ground for every faction. The gate
+	# (walk_height) is the faction-gated defense, not the bridge. deck_owner is still
+	# written (it tints the hard-light visual) but no longer gates physics.
+	return o != Faction.NONE and deck[i] > height[i]
 
 
-## Where a walker of `faction` stands: the smooth ground, or a drawbridge deck it may
-## cross (decks count as ground in the bilinear blend, so walking on and off is seamless).
+## Where a walker of `faction` stands: the smooth ground, or a lowered drawbridge
+## deck (decks count as ground in the bilinear blend, so walking on and off is seamless).
 func stand_y(wx: float, wz: float, faction: int) -> float:
 	var fx := wx / Config.CELL - 0.5
 	var fz := wz / Config.CELL - 0.5
