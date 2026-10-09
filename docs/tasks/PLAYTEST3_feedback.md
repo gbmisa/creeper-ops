@@ -16,6 +16,6 @@ Logged by Opus. Not briefed yet. Items marked (branch) may already be covered by
 12. **Lancers guard castles (decided):** Lancers stay at their castle (beam range 32) and nothing can be built within a radius of a hostile castle. The Operative must clear the castle to use the land around it.
 13. **Spitter towers (decided):** sabotaging one gives no Salvage. Some respawn instantly, which allows Salvage farming; that must stop. Spitter towers should be constructed by the enemy over time, not pre-placed and respawning.
 
-Done: item 3 (Spitter range 14, smoke rule in smoke_rules.gd `_balance`).
+Done on integ: 1, 3, 4, 7 (Muse branches + Spitter range 14), 10 + 13 (pt3/enemy-builds), 11 (art/totem-red), 12 + 14 (pt3/castle-guard, over-the-wall repro not confirmed). Open: 2, 5, 6, 9, 15; E-hold mortar sabotage still kills + pays 5 Salvage (ask Gregory). raiders.gd 304 lines, weapon_logic.gd 356: split.
 14. **Ashmote Keep Lancers (L1):** Lancers in the keep shoot over the wall and hit the base. No collision rule is broken; Gregory moved the base. Item 12's build exclusion around hostile castles should cover this. Check the LOS fix (fix/enemy-los, merged) clips beams against wall height too.
 15. **Flying Node launches packets (decided, overrides the CLAUDE.md "Flying Node" contract):** the Node must keep launching packets while it flies, as long as it is connected to the network. Update the contract in CLAUDE.md when built.
