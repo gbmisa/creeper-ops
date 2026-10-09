@@ -5,8 +5,19 @@ extends RefCounted
 ## The Spitter is the spec lobber: 10 HP, range 20. Unlock is a pressure, not a clock time.
 ## `special` rows are not in the ordinary weighted pick: Spotter arrives with a mortar (phase 7).
 ## Loot numbers are the Salvage pickup when that raider dies (Loot).
-## Weight among the ordinary unlocked rows is 2^order (oldest 1, next 2, ...), so the newest
-## is about half of a two-type pool and still the most common in a larger one.
+## Weight among the ordinary unlocked rows is 2^order (oldest 1, next 2, ...), except the
+## Behemoth, whose weight is capped (see BEHEMOTH_WEIGHT_CAP): uncapped, the newest tier is
+## about half of every spawn pool at unlock, and late-game nests flood Behemoths faster than
+## a maxed arsenal can kill them. The cap keeps the Behemoth the most common front-liner in
+## raid groups without letting it dominate every pick.
+
+
+## Spawn-weight cap for the Behemoth (tunable). Was 2^7 = 128 in pick() (~50% of spawns at
+## the 0.85 unlock) and 2^3 = 8 in group front pools (~53% of the front line). At 4 the
+## Behemoth is ~3% of pick() and ~36% of a group front pool (~18% of the group): still the
+## joint-most-common front-liner, no longer the flood. Early/mid game is untouched: the cap
+## only binds the Behemoth row.
+const BEHEMOTH_WEIGHT_CAP := 4
 
 
 const ROWS := [
@@ -65,6 +76,15 @@ static func newest(p: float) -> Dictionary:
 	return best
 
 
+## Spawn weight of `row` at pool index `i`: 2^order, except the Behemoth, which is capped
+## (see BEHEMOTH_WEIGHT_CAP). Shared by pick() and RaiderGroups._from() so both spawn
+## paths agree on the top tier's share.
+static func spawn_weight(row: Dictionary, i: int) -> int:
+	if str(row.get("name", "")) == "Behemoth":
+		return mini(1 << i, BEHEMOTH_WEIGHT_CAP)
+	return 1 << i
+
+
 ## Weighted pick. `roll` in 0..1 picks without touching the global RNG; below 0 uses randf().
 static func pick(p: float, roll := -1.0) -> Dictionary:
 	var rows: Array = []
@@ -77,12 +97,12 @@ static func pick(p: float, roll := -1.0) -> Dictionary:
 		return named("Skitter")
 	var total := 0
 	for i in rows.size():
-		total += 1 << i
+		total += spawn_weight(rows[i], i)
 	var r := randf() if roll < 0.0 else clampf(roll, 0.0, 0.9999)
 	var ticket := mini(total - 1, int(floor(r * float(total))))
 	var acc := 0
 	for i in rows.size():
-		acc += 1 << i
+		acc += spawn_weight(rows[i], i)
 		if ticket < acc:
 			return rows[i] as Dictionary
 	return rows.back() as Dictionary
