@@ -180,6 +180,7 @@ static func run(g) -> void:
 	SmokeCastles2Walk.run(g)
 	SmokeCastles2Capture.run(g)
 	SmokeCastles2BaileyUx.run(g)
+	SmokeBaileyAllCastles.run(g)
 	SmokeCastles2Engines.run(g)
 	SmokeCastles2Perks.run(g)
 	SmokeCastles2bStone.run(g)

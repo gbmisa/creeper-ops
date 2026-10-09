@@ -237,6 +237,7 @@ static func build() -> Dictionary:
 			["Ops: Energy IS packets. The Node fires one wherever a structure asks, as long as the bank has energy.", "radio"],
 			["Ops: Collectors claim land for income. Relays carry packets to the front. Weapons can fly to new spots.", "radio"],
 			["Ops: Purple Blight can't be built on. Barracks units can go there, but they run dry and must come home.", "radio"],
+			["Ops: Ashmoat falls in rings: hold the gatehouse, wreck the trebuchet on the corner tower and raise the bailey standard, then kill the crown nest in the keep hall.", "radio"],
 		],
 	}
 	level["nests"] = level.hives # alias: older readers still say nests
