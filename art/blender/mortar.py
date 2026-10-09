@@ -84,7 +84,7 @@ def geometry(k):
         k.limb(B + Vector((0, s * 0.7, 0)), B + Vector((0, s * 0.86, 0)), 0.16, 0.16, "gunmetal", "head", seg=8)
     # tube, built upright at B; the bowl bone tilts it forward in every clip
     k.lathe(TUBE, "olive", "bowl", at=tuple(B), seg=14, smooth=False)
-    k.lathe([(0.0, -0.5), (0.5, -0.5), (0.5, -0.1), (0.0, -0.1)], "gunmetal", "bowl", at=tuple(B), seg=14, smooth=False)
+    k.lathe([(0.0, -0.5), (0.5, -0.5), (0.5, -0.1), (0.0, -0.1)], "olive_dark", "bowl", at=tuple(B), seg=14, smooth=False)
     k.lathe([(0.42, 0.48), (0.5, 0.48), (0.5, 0.66), (0.32, 0.66), (0.32, 0.6), (0.42, 0.6)], "steel", "bowl", at=tuple(B), seg=14, smooth=False)
     k.lathe([(0.42, 0.22), (0.45, 0.22), (0.45, 0.32), (0.42, 0.32), (0.42, 0.22)], "hazard", "bowl", at=tuple(B), seg=14, cap=False)
     k.limb(B + Vector((0, -0.72, 0)), B + Vector((0, 0.72, 0)), 0.1, 0.1, "steel", "bowl", seg=8)

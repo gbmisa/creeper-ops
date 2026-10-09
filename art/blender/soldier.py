@@ -24,7 +24,8 @@ def build():
                                    ("head", (0, 0, 1.5), (0, 0, 1.8), "chest"),
                                    ("arm_L", (0, 0.25, 1.4), (0.3, 0.12, 1.08), "chest"),
                                    ("arm_R", (0, -0.25, 1.4), (0.3, -0.12, 1.08), "chest"),
-                                   ("xbow", (0.3, 0, 1.08), (0.7, 0, 1.08), "chest")] + LEGS.bones("hips"))
+                                   ("xbow", (0.3, 0, 1.08), (0.7, 0, 1.08), "chest"),
+                                   ("flash", (0.9, 0, 1.11), (1.1, 0, 1.11), "xbow")] + LEGS.bones("hips"))
     b = lib.Builder("soldier")
     LEGS.mesh(b, 0.08, 0.07, 0.06, mat="olive", joint="olive_dark", tip="rubber", seg=7)
     for n, (_h, _k, foot, _s, _p) in LEGS.legs.items():
@@ -47,10 +48,12 @@ def build():
         b.limb((0, s * 0.25, 1.38), (0.3, s * 0.12, 1.08), 0.07, 0.06, "olive", "arm_" + sd, seg=6, smooth=True)
     b.limb((0.3, 0.12, 1.08), (0.5, 0.03, 1.1), 0.05, 0.045, "olive", "arm_L", seg=6, smooth=True)  # support hand
     b.ball((0.5, 0.03, 1.1), 0.045, "rubber", "arm_L", seg=6, rings=4)
-    b.box((0.36, 0, 1.1), (0.34, 0.06, 0.1), "gunmetal", "xbow")  # receiver
+    b.box((0.36, 0, 1.1), (0.36, 0.08, 0.13), "gunmetal", "xbow")  # receiver
     b.box((0.13, 0, 1.08), (0.16, 0.05, 0.1), "rubber", "xbow")  # stock
-    b.box((0.55, 0, 1.1), (0.22, 0.07, 0.08), "olive_dark", "xbow")  # handguard
-    b.limb((0.66, 0, 1.11), (0.86, 0, 1.11), 0.015, 0.015, "gunmetal", "xbow", seg=6)  # barrel
+    b.box((0.56, 0, 1.1), (0.24, 0.09, 0.1), "olive_dark", "xbow")  # handguard
+    b.limb((0.66, 0, 1.11), (0.9, 0, 1.11), 0.025, 0.025, "gunmetal", "xbow", seg=6)  # barrel
+    b.limb((0.9, 0, 1.11), (1.15, 0, 1.11), 0.07, 0.0, "fire", "flash", seg=6)
+    b.ball((0.93, 0, 1.11), 0.06, "flash_white", "flash", seg=6, rings=3)
     b.box((0.4, 0, 1.0), (0.06, 0.04, 0.14), "gunmetal", "xbow", rot=Quaternion((0, 1, 0), 0.25))  # magazine
     b.box((0.36, 0, 1.18), (0.1, 0.04, 0.05), "rubber", "xbow")  # optic
     b.finish(arm)
@@ -62,12 +65,15 @@ def R(arm, bone, axis, ang):
 
 
 def stand(arm):
-    return LEGS.all(arm, lambda n, s, i: (0.0, 0.0, 0.0))
+    p = LEGS.all(arm, lambda n, s, i: (0.0, 0.0, 0.0))
+    p["flash"] = (None, None, (0.01, 0.01, 0.01))
+    return p
 
 
 def clips(arm):
     def walk(t):
         p = LEGS.walk(arm, t, 0.5, lift=0.3, bend=0.9, duty=0.6)
+        p["flash"] = (None, None, (0.01, 0.01, 0.01))
         w = 2 * math.pi * t
         p["hips"] = (R(arm, "hips", (0, 0, 1), 0.08 * math.sin(w)), lib.world_loc(arm, "hips", (0, 0, 0.03 * math.cos(2 * w))))
         p["chest"] = (R(arm, "chest", (0, 0, 1), -0.1 * math.sin(w)) @ R(arm, "chest", (0, 1, 0), 0.06), None)
@@ -89,15 +95,18 @@ def clips(arm):
         p["chest"] = (R(arm, "chest", (0, 1, 0), -0.15 * kick) @ R(arm, "chest", (0, 0, 1), 0.1 * kick), None)
         p["xbow"] = (R(arm, "xbow", (0, 1, 0), -0.1 * aim - 0.35 * kick), lib.world_loc(arm, "xbow", (-0.18 * kick, 0, 0.12 * aim)))
         p["arm_R"] = (None, lib.world_loc(arm, "arm_R", (-0.18 * kick, 0, 0.12 * aim)))
+        fl = lib.pulse(t, 0.28, 0.45)
+        p["flash"] = (None, None, (max(0.01, 1.6 * fl),) * 3)
         return p
     lib.action(arm, "attack", 20, attack, step=1)
 
     def hit(t):
         j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
         p = stand(arm)
-        p["chest"] = (R(arm, "chest", (0, 1, 0), -0.5 * j), None)
-        p["head"] = (R(arm, "head", (0, 1, 0), -0.5 * j), None)
-        p["hips"] = (None, lib.world_loc(arm, "hips", (-0.12 * j, 0, -0.04 * j)))
+        p["chest"] = (R(arm, "chest", (0, 1, 0), -0.8 * j) @ R(arm, "chest", (0, 0, 1), 0.3 * j), None)
+        p["head"] = (R(arm, "head", (0, 1, 0), -0.6 * j), None)
+        p["hips"] = (None, lib.world_loc(arm, "hips", (-0.25 * j, 0, -0.08 * j)))
+        p["xbow"] = (R(arm, "xbow", (0, 1, 0), 0.5 * j), None)
         return p
     lib.action(arm, "hit", 10, hit, step=1)
 
@@ -105,6 +114,7 @@ def clips(arm):
         buckle = lib.ease(min(1.0, t / 0.35))
         fall = lib.ease(min(1.0, max(0.0, (t - 0.2) / 0.55)))
         p = LEGS.all(arm, lambda n, s, i: (0.4 * buckle, 0.0, 1.0 * buckle * (1.0 - fall)))
+        p["flash"] = (None, None, (0.01, 0.01, 0.01))
         p["root"] = (R(arm, "root", (0, 1, 0), -1.45 * fall), lib.world_loc(arm, "root", (-0.25 * fall, 0, -0.08 * fall)))
         p["hips"] = (None, lib.world_loc(arm, "hips", (0, 0, -0.25 * buckle * (1.0 - fall))))
         p["arm_L"] = (R(arm, "arm_L", (1, 0, 0), -0.6 * fall), None)

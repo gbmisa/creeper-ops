@@ -49,9 +49,9 @@ def geometry(k):
     mk.slab(k, 0.95, 0.16, "base")
     mk.sandbags(k, 0.62, 0.16, "base", rows=1, per=3)
     k.lathe([(0.62, 0.16), (0.6, 0.5), (0.46, 0.7), (0.42, 2.1), (0.56, 2.22), (0.56, 2.4), (0.0, 2.4)],
-            "concrete", "base", seg=12, smooth=False)
+            "olive", "base", seg=12, smooth=False)
     for z0, z1, r in ((0.5, 0.62, 0.6), (1.2, 1.32, 0.455), (2.1, 2.3, 0.57)):
-        k.lathe([(r, z0), (r, z1), (0.0, z1)], "olive", "base", seg=12, smooth=False)
+        k.lathe([(r, z0), (r, z1), (0.0, z1)], "gunmetal", "base", seg=12, smooth=False)
     for i in range(12):
         a = 2 * math.pi * i / 12
         k.box((math.cos(a) * 0.575, math.sin(a) * 0.575, 2.2), (0.04, 0.3, 0.1), "hazard" if i % 2 else "rubber", "base",

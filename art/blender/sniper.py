@@ -108,9 +108,9 @@ def geometry(k):
     so = BORE + Vector((-0.55, 0, 0.24))
     for x in (0.25, 0.75):
         k.box(so + Vector((x, 0, -0.1)), (0.08, 0.08, 0.14), "gunmetal", "head")
-    k.limb(so, so + X * 1.05, 0.065, 0.065, "gunmetal", "head", seg=8)
-    k.limb(so + X * 0.85, so + X * 1.15, 0.065, 0.1, "gunmetal", "head", seg=8)
-    k.limb(so + X * 1.15, so + X * 1.17, 0.085, 0.085, "lamp_red", "head", seg=8)
+    k.limb(so, so + X * 1.05, 0.08, 0.08, "gunmetal", "head", seg=8)
+    k.limb(so + X * 0.85, so + X * 1.15, 0.08, 0.12, "gunmetal", "head", seg=8)
+    k.limb(so + X * 1.15, so + X * 1.19, 0.11, 0.11, "lamp_red", "head", seg=8)
     k.limb(so - X * 0.08, so, 0.055, 0.075, "rubber", "head", seg=8)
     k.limb(NOCK - Vector((0, 0.1, 0)), NOCK, 0.02, 0.02, "steel", "nock", seg=4)
     k.ball(tuple(NOCK), 0.045, "gunmetal", "nock", seg=6, rings=3)

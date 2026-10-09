@@ -77,7 +77,7 @@ def geometry(k):
     k.limb(p0.lerp(mid, 0.5), mid, 0.04, 0.04, "brake", "arm", seg=8)
     # head: receiver, belt feed, ammo drum, optic (gem); the gun itself recoils on "barrel"
     k.ball(tuple(W), 0.15, "steel", "head", seg=6, rings=3)
-    k.box(W + Vector((-0.2, 0, 0.02)), (0.8, 0.42, 0.36), "olive", "head")
+    k.box(W + Vector((-0.2, 0, 0.02)), (0.85, 0.56, 0.42), "olive", "head")
     k.box(W + Vector((-0.2, 0, 0.21)), (0.6, 0.3, 0.04), "olive_dark", "head")
     k.box(W + Vector((-0.1, 0.32, -0.06)), (0.42, 0.22, 0.3), "olive_dark", "head")
     k.box(W + Vector((-0.1, 0.44, -0.06)), (0.3, 0.02, 0.07), "hazard", "head")
@@ -85,11 +85,11 @@ def geometry(k):
         k.box(W + Vector((0.05 - i * 0.08, 0.24, 0.1 - i * 0.03)), (0.05, 0.1, 0.06), "brass", "head")
     k.box(W + Vector((-0.35, -0.12, 0.31)), (0.34, 0.1, 0.12), "gunmetal", "head")
     k.ball(W + Vector((-0.17, -0.12, 0.31)), 0.06, "lamp_amber", "gem", seg=6, rings=3)
-    k.tube([(W + Vector((x, 0, 0)), r) for x, r in ((-0.55, 0.14), (0.2, 0.14), (0.2, 0.17), (0.95, 0.17), (0.95, 0.1), (1.22, 0.1))],
+    k.tube([(W + Vector((x, 0, 0)), r) for x, r in ((-0.55, 0.18), (0.2, 0.18), (0.2, 0.22), (0.95, 0.22), (0.95, 0.14), (1.22, 0.14))],
            "gunmetal", "barrel", seg=10)
     for x in (0.32, 0.5, 0.68, 0.86):
-        k.limb(W + Vector((x, 0, 0)), W + Vector((x + 0.04, 0, 0)), 0.19, 0.19, "rubber", "barrel", seg=10)
-    mk.muzzle_brake(k, M - Vector((0.28, 0, 0)), 0.15, "barrel", length=0.3)
+        k.limb(W + Vector((x, 0, 0)), W + Vector((x + 0.04, 0, 0)), 0.245, 0.245, "rubber", "barrel", seg=10)
+    mk.muzzle_brake(k, M - Vector((0.28, 0, 0)), 0.2, "barrel", length=0.3)
     mk.flash(k, M + Vector((0.02, 0, 0)), 0.26, "flash")
 
 
