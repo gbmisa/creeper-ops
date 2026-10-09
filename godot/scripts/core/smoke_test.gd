@@ -140,6 +140,7 @@ static func run(g) -> void:
 	SmokeRules.run(g)
 	SmokeRaiders.run(g)
 	SmokeRaiderCirc.run(g)
+	SmokeSpitterSiege.run(g)
 	SmokeTerrain.run(g)
 	SmokeStrongholds.run(g)
 	SmokeCastleRaids.run(g)

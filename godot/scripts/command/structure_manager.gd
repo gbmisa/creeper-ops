@@ -170,6 +170,7 @@ func damage(s: Structure, amount: float, source := "") -> void:
 			if now - int(_anim_hit.get(s.id, 0)) >= 300:
 				_anim_hit[s.id] = now
 				CreatureAnim.hit(model)
+	s.regen_delay = StructureUpkeep.REGEN_DELAY  # hits pause passive healing so chip damage sticks
 	if s.type == "node":
 		Bus.node_hit.emit()
 	if s.hp <= 0.0:

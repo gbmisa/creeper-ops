@@ -4,14 +4,18 @@ class_name StructureUpkeep
 ## Weapons and the Node have a health reserve: wet, they lose max HP / `wet_time` per second
 ## whatever the depth, and an unfinished one loses build progress at the same rate (and asks
 ## for no packets) instead. Everything else dies on contact, built or not. A charging weapon
-## (Nullifier) takes nothing. Dry built structures heal to full over HEAL_TIME.
+## (Nullifier) takes nothing. Dry built structures heal to full over HEAL_TIME — but not while
+## they are taking damage: any hit pauses healing for REGEN_DELAY (so chip damage sticks).
+
+const REGEN_DELAY := 5.0  # seconds after a hit before passive healing resumes (tunable)
 
 
 static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
+	s.regen_delay = maxf(0.0, s.regen_delay - dt)
 	s.wet = 0.0 if (s.is_flying() or s.def.get("flying", false)) else mgr.wet_depth(s)
 	# Wet means any creeper drawn on it (MIN_DEPTH), so a thin film can't hide a "submerged" survivor.
 	if s.wet <= Config.MIN_DEPTH:
-		if s.is_built():
+		if s.is_built() and s.regen_delay <= 0.0:
 			s.hp = minf(s.def.hp, s.hp + s.def.hp / Config.HEAL_TIME * dt)
 		return
 	if not has_reserve(s):
