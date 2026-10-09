@@ -97,11 +97,12 @@ def hit_common(t):
             "arm": {"rot": ((0, 1, 0), -0.35 * j * math.sin(18 * t))}}
 
 
-def run(name, bones, pivots, geometry, clips):
-    """clips: {name: (frames, pose_fn(t) -> spec, loop)}; walk is copied from idle."""
+def run(name, bones, pivots, geometry, clips, parts=PARTS):
+    """clips: {name: (frames, pose_fn(t) -> spec, loop)}; walk is copied from idle.
+    parts: the glbs to write (default base/turret/arm; e.g. ("base", "core") for the Nullifier)."""
     out = sys.argv[sys.argv.index("--") + 1]
     d = os.path.dirname(out)
-    targets = [(p, os.path.join(d, "%s_%s.glb" % (name, p))) for p in PARTS]
+    targets = [(p, os.path.join(d, "%s_%s.glb" % (name, p))) for p in parts]
     if os.environ.get("PREVIEW"):
         targets.append((None, os.environ["PREVIEW"]))
     clips = dict(clips)
