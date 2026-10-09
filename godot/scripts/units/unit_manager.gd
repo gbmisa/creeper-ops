@@ -8,12 +8,16 @@ var world: World
 var structures: StructureManager
 var list: Array[Unit] = []
 var selected: Array[Unit] = []
+var castles: Strongholds = null   # injected: units from a barracks in a held castle garrison it
+var lines := PatrolLines.new()
 
 
 func setup(w: World, sm: StructureManager) -> void:
 	name = "Units"
 	world = w
 	structures = sm
+	lines.mgr = self
+	add_child(lines)
 	Bus.unit_trained.connect(_on_trained)
 	Bus.terrain_changed.connect(func(cw, _cells):  # re-path anyone walking a stale route
 		if cw == world:
@@ -38,6 +42,7 @@ func _on_trained(type: String, b: Structure) -> void:
 	u.home = b
 	var rally: Vector3 = b.rally if b.rally != null else b.pos + Vector3(randf_range(-3, 3), 0, 9)
 	order([u], Vector2(rally.x, rally.z))
+	UnitPatrol.auto_castle(self, u, b.pos)
 	Bus.say("%s ready (%d/%d at this barracks)." % [u.def.label, living_for(b), Config.UNITS_PER_BARRACKS], "good")
 
 
@@ -87,6 +92,7 @@ func order(units: Array, dest: Vector2, player := false) -> void:
 		var goal := dest + Vector2(cos(a), sin(a)) * r
 		walk_to(u, goal)
 		u.post = goal
+		u.patrol = []  # any move order cancels a patrol
 		if u.state != "resupply" or player:
 			u.state = "move"
 	if not units.is_empty():
@@ -168,7 +174,7 @@ func select(units: Array, additive := false) -> void:
 
 func update(dt: float, enemies: Array) -> void:
 	for u in list.duplicate():
-		if (u.state == "move" or u.state == "return") and not u.path.is_empty() and u.ammo >= 1.0:
+		if (u.state == "move" or u.state == "return" or u.state == "patrol") and not u.path.is_empty() and u.ammo >= 1.0:
 			# Attack-move: hold the route and fight anything already in gun range.
 			# No chasing — the unit never leaves its path for a target. Dry units
 			# keep walking (their retreat is handled in UnitSupply.update).
@@ -186,7 +192,6 @@ func update(dt: float, enemies: Array) -> void:
 
 
 func _move(u: Unit, dt: float) -> void:
-	var g := world.grid
 	var v := Vector2.ZERO
 	if not u.path.is_empty():
 		var wp: Vector2 = u.path[0]
@@ -205,18 +210,7 @@ func _move(u: Unit, dt: float) -> void:
 			v += d.normalized() * (mn - d.length()) * 2.0
 	var wet := world.creeper.depth_world(u.pos) > Config.DAMAGE_DEPTH
 	var step: float = u.def.speed * (0.6 if wet else 1.0) * dt
-	var nx := u.pos.x + v.x * step
-	var nz := u.pos.z + v.y * step
-	var a := g.world_to_cell(u.pos.x, u.pos.z)
-	var b := g.world_to_cell(nx, nz)
-	var rise := g.walk_height(b.x, b.y, Grid.Faction.PLAYER) - g.walk_height(a.x, a.y, Grid.Faction.PLAYER)
-	var p := u.pos
-	var into_tower: bool = b != a and world.occupied.call(b.x, b.y) and not world.occupied.call(a.x, a.y)
-	if g.in_bounds(b.x, b.y) and rise <= u.def.climb and -rise <= u.def.drop and not into_tower:
-		p.x = nx
-		p.z = nz
-	p.y = g.stand_y(p.x, p.z, Grid.Faction.PLAYER)
-	u.pos = p
+	u.pos = UnitMotion.step(self, u, v * step, dt)
 	CreatureAnim.move(u.node.get_node("Mesh"), v.length() * u.def.speed)
 
 

@@ -51,7 +51,9 @@ func set_tool(t: String) -> void:
 		drag_rect = Rect2()
 	tool = t
 	cancel_drag()
-	if t != "" and t != "@move":
+	if t != "@patrol":
+		units.lines.pending.clear()
+	if t != "" and t != "@move" and t != "@patrol":
 		select_structure(null)
 		units.select([])
 	if t == "":

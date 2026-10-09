@@ -326,3 +326,5 @@ const RESUPPLY_RANGE := 4.0    # metres from a barracks to draw supply
 const RESUPPLY_RATE := 8.0     # ammo/s transferred while docked
 const UNIT_CREEPER_BASE_DPS := 6.0
 const UNIT_CREEPER_DPS := 12.0
+const PATROL_INSET := 3        # cells in from the courtyard's edge for a castle garrison's auto-patrol corners
+const PATROL_LINE_STEP := 2.5  # metres between samples when drawing a patrol route over terrain

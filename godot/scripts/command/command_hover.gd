@@ -18,6 +18,10 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 		cm.reason = cm.overlay.paint.hover_text(cm) if cm.overlay.paint else ""
 		cm.overlay.hide_ghost()
 		return
+	if cm.tool == "@patrol":
+		cm.reason = CommandPatrol.hint()
+		cm.overlay.hide_ghost()
+		return
 	if not cm.drag_plan.is_empty():  # DragBuild draws its own preview
 		cm.overlay.hide_ghost()
 		cm.reason = DragBuild.summary(cm.drag_plan)

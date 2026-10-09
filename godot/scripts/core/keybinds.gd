@@ -54,6 +54,7 @@ const DEFAULTS := {
 	"train_soldier": ["Command", "Train Soldier", [KEY_F]],
 	"train_crawler": ["Command", "Train Crawler", [KEY_G]],
 	"select_units": ["Command", "Select all units", [KEY_U]],
+	"patrol": ["Command", "Patrol: click points, press again or right-click to finish", [KEY_P]],
 	"terp_up": ["Command", "Terp target up", [KEY_PAGEUP]],
 	"terp_down": ["Command", "Terp target down", [KEY_PAGEDOWN]],
 	"terp_erase": ["Command", "Erase terp paint (hold)", [KEY_C]],
