@@ -45,7 +45,16 @@ static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 			c.pump.jam = Config.PUMP_JAM_TIME
 			Sfx.play("click")
 			Bus.say("Spire pump jammed: %s builds nothing from its moat for %ds." % [c.name, Config.PUMP_JAM_TIME], "good") })
-	world.markers.append({ "pos": (v.crown as Node3D).position + Vector3(0, 5, 0), "label": func(): return label(c, lay),
+	var stage_pos := func() -> Vector3:
+		var stage := CastleStages.current(c, lay)
+		if stage == "gate" and lay.zones.has("gate"):
+			var cell: Vector2i = lay.zones["gate"].cells[4]
+			return world.grid.cell_ground(cell.x, cell.y) + Vector3(0, 3, 0)
+		if stage == "bailey" and lay.zones.has("bailey"):
+			var cell: Vector2i = lay.zones["bailey"].cells[4]
+			return world.grid.cell_ground(cell.x, cell.y) + Vector3(0, 3, 0)
+		return (v.crown as Node3D).position + Vector3(0, 5, 0)
+	world.markers.append({ "pos": stage_pos, "label": func(): return label(c, lay),
 		"color": StrongholdMeshes.PLAYER if c.owner == "player" else Color("ff6a8a"), "visible": func(): return true })
 
 
