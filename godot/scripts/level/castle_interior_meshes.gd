@@ -67,8 +67,10 @@ static func _fires(node: Node3D, g: Grid, lay: Dictionary, it: Dictionary, fires
 		var cc: Vector2i = c
 		if bool((lay.get("keep", {}) as Dictionary).get("column", false)):
 			cc = c + Vector2i(3, 3)  # clear of the 3x3 spire column through the hall
-			if not it.cells.has(cc):
-				cc = c
+		else:
+			cc = c + Vector2i(2, 1)  # P3: the crown dais owns the hall centre
+		if not it.cells.has(cc):
+			cc = c
 		var floor_y := g.height_at(cc.x, cc.y) * Config.LEVEL_H
 		fires.append(CastleFires.brazier(node, floor_y,
 			Vector3((cc.x + 0.5) * Config.CELL, 0, (cc.y + 0.5) * Config.CELL), seed))

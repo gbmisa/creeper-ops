@@ -154,7 +154,60 @@ Tests:
 - Castle smokes (shape/walk/capture/engines/perks) all PASS.
 
 Unfinished: none for P2.
-## P3 interior props — FILL
+## P3 interior props
+
+Done (2026-10-09 ~07:40 UTC):
+- `level/castle_props.gd` (new, `CastleProps`, 249 lines): `build(root, g, lay)` returns a
+  descriptor dict for the smoke test. Keep hall: a two-step stone dais (5.0 m / 3.6 m,
+  `CastleDefs.DAIS_H`=0.5) under the crown nest; two long oak tables (top + 4 legs) on
+  the longest runs of hall cells two cells either side of the aisle; two freestanding
+  weapon racks (posts, crossbars, leaning blades) on the back cells of the table rows;
+  a runner rug (flat 8 cm box — a prop, not a ground quad) on the aisle from the dais
+  edge to the door. Gate halls (every gatehouse interior, outer + inner): a winch wheel
+  (stone posts, oak drum, iron spoked wheel, chain up into the slab) in the hall's inner
+  corner, and three chains over the gate cells for the portcullis. Tower stairs: a stone
+  lip on each step's downhill edge (one trim per ring-cell edge, 8 per tower).
+- `level/stronghold_meshes.gd`: calls `CastleProps.build`; the crown mesh rides up
+  `DAIS_H` on concentric castles (capture logic reads zones/hp, `crown_push` tolerates
+  3 m, the marker hangs off the node — all safe).
+- `level/castle_defs.gd`: `DAIS_H`, `TABLE_H`, `WINCH_WHEEL_R`, `STAIR_TRIM_H`.
+- `level/castle_interior_meshes.gd`: the no-column (9x9) keep-hall brazier moved from the
+  hall centre to centre+(2,1) — the P3 dais owns the centre now (counts unchanged, fires
+  smoke still green).
+- `core/smoke_castles2b_props.gd` (new, `SmokeCastles2bProps`, registered in
+  `smoke_test.gd`): per concentric castle — dais cell/height, two tables flanking the
+  aisle (2-4 cells, in-zone, off stairs/doors/tower doors), two racks off the walking
+  line, rug on hall/door floor, one winch per gatehouse interior off the walking line,
+  exactly 8 trims per tower.
+- Screenshots: not run (no display); Opus judges visuals.
+
+Spec gaps filled:
+- Table length adapts to the hall: door-end 4 cells on 11x11 keeps, 3 on the 9x9
+  (Ashmoat), leaving the back row for the racks — racks are freestanding, not
+  wall-mounted, so they fit both hall sizes.
+- The winch corner is picked by max |perp| offset at the passage's inner end (never the
+  middle walking column, never a tower door cell); chains hang over the gate cells'
+  inner row, from the slab underside to the portcullis top.
+- The rug is flat decor (walkers read the grid); it is the one prop allowed on the
+  aisle, exempted from the walking-line check.
+- Crown Keep (3 gates) gets 3 winches and 80 trims (10 towers); the smoke asserts per
+  castle, not fixed totals.
+
+Tests:
+- Parse: `--headless --path godot --import` — 0 script errors (two caught during dev:
+  `-1 << 20` illegal shift, `:=` inference on a Variant product; plus a stubborn
+  phantom parse error in the first smoke draft that cleared on rewrite to bracket
+  access — see Unfinished).
+- Full suite `-- --smoke --quit=0.1`: **[smoke] OK: 0 failure(s)** — all 36 new props
+  checks PASS on all 6 concentric castles (ashmoat/ashgate/thornwall/crown/northreach/
+  stormcrown), castle smokes (shape/walk/capture/engines/perks) all PASS.
+- Bug caught before push: the winch corner search initialised its best-score to -99,
+  so no winch was ever placed — fixed to a proper max scan (the smoke now covers it).
+
+Unfinished: none for P3. Open question for Opus: the first `smoke_castles2b_props.gd`
+draft failed `--import` with "Expected closing )" at a line that parsed fine in
+isolation; rewriting with bracket dict access and precomputed booleans cleared it.
+Root cause not identified — worth knowing if it recurs (no behaviour impact).
 ## P4 command-view readability — FILL
 ## P5 turret variety — FILL
 ## P6 castle guards — FILL

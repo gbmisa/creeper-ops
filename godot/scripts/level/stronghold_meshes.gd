@@ -86,9 +86,12 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 	var crown := CastleDecor.crown_nest()  # fungal husk round a pulsing red "Sac"
 	var ca: Dictionary = lay.crown_at  # spire top (Stage 7) or the keep hall (concentric)
 	crown.position = cell_pos(ca.cell.x, ca.cell.y, ca.level)
+	if lay.get("plan", "") == "concentric":
+		crown.position.y += CastleDefs.DAIS_H  # P3: the nest sits on the dais
 	v["fires"] = []
 	v["interiors"] = CastleInteriorMeshes.build(root, world.grid, lay, v.banners, v["fires"])
 	CastleStonework.build(root, world.grid, lay)
+	CastleProps.build(root, world.grid, lay)
 	var cloth := CastleBanners.build(root, world.grid, lay, v.banners)
 	for k in cloth:
 		v[k] = cloth[k]

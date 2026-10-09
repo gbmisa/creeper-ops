@@ -33,6 +33,16 @@ const TORCH_ENERGY := 0.9    # torch OmniLight energy
 const TORCH_RANGE := 5.0     # torch OmniLight range (m)
 const STANDARD_H := 6.0      # bailey standard pole height (m)
 
+# ---- 21b detail: props (CastleProps) ----------------------------------------------------
+const DAIS_H := 0.5           # crown dais: two 0.25 m steps; the crown mesh rides up this
+const TABLE_H := 0.85         # long-table top height (m)
+const WINCH_WHEEL_R := 0.5    # gate-hall winch wheel radius (m)
+const STAIR_TRIM_H := 0.16    # tower step edge trim height (m)
+
+# ---- 21b detail: readability (CastleReadability) -----------------------------------------
+const ROOF_FADE_ALPHA := 0.35 # roof slab alpha while the command view is active
+const STAGE_BAR_W := 3.2      # stage progress bar width (m)
+
 # ---- war engines: trebuchets on the outer corner towers (CastleEngines) --------------
 const ENGINE := {
 	"range": 40.0, "min_range": 8.0, "interval": 11.0, "telegraph": 3.0, "whistle": 1.0,
