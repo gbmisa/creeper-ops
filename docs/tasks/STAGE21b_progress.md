@@ -100,7 +100,60 @@ Tests:
 - Castle smokes (shape/walk/capture/engines/perks) all PASS in both runs.
 
 Unfinished: none for P1. P2 next.
-## P2 light and life — FILL
+## P2 light and life
+
+Done (2026-10-09 ~06:10 UTC):
+- `level/castle_fires.gd` (new, `CastleFires`): `brazier()` — stone foot, iron stem and
+  bowl (lathe), glowing ember ball, flickering OmniLight (energy 2.2, range 10 m);
+  `torch()` — iron bracket, angled oak haft, flame ball, small warm light (0.9, 5 m);
+  `flicker()` — two-sine energy flicker; `gate_inner_dir()` — a gatehouse's inner side
+  (toward its rect's centre; the inner gatehouse uses the inner rect, so torches face
+  the ward, never the bailey).
+- `level/castle_interior_meshes.gd`: `_light` replaced by `_fires` — a brazier in every
+  gate hall and the keep hall (inner gatehouses: one cell toward the ward so it stands
+  in the gate hall, not on the gate cells), two torches flanking each gatehouse
+  passage's inner opening; tower stairs stay unlit. Fire entries
+  `{ light, base, seed, kind }` go to `v["fires"]` for the flicker pass.
+- Light budget per castle: Crown Keep (biggest) = 4 braziers + 6 torches = 10;
+  Ashmoat = 3 + 4 = 7. All ≤ 12 (checked in smoke).
+- `level/castle_banners.gd` (new, `CastleBanners`): banners over every gate (outer and
+  inner) on the gatehouse's outer face; a banner down each of the keep's four faces; the
+  bailey standard — stone-footed iron pole + flag on the zone's centre cell — whose
+  flag rises with `c.ring.progress` while the bailey stage runs and sits at full height
+  once taken; a small war banner on a pole in the gate hall hoisted with the gate
+  stage. Every cloth mesh is appended to the view's `banners` list, so
+  `StrongholdMeshes.refresh` dyes them by owner. `animate_flags` reads only
+  `c.stage`/`c.ring` — no rule changes.
+- `level/stronghold_meshes.gd`: build passes `v.banners` + a fires array into
+  `CastleInteriorMeshes.build`, stores `v["fires"]`, merges `CastleBanners.build`
+  descriptors (`standard`, `gate_banner`) into `v`; `animate` flickers the fires and
+  hoists the flags.
+- `level/castle_defs.gd`: `BRAZIER_ENERGY/RANGE`, `TORCH_ENERGY/RANGE`, `STANDARD_H`.
+- `core/smoke_castles2b_fires.gd` (new, `SmokeCastles2bFires`, registered): brazier and
+  torch counts per castle, ≤ 12 lights, cloth count wired into the banners list, and the
+  flag-rise behaviour (mid-progress, full when taken, gate banner on the gate stage,
+  lowered again on retake).
+- Screenshots: not run (no display); Opus judges visuals.
+
+Spec gaps filled:
+- Torch placement: flanking the passage's inner opening at the end row's side cells,
+  2.2 m up — no axis stored on the interior dict, so the inner direction is derived
+  from the rects at build time.
+- The rising elements are flag *nodes* sliding up static poles (poles don't grow).
+- Tower interiors lost their bare light (budget); the brief's "replacing the bare
+  lights" covers halls — towers were the only cut.
+
+Tests:
+- Parse: `--headless --path godot --import` — 0 script errors (two caught during dev:
+  `-1 << 20` illegal in GDScript, `:=` inference on a Variant product).
+- Full suite `-- --smoke --quit=0.1`: **[smoke] OK: 0 failure(s), 818 PASS**
+  (776 P1 + 42 new), 0 script errors. (One run was killed by a service restart at
+  607 PASS/0 FAIL and re-run to completion on the final tree.)
+- New fires checks: brazier/torch counts per castle (7 fires typical, 10 on Crown Keep
+  — all ≤ 12), cloth counts exact (24, 27 on Crown Keep), flag-rise/retake all green.
+- Castle smokes (shape/walk/capture/engines/perks) all PASS.
+
+Unfinished: none for P2.
 ## P3 interior props — FILL
 ## P4 command-view readability — FILL
 ## P5 turret variety — FILL

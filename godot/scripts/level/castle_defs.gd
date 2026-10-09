@@ -27,6 +27,11 @@ const RING_RETAKE := 15.0    # raiders on the last ring you took, nobody there: 
 const SLAB_BEAM_EVERY := 2   # oak beams under roof slabs, one row every N cells
 const ARCH_SPRING := 1.7     # tower door-arch spring line above the door floor (m)
 const KEEP_ARCH_SPRING := 2.0  # keep door-arch spring line above the hall floor (m)
+const BRAZIER_ENERGY := 2.2  # brazier OmniLight energy
+const BRAZIER_RANGE := 10.0  # brazier OmniLight range (m)
+const TORCH_ENERGY := 0.9    # torch OmniLight energy
+const TORCH_RANGE := 5.0     # torch OmniLight range (m)
+const STANDARD_H := 6.0      # bailey standard pole height (m)
 
 # ---- war engines: trebuchets on the outer corner towers (CastleEngines) --------------
 const ENGINE := {

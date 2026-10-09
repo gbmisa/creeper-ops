@@ -86,8 +86,12 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 	var crown := CastleDecor.crown_nest()  # fungal husk round a pulsing red "Sac"
 	var ca: Dictionary = lay.crown_at  # spire top (Stage 7) or the keep hall (concentric)
 	crown.position = cell_pos(ca.cell.x, ca.cell.y, ca.level)
-	v["interiors"] = CastleInteriorMeshes.build(root, world.grid, lay)
+	v["fires"] = []
+	v["interiors"] = CastleInteriorMeshes.build(root, world.grid, lay, v.banners, v["fires"])
 	CastleStonework.build(root, world.grid, lay)
+	var cloth := CastleBanners.build(root, world.grid, lay, v.banners)
+	for k in cloth:
+		v[k] = cloth[k]
 	root.add_child(crown)
 	v["crown"] = crown
 	if not sp.pad.is_empty():
@@ -130,3 +134,6 @@ static func animate(v: Dictionary, c: Dictionary, t: float) -> void:
 	var glow := v.pump_glow as Node3D
 	glow.scale.y = 1.0 + minf(3.0, c.pump.intake) * (0.5 + 0.5 * sin(t * 6.0))
 	glow.visible = c.pump.jam <= 0.0
+	for f in v.get("fires", []):
+		CastleFires.flicker(f, t)
+	CastleBanners.animate_flags(v, c)
