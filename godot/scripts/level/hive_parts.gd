@@ -32,7 +32,7 @@ static func spawn(host, hive: Dictionary, id: String, stage: int, grown: bool) -
 	part["enemy"] = { "node": node, "oy": 0.8, "radius": 1.0,
 		"alive": func(): return part.alive, "hit": hit_unit }
 	part["target"] = { "node": node, "radius": 1.05, "oy": 0.9,
-		"alive": func(): return part.alive, "on_hit": hit_op }
+		"alive": func(): return part.alive, "on_hit": hit_op, "max_hp": part.max_hp }
 	host.world.add_target(part.target)
 	(hive.parts as Array).append(part)
 	return part

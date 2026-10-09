@@ -140,16 +140,28 @@ static func _earth(g, nests: SporeNests) -> void:
 
 static func _sabotage(g, nests: SporeNests, hive: Dictionary) -> void:
 	var m := _plant(nests, hive, 20, 70)
+	var it: Dictionary = m.interact
+	var w: World = nests.world
 	var before: float = g.stockpile.salvage
-	(m.interact as Dictionary).use.call()
-	SmokeTest._check("sabotage use starts the channel", is_equal_approx(float(m.channel), Config.MORTAR_SABOTAGE_TIME))
-	var far: Vector3 = m.pos + Vector3(8, 0, 0)
-	SmokeTest._check("leaving range cancels sabotage", not EnemyMortars.sabotage(nests, m, far, 1.0) and m.alive)
-	(m.interact as Dictionary).use.call()
-	SmokeTest._check("sabotage needs the full 3s", not EnemyMortars.sabotage(nests, m, m.pos, 2.9) and m.alive)
-	var down := EnemyMortars.sabotage(nests, m, m.pos, 0.2)
-	SmokeTest._check("sabotage destroys the mortar and pays salvage", down and not m.alive
-		and is_equal_approx(g.stockpile.salvage, before + Config.MORTAR_SALVAGE))
+	OperativeUpgrades.reset()
+	DemoCharge.clear()
+	SmokeTest._check("mortar prompt without a charge points to the Armoury",
+		"Armoury" in String(it.prompt.call()) and not it.ready.call())
+	it.use.call()
+	DemoCharge.tick(w, Config.DEMO_FUSE + 1.0)
+	SmokeTest._check("E without a charge does not harm the mortar", m.alive and DemoCharge.list.is_empty())
+	OperativeUpgrades.charges = 2
+	SmokeTest._check("mortar prompt offers planting", "Plant demolition charge" in String(it.prompt.call()) and it.ready.call())
+	it.use.call()
+	SmokeTest._check("planting consumes one charge and arms a fuse", OperativeUpgrades.charges == 1 and DemoCharge.list.size() == 1 and m.alive)
+	it.use.call()
+	SmokeTest._check("a mortar takes only one charge", OperativeUpgrades.charges == 1 and DemoCharge.list.size() == 1)
+	DemoCharge.tick(w, Config.DEMO_FUSE - 0.5)
+	SmokeTest._check("mortar survives until the fuse runs out", m.alive)
+	DemoCharge.tick(w, 0.6)
+	SmokeTest._check("the planted charge destroys the mortar and pays no Salvage",
+		not m.alive and is_equal_approx(g.stockpile.salvage, before))
+	OperativeUpgrades.reset()
 	EnemyMortars.clear(nests, hive)
 
 

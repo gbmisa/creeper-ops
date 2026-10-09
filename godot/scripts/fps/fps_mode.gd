@@ -175,8 +175,11 @@ func _interact(input: InputState, dt := 0.0) -> void:
 	for b in beacons.call(world):
 		candidates.append({ "pos": b.pos, "radius": 1.8, "prompt": func(): return "[%s] Recall to the Command Node (free)" % Keybinds.short("use"),
 			"use": func(): commit_recall.call() })
+	candidates.append_array(DemoCharge.candidates(world))
 	for it in candidates:
 		var d := Vector2(it.pos.x - feet.x, it.pos.z - feet.z).length()
+		if it.get("prefer", false):
+			d -= 1.0  # a planted charge beats a sabotage prompt at the same spot
 		if it.has("near") and not it.near.call(feet):
 			continue
 		if d <= it.radius and d < bd and it.prompt.call() != "":
@@ -225,7 +228,7 @@ func _hold_use(it: Dictionary, input: InputState, dt: float) -> void:
 func _hold_label(it: Dictionary) -> String:
 	var p := String(it.get("prompt", func(): return "").call())
 	var verb := p
-	if verb.begins_with("[Hold "):
+	if verb.begins_with("["):
 		verb = verb.get_slice("] ", 1)
 	return "%s [%s]" % [verb.to_upper().left(42), Keybinds.short("use")]
 

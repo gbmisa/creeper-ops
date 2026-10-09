@@ -24,6 +24,7 @@ static func run(g) -> void:
 	SmokeTest._check("castles2 engines: two trebuchets on the corner towers", c.engines.size() == CastleDefs.ENGINES_DEFAULT
 		and r.lay.engine_posts.has(c.engines[0].post))
 	var e: Dictionary = c.engines[0]
+	_charge(r.w, v, e)
 	c.engines[1].cd = 1e6  # only the first engine shoots in these checks
 	# L2 castle rows shorten engine reach ("engine_range"); the test stands inside the real range.
 	var reach: float = float(e.get("range", CastleDefs.ENGINE.range))
@@ -106,3 +107,24 @@ static func _shoot(castles: Strongholds, c: Dictionary, v: Dictionary, rows: Arr
 	while t < CastleDefs.ENGINE.telegraph + 0.5:
 		CastleEngines.tick(castles, c, v, rows, 0.1)
 		t += 0.1
+
+
+## A planted demolition charge destroys a trebuchet outright (chargeable by max HP).
+static func _charge(w: World, v: Dictionary, e: Dictionary) -> void:
+	OperativeUpgrades.reset()
+	OperativeUpgrades.charges = 1
+	var node: Node3D = v.engines[0]
+	var plant := {}
+	for it in DemoCharge.candidates(w):
+		if (it.pos as Vector3).distance_to(node.global_position) < 0.01:
+			plant = it
+	SmokeTest._check("castles2 engines: a trebuchet offers a plant prompt", not plant.is_empty() and "Plant" in String(plant.prompt.call()))
+	if plant.is_empty():
+		return
+	plant.use.call()
+	DemoCharge.tick(w, Config.DEMO_FUSE + 0.1)
+	SmokeTest._check("castles2 engines: a planted charge destroys the trebuchet", e.hp <= 0.0 and OperativeUpgrades.charges == 0)
+	e.hp = e.max_hp
+	e.dead = 0.0
+	OperativeUpgrades.reset()
+	DemoCharge.clear()

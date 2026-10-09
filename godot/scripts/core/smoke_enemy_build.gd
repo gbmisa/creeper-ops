@@ -228,6 +228,20 @@ static func _rubble(g, b: EnemyBuilder) -> void:
 	other.channel = Config.MORTAR_SABOTAGE_TIME
 	var done := b.apply_channel(other, other.pos, Config.MORTAR_SABOTAGE_TIME)
 	SmokeTest._check("sabotage pays salvage and leaves no rubble", done and b.queue.size() == 1 and is_equal_approx(g.stockpile.salvage, salvage + Config.MORTAR_SALVAGE))
+	OperativeUpgrades.reset()
+	OperativeUpgrades.charges = 1
+	var pl := b.begin(hub, "lancer", cell + Vector2i(2, 0), false, -1.0)
+	var plant := {}
+	for it in DemoCharge.candidates(b.world):
+		if (it.pos as Vector3).distance_to(pl.pos) < 0.01:
+			plant = it
+	SmokeTest._check("an enemy lancer offers a plant prompt with a charge", not plant.is_empty())
+	if not plant.is_empty():
+		plant.use.call()
+		DemoCharge.tick(b.world, Config.DEMO_FUSE + 0.1)
+	SmokeTest._check("a planted charge destroys an enemy-built lancer", not bool(pl.alive) and OperativeUpgrades.charges == 0)
+	OperativeUpgrades.reset()
+	DemoCharge.clear()
 	b.clear()
 
 
@@ -345,12 +359,25 @@ static func _mortars(g, b: EnemyBuilder) -> void:
 	_drain_shells(world)
 	SmokeTest._check("an intercepted shell never detonates",
 		shell2.is_empty() or is_equal_approx(grid.height[ti2], floor2 + 2.0), str(grid.height[ti2]))
-	# The player can destroy built mortars.
+	# Guns cannot destroy built mortars; a planted charge does, for no Salvage.
+	var gun_s: Dictionary = built[0]
+	(gun_s.target as Dictionary).on_hit.call(99999.0, gun_s.pos)
+	(gun_s.enemy as Dictionary).hit.call(99999.0)
+	SmokeTest._check("gunfire cannot destroy a built mortar", bool(gun_s.alive))
+	OperativeUpgrades.reset()
+	var pay_before: float = g.stockpile.salvage
+	var plant: Dictionary = gun_s.interact
+	plant.use.call()
+	OperativeUpgrades.charges = 1
+	plant.use.call()
+	DemoCharge.tick(world, Config.DEMO_FUSE + 0.1)
+	SmokeTest._check("a planted charge destroys a built mortar for no Salvage",
+		not bool(gun_s.alive) and OperativeUpgrades.charges == 0 and is_equal_approx(g.stockpile.salvage, pay_before))
 	for raw in b.list.duplicate():
 		var s: Dictionary = raw
 		if str(s.kind) == "mortar" and bool(s.alive):
-			b.hurt(s, 99999.0)
-	SmokeTest._check("player fire destroys castle mortars and unregisters them",
+			(s.target as Dictionary).charge_kill.call()
+	SmokeTest._check("destroyed castle mortars unregister",
 		b.mortars.is_empty() and nests.hub_mortars.is_empty(),
 		"%d/%d" % [b.mortars.size(), nests.hub_mortars.size()])
 	TerrainEdit.apply(world, [{ "x": tc.x, "z": tc.y, "height": floor_h }])

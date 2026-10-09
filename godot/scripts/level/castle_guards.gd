@@ -84,7 +84,7 @@ func _spawn(s: Dictionary) -> void:
 	var size: float = Config.SENTINEL.size
 	var hit := func(dmg: float, _p = null): _hurt(s, dmg)
 	s["enemy"] = { "node": node, "oy": size * 1.2, "radius": size * 1.2, "alive": func(): return s.alive, "hit": hit }
-	s["target"] = { "node": node, "oy": size * 1.2, "radius": size * 1.2, "alive": func(): return s.alive, "on_hit": hit }
+	s["target"] = { "node": node, "oy": size * 1.2, "radius": size * 1.2, "alive": func(): return s.alive, "on_hit": hit, "max_hp": Config.SENTINEL.hp }
 	world.add_target(s.target)
 
 
