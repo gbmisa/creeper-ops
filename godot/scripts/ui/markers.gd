@@ -28,7 +28,7 @@ func refresh(world: World, cam: Camera3D, fps: bool) -> void:
 	for m in world.markers:
 		if not m.visible.call():
 			continue
-		var p: Vector3 = m.pos
+		var p: Vector3 = m.pos.call() if m.pos is Callable else m.pos
 		var dist := cam.global_position.distance_to(p)
 		if m.get("minor", false) and dist > (40.0 if fps else 120.0):
 			continue

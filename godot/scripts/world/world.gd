@@ -24,7 +24,7 @@ var targets: Array[Dictionary] = []
 var interactables: Array[Dictionary] = []
 ## Per-frame hooks: Callable(dt)
 var updaters: Array[Callable] = []
-## On-screen markers: { pos: Vector3, label: String|Callable, color: Color, visible: Callable, minor: bool }
+## On-screen markers: { pos: Vector3|Callable, label: String|Callable, color: Color, visible: Callable, minor: bool }
 var markers: Array[Dictionary] = []
 
 
