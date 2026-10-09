@@ -11,6 +11,8 @@ class_name CastlePerks
 ## Hooks the game's castles into weapon range (only the live game calls this).
 static func attach(s: Strongholds) -> void:
 	WeaponLogic.range_bonus = func(st: Structure) -> float: return range_mult(s, st.x, st.z)
+	# P7: castle-only production. (bind() appends, so a lambda carries the castles.)
+	Placement.inside_held = func(cell: Vector2i) -> bool: return CastleVaults.inside_held(s, cell)
 
 
 static func range_mult(s: Strongholds, x: int, z: int) -> float:

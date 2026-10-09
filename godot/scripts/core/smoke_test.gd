@@ -173,6 +173,7 @@ static func run(g) -> void:
 	SmokeCastles2bReadability.run(g)
 	SmokeCastles2bTurrets.run(g)
 	SmokeCastles2bGuards.run(g)
+	SmokeCastles2bSiege.run(g)
 	SmokeMetrics.run(g)
 	SmokeEngines.run(g)
 	SmokeEnginesShip.run(g)

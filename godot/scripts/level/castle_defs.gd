@@ -51,6 +51,14 @@ const ENGINE := {
 }
 const ENGINES_DEFAULT := 2   # concentric rows without an "engines" key
 
+# ---- 21b: castle-only production (player Trebuchet) ------------------------------------
+const P_TREB := {  # P7: cost 80, Weapons tab, castle_only; lobs at enemy builds, never creeper
+	"range": 40.0, "min_range": 8.0, "fire_rate": 10.0, "power": 45.0, "splash": 2.5,
+	"ammo_max": 30.0, "ammo_per_packet": 2.0, "ammo_per_shot": 6.0,  # 3 packets a stone
+}
+const PORTCULLIS_LIFT := 2.5  # P8: metres the gate mesh rises when its ring changes hands to you
+const PORTCULLIS_TIME := 1.2  # P8: seconds for the raise/lower tween
+
 # ---- held perks (CastlePerks) ----------------------------------------------------------
 const REACH_RADIUS := 28.0   # cells from a held castle's centre
 const REACH_BONUS := 0.25    # weapon range bonus inside it

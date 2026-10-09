@@ -1,6 +1,13 @@
 class_name Placement
 ## Placement / move / landing validity. Returns { ok: bool, reason: String, warn: String }.
 ## `ignore` = a structure whose own cells don't count as occupied (it's the one moving).
+##
+## Stage 21b P7: `inside_held` is set by CastlePerks.attach to CastleVaults.inside_held
+## bound to the game's castles. Defs with "castle_only" refuse everywhere it returns
+## false. Unset (invalid) outside the live game: castle_only defs refuse everywhere.
+
+
+static var inside_held := Callable()
 
 
 static func footprint_cells(type: String, x: int, z: int) -> Array[Vector2i]:
@@ -61,6 +68,8 @@ static func can_place(mgr, type: String, x: int, z: int, planned: Array[Vector3]
 		return { "ok": false, "reason": why }
 	if def.get("unique", false) and mgr.count_type(type) > 0:
 		return { "ok": false, "reason": "Only one %s per mission" % def.label }
+	if def.get("castle_only", false) and (not inside_held.is_valid() or not inside_held.call(Vector2i(x, z))):
+		return { "ok": false, "reason": "%s can only be built inside a castle you hold" % def.label }
 	if type == "miner":
 		var vein: Dictionary = mgr.deposits.ore_at(x, z) if mgr.deposits != null else {}
 		if vein.is_empty() or float(vein.get("left", 0.0)) < 1.0:

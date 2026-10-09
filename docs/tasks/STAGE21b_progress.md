@@ -369,7 +369,67 @@ Tests:
   castle-garrison checks all PASS.
 
 Unfinished: none for P6.
-## P7 castle-only production — FILL
+## P7 castle-only production
+
+Done (2026-10-09 ~14:30 UTC):
+- `command/placement.gd`: `static var inside_held := Callable()` + one guard in
+  `can_place`: a def with `"castle_only"` refuses when the callable is invalid or returns
+  false for the cell ("<label> can only be built inside a castle you hold"). The guard
+  runs before the network check, so the reason is deterministic.
+- `level/castle_perks.gd`: `attach` also sets `Placement.inside_held` to a lambda
+  calling `CastleVaults.inside_held(s, cell)` — the one P7 rule-file touch the brief
+  prescribes (nothing else in that file changed). game.gd already calls attach.
+- `command/structure_defs.gd`: `"trebuchet"` row (Weapons tab, cost 80, hp 140,
+  `castle_only`, range/min_range/fire_rate/power/splash from `CastleDefs.P_TREB`,
+  `targets: "siege"`, ammo max 30 / 2 per packet / 6 per shot = 3 packets a stone).
+- `command/weapon_logic.gd`: `"trebuchet"` case + `_trebuchet` (nearest foe in
+  [min_range, range] from `_siege_foes`: grown enemy structures, hive parts except the
+  core, hive mortars; lobs a stone via `w.effects.lob` with the arm swung by
+  `CastleEngineMeshes.throw`) + `_treb_impact` (builder list via
+  `EnemyBuilder.splash`, hive parts/mortars via their foe-row hit, raiders nicked;
+  the Core ignores the hit like every non-Operative weapon; creeper never touched).
+  Needs network (default) and packets-as-ammo through the normal weapon path.
+- `command/weapon_meshes.gd`: `"trebuchet"` case → `trebuchet_p()` reuses
+  `CastleEngineMeshes.trebuchet()` with the glow ball swapped to
+  `StrongholdMeshes.PLAYER` blue + a "Muzzle" node for shot effects.
+- `command/structure_meshes.gd`: `top_y` entry 4.2.
+- `level/castle_defs.gd`: `P_TREB` numbers, `PORTCULLIS_LIFT`/`PORTCULLIS_TIME` (P8).
+- `core/smoke_castles2b_siege.gd` (new, `SmokeCastles2bSiege`, registered): 11 checks —
+  attach wiring, refused outside (guard reason), Weapons tab row, capture to held,
+  keep sender up, placed in the held bailey, player-coloured model, lobs (ammo
+  consumed), stone damages the structure (200 → 155) while creeper depth stays 2.0,
+  castle[0] hostile again at the end. Leaves no structures/raiders behind.
+- Screenshots: not run (no display); Opus judges visuals.
+
+Spec gaps filled:
+- `mgr` (StructureManager) exposes no castles object, so the guard is a static
+  callable on Placement set by `CastlePerks.attach`, as the brief's context describes.
+- Unset callable (outside the live game) refuses everywhere — fail closed.
+- `bind()` appends bound args in Godot 4, so `inside_held.bind(s)` would have passed
+  (cell, s); a lambda carries the castles instead.
+- Range 40, min range 8, 10 s interval, 45 power, 2.5 splash mirror the enemy engine
+  (`CastleDefs.ENGINE`); the Reach perk's +25% applies near held castles as for every
+  weapon (no exception made).
+- Hub mortars die with their parent structure (splash path); hive mortars and parts
+  are hit directly through their foe rows.
+
+Tests:
+- Parse: `--headless --path godot --import` (from the work dir) — 0 script errors.
+- Full suite `-- --smoke --quit=0.1`: **[smoke] OK: 0 failure(s), 897 PASS**
+  (886 P6 + 11 new), 0 script errors. All castle smokes PASS.
+
+Bugs caught before push (both mine):
+- `trebuchet_p` was inserted mid-`mortar()` (anchored on a line that wasn't the
+  function's end): parse errors in weapon_meshes.gd → every placed structure got a
+  null body → the post-smoke `_process` looped script errors and the run never quit.
+  Fixed by moving the function after `mortar()`'s true end.
+- The first `--import` "0 script errors" was bogus: I ran it from inside `godot/`,
+  so `--path godot` aborted ("Invalid project path") before compiling anything.
+  Always run from the work dir. Logged in AGENTS.md below.
+- `CastleVaults.inside_held.bind(s)`: Godot's `bind` appends, so the call arrived as
+  (cell, s) — replaced with a lambda.
+
+Unfinished: none for P7.
 ## P8 Stage 21 leftovers — FILL
 
 ## Suggestions (unbriefed, not implemented)
