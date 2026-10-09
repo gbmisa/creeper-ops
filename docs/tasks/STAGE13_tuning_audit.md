@@ -1,6 +1,6 @@
 # Brief T (Muse): Stage 13 tuning audit (measure and propose, change no numbers)
 
-**Branch:** `stage/13-tuning-audit`. Opus creates it from `main` after brief P (`fix/playtest2-pressure`) is merged, so you measure the current balance. **Don't start until that branch exists.**
+**Branch:** `stage/13-tuning-audit` (from `main`). **Start now.** Brief P (`fix/playtest2-pressure`) will change L2 balance when it merges (trebuchet range and HP, raider grace). Measure L1 first. For L2, if P has landed on `main` by the time you get there, fetch `main` and measure on that version (you may merge `origin/main` into this branch for that). Say in the report which commit each number came from.
 **Read:** AGENTS.md, MUSE_NOTES.md, this brief, MASTER_PLAN.md §2 items 13 and 14 only, `level/raider_defs.gd`, `level/flyer_defs.gd`, `command/structure_defs.gd`, `core/config.gd` and the level `RAID_SCHEDULE`s. The only output is `docs/tasks/STAGE13_report.md`, plus at most one new helper flag in `core/` if a number can't be measured otherwise.
 
 ## Targets (from MASTER_PLAN 13)

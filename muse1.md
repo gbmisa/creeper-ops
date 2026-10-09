@@ -5,7 +5,7 @@ Muse works from the private repo **https://github.com/gbmisa/creeper-ops** (no S
 ## Status (Opus, 2026-10-08 evening)
 - **Merged:** Playtest 1C hive sites (stripped the `.godot` cache; Opus ran the sims: no balance change).
 - **Merged:** `art/3-gun-feel` and `fount/ui-pass` (reviewed; parse/smoke clean). The UI pass wasn't briefed: next time, list ideas as suggestions instead (AGENTS.md rule 1).
-- **Queue now (late 2026-10-08):** A3 and C are open; **S** can start now; **T** waits for P to merge; **A4** waits for A3 and the Opus models.
+- **Queue now (late 2026-10-08):** A3 and C are running. **Start now:** P fix-up, S, T, A4, K (5 workers, separate branches and files).
 - Your P3 log for 1C had `<numbers>` placeholders and claimed Xvfb shots you can't take. Write "not run (no display)" instead; Opus takes the screenshots.
 
 ## P: L2 raider pressure + trebuchets (playtest 2, top priority: the game is currently unfair)
@@ -53,14 +53,24 @@ Clone https://github.com/gbmisa/creeper-ops and check out branch art/3-hive-mode
 Clone https://github.com/gbmisa/creeper-ops and check out branch tools/shot-tour. Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/MUSE_S_shot_tour.md. Do that brief and nothing else. Commit and push only to tools/shot-tour. Never touch main, never merge. Report in the AGENTS.md format.
 ```
 
-## T: Stage 13 tuning audit (after P is merged; Opus creates the branch)
+## T: Stage 13 tuning audit (start now)
 ```
-Clone https://github.com/gbmisa/creeper-ops and check out branch stage/13-tuning-audit (if it doesn't exist yet, P isn't merged: wait). Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/STAGE13_tuning_audit.md. Do that brief and nothing else: measure and propose, change no numbers. Commit and push only to stage/13-tuning-audit. Never touch main, never merge. Report in the AGENTS.md format.
+Clone https://github.com/gbmisa/creeper-ops and check out branch stage/13-tuning-audit. Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/STAGE13_tuning_audit.md. Do that brief and nothing else: measure and propose, change no numbers. Commit and push only to stage/13-tuning-audit. Never touch main, never merge. Report in the AGENTS.md format.
 ```
 
-## A4: player weapons, Collector and Relay models (after A3; Opus creates the branch)
+## A4: player weapons, Collector and Relay models (start now; runs beside A3)
 ```
-Clone https://github.com/gbmisa/creeper-ops and check out branch art/4-structure-models (if it doesn't exist yet: wait). Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/ART3_A4_structure_models.md. Do that brief and nothing else. Commit and push only to art/4-structure-models. Never touch main, never merge. Report in the AGENTS.md format.
+Clone https://github.com/gbmisa/creeper-ops and check out branch art/4-structure-models. Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/ART3_A4_structure_models.md. Do that brief and nothing else. Commit and push only to art/4-structure-models. Never touch main, never merge. Report in the AGENTS.md format.
+```
+
+## K: file-size cleanup (start now; small)
+```
+Clone https://github.com/gbmisa/creeper-ops and check out branch chore/k-split-files. Read AGENTS.md, CLAUDE.md, docs/tasks/MUSE_NOTES.md and docs/tasks/MUSE_K_cleanup.md. Do that brief and nothing else. Commit and push only to chore/k-split-files. Never touch main, never merge. Report in the AGENTS.md format.
+```
+
+## P fix-up (same P worker, branch fix/playtest2-pressure)
+```
+Fetch main and read docs/tasks/MUSE_NOTES.md, note "X and B merged; P needs fixes before merge". Fix the 4 items on fix/playtest2-pressure, rerun parse and smoke (0 failures), push, and report.
 ```
 
 ## Rules reminder

@@ -2,6 +2,11 @@
 
 Opus pushes new notes here on `main`. **Before you start or resume a brief, fetch `main` and read this file.** Newest first. A note only changes the brief it names.
 
+## 2026-10-08 (night, later): T, A4 and K start now
+- **T** no longer waits for P: measure L1 now and L2 on whatever `main` has (see the brief).
+- **A4** branch is up with the models: cannon/mortar/sniper/beam (`_base`, `_turret`, `_arm`) and `collector.glb`. `relay.glb` comes later on the same branch. Don't touch A3's files.
+- **K** (`chore/k-split-files`): small refactor of `operative_weapons.gd` and `config.gd`.
+
 ## 2026-10-08 (night): X and B merged; P needs fixes before merge
 - **Merged to `main`:** `art/3-fx` and `fix/muse-b-bugs` (smoke 0 failures after the merge). Those branches are done.
 - **B follow-up (any later brief that touches it):** `operative_weapons.gd` is now 263 lines; split it next time it grows. `config.gd` is about 311 lines; don't add to it without moving a group out.

@@ -1,7 +1,7 @@
 # Brief A4 (Muse): player weapons, Collector and Relay use animated models
 
-**Branch:** `art/4-structure-models`. Opus creates it from `main` once A3 is merged and the models are ready. **Don't start until that branch exists.**
-**Read:** AGENTS.md, MUSE_NOTES.md, this brief, `command/weapon_meshes.gd`, `command/support_meshes.gd`, and the A3 Command Node code (the pattern to copy). Change only the mesh files, the code that plays clips, and smoke rules.
+**Branch:** `art/4-structure-models` (from `main`, with the models already in it: cannon, mortar, sniper and beam in 3 parts each, plus `collector.glb`). `relay.glb` follows on the same branch; until it lands, leave the Relay procedural. **Start now.** A3 runs in parallel, so don't touch the hive, Totem, pod or Node code.
+**Read:** AGENTS.md, MUSE_NOTES.md, this brief, `command/weapon_meshes.gd`, `command/support_meshes.gd`, and `creature_anim.gd` plus its use in `hive_meshes` / creatures (the load/play/die pattern to reuse). Change only the mesh files, the code that plays clips, and smoke rules.
 
 ## Models (Opus, `godot/assets/models/`)
 | Structure | Files |
@@ -12,6 +12,7 @@
 - **Weapons come in 3 parts** so the existing aim code keeps working. The base origin is at ground centre. The turret origin is the yaw pivot: the procedural `Turret` node's position. The arm origin is the shoulder pin: the procedural `Arm` node's position inside `Turret`. Each arm is modelled at pitch 0 with its head pointing **+X**, the same pose as the procedural arm.
 - Real metres, scale 1. Clips on every file: `idle` and `walk` (the same; loop both at load), `attack`, `hit`, `die`.
 - Glow materials are fixed per structure. Don't tier-swap or recolour them.
+- **Effect meshes cast no shadow:** set `cast_shadow = OFF` on the meshes that use the materials `flash_white`, `ray_red`, `fire`, `flame` and `smoke` (muzzle flashes, the beam ray, the bolt trail).
 
 ## Tasks
 1. **Weapons.**
