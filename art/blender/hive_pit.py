@@ -27,7 +27,7 @@ def build():
         b.limb((math.cos(a) * 0.7, math.sin(a) * 0.7, 0.2), (math.cos(a) * 1.15, math.sin(a) * 1.15, 0.01), 0.045, 0.015, "sinew", "base", seg=4)
     for x, y, z, a in sk.ring(9, 0.78, 0.29, 0.1):  # warts along the lip
         b.ball((x, y, z), 0.07, "hive_dark", "base", seg=5, rings=3)
-    b.lathe([(0.52, 0.0), (0.48, 0.08), (0.42, 0.03)], "hive_dark", "base", seg=14)  # dark lip round the pool
+    b.lathe([(0.52, 0.0), (0.48, 0.08), (0.42, 0.03)], "hive_dark", "base", seg=14, cap=False)  # dark lip round the pool
     b.ball((0, 0, 0.04), 0.44, "pit_glow", "pool", scale=(1, 1, 0.45), seg=10, rings=6)
     for i, (x, y, z, _a) in enumerate(TEETH):
         mid = (x * 0.98, y * 0.98, z + 0.5)

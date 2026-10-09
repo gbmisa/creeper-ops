@@ -37,7 +37,7 @@ def build():
     for k in range(5):  # veins clutching the heart
         a = k * 2 * math.pi / 5
         b.limb((math.cos(a) * 0.42, math.sin(a) * 0.42, 0.95), (math.cos(a) * 0.3, math.sin(a) * 0.3, 1.38), 0.05, 0.02, "sick", "heart", seg=4)
-    b.lathe([(0.82, 0.05), (0.88, 0.09), (0.82, 0.13)], "core_glow", "halo", seg=16)  # ring that flares on the beat
+    b.lathe([(0.82, 0.05), (0.88, 0.09), (0.82, 0.13)], "core_glow", "halo", seg=16, cap=False)  # ring that flares on the beat
     b.ball((0, 0, 1.15), 0.42, "core_glow", "heart", seg=12, rings=9)
     b.ball((0, 0, 1.15), 0.3, "core_flesh", "heart", scale=(1.5, 0.35, 1.45), seg=8, rings=6)  # dark cleft
     b.finish(arm)

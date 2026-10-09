@@ -32,7 +32,7 @@ def build():
     b.lathe([(0.26, 0.25), (0.29, 0.45), (0.24, 0.62), (0.25, 0.82)], "hive_skin", "stalk1", seg=10)
     b.lathe([(0.25, 0.8), (0.2, 1.0), (0.19, 1.18), (0.25, TOP)], "hive_skin", "stalk2", seg=10)
     for z, bone in ((0.42, "stalk1"), (0.66, "stalk1"), (0.92, "stalk2"), (1.12, "stalk2")):  # bone rings
-        b.lathe([(0.3, z - 0.035), (0.33, z), (0.3, z + 0.035)], "chitin", bone, seg=10)
+        b.lathe([(0.3, z - 0.035), (0.33, z), (0.3, z + 0.035)], "chitin", bone, seg=10, cap=False)
     for k in range(3):  # glowing veins up the stalk
         a = k * 2 * math.pi / 3
         for z0, z1, bone in ((0.3, 0.8, "stalk1"), (0.8, TOP, "stalk2")):
@@ -45,7 +45,7 @@ def build():
         b.limb((x, y, z - 0.04), mid, 0.11, 0.11, "bone", "petal%d" % i, seg=5)
         b.limb(mid, tip, 0.11, 0.0, "bone", "petal%d" % i, seg=5)
         b.poly([(x * 0.5, y * 0.5, z), mid, tip], ["petal%d" % i] * 3, "chitin")
-    b.lathe([(0.3, 0.24), (0.38, 0.3), (0.3, 0.36)], "spore_glow", "wave", seg=12)
+    b.lathe([(0.32, 0.24), (0.4, 0.3), (0.32, 0.36), (0.28, 0.3), (0.32, 0.24)], "spore_glow", "wave", seg=12, cap=False)
     b.ball((0, 0, TOP + 0.14), 0.2, "spore_glow", "shot", seg=8, rings=6)
     b.finish(arm)
     return arm
