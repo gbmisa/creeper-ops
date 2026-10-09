@@ -65,11 +65,6 @@ static func creature_glow(color: Color) -> StandardMaterial3D:
 	m.emission_energy_multiplier = 0.55
 	return m
 
-## Test/debug switch: when true, make() returns null so callers fall back to
-## procedural meshes. Used by the A4 smoke rules.
-static var disabled := false
-
-
 ## "Spore Bat" -> "spore_bat", "Skitter" -> "skitter".
 static func id_of(def_name: String) -> String:
 	return def_name.strip_edges().to_lower().replace(" ", "_")
