@@ -46,11 +46,17 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	_selbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_selbox)
 	_help = UiKit.label("", 12, UiKit.DIM)
-	_help.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_help.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_help.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	# Fixed offsets (not grow): the label must sit 12px above the bottom edge at any
+	# viewport size; grow-based layout clipped its descenders at 720p.
+	_help.anchor_left = 1.0
+	_help.anchor_right = 1.0
+	_help.anchor_top = 1.0
+	_help.anchor_bottom = 1.0
+	_help.offset_left = -1012.0
+	_help.offset_right = -12.0
+	_help.offset_top = -36.0
+	_help.offset_bottom = -12.0
 	_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_help.position = Vector2(-12, -12)
 	add_child(_help)
 	_build_overlay()
 	keys = KeybindMenu.new()

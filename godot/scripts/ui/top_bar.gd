@@ -1,20 +1,27 @@
 class_name TopBar
 extends PanelContainer
-## CW3-style economy readout. Energy bank bar, then the numbers that matter:
-##   green  = production (energy/packets generated per second)
-##   red    = demand (packets structures are asking for per second)
-##   unmet  = demand the bank couldn't pay (starving), or "bank full" when income is wasted
-## plus packets in the air, claimed field, units, creeper cover, Node health, clock, speed.
+## Compact left-docked economy/status cluster. All numeric readouts live here, on the
+## left side of the screen. Percentages are bars, not numbers; every metric has its own
+## color so the panel reads at a glance. Must fit 1280x720 and up.
+
+const CREEP := Color(0.35, 0.62, 1.0)   # creeper coverage: blue
+const PRESS := Color(1.0, 0.45, 0.25)   # nest pressure: orange-red
+const AETHER := Color(0.83, 0.55, 1.0)  # aether: purple
+const RADIO := Color(0.62, 0.83, 1.0)   # packets: pale blue
 
 var energy_bar: ProgressBar
 var energy_lbl: Label
 var ore_lbl: Label
 var salvage_lbl: Label
+var aether_lbl: Label
+var status_lbl: Label
+var node_bar: ProgressBar
+var creep_bar: ProgressBar
+var press_bar: ProgressBar
+var nest_lbl: Label
 var prod_lbl: Label
 var demand_lbl: Label
-var status_lbl: Label
-var stats_lbl: Label
-var node_lbl: Label
+var misc_lbl: Label
 var time_lbl: Label
 
 
@@ -25,68 +32,79 @@ func _sep() -> VSeparator:
 	return s
 
 
+## Caption + bar (+ optional value label) column for one metric.
+func _meter(row: HBoxContainer, caption: String, bar_w: float, color: Color, with_value := true) -> Array:
+	var v := UiKit.vbox(1)
+	v.add_child(UiKit.label(caption, 10, UiKit.DIM))
+	var h := UiKit.hbox(6)
+	var b := UiKit.bar(bar_w, 10, color)
+	h.add_child(b)
+	var val: Label = null
+	if with_value:
+		val = UiKit.label("", 13)
+		h.add_child(val)
+	v.add_child(h)
+	row.add_child(v)
+	return [b, val]
+
+
 func _init() -> void:
 	add_theme_stylebox_override("panel", UiKit.style(UiKit.BG, UiKit.EDGE, 0, 6))
-	set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	position = Vector2(10, 10)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var row := UiKit.hbox(18)
-	add_child(row)
-	var e := UiKit.vbox(2)
-	e.add_child(UiKit.label("ENERGY", 11, UiKit.DIM))
-	energy_bar = UiKit.bar(220, 14, UiKit.ENERGY)
-	e.add_child(energy_bar)
-	row.add_child(e)
-	energy_lbl = UiKit.label("0 / 0", 18)
-	energy_lbl.custom_minimum_size.x = 90
-	row.add_child(energy_lbl)
-	row.add_child(_sep())
-	ore_lbl = UiKit.label("Ore 0", 16, UiKit.WARN)
-	row.add_child(ore_lbl)
-	salvage_lbl = UiKit.label("Salvage 0", 16, UiKit.GOOD)
-	row.add_child(salvage_lbl)
-	row.add_child(_sep())
-	prod_lbl = _stat(row, "PRODUCTION /s", UiKit.GOOD)
-	demand_lbl = _stat(row, "DEMAND /s", UiKit.BAD)
-	row.add_child(_sep())
-	status_lbl = UiKit.label("", 14, UiKit.WARN)
-	status_lbl.custom_minimum_size.x = 260
-	row.add_child(status_lbl)
-	row.add_child(_sep())
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(spacer)
-	stats_lbl = UiKit.label("", 14, UiKit.TEXT)
-	row.add_child(stats_lbl)
-	node_lbl = UiKit.label("", 16)
-	row.add_child(node_lbl)
-	time_lbl = UiKit.label("", 16)
-	row.add_child(time_lbl)
+	var v := UiKit.vbox(4)
+	add_child(v)
+	# Row 1: stockpiles + status message.
+	var r1 := UiKit.hbox(12)
+	v.add_child(r1)
+	var em := _meter(r1, "ENERGY", 130, UiKit.ENERGY)
+	energy_bar = em[0]
+	energy_lbl = em[1]
+	r1.add_child(_sep())
+	ore_lbl = UiKit.label("", 13, UiKit.WARN)
+	r1.add_child(ore_lbl)
+	salvage_lbl = UiKit.label("", 13, UiKit.GOOD)
+	r1.add_child(salvage_lbl)
+	aether_lbl = UiKit.label("", 13, AETHER)
+	r1.add_child(aether_lbl)
+	r1.add_child(_sep())
+	status_lbl = UiKit.label("", 13, UiKit.WARN)
+	r1.add_child(status_lbl)
+	# Row 2: bars for the percentages + compact counts + clock.
+	var r2 := UiKit.hbox(12)
+	v.add_child(r2)
+	node_bar = _meter(r2, "NODE", 90, UiKit.GOOD, false)[0]
+	creep_bar = _meter(r2, "CREEPER", 90, CREEP, false)[0]
+	press_bar = _meter(r2, "PRESSURE", 90, PRESS, false)[0]
+	nest_lbl = UiKit.label("", 13)
+	r2.add_child(nest_lbl)
+	r2.add_child(_sep())
+	prod_lbl = UiKit.label("", 13, UiKit.GOOD)
+	r2.add_child(prod_lbl)
+	demand_lbl = UiKit.label("", 13, UiKit.BAD)
+	r2.add_child(demand_lbl)
+	r2.add_child(_sep())
+	misc_lbl = UiKit.label("", 13, UiKit.TEXT)
+	r2.add_child(misc_lbl)
+	time_lbl = UiKit.label("", 13, UiKit.TEXT)
+	r2.add_child(time_lbl)
 
 
-func _pile(title: String, amount: float, rate: float) -> String:
+func _num(amount: float, rate: float) -> String:
 	var tail := "" if absf(rate) < 0.05 else " (%+.1f)" % rate
-	return "%s %s%s" % [title, String.num(amount, 1), tail]
-
-
-func _stat(row: HBoxContainer, title: String, color: Color) -> Label:
-	var v := UiKit.vbox(0)
-	v.add_child(UiKit.label(title, 11, UiKit.DIM))
-	var l := UiKit.label("0.0", 18, color)
-	v.add_child(l)
-	row.add_child(v)
-	return l
+	return "%s%s" % [String.num(amount, 1), tail]
 
 
 func refresh(g) -> void:
 	var eco: Economy = g.economy
 	var pk: Packets = g.structures.packets
 	energy_bar.value = eco.energy / eco.max_energy
+	energy_bar.tooltip_text = "Energy %d / %d" % [floori(eco.energy), eco.max_energy]
 	energy_lbl.text = "%d / %d" % [floori(eco.energy), eco.max_energy]
-	ore_lbl.text = _pile("Ore", g.stockpile.ore, g.stockpile.ore_rate)
-	salvage_lbl.text = _pile("Salvage", g.stockpile.salvage, g.stockpile.salvage_rate)
-	prod_lbl.text = "+%.1f" % eco.income
-	demand_lbl.text = "-%.1f" % pk.demand_rate
+	ore_lbl.text = "Ore %s" % _num(g.stockpile.ore, g.stockpile.ore_rate)
+	salvage_lbl.text = "Salvage %s" % _num(g.stockpile.salvage, g.stockpile.salvage_rate)
+	aether_lbl.text = "Æther %d" % Upgrades.aether
 	if g.landing:
 		status_lbl.text = "Choose a landing site for the Command Node"
 		status_lbl.add_theme_color_override("font_color", UiKit.ENERGY)
@@ -101,15 +119,26 @@ func refresh(g) -> void:
 		status_lbl.add_theme_color_override("font_color", UiKit.WARN)
 	else:
 		status_lbl.text = ""
-	var held: int = g.castles.held()
-	var nests: SporeNests = g.hazards.nests
-	var threat := ("Nests: %s" % RaiderDefs.newest(nests.pressure()).name if nests.alive_count() > 0 else "Nests: none") + "  Pressure %d%%" % roundi(nests.pressure() * 100.0) + ("  AIR %d" % nests.flyers.count() if nests.flyers.count() > 0 else "")
-	stats_lbl.text = "Æther %d (%d castles)   Packets %d   Field %d   Units %d   Creeper %d%%   %s" % [Upgrades.aether, held,
-		pk.count(), eco.field_cells, g.units.list.size(), roundi(g.surface.creeper.coverage() * 100.0), threat]
 	var node: Structure = g.structures.command_node()
-	var hp: float = node.hp / node.def.hp if node else 0.0
-	node_lbl.text = "Node %d%%" % roundi(maxf(0.0, hp) * 100.0) if node or not g.landing else "Node: in orbit"
-	node_lbl.add_theme_color_override("font_color", UiKit.BAD if hp < 0.35 else (UiKit.WARN if hp < 0.7 else UiKit.TEXT))
+	var frac := 0.0
+	if node:
+		frac = clampf(node.hp / node.def.hp, 0.0, 1.0)
+	node_bar.value = frac
+	UiKit.set_bar_color(node_bar, UiKit.BAD if frac < 0.35 else (UiKit.WARN if frac < 0.7 else UiKit.GOOD))
+	node_bar.tooltip_text = "Command Node HP %d%%" % roundi(frac * 100.0) if node or not g.landing else "Node: in orbit"
+	var cov := clampf(g.surface.creeper.coverage(), 0.0, 1.0)
+	creep_bar.value = cov
+	creep_bar.tooltip_text = "Creeper coverage %d%%" % roundi(cov * 100.0)
+	var nests: SporeNests = g.hazards.nests
+	var pr := clampf(nests.pressure(), 0.0, 1.0)
+	press_bar.value = pr
+	press_bar.tooltip_text = "Nest pressure %d%%" % roundi(pr * 100.0)
+	nest_lbl.text = ("Nests: %s" % RaiderDefs.newest(nests.pressure()).name if nests.alive_count() > 0 else "Nests: none") \
+		+ ("  AIR %d" % nests.flyers.count() if nests.flyers.count() > 0 else "")
+	prod_lbl.text = "+%.1f/s" % eco.income
+	demand_lbl.text = "-%.1f/s" % pk.demand_rate
+	misc_lbl.text = "Packets %d · Field %d · Units %d · %d %s" % [pk.count(), eco.field_cells,
+		g.units.list.size(), g.castles.held(), "castle" if g.castles.held() == 1 else "castles"]
 	var t: float = g.time
 	var spd := "PAUSED" if g.paused else "%dx" % g.speed
-	time_lbl.text = "%02d:%02d  %s" % [floori(t / 60.0), floori(fmod(t, 60.0)), spd]
+	time_lbl.text = "%02d:%02d · %s" % [floori(t / 60.0), floori(fmod(t, 60.0)), spd]

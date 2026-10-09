@@ -26,7 +26,7 @@ var _flash := {}  # id -> seconds of hint still showing
 
 func _init(rows: Array = LIST) -> void:
 	add_theme_stylebox_override("panel", UiKit.style())
-	position = Vector2(10, 64)
+	position = Vector2(10, 100)  # below the two-row top bar
 	custom_minimum_size.x = 330
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var v := UiKit.vbox(4)
