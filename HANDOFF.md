@@ -1,28 +1,31 @@
-# Handoff: 2026-10-08 (session 15: Muse joins, Art 3 models built)
+# Handoff: 2026-10-08 (session 15b: Muse merges, model grading, integration)
 
 ## State
-Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). Playtest plans: [PLAYTEST1_plan.md](docs/tasks/PLAYTEST1_plan.md), [PLAYTEST2_pressure.md](docs/tasks/PLAYTEST2_pressure.md).
-**Repo is on GitHub (private):** https://github.com/gbmisa/creeper-ops. `main` is pushed after every merge.
-**Roles (new):** **Muse** (calls itself Fount; benchmarks around GPT 5.6 Sol) does **all coding** from GitHub branches: headless Godot 4.7.2, parse/smoke/sims, no display, pushes via the API (which ignores `.gitignore`!). **Opus** orchestrates, writes briefs, merges, and does **visual work only** (Blender models + animation, screenshot judging). Prompts for the user to paste: [muse1.md](muse1.md). Memory: `muse-does-coding`.
+Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md). **Opus long-horizon plan: [docs/tasks/ART3_OPUS_plan.md](docs/tasks/ART3_OPUS_plan.md).**
+Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** (Fount) codes from GitHub branches; **Opus** orchestrates, merges, and does visual work only. Prompts for the user: [muse1.md](muse1.md). Memory: `muse-does-coding` (never move a branch Muse has started; strip `godot/.godot/` at merge).
 
-## Muse branches (all pushed from main; check with `git fetch && git log main..origin/<b>`)
-| Branch | Brief | Status |
+## Merged to main this session
+- Playtest 1C hive sites (Muse). Opus sims: L1 undefended 341 s, L1 demo 734 s, L2 demo 400 s (no balance change).
+- `art/3-gun-feel` (Muse): recoil defs, rifle bloom, yaw punch, sounds, crossbow reload. Sonnet review: no damage/rate/ammo change. Feel needs the user's play test.
+- `fount/ui-pass` (Muse, unbriefed): HUD panels, buttons, HP bar. Opus screenshot: command HUD reads well.
+
+## Branches
+| Branch | Owner | Status |
 |---|---|---|
-| `fix/playtest1-hive-sites` | PLAYTEST1_C_hive_sites.md | P1 pushed (5327b97). **Committed `godot/.godot/` cache: strip at merge.** P2 (L2) pending |
-| `fix/playtest2-pressure` | PLAYTEST2_pressure.md | not started. **Top priority:** user lost L2 in 5:51, first loss at 0:22, trebuchets too slow to kill |
-| `art/3-creature-anim` | ART3_MUSE_briefs.md §A | not started. Godot loader for Opus's models |
-| `art/3-gun-feel` | §F | not started |
-| `art/3-fx` | §X | not started |
+| `art/3-integration` | Muse brief **A2** | Opus merged A + models here. **Smoke has 5 expected failures** (tests assume no .glb). Gallery camera broken. A2 fixes both + adds `--creatures=near` and the trebuchet hook. **Then Opus takes in-game shots and merges.** |
+| `fix/playtest2-pressure` | Muse P | running (top priority gameplay fix) |
+| `art/3-fx` | Muse X | running |
+| `fix/muse-b-bugs` | Muse B | queued: FPS camera starts inside an orange mesh (`--demo --sim=60 --surface`), RecoilDefs.cam unused, weapon label, split hud.gd |
+| `stage/21b-castles-detail` | Muse C | queued after P/A/X |
+| `art/3-models` | Opus | 17 glbs (16 creatures/units + trebuchet). Merged into integration. |
 
-## Art 3 Track M (Opus): models done, branch `art/3-models` (worktree `art3-models`, pushed)
-16 skinned .glb in `godot/assets/models/`: skitter brute ravager behemoth spitter lancer warden spotter burrower sentinel spore_bat gasbag wyvern soldier crawler hive_core. Each has idle/walk/attack/hit/die. Built by `art/blender/*.py` (Blender 5.2 headless; `build_all.sh`, `review.sh <id> <png>` renders a contact sheet). Progress: `docs/tasks/ART3M_progress.md`. All import cleanly in Godot; clips arrive with loop off (brief A says set loop on idle/walk).
-**Not done:** in-game look (needs brief A merged), perf check, models for structures/Operative.
+## Model grading (Sonnet grader, 3 iterations done, as the user asked)
+Average 6.1 → 6.8 → 7.4. At 8: brute, crawler, sentinel, soldier, spore_bat, warden; the rest at 7. Open notes in `docs/tasks/ART3M_progress.md`, to fix during the **in-game** pass (real scale + tier glow).
 
-## Merge plan
-1. Review each Muse branch: `git diff main...origin/<b>`, run parse + smoke, strip `godot/.godot/`, merge, push main.
-2. When `art/3-creature-anim` lands: merge it and `art/3-models`, then Opus takes Xvfb shots (`--gallery`, in-game raiders) and fixes the worst visuals in Blender.
-3. Merge order: playtest2 → creature-anim + models → gun-feel / fx (separate files).
+## Next (Opus)
+1. When A2 lands: shots with `--gallery=anim` and `--creatures=near` (RTS + `--surface`), a grader subagent judges in-game readability (target 8), fix in Blender, tune the per-type scale table, merge `art/3-integration`.
+2. Review P, X, B, C as they land (Sonnet reviewer for code, Opus screenshots for visuals).
+3. New models: hive structures (pit, spitter tower, launcher, mortar, roost), Command Node / Totem / drop pod (plan §3).
 
 ## Open questions for the user
-- The Art 3 feedback sentence was cut off at "Holding down left...". How does it end?
-- Ammo reserves/inventory: still to be designed (after playtest fixes).
+- The Art 3 feedback was cut off at "Holding down left...": how does it end?
