@@ -25,6 +25,7 @@ class_name Debug
 ##                 id "open" shows the first-person Armoury at the Node; "fire" holds
 ##                 the trigger on an unlocked advanced weapon just before --shot
 ##   --landing     dismiss the briefing and stop at the landing-site choice
+##   --briefing    keep the briefing up (screenshots)  --ended=won|lost  show the end screen before --shot
 ##   --hover=x,z   put the (fake) cursor over a cell
 ##   --select=T    select the first structure of type T (T=all-weapons: every movable weapon)
 ##   --keys        open the Controls (keybind) menu
@@ -89,7 +90,7 @@ static func apply(g) -> void:
 	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "castle2", "engines", "raid", "gallery", "creatures", "sim", "shot", "smoke", "engine"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
-	elif auto:
+	elif auto and not args.has("briefing"):
 		g.flow.begin()
 		var hint: Vector2i = g.level.landing_hint
 		g.flow.land(hint)
@@ -232,6 +233,8 @@ static func apply(g) -> void:
 		DebugFire.run(g, str(args.fire))
 	if args.has("keys"):
 		g.hud.keys.open()
+	if args.has("ended"):
+		g.flow.end_game(args.ended == "won")
 	if args.has("shot"):
 		DebugHooks._screenshot_later(g, args.shot)
 	elif args.has("quit"):

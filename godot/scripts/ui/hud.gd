@@ -15,8 +15,7 @@ var _log: VBoxContainer
 var alerts: HudAlerts
 var _selbox: Panel
 var _help: Label
-var _overlay: Control
-var _overlay_box: VBoxContainer
+var _overlay: HudOverlay
 var _mode := ""
 const LOG_LIFT := 178.0
 
@@ -74,22 +73,8 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 
 
 func _build_overlay() -> void:
-	_overlay = ColorRect.new()
-	(_overlay as ColorRect).color = Color(0, 0, 0, 0.55)
-	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay = HudOverlay.new()
 	add_child(_overlay)
-	var c := CenterContainer.new()
-	c.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_overlay.add_child(c)
-	var p := UiKit.panel(UiKit.BG_SOLID)
-	(p.get_theme_stylebox("panel") as StyleBoxFlat).set_content_margin_all(18)
-	UiKit.brackets(p, UiKit.ACCENT, 16.0)
-	c.add_child(p)
-	_overlay_box = UiKit.vbox(10)
-	_overlay_box.custom_minimum_size.x = 620
-	_overlay_box.mouse_filter = Control.MOUSE_FILTER_PASS
-	p.add_child(_overlay_box)
-	_overlay.visible = false
 
 
 func add_log(text: String, kind: String) -> void:
@@ -188,19 +173,9 @@ func set_mode(mode: String) -> void:
 		k.call("use"), k.call("op_build"), k.call("recall")])
 
 
-## Modal overlay: html-free rich text + buttons [{ label, on_click }].
+## Modal overlay: BBCode text + buttons [{ label, on_click }]; the first is the primary action.
 func show_overlay(bbcode: String, buttons: Array) -> void:
-	for c in _overlay_box.get_children():
-		c.queue_free()
-	var t := UiKit.rich(16)
-	t.text = bbcode
-	_overlay_box.add_child(t)
-	var row := UiKit.hbox(10)
-	row.mouse_filter = Control.MOUSE_FILTER_PASS
-	_overlay_box.add_child(row)
-	for b in buttons:
-		row.add_child(UiKit.button(b.label, b.on_click, 18))
-	_overlay.visible = true
+	_overlay.open(bbcode, buttons)
 
 
 func hide_overlay() -> void:
