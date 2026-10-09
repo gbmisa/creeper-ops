@@ -133,7 +133,7 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 	if r.guard:
 		target = _nearest(p, prey, Config.NEST_AGGRO, home)
 		if target.is_empty():
-			goal = _patrol(home, r)
+			goal = CastlePatrols.waypoint(r) if r.has("wall_patrol") else _patrol(home, r)
 	else:
 		target = _nearest(p, prey, Config.RAIDER_AGGRO)
 		if target.is_empty():

@@ -132,7 +132,8 @@ static func make(type: String) -> Node3D:
 static func top_y(type: String) -> float:
 	return { "node": 11.5, "collector": 2.6, "relay": 3.7, "outpost": 5.6, "keep": 5.6, "reactor": 3.0, "storage": 2.6,
 		"barracks": 5.0, "nullifier": 4.4, "cannon": 4.0, "mortar": 4.1, "beam": 5.4, "sniper": 4.2,
-		"bertha": 8.6, "thor": 5.0, "forge": 8.6, "terp": 7.4, "beacon": 2.7, "miner": 2.4 }.get(type, 3.0)
+		"bertha": 8.6, "thor": 5.0, "forge": 8.6, "terp": 7.4, "beacon": 2.7, "miner": 2.4,
+		"trebuchet": 4.2 }.get(type, 3.0)
 
 
 ## Translucent copy used as the placement / move ghost.

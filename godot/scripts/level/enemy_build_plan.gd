@@ -69,8 +69,15 @@ static func _pad(b, hub: Dictionary) -> Vector2i:
 	var centre: Vector2i = lay.spire.centre
 	var best := Vector2i(-1, -1)
 	var bd := INF
+	# Taken ground is yours: never site a dome in a bailey you took (Stage 21b P8).
+	var taken := {}
+	if CastleStages.bailey_open(hub, lay):
+		for cell in lay.get("bailey", []):
+			taken[cell] = true
 	for raw in lay.courtyard:
 		var cell: Vector2i = raw
+		if taken.has(cell):
+			continue
 		if not _open(b, cell, false):
 			continue
 		var d := Vector2(cell.x - centre.x, cell.y - centre.y).length()

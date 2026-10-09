@@ -16,8 +16,11 @@ static func hostile(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 		c.garrison_timer = 0.0
 		nests.raiders.spawn(v.garrison, nests.pick_tier(), true)
 		nests.raiders.list.back().node.position = v.garrison.pos  # not on the wall
+		if lay.stages.size() > 1:
+			CastlePatrols.on_garrison_tick(s, c, lay, v)
 	if lay.stages.size() > 1:
 		CastleStages.tick(s, c, lay, p, dt)
+		CastlePatrols.ensure(s, c, lay, v)
 
 
 static func capturing(s: Strongholds, c: Dictionary, lay: Dictionary, p, dt: float) -> void:
@@ -27,6 +30,7 @@ static func capturing(s: Strongholds, c: Dictionary, lay: Dictionary, p, dt: flo
 		cap.progress = minf(1.0, cap.progress + dt / Config.CAPTURE_TIME)
 		if cap.progress >= 1.0:
 			StrongholdRules.to_held(s.world, c, lay)
+			CastlePatrols.clear(s, s.views[c.id])  # the wall patrols and the hall guard are gone
 			if s.stockpile:
 				s.stockpile.add("salvage", Config.CASTLE_CAPTURE_SALVAGE)
 			Sfx.play("good")
@@ -37,6 +41,7 @@ static func capturing(s: Strongholds, c: Dictionary, lay: Dictionary, p, dt: flo
 	cap.progress = maxf(0.0, cap.progress - Config.CAPTURE_DECAY * dt)
 	if cap.progress <= 0.0 and cap.away >= Config.CAPTURE_ABANDON:
 		StrongholdRules.to_hostile(s.world, c, lay, Config.CROWN_REGROW)
+		CastlePatrols.release(s.views[c.id])
 		if lay.stages.size() > 1:  # the outer rings stay yours: only the keep is lost
 			CastleStages.set_stage(s, c, lay.stages.size() - 1)
 		Bus.say("%s: the crown nest regrew. Nobody held the %s." % [c.name, "keep hall" if lay.stages.size() > 1 else "spire"], "bad")
@@ -68,6 +73,7 @@ static func holding(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 	if c.capture.retake < Config.RETAKE_TIME:
 		return
 	StrongholdRules.to_hostile(s.world, c, lay, Config.CROWN_REGROW)
+	CastlePatrols.release(v)  # old patrols stand down; fresh ones spawn on the wall
 	s.on_lost.call(lay.courtyard)
 	for r in inside:  # the raiders inside become its new garrison
 		r.nest.count -= 1

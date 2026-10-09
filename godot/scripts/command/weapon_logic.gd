@@ -1,7 +1,8 @@
 class_name WeaponLogic
 ## Active behaviour for built, connected, landed weapons. Every shot spends ammo, and ammo
 ## only arrives as packets. Targets by def.targets: "creeper", "air" (Beam: surface-to-air,
-## burns flying enemies), "raiders" (Snipers). Hold-fire (CW3 toggle) skips firing entirely.
+## burns flying enemies), "raiders" (Snipers), "siege" (Trebuchet: enemy structures, hive
+## parts, enemy mortars — never creeper). Hold-fire (CW3 toggle) skips firing entirely.
 ## Mortar splash also nicks raiders for MORTAR_RAIDER_DMG. Snipers are the anti-raider weapon.
 ## Creeper removal follows CW3 (CreeperStrike): cannons spread `hits` over a disk, mortars and
 ## Bertha hit every wet cell in theirs. A `roams` weapon (Thor) also fires in flight.
@@ -20,6 +21,8 @@ static func update(s: Structure, dt: float, mgr) -> void:
 			fired = _zap(s, mgr)
 		"mortar", "bertha":
 			fired = _lob(s, mgr)
+		"trebuchet":
+			fired = _trebuchet(s, mgr)
 		"beam":
 			fired = _beam(s, mgr)
 		"sniper":
@@ -120,6 +123,94 @@ static func _lob(s: Structure, mgr) -> bool:
 	Sfx.play("mortar", s.pos)
 	WeaponFx.fire(s, w.effects)  # P1: recoil + muzzle flash (visual only)
 	return true
+
+
+## Player Trebuchet (castle_only): lobs a stone at the nearest enemy structure, hive
+## part or enemy mortar inside [min_range, range]. Never at creeper: the blast damages
+## enemy builds, not the sim. The arm swing is CastleEngineMeshes.throw (visual).
+static func _trebuchet(s: Structure, mgr) -> bool:
+	var w: World = mgr.world
+	var reach: float = range_cells(s) * Config.CELL
+	var min_r := float(s.def.get("min_range", 0.0)) * Config.CELL
+	var from: Vector3 = s.node.position
+	var best: Dictionary = {}
+	var bd := reach
+	for foe in _siege_foes(mgr):
+		if not (foe.alive as Callable).call():
+			continue
+		var mp: Vector3 = (foe.node as Node3D).position
+		var d := Vector2(mp.x - from.x, mp.z - from.z).length()
+		if d < min_r or d > reach or d >= bd:
+			continue
+		bd = d
+		best = foe
+	if best.is_empty():
+		return false
+	var target: Vector3 = (best.node as Node3D).position
+	var tn := s.body.get_node_or_null("Trebuchet") as Node3D
+	if tn != null:
+		CastleEngineMeshes.throw(tn, target)
+	var splash := float(s.def.splash)
+	var power := float(s.def.power)
+	w.effects.lob(_fx(s), target, { "color": Color("c8b089"), "time": 2.2, "arc": 26.0, "size": 0.7,
+		"on_arrive": func(): _treb_impact(mgr, target, splash, power) })
+	Sfx.play("mortar", s.pos)
+	return true
+
+
+## Every enemy build the Trebuchet may hit: built enemy structures (hub mortars die
+## with their parent), hive parts except the core (Operative/Lance-only), hive mortars.
+static func _siege_foes(mgr) -> Array:
+	var out: Array = []
+	if mgr.enemy_build != null:
+		for raw in (mgr.enemy_build as EnemyBuilder).list:
+			var e: Dictionary = raw
+			var foe: Dictionary = e.get("enemy", {})
+			if bool(e.alive) and bool(e.get("grown", true)) and not foe.is_empty():
+				out.append(foe)
+	if mgr.hazards == null:
+		return out
+	for n in (mgr.hazards as SurfaceHazards).nests.nests:
+		var hive: Dictionary = n
+		if not bool(hive.alive):
+			continue
+		for raw in hive.get("parts", []):
+			var p: Dictionary = raw
+			var foe: Dictionary = p.get("enemy", {})
+			if bool(p.alive) and str(p.get("kind", "")) != "core" and not foe.is_empty():
+				out.append(foe)
+		for raw in hive.get("mortars", []):
+			var m: Dictionary = raw
+			var foe: Dictionary = m.get("enemy", {})
+			if bool(m.alive) and not foe.is_empty():
+				out.append(foe)
+	return out
+
+
+## The stone lands: enemy builds in the blast take power (the Core ignores it, as with
+## every non-Operative weapon); raiders in the blast take the mortar's flat nick.
+static func _treb_impact(mgr, at: Vector3, splash: float, power: float) -> void:
+	var w: World = mgr.world
+	w.effects.burst(at + Vector3.UP * 0.5, Color("c8b089"), splash * Config.CELL, 0.5)
+	Sfx.play("boom", at)
+	var r := splash * Config.CELL
+	if mgr.enemy_build != null:
+		(mgr.enemy_build as EnemyBuilder).splash(at, r, power)
+	_splash_raiders(mgr, at, splash)
+	if mgr.hazards == null:
+		return
+	for n in (mgr.hazards as SurfaceHazards).nests.nests:
+		var hive: Dictionary = n
+		if not bool(hive.alive):
+			continue
+		for raw in (hive.get("parts", []) as Array) + (hive.get("mortars", []) as Array):
+			var p: Dictionary = raw
+			var foe: Dictionary = p.get("enemy", {})
+			if foe.is_empty() or not (foe.alive as Callable).call():
+				continue
+			var mp: Vector3 = (foe.node as Node3D).position
+			if Vector2(mp.x - at.x, mp.z - at.z).length() <= r + float(foe.get("radius", 0.5)):
+				(foe.hit as Callable).call(power)
 
 
 ## Beam: surface-to-air. Burns flying enemies: spore volleys first, then Flyers. Ground

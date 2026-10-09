@@ -11,10 +11,10 @@ const TABS := ["Structures", "Weapons", "Titans", "Orbital", "Castle"]
 ## Build menu contents per tab. Entries are structure types, or "@action" for orbital actions.
 const MENU := {
 	"Structures": ["collector", "relay", "outpost", "miner", "reactor", "storage", "barracks"],
-	"Weapons": ["cannon", "mortar", "beam", "sniper", "nullifier"],
+	"Weapons": ["cannon", "mortar", "beam", "sniper", "nullifier", "trebuchet"],
 	"Titans": ["bertha", "thor", "forge", "terp", "@terp"],
 	"Orbital": ["beacon", "@drop", "@lance", "@operative"],
-	"Castle": ["@repeater", "@lobber", "@flak", "@repair"],
+	"Castle": ["@repeater", "@lobber", "@flak", "@ballista", "@ward_lamp", "@repair"],
 }
 
 static var ACTIONS := _turret_actions().merged({
@@ -69,6 +69,13 @@ static var DEFS := {
 		"movable": true, "move_speed": 6.0, "range": 20.0, "fire_rate": 1.5, "power": 4.0, "weapon": true, "grades": true,
 		"ammo": { "max": 60.0, "per_packet": 2.0, "per_shot": 5.0 }, "targets": "raiders",  # playtest 1: 2.5 packets a shot (was 5)
 		"desc": "Long-range rifle that picks off nest raiders within range 20 (Skitters die in one shot; later tiers take several). 2.5 packets per shot, holds 12. Can't hurt nests: those still need units or the Operative. Movable." },
+	"trebuchet": { "tab": "Weapons", "label": "Trebuchet", "cost": 80, "hp": 140.0, "link": 5.0, "link_y": 1.6,
+		"castle_only": true, "range": CastleDefs.P_TREB.range, "min_range": CastleDefs.P_TREB.min_range,
+		"fire_rate": CastleDefs.P_TREB.fire_rate, "power": CastleDefs.P_TREB.power, "splash": CastleDefs.P_TREB.splash,
+		"weapon": true, "targets": "siege",
+		"ammo": { "max": CastleDefs.P_TREB.ammo_max, "per_packet": CastleDefs.P_TREB.ammo_per_packet,
+			"per_shot": CastleDefs.P_TREB.ammo_per_shot },
+		"desc": "Castle-only siege engine: lobs a stone at the nearest enemy structure, hive part or enemy mortar within range 40 (never at creeper). 3 packets a stone, needs the network. Can only be built inside a castle you hold." },
 	"bertha": { "tab": "Titans", "label": "Big Bertha", "cost": 250, "hp": 220.0, "link": 5.0, "link_y": 2.6, "footprint": 1,
 		"movable": true, "move_speed": 3.0, "range": 200.0, "min_range": 5, "fire_rate": 10.0, "power": 100.0, "splash": 10.0,
 		"weapon": true, "wet_time": 160.0,

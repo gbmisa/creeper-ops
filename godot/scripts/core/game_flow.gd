@@ -136,6 +136,7 @@ func set_mode(m: String) -> void:
 	g.cave.set_active(m == "cave")
 	g.command.overlay.set_overlay_visible(cmd)
 	WorldLook.set_command_view(g.surface.env, cmd)
+	CastleReadability.set_command_view(cmd)  # P4: fade the castle roof slabs
 	if cmd:
 		g.command.cam.current = true
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
