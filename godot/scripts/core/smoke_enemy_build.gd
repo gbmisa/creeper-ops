@@ -108,7 +108,20 @@ static func _blight(g, b: EnemyBuilder) -> void:
 	var hp := col.hp
 	b.update(1.0)
 	SmokeTest._check("blight damages a structure inside", is_equal_approx(col.hp, hp - Config.ENEMY_BLIGHT_DPS), str(hp - col.hp))
+	SmokeTest._check("a grown pylon shows its aura", pylon.node.get_node_or_null("Aura") != null, str(pylon.node.get_node_or_null("Aura")))
+	var far: Structure = g.structures.place("collector", (cell + Vector2i(9, 0)).x, (cell + Vector2i(9, 0)).y, true)
+	var far_hp := far.hp
+	b.update(1.0)
+	SmokeTest._check("blight ignores a structure outside the radius", is_equal_approx(far.hp, far_hp), str(far.hp - far_hp))
 	g.structures.remove(col)
+	g.structures.remove(far)
+	b.kill(pylon, true)
+	var near2: Structure = g.structures.place("collector", at.x, at.y, true)
+	var hp2 := near2.hp
+	b.update(1.0)
+	SmokeTest._check("a dead pylon deals no blight damage", is_equal_approx(near2.hp, hp2), str(near2.hp - hp2))
+	SmokeTest._check("the aura is gone with the pylon", pylon.get("node") == null, str(pylon.get("node")))
+	g.structures.remove(near2)
 	b.clear()
 
 
