@@ -1,7 +1,9 @@
 class_name SmokeNetwork
-## Network routing: planned (unfinished) relays relay packets immediately (relaying
-## only, never senders), rebuild re-runs when construction finishes, cutting a relay
-## darkens everything downstream of it, and packets take the shortest path.
+## Network routing (Gregory, playtest 3): only finished collectors/relays pass packets on.
+## An unfinished relay is a leaf: fed if something connected is in range, but nothing
+## beyond it connects until it finishes. Anything in a sender's own range is fed
+## directly by it, never detoured. Cutting a relay darkens what's downstream, and
+## packets take the shortest path.
 
 
 static func _chain_types(sm: StructureManager, s: Structure) -> Array:
@@ -25,15 +27,15 @@ static func run(g) -> void:
 	var nx := node.x
 	var nz := node.z
 
-	# (a) A planned relay routes immediately: node -> relay(planned) -> reactor.
+	# (a) A planned relay is a leaf: the Node feeds it, but nothing beyond it connects yet.
 	var relay := sm.place("relay", nx + 9, nz, false)
 	var reactor := sm.place("reactor", nx + 17, nz, true)
 	SmokeTest._sim(g, 0.5)
 	SmokeTest._check("planned relay placed", relay != null and reactor != null)
-	var chain := _chain_types(sm, reactor) if reactor != null else []
-	SmokeTest._check("route goes through the planned relay",
-		chain == ["node", "relay(planned)", "reactor"], str(chain))
-	SmokeTest._check("planned relay is connected", relay != null and relay.connected)
+	SmokeTest._check("planned relay fed directly by the Node",
+		relay != null and relay.connected and _prev_is(sm, relay, node))
+	SmokeTest._check("nothing connects through an unfinished relay",
+		reactor == null or not reactor.connected, str(_chain_types(sm, reactor)) if reactor else "")
 	SmokeTest._check("planned relay is not a sender",
 		relay == null or not Network._sender(relay))
 
@@ -43,7 +45,7 @@ static func run(g) -> void:
 		SmokeTest._sim(g, 1.0)
 		SmokeTest._check("relay finished building", relay.is_built())
 		var chain2 := _chain_types(sm, reactor)
-		SmokeTest._check("route still via the relay after completion",
+		SmokeTest._check("finished relay carries packets on",
 			chain2 == ["node", "relay", "reactor"], str(chain2))
 
 	# (c) Cutting the relay darkens everything downstream of it.
@@ -52,6 +54,19 @@ static func run(g) -> void:
 		SmokeTest._sim(g, 0.5)
 		SmokeTest._check("reactor dark after its relay is cut", not reactor.connected)
 		sm.remove(reactor, "cleanup")
+
+	# (e) In the Node's range, an unfinished collector is fed directly, not via a finished
+	# collector that happens to be nearer to it.
+	var near := sm.place("collector", nx + 6, nz + 3, true)
+	var fresh := sm.place("collector", nx + 9, nz, false)
+	SmokeTest._sim(g, 0.5)
+	if near != null and fresh != null:
+		SmokeTest._check("in-range unfinished collector fed directly by the Node",
+			_prev_is(sm, fresh, node), str(_chain_types(sm, fresh)))
+	for s in [near, fresh]:
+		if s != null:
+			sm.remove(s, "cleanup")
+	SmokeTest._sim(g, 0.5)
 
 	# (d) Packets take the shortest path when several routes exist.
 	var s1 := sm.place("relay", nx + 9, nz, true)

@@ -1,11 +1,11 @@
 class_name Network
 extends MeshInstance3D
-## Energy network. Every pair of relaying nodes within link range is connected, and
-## planned (unfinished) relays relay too, so a chain you just laid out carries packets
-## along the shortest path immediately. Dijkstra starts at every built sender that is
-## not flying, all at distance 0; planned relays never send, they only relay.
-## Non-relaying structures hang off their nearest relaying node. Cut a relay, built or
-## planned, and everything that only routed through it goes dark.
+## Energy network. Every pair of built relaying nodes within link range is connected.
+## Dijkstra starts at every built sender that is not flying (Node, Outpost, castle keep),
+## all at distance 0. Only finished collectors/relays pass packets on: a chain laid out
+## beyond reach waits, and each piece gets packets once something finished reaches it.
+## Leaves (incl. unfinished relays) hang off the connected node with the shortest route,
+## so anything in a sender's own range is fed directly by the closest sender.
 
 var _prev := {}          # Structure -> upstream Structure (null for a sender)
 var _len := {}           # Structure -> route length in metres (packet transit distance)
@@ -32,10 +32,8 @@ static func linked(a: Structure, b: Structure) -> bool:
 
 
 static func _relaying(s: Structure) -> bool:
-	# Planned (unfinished) relays relay too: a chain you just laid out carries packets
-	# along the shortest path immediately, matching in_range/cover_discs which already
-	# count planned relays. They are never senders (see _sender) and never count as built.
-	return s.def.get("relays", false) and not s.is_flying() and not s.dead
+	# Only finished relays pass packets on (Gregory, playtest 3): an unfinished one is a leaf.
+	return s.def.get("relays", false) and s.is_built() and not s.is_flying() and not s.dead
 
 
 static func _sender(s: Structure) -> bool:
@@ -76,7 +74,8 @@ func rebuild(list: Array) -> void:
 		for b in _prev.keys():
 			if _prev[b] != null:
 				edges.append([_prev[b], b])
-		# Leaves (incl. unfinished relays): nearest connected relaying node in range.
+		# Leaves (incl. unfinished relays): the in-range connected node with the shortest
+		# route, so a sender in range (route 0) feeds it directly.
 		for s in list:
 			if s.connected or s.def.link <= 0.0 or s.is_flying():
 				continue
@@ -85,8 +84,8 @@ func rebuild(list: Array) -> void:
 			for n in list:
 				if n.connected and _relaying(n):
 					var d := _dist(n, s)
-					if d <= maxf(n.def.link, s.def.link) and d < bd:
-						bd = d
+					if d <= maxf(n.def.link, s.def.link) and dist.get(n, 0.0) + d < bd:
+						bd = dist.get(n, 0.0) + d
 						best = n
 			if best:
 				s.connected = true
@@ -137,11 +136,12 @@ func _hold_flying_node(list: Array, edges: Array) -> void:
 			if a == node or not b.connected:
 				edges.append([a, b])
 			b.connected = true
-	for s in list:  # leaves hang off the nearest relaying node it kept
+	for s in list:  # leaves (incl. unfinished relays) hang off a node it kept, or the Node itself
 		if s.connected or s.def.link <= 0.0 or s.is_flying():
 			continue
 		for n in seen:
-			if n != node and _dist(n, s) <= maxf(n.def.link, s.def.link):
+			var d: float = Vector2(s.x - from.x, s.z - from.y).length() if n == node else _dist(n, s)
+			if d <= maxf(n.def.link, s.def.link):
 				s.connected = true
 				edges.append([n, s])
 				_hold_link(n, s)
