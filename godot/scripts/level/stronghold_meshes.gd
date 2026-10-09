@@ -51,6 +51,7 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 	root.name = "Castle"
 	world.add_child(root)
 	var v := { "root": root, "segs": [], "gates": [], "banners": CastleDecor.build(root, lay), "gate_trim": [] }
+	v["lay"] = lay  # P8: the portcullis swing reads ring ownership from this
 	var top: float = lay.wall_top
 	var stone := StructureMeshes.mat(DECOR_STONE, 0.0, 0.92)
 	var outward := { "n": Vector3(0, 0, -1), "s": Vector3(0, 0, 1), "w": Vector3(-1, 0, 0), "e": Vector3(1, 0, 0) }
@@ -64,6 +65,8 @@ static func build(world: World, lay: Dictionary) -> Dictionary:
 	for gt in lay.gates:
 		var b := _bounds(gt.cells, lay.yard)
 		var pc: Array = CastleDecor.portcullis(root, b[0], b[1])
+		(pc[0] as Node3D).set_meta("base_y", (pc[0] as Node3D).position.y)
+		(pc[0] as Node3D).set_meta("ring", (gt as Dictionary).get("ring", "outer"))
 		v.gates.append(pc[0])
 		v.gate_trim.append(pc[1])
 	if not lay.bridge.is_empty():
@@ -121,6 +124,7 @@ static func refresh(v: Dictionary, c: Dictionary) -> void:
 		(v.segs[i] as Node3D).visible = c.walls[i].hp > 0.0
 	for i in v.gates.size():
 		(v.gates[i] as Node3D).visible = c.gates[i].hp > 0.0
+		_swing_gate(v, c, i)
 		for t in v.gate_trim[i]:
 			(t as MeshInstance3D).material_override = CastleDecor.trim(col)
 	if v.has("deck"):
@@ -132,6 +136,37 @@ static func refresh(v: Dictionary, c: Dictionary) -> void:
 	(v.crown as Node3D).visible = c.state == "hostile"
 	for b in v.banners:
 		(b as MeshInstance3D).material_override = CastleDecor.cloth(c.owner)
+
+
+## Portcullis swing (P8, visual only): the gate mesh (v.gates[i]) tweens up when its ring
+## changes hands to you and back down when the enemy takes it. Idempotent: it only
+## tweens when the target height differs, so every refresh() after a handoff moves it
+## and nothing else does. Targets and hit heights are untouched (the node sits where
+## the old gate field did; the 3.2 m aim height in stronghold_hooks.gd is unchanged).
+static func _swing_gate(v: Dictionary, c: Dictionary, i: int) -> void:
+	var n := v.gates[i] as Node3D
+	if not n.has_meta("base_y"):
+		n.set_meta("base_y", n.position.y)
+	var base: float = n.get_meta("base_y")
+	var lay: Dictionary = v.get("lay", {})
+	var yours := false
+	if not lay.is_empty() and float((c.gates[i] as Dictionary).get("hp", 0.0)) > 0.0:
+		yours = CastleStages.ring_owner(c, lay, str(n.get_meta("ring", "outer"))) == "player"
+	var want := base + (CastleDefs.PORTCULLIS_LIFT if yours else 0.0)
+	n.set_meta("lift_t", want)  # the smoke test reads the target, not the tween
+	if absf(n.position.y - want) < 0.01:
+		return
+	if n.has_meta("gate_tween"):
+		var old = n.get_meta("gate_tween")
+		if old is Tween and (old as Tween).is_valid():
+			(old as Tween).kill()
+	if n.is_inside_tree():
+		var tw := n.create_tween()
+		tw.tween_property(n, "position:y", want, CastleDefs.PORTCULLIS_TIME)\
+			.set_trans(Tween.TRANS_SINE)
+		n.set_meta("gate_tween", tw)
+	else:
+		n.position.y = want
 
 
 static func animate(v: Dictionary, c: Dictionary, t: float) -> void:

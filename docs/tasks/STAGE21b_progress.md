@@ -430,7 +430,56 @@ Bugs caught before push (both mine):
   (cell, s) — replaced with a lambda.
 
 Unfinished: none for P7.
-## P8 Stage 21 leftovers — FILL
+## P8 Stage 21 leftovers
+
+Done (2026-10-09 ~16:00 UTC):
+- `level/enemy_build_plan.gd` `_pad`: skips `lay.bailey` cells when
+  `CastleStages.bailey_open(c, lay)` (data read only — no rule change; `_edge`/`_hive`/`_ore`
+  never picked courtyard cells anyway, so the dome was the only leak).
+- Portcullis: `StrongholdMeshes.refresh` now swings `v.gates[i]` — the portcullis node —
+  up `CastleDefs.PORTCULLIS_LIFT` (2.5 m) when its ring changes hands to you, back down
+  on retake (tween 1.2 s, TRANS_SINE). Idempotent: it only tweens when the target
+  height differs, so the motion fires exactly on handoffs (set_stage, to_held/to_hostile,
+  the `--held`/`--stage` debug cheats all end in refresh). Visual only: target
+  registration (stronghold_hooks.gd, oy 3.2) untouched. `build` stores `base_y` and the
+  ring as node metas and `v["lay"]` for the ownership read, so `refresh` keeps its
+  (v, c) signature (24 call sites untouched).
+- `level/castle_debug.gd` `_drop`: the `gate` spot now walks the gate axis outward
+  (`_open_approach`) and drops on the last open, gate-level cell — the open side —
+  instead of a fixed 5-cell offset that could land in a slope; `tower` spot pitches up
+  (0.5 rad) so the stair is in view (pitch extracted to `pitch_for` for testability).
+- Level 1 Ashmoat approach screenshots: not run (no display); Opus judges visuals.
+- Mesa notch (Level 1, west edge ~x=30, z=70 where the rect meets the disc): terrain
+  left alone — nothing in the data is clearly wrong (sheer sides are by design, no
+  unreachable cells found by inspection), and the "looks wrong" call needs eyes.
+  Needs Opus's visual check.
+- STAGE21_progress.md Unfinished re-checked: roof slabs (P1), command-view fade (P4),
+  builder bailey skip, portcullis, gate/tower spots — all done; trebuchet reach ring
+  stays a logged Suggestion (brief forbids the shader uniform); "not playtested by a
+  human" (stair feel, trebuchet fairness, stage pacing) is unfixable headless — logged
+  for Opus.
+- `core/smoke_castles2b_leftovers.gd` (new, `SmokeCastles2bLeftovers`, registered): 4
+  checks — `_pad` returns (-1,-1) with the ward phantom-occupied and the bailey taken
+  vs a bailey cell (15,55) when hostile; portcullis target height rises on the gate
+  stage and lowers on retake (inner gates stay down until held); the gate spot lands
+  on open gate-level ground (16,47); tower pitch > 0.3, roof pitch < 0, gate pitch 0.05.
+- Screenshots: not run (no display); Opus judges visuals.
+
+Spec gaps filled:
+- The tween lives in `refresh` rather than at the three handoff call sites: every
+  ownership change already ends in refresh, and the idempotence makes it fire only
+  on actual flips. No rule files touched (castle_stages/stronghold_rules/stronghold_tick
+  unchanged).
+- The P3 winch chains hang from the slab to the portcullis top at rest; a raised
+  portcullis leaves a 2.5 m gap at the chain bottoms. Left as-is (brief scoped the
+  tween to the gate mesh); noted under Suggestions.
+
+Tests:
+- Parse: `--headless --path godot --import` (from the work dir) — 0 script errors
+  (one caught during dev: `:=` inference on a Variant `.sign()` in castle_debug.gd).
+- Full suite `-- --smoke --quit=0.1`: **[smoke] OK: 0 failure(s), 901 PASS**
+  (897 P7 + 4 new), 0 script errors. All castle smokes PASS
+  (shape/walk/capture/engines/perks + all castles2b files).
 
 ## Suggestions (unbriefed, not implemented)
 - (P4) Trebuchet reach ring on hover: add a `ring_c` vec4 (+ `ring_c_color`) uniform to
