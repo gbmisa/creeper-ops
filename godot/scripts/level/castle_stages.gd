@@ -60,7 +60,9 @@ static func tick(s: Strongholds, c: Dictionary, lay: Dictionary, p: Variant, dt:
 	set_stage(s, c, int(c.stage) + 1)
 	Sfx.play("good")
 	if stage == "gate":
-		Bus.say("%s: the gatehouse is yours. The outer gate opens for your units." % c.name, "good")
+		var n := CastleEngines.alive_count(c)
+		var treb := "the trebuchet" if n == 1 else "%d trebuchets" % n
+		Bus.say("%s: the gatehouse is yours. To take the bailey: destroy %s on the corner towers, then hold the bailey standard." % [c.name, treb], "good")
 	else:
 		Bus.say("%s: the bailey is yours: build in it. The crown nest in the keep is exposed." % c.name, "good")
 
