@@ -17,3 +17,5 @@ Logged by Opus. Not briefed yet. Items marked (branch) may already be covered by
 13. **Spitter towers (decided):** sabotaging one gives no Salvage. Some respawn instantly, which allows Salvage farming; that must stop. Spitter towers should be constructed by the enemy over time, not pre-placed and respawning.
 
 Done: item 3 (Spitter range 14, smoke rule in smoke_rules.gd `_balance`).
+14. **Ashmote Keep Lancers (L1):** Lancers in the keep shoot over the wall and hit the base. No collision rule is broken; Gregory moved the base. Item 12's build exclusion around hostile castles should cover this. Check the LOS fix (fix/enemy-los, merged) clips beams against wall height too.
+15. **Flying Node launches packets (decided, overrides the CLAUDE.md "Flying Node" contract):** the Node must keep launching packets while it flies, as long as it is connected to the network. Update the contract in CLAUDE.md when built.
