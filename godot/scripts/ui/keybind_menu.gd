@@ -12,13 +12,14 @@ var _waiting: Array = []  # [id, slot] while capturing a key
 
 
 func _init() -> void:
-	color = Color(0, 0, 0, 0.6)
+	color = Color(0.02, 0.025, 0.015, 0.62)
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	visible = false
 	var c := CenterContainer.new()
 	c.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(c)
-	var p := UiKit.panel(Color(0.05, 0.07, 0.1, 0.97))
+	var p := UiKit.panel(UiKit.BG_SOLID)
+	UiKit.brackets(p, UiKit.ACCENT, 16.0)
 	c.add_child(p)
 	var v := UiKit.vbox(8)
 	v.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -60,7 +61,8 @@ func _build_rows() -> void:
 			row.add_child(l)
 			var pair := []
 			for slot in Keybinds.SLOTS:
-				var b := UiKit.button("", func(): _capture(id, slot), 14)
+				var b := UiKit.button("", func(): _capture(id, slot), 15)
+				b.add_theme_font_override("font", UiTheme.font(UiTheme.FONT_MONO))
 				b.custom_minimum_size.x = 150
 				b.gui_input.connect(func(e):
 					if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_RIGHT:
