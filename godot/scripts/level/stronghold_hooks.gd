@@ -38,6 +38,7 @@ static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 			v.enemies.append(e)
 			world.add_target({ "node": p[2], "radius": e.radius, "oy": 0.5, "alive": e.alive, "on_hit": hit, "chargeable": true })
 	_turrets(s, c, v)
+	CastleSocketLook.markers(world, v, c)
 	world.interactables.append({ "pos": v.pump.position, "radius": Config.PUMP_JAM_RANGE,
 		"prompt": func(): return "[%s] Jam the spire pump (%ds)" % [Keybinds.short("use"), Config.PUMP_JAM_TIME] \
 			if c.owner == "enemy" and c.pump.jam <= 0.0 else "",

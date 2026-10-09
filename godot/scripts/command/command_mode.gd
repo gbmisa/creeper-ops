@@ -85,6 +85,7 @@ func update(dt: float, input: InputState) -> void:
 	Sfx.listener = cam.global_position
 	CommandHover.refresh(self, input)
 	overlay.show_selection(selected, group, tool != "")
+	CastleSocketLook.highlight(castles, CommandHover._turret_type(tool) != "", hover)
 	if input.right_clicked:
 		CommandInput.right_click(self)
 	CommandInput.left_mouse(self, input)

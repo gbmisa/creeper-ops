@@ -23,6 +23,7 @@ var on_lost := func(_cells: Array) -> void: pass  # injected: destroy your struc
 var stockpile: Stockpile = null  # injected: Salvage for turrets, the castle trickle and capture bounty
 var engine_prey := func() -> Array: return []  # injected: what war engines may hit (Game.surface_prey)
 var time := 0.0
+var sock_cache := PackedVector4Array()  # last socket rings sent to the terrain shader
 var ban_cache := PackedVector4Array()  # last build-ban rings sent to the terrain shader
 
 
@@ -36,6 +37,7 @@ func _init(w: World, castles: Array, sn: SporeNests) -> void:
 		lays[c.id] = lay
 		var v := StrongholdMeshes.build(w, lay)
 		CastleTurretFire.build_views(w, c, v)
+		CastleSocketLook.build(w, v, c)
 		v["garrison"] = { "name": c.name, "castle": c.id, "pos": w.grid.cell_ground(lay.home.x, lay.home.y), "count": 0 }
 		views[c.id] = v
 		StrongholdHooks.attach(self, c, lay, v)
@@ -164,6 +166,7 @@ func update(dt: float) -> void:
 		CastleEngines.tick(self, c, v, targets, dt)
 		SpirePump.update(world, c, lay, dt)
 		CastleTurretFire.refresh(v, c)
+		CastleSocketLook.update(v, c, time)
 		if o != null and not lay.spire.pad.is_empty():
 			StrongholdTick.pad(lay, o)
 		if o != null and c.state == "hostile":
