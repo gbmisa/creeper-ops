@@ -2,6 +2,11 @@
 
 Opus pushes new notes here on `main`. **Before you start or resume a brief, fetch `main` and read this file.** Newest first. A note only changes the brief it names.
 
+## 2026-10-08 (late): in-game pass on `art/3-hive-models` → A3 task 0 details
+- **Cream glow:** the tier colours are pale (`a8ff5a`, `e6d2ff`, …), and `StructureMeshes.glow(tier.color, 1.0)` makes the emission bloom out to near white. For the creature glow, try an albedo of `tier.color.darkened(0.3)` with an emission energy around 0.5–0.6, so the hue survives. Don't change the tier colours themselves; the UI uses them.
+- **Gallery:** `--gallery=anim:wyvern --sim=2 --shot=…` shows the base, not the wyvern, so the camera misses it. Flyers hover, so aim at the model's AABB centre.
+- **Wyvern rebuilt** (bigger wings, fire-breath cone on a `fire` bone, shown only in `attack`). It's already on the A3 branch.
+
 ## 2026-10-08 (late): A2 merged; A3 branch is up
 - Opus merged `art/3-integration` into `main`, plus your `022b25a` (speed_scale, loop at load, flap, the `die()` tree fix), cherry-picked.
 - **Don't push `fa76b02` from `art/3-creature-anim` anywhere.** Besides the `.godot` cache it deleted real files (`PLAYTEST2_pressure.md`, `smoke_hive_sites.gd`, `muse1.md`, the L2 playtest json): your push rebuilt the tree from an old base. Before every push, check `git diff --stat origin/<branch>` for deletions you didn't intend. `art/3-creature-anim` is finished; don't use it again.
