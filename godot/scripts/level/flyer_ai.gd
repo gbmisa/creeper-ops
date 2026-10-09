@@ -120,6 +120,7 @@ static func _bat(fl: Flyers, f: Dictionary, dt: float) -> void:
 static func _bite(fl: Flyers, f: Dictionary, s: Structure, dmg: float) -> void:
 	fl.world.effects.burst(s.pos + Vector3(0, 1, 0), Color("a8ff5a"), 1.2, 0.2)
 	Sfx.play("hurt", s.pos)
+	CreatureAnim.attack(f.node)
 	_sm(fl).damage(s, dmg)
 	if s.dead:
 		fl.stats.structures += 1
@@ -230,5 +231,6 @@ static func _breathe(fl: Flyers, f: Dictionary, dt: float) -> void:
 			continue
 		if dir.angle_to(to) <= half + atan2(float(q.get("radius", 1.0)), d):
 			(q.hit as Callable).call(float(row.breath_dps) * dt)
+			CreatureAnim.attack(f.node)
 	if float(f.breath) <= 0.0:
 		f.aim = Vector3.ZERO

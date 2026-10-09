@@ -21,6 +21,9 @@ const SENTINEL := { "name": "Sentinel", "size": 1.0, "color": Color("d04aff") }
 
 
 static func run(g, mode: String) -> void:
+	if mode == "anim":  # creature model row for .glb art screenshots (ART3 track M)
+		CreatureGallery.run(g)
+		return
 	var w: World = g.surface
 	var level := w.grid.height_at(40, 66)
 	var edits := []

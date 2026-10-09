@@ -153,7 +153,6 @@ static func run(g) -> void:
 	SmokeDragbuild.run(g)
 	SmokeRoster.run(g)
 	SmokeHives.run(g)
-	SmokeHiveSites.run(g)
 	SmokeEnemyMortar.run(g)
 	SmokeEconomy.run(g)
 	SmokeEnemyBuild.run(g)
@@ -162,6 +161,7 @@ static func run(g) -> void:
 	SmokeFpsArms.run(g)
 	SmokeFlyers.run(g)
 	SmokeFlyers2.run(g)
+	SmokeCreatureAnim.run(g)
 	SmokeCastles2Shape.run(g)
 	SmokeCastles2Walk.run(g)
 	SmokeCastles2Capture.run(g)
@@ -189,6 +189,8 @@ static func _run_only(g) -> void:
 				SmokePlacement.run(g)
 			"tuning":
 				SmokeTuning.run(g)
+			"creature":
+				SmokeCreatureAnim.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

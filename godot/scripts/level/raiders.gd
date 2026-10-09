@@ -49,6 +49,8 @@ func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
 		r.hp -= dealt
 		if r.hp <= 0.0:
 			kill(r)
+		else:
+			CreatureAnim.hit(r.node)
 	r["enemy"] = { "node": node, "oy": tier.size * 0.6, "radius": tier.size, "alive": func(): return r.alive, "hit": hit, "tier": tier }
 	r["target"] = { "node": node, "radius": tier.size, "oy": tier.size * 0.6, "alive": func(): return r.alive, "on_hit": hit, "tier": tier }
 	world.add_target(r.target)
@@ -69,9 +71,12 @@ func kill(r: Dictionary) -> void:
 		Loot.from_raider(loot_host, r)
 	world.effects.burst(p + Vector3.UP * r.size, r.tier.color, 1.0 + r.size, 0.3)
 	Sfx.play("pop", p)
-	r.node.queue_free()
 	world.remove_target(r.target)
 	list.erase(r)
+	# Out of targeting and collision at once; the node plays its death clip
+	# (max 1.5 s) before it is freed. Procedural fallback frees immediately.
+	var node := r.node as Node3D
+	CreatureAnim.die(node, func() -> void: node.queue_free())
 
 
 func update(dt: float, prey: Array, goal_cells: Array) -> void:
@@ -148,6 +153,7 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 			if target.get("kind", "") == "operative":
 				HitFeel.note_source(p)
 			target.hit.call(dmg)
+			CreatureAnim.attack(r.node)
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
 			r.node.position.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY) + absf(sin(time * 12.0 + r.phase)) * 0.2
 			return
@@ -192,7 +198,8 @@ func _walk(r: Dictionary, goal: Vector2, dt: float) -> bool:
 		if d.length() > 0.001 and d.length() < mn:
 			v += d.normalized() * (mn - d.length())
 	v = v.limit_length(1.0)  # separation steers; it must not add speed (a packed group would outrun its slowest)
-	var step: float = RaiderGroups.speed(self, r) * dt
+	var speed: float = RaiderGroups.speed(self, r)
+	var step: float = speed * dt
 	var nx := p.x + v.x * step
 	var nz := p.z + v.y * step
 	var ws := world.grid.world_size()
@@ -209,6 +216,7 @@ func _walk(r: Dictionary, goal: Vector2, dt: float) -> bool:
 	p.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY)
 	r.node.position = p
 	_face(r, v)
+	CreatureAnim.move(r.node, speed if moved else 0.0)
 	return moved
 
 

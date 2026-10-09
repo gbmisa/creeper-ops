@@ -5,8 +5,11 @@ class_name FlyerMeshes
 
 
 static func make(row: Dictionary) -> Node3D:
-	var root := Node3D.new()
 	var glow := StructureMeshes.glow(row.color, 1.1)
+	var anim := CreatureAnim.make(CreatureAnim.id_of(str(row.name)), float(row.size), glow)
+	if anim != null:
+		return anim
+	var root := Node3D.new()
 	match str(row.name):
 		"Spore Bat": _bat(root, float(row.size), glow)
 		"Gasbag": _gasbag(root, float(row.size), glow)

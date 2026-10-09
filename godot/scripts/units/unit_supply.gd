@@ -111,6 +111,7 @@ static func _fight(mgr: UnitManager, u: Unit, dt: float, enemies: Array) -> void
 			u.gun_cd = gun.rate
 			u.ammo -= 1.0
 			AmmoGrades.shoot(best, gun.damage, _grade_round(u), w, ep)
+			CreatureAnim.attack(u.node.get_node("Mesh"))
 			w.effects.beam(muzzle, ep, Color("ffc06a") if u.type == "crawler" else Color("bfffa0"), 0.07, 0.04)
 			Sfx.play("rifle", u.pos)
 		return
