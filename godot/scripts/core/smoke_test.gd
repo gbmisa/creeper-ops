@@ -235,6 +235,8 @@ static func _run_only(g) -> void:
 				SmokeNetwork.run(g)
 			"los":
 				SmokeEnemyLos.run(g)
+			"pacing":
+				SmokeSpawnPacing.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

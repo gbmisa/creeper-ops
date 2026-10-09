@@ -78,11 +78,11 @@ static func _from(pools: Dictionary, role: String, roll: float) -> Dictionary:
 		return RaiderDefs.named("Skitter")
 	var total := 0
 	for i in rows.size():
-		total += 1 << i
+		total += RaiderDefs.spawn_weight(rows[i], i)
 	var ticket := mini(total - 1, int(floor(clampf(roll, 0.0, 0.9999) * float(total))))
 	var acc := 0
 	for i in rows.size():
-		acc += 1 << i
+		acc += RaiderDefs.spawn_weight(rows[i], i)
 		if ticket < acc:
 			return rows[i] as Dictionary
 	return rows.back() as Dictionary
