@@ -34,13 +34,15 @@ func _init() -> void:
 	_cross.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_cross.position -= Vector2(8, 18)
 	add_child(_cross)
+	var panel := UiKit.panel(Color(0.04, 0.06, 0.09, 0.55))
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_top = 1.0
+	panel.anchor_bottom = 1.0
+	panel.position = Vector2(-146, -192)  # bottom centre: the event log owns bottom-left
+	add_child(panel)
 	var box := UiKit.vbox(4)
-	box.anchor_left = 0.5
-	box.anchor_right = 0.5
-	box.anchor_top = 1.0
-	box.anchor_bottom = 1.0
-	box.position = Vector2(-130, -176)  # bottom centre: the event log owns bottom-left
-	add_child(box)
+	panel.add_child(box)
 	box.add_child(UiKit.label("SUIT", 11, UiKit.DIM))
 	_suit = UiKit.bar(260, 14, UiKit.GOOD)
 	box.add_child(_suit)

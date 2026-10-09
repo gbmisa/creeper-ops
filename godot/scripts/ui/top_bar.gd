@@ -18,6 +18,13 @@ var node_lbl: Label
 var time_lbl: Label
 
 
+func _sep() -> VSeparator:
+	var s := VSeparator.new()
+	s.add_theme_color_override("separator_color", Color(1, 1, 1, 0.14))
+	s.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return s
+
+
 func _init() -> void:
 	add_theme_stylebox_override("panel", UiKit.style(UiKit.BG, UiKit.EDGE, 0, 6))
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
@@ -32,15 +39,19 @@ func _init() -> void:
 	energy_lbl = UiKit.label("0 / 0", 18)
 	energy_lbl.custom_minimum_size.x = 90
 	row.add_child(energy_lbl)
+	row.add_child(_sep())
 	ore_lbl = UiKit.label("Ore 0", 16, UiKit.WARN)
 	row.add_child(ore_lbl)
 	salvage_lbl = UiKit.label("Salvage 0", 16, UiKit.GOOD)
 	row.add_child(salvage_lbl)
+	row.add_child(_sep())
 	prod_lbl = _stat(row, "PRODUCTION /s", UiKit.GOOD)
 	demand_lbl = _stat(row, "DEMAND /s", UiKit.BAD)
+	row.add_child(_sep())
 	status_lbl = UiKit.label("", 14, UiKit.WARN)
 	status_lbl.custom_minimum_size.x = 260
 	row.add_child(status_lbl)
+	row.add_child(_sep())
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
