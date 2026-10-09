@@ -173,6 +173,11 @@ func _arrive(p: Dictionary) -> void:
 			if s.job.is_empty() or int(s.job.get("x", -1)) < 0:
 				return  # step was cancelled while this packet was in flight
 			s.job["paid"] = int(s.job.paid) + 1
+	# P1: packet arrival pop (visual only). Packets is a child of StructureManager.
+	var _mgr := get_parent()
+	var _w: Variant = _mgr.get("world") if _mgr != null else null
+	if _w != null and (_w as World).effects != null:
+		WeaponFx.packet_flash((_w as World).effects, s)
 
 
 ## Ore or Salvage already extracted. The route is copied reversed, so a later rebuild cannot recall it.

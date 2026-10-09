@@ -17,6 +17,7 @@ static func update(s: Structure, dt: float, mgr, time: float) -> void:
 			_barracks(s, dt)
 		"terp":
 			Terp.tick(s, dt, mgr)
+	WeaponFx.update(s, dt)  # P1/P2: recoil spring, fire/hit flash, nullifier glow (visual only)
 
 
 static func _nullifier(s: Structure, dt: float, mgr) -> void:

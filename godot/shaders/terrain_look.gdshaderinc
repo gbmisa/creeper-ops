@@ -31,18 +31,26 @@ vec3 grass_top(vec3 base, vec2 xz, float cave, float near, inout float bump) {
 	return c;
 }
 
-vec3 rock_wall(vec3 base, vec3 wp, float level_h, inout float bump) {
+vec3 rock_wall(vec3 base, vec3 wp, float level_h, float cave, float midslope, inout float bump,
+		out float crack) {
 	float along = wp.x * 0.7 + wp.z * 0.7;
 	float warp = fbm3(wp.xz * 0.25) * 1.6;
-	float strata = vnoise(vec2(wp.y * 2.3 + warp, along * 0.08));
+	float afreq = mix(0.08, 0.4, midslope);  // break up banding on gentle slopes
+	float strata = vnoise(vec2(wp.y * 2.3 + warp, along * afreq));
 	float streak = vnoise(vec2(along * 1.9, wp.y * 0.3));
-	float grit = vnoise(vec2(along * 6.0, wp.y * 6.0));
+	float gf = mix(6.0, 14.0, midslope);     // extra grit on gentle slopes
+	float grit = vnoise(vec2(along * gf, wp.y * gf));
 	vec3 c = base * (0.68 + 0.5 * strata) * (0.82 + 0.3 * streak) * (0.9 + 0.2 * grit);
 	float ledge = fract(wp.y * 2.0 / level_h + warp * 0.15);
-	c *= mix(0.55, 1.0, smoothstep(0.0, 0.07, ledge));  // thin cracks between rock beds
+	crack = 1.0 - smoothstep(0.0, 0.07, ledge);  // thin cracks between rock beds
+	c *= mix(0.55, 1.0, 1.0 - crack);
+	if (cave > 0.5) {
+		c = mix(c, c * vec3(0.72, 0.85, 1.05), 0.65);  // cooler cave rock
+		c *= 0.82 + 0.36 * strata;                       // stronger strata
+	}
 	float t = fract(wp.y / level_h + 0.001);
 	c *= mix(0.5, 1.0, smoothstep(0.0, 0.45, t));      // occluded foot of each wall
-	bump += strata * 0.9 + streak * 0.5 + grit * 0.2 - (1.0 - smoothstep(0.0, 0.07, ledge)) * 0.6;
+	bump += strata * 0.9 + streak * 0.5 + grit * 0.2 - crack * 0.6;
 	return c;
 }
 
@@ -82,13 +90,19 @@ vec3 ground_look(vec3 base, float kind, vec3 wp, vec3 wn, float level_h, float c
 	float bt = 0.0;
 	float br = 0.0;
 	vec3 top = grass_top(base, wp.xz, cave, near, bt);
-	vec3 rock = rock_wall(base, wp, level_h, br);
+	float midslope = smoothstep(0.18, 0.26, slope) * (1.0 - smoothstep(0.42, 0.5, slope));
+	float crack = 0.0;
+	vec3 rock = rock_wall(base, wp, level_h, cave, midslope, br, crack);
 	// Grass drapes a little over the top lip of each wall.
 	float t = fract(wp.y / level_h + 0.001);
 	float lip = smoothstep(0.78, 0.92, t) * cliff;
 	float w = cliff * (1.0 - lip);
 	vec3 c = mix(top, rock * 0.95, w);
 	bump = mix(bt, br, w);
+	if (cave > 0.5) {
+		// Faint teal seep glowing in the rock cracks.
+		glow += vec3(0.05, 0.35, 0.32) * crack * (0.35 + 0.65 * vnoise(wp.xz * 0.8));
+	}
 	if (kind < 0.83) {  // Blight: cracked crust glowing violet
 		vec2 v = voronoi(wp.xz * 0.55);
 		float crack = 1.0 - smoothstep(0.015, 0.045, v.y - v.x);

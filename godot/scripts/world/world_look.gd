@@ -17,13 +17,13 @@ static func make_environment(cave: bool) -> WorldEnvironment:
 	e.ssao_intensity = 1.5
 	if cave:
 		e.background_mode = Environment.BG_COLOR
-		e.background_color = Color("120b1c")
+		e.background_color = Color("0d1420")
 		e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-		e.ambient_light_color = Color("6a5a90")
-		e.ambient_light_energy = 0.9
+		e.ambient_light_color = Color("54648f")  # colder than the old violet
+		e.ambient_light_energy = 1.0
 		e.fog_enabled = true
-		e.fog_light_color = Color("1a1028")
-		e.fog_density = 0.02
+		e.fog_light_color = Color("0d1420")
+		e.fog_density = 0.028
 	else:
 		var sky_mat := ShaderMaterial.new()
 		sky_mat.shader = load("res://shaders/dusk_sky.gdshader")
@@ -57,9 +57,10 @@ static func add_lights(world: Node3D, g: Grid, cave: bool) -> void:
 		amb.position = centre + Vector3(0, 7.5, 0)
 		amb.omni_range = maxf(size.x, size.y)
 		amb.light_energy = 0.6
-		amb.light_color = Color("a08cd0")
+		amb.light_color = Color("8a9cc8")
 		world.add_child(amb)
 		world.add_child(_ceiling(g, 8.5))
+		world.add_child(_shafts(g))
 		return
 	var sun := DirectionalLight3D.new()
 	sun.light_color = Color("ffe2c0")
@@ -81,10 +82,45 @@ static func _ceiling(g: Grid, y: float) -> MeshInstance3D:
 	mi.mesh = pm
 	mi.position = Vector3(size.x * 0.5, y, size.y * 0.5)
 	var m := StandardMaterial3D.new()
-	m.albedo_color = Color("1c1426")
+	m.albedo_color = Color("141a26")
 	m.roughness = 1.0
 	mi.material_override = m
 	return mi
+
+
+## Light shafts from the cave ceiling: additive cones at deterministic open cells
+## near the centre (the cave has no Rift; these stand in for ceiling openings).
+static func _shafts(g: Grid) -> Node3D:
+	var root := Node3D.new()
+	root.name = "LightShafts"
+	var rng := RandomNumberGenerator.new()
+	rng.seed = g.w * 73856093 ^ g.h * 19349663
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.albedo_color = Color(0.55, 0.7, 0.9, 0.10)
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var placed := 0
+	var tries := 0
+	while placed < 6 and tries < 60:
+		tries += 1
+		var x := rng.randi_range(int(g.w * 0.3), int(g.w * 0.7))
+		var z := rng.randi_range(int(g.h * 0.3), int(g.h * 0.7))
+		if g.height_at(x, z) > 3.0:
+			continue  # want open floor, not a rock pillar
+		var cm := CylinderMesh.new()
+		cm.top_radius = 0.7
+		cm.bottom_radius = 2.4
+		cm.height = 8.0
+		var mi := MeshInstance3D.new()
+		mi.mesh = cm
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.position = Vector3((x + 0.5) * Config.CELL, 8.5 - 4.0, (z + 0.5) * Config.CELL)
+		root.add_child(mi)
+		placed += 1
+	return root
 
 
 ## The command camera looks down from 40-120 m, so first-person haze would wash out the whole

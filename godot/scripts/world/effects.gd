@@ -7,6 +7,8 @@ extends Node3D
 var _items: Array[Dictionary] = []
 static var _box: BoxMesh
 static var _sphere: SphereMesh
+var _flash: OmniLight3D       # one reused light for muzzle flashes / explosions
+var _flash_e := 0.0
 
 
 func _ready() -> void:
@@ -18,6 +20,11 @@ func _ready() -> void:
 		_sphere.height = 1.0
 		_sphere.radial_segments = 16
 		_sphere.rings = 8
+	_flash = OmniLight3D.new()
+	_flash.omni_range = 18.0
+	_flash.light_energy = 0.0
+	_flash.shadow_enabled = false
+	add_child(_flash)
 
 
 static func glow_mat(color: Color, alpha := 1.0) -> StandardMaterial3D:
@@ -88,6 +95,50 @@ func burst(p: Vector3, color: Color, size := 1.5, life := 0.35) -> void:
 	_items.append({ "node": mi, "t": 0.0, "life": life, "kind": "burst", "size": size })
 
 
+## Brief bright point light (muzzle flashes, explosions). One light is reused; the
+## newest call wins while the old one is still decaying.
+func flash_light(p: Vector3, color: Color, energy := 6.0) -> void:
+	if _flash == null:
+		return
+	_flash.position = p
+	_flash.light_color = color
+	_flash_e = energy
+
+
+## Gravity debris chunks for structure deaths. Count is capped by Config.FX_MAX_DEBRIS.
+func debris(p: Vector3, color: Color, n := 8, spread := 6.0) -> void:
+	var live := 0
+	for it in _items:
+		if it.kind == "debris":
+			live += 1
+	n = mini(n, Config.FX_MAX_DEBRIS - live)
+	if n <= 0:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(absf(p.x * 13.0 + p.z * 7.0 + p.y * 3.0)) & 0x7fffffff
+	for i in n:
+		var mi := MeshInstance3D.new()
+		mi.mesh = _box
+		var m := StandardMaterial3D.new()
+		m.albedo_color = color * rng.randf_range(0.7, 1.2)
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.roughness = 1.0
+		mi.material_override = m
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var a := rng.randf() * TAU
+		var sp := rng.randf_range(2.0, spread)
+		mi.position = p
+		add_child(mi)
+		_items.append({ "node": mi, "t": 0.0, "life": rng.randf_range(0.7, 1.4), "kind": "debris",
+			"vel": Vector3(cos(a) * sp, rng.randf_range(4.0, 9.0), sin(a) * sp),
+			"size": rng.randf_range(0.15, 0.45) })
+
+
+## A dust puff: grey, normal blending, shows against bright ground.
+func dust(p: Vector3, size := 1.5) -> void:
+	smoke(p, size, 1.4)
+
+
 ## Arcing projectile. opts: color, time, arc (apex height), size, on_arrive (Callable).
 ## Returns the item dict so callers (Beams vs spores) can cancel it via item.dead = true.
 func lob(a: Vector3, b: Vector3, opts: Dictionary) -> Dictionary:
@@ -104,6 +155,22 @@ func lob(a: Vector3, b: Vector3, opts: Dictionary) -> Dictionary:
 
 
 func update(dt: float) -> void:
+	# Perf cap (P6): lobs are gameplay-relevant and are never culled, only other fx.
+	var over := _items.size() - Config.FX_MAX_ITEMS
+	while over > 0:
+		var idx := -1
+		for i in range(_items.size()):
+			if _items[i].kind != "lob":
+				idx = i
+				break
+		if idx < 0:
+			break
+		(_items[idx].node as Node3D).queue_free()
+		_items.remove_at(idx)
+		over -= 1
+	if _flash_e > 0.0 and _flash != null:
+		_flash_e = maxf(0.0, _flash_e - dt * 40.0)
+		_flash.light_energy = _flash_e
 	for i in range(_items.size() - 1, -1, -1):
 		var it: Dictionary = _items[i]
 		it.t += dt
@@ -124,6 +191,11 @@ func update(dt: float) -> void:
 			"burst":
 				node.scale = Vector3.ONE * lerpf(0.1, it.size, sqrt(k))
 				(node.material_override as StandardMaterial3D).albedo_color.a = 0.8 * (1.0 - k)
+			"debris":
+				it.vel.y -= 22.0 * dt
+				node.position += it.vel * dt
+				node.scale = Vector3.ONE * float(it.size) * (1.0 - k * 0.5)
+				(node.material_override as StandardMaterial3D).albedo_color.a = 1.0 - k
 			"lob":
 				var p: Vector3 = it.a.lerp(it.b, k)
 				p.y += sin(k * PI) * it.arc
