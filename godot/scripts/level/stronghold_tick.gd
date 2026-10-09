@@ -30,7 +30,7 @@ static func capturing(s: Strongholds, c: Dictionary, lay: Dictionary, p, dt: flo
 			if s.stockpile:
 				s.stockpile.add("salvage", Config.CASTLE_CAPTURE_SALVAGE)
 			Sfx.play("good")
-			Bus.say("%s is yours: +%.0f Aether/min while you hold it. Raiders will come for it." % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)], "good")
+			Bus.say("%s is yours: +%.0f Aether/min while you hold it. Raiders will come for it — select troops and right-click to garrison the courtyard." % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)], "good")
 			StrongholdMeshes.refresh(s.views[c.id], c)
 		return
 	cap.away += dt

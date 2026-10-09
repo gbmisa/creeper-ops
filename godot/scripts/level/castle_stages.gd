@@ -60,9 +60,9 @@ static func tick(s: Strongholds, c: Dictionary, lay: Dictionary, p: Variant, dt:
 	set_stage(s, c, int(c.stage) + 1)
 	Sfx.play("good")
 	if stage == "gate":
-		Bus.say("%s: the gatehouse is yours. The outer gate opens for your units." % c.name, "good")
+		Bus.say("%s: the gatehouse is yours. The outer gate opens for your units — select troops and right-click to order them in." % c.name, "good")
 	else:
-		Bus.say("%s: the bailey is yours: build in it. The crown nest in the keep is exposed." % c.name, "good")
+		Bus.say("%s: the bailey is yours: build in it and right-click to order troops in. The crown nest in the keep is exposed." % c.name, "good")
 
 
 ## Raiders back on the last ring you took, with nobody to stop them, take it back.
