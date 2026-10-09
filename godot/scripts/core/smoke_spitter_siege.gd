@@ -82,7 +82,7 @@ static func _acid_hurts_cannon(g) -> void:
 	var row := cannon.prey.duplicate() as Dictionary
 	row["type"] = cannon.type
 	row["weapon"] = true
-	var r := _spawn_spitter(g, grid.cell_ground(node.x + 10, node.z))
+	var r := _spawn_spitter(g, _open_spot(grid, cannon, float(RaiderDefs.named("Spitter").size)))
 	var nests: SporeNests = g.hazards.nests
 	for i in 280:  # 14 s
 		nests.raiders.update(0.05, [row], [])
@@ -95,6 +95,22 @@ static func _acid_hurts_cannon(g) -> void:
 	if not cannon.dead:
 		sm.remove(cannon)
 	nests_cleanup(g)
+
+
+## A spot just outside the Spitter's standoff ring (it backs off inside
+## RAIDER_STANDOFF x range, so it shoots from here) whose acid arc clears the
+## terrain (Level 2 is loaded in the full run; some bearings sit behind a terrace).
+static func _open_spot(grid: Grid, s: Structure, size: float) -> Vector3:
+	var aim: Vector3 = s.node.position
+	var ring: float = float(RaiderDefs.named("Spitter").range) * Config.RAIDER_STANDOFF + 1.0
+	for i in 16:
+		var a := TAU * i / 16.0
+		var spot := grid.cell_ground(s.x + roundi(cos(a) * ring), s.z + roundi(sin(a) * ring))
+		var from := spot + Vector3(0, size, 0)
+		var arc := clampf(from.distance_to(aim) * 0.15, 1.2, 8.0)
+		if WeaponLogic.clip_lob(grid, from, aim, arc) == aim:
+			return spot
+	return grid.cell_ground(s.x + roundi(ring), s.z)
 
 
 static func _no_double_dip(g) -> void:
