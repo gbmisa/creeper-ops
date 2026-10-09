@@ -67,3 +67,6 @@ Parse is clean, smoke reports `OK: 0 failure(s)`, and a 4-line Xvfb tour saved e
 
 ## 2026-10-08: playtest → brief Q (`fix/q-spitter-towers`)
 Gregory: enemy Spitter Towers on L1 sit underground, shoot from where Snipers can't reach, and pile up. See [MUSE_Q_spitter_towers.md](MUSE_Q_spitter_towers.md). Start now.
+
+## 2026-10-08: military models ready → brief A5 (after A4 merges)
+Opus made Bertha, Thor, Terp, the Nullifier and the Outpost in a military style (on `art/3-models`). The brief is [ART3_A5_military_models.md](ART3_A5_military_models.md). Its branch `art/5-military-models` appears after A4 is merged, so don't start before then.

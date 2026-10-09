@@ -24,3 +24,8 @@ Open notes for the in-game pass: wyvern head/neck merge into a round body (lengt
 - `weapon_kit.py`: weapons as 3 glbs (base / turret / arm), pivots from WeaponMeshes; `wreview.sh` previews the assembled weapon.
 - Grades (Sonnet, 3 rounds max): cannon 5→6→7, mortar 5.5→6.5→7, sniper 5→6→6.5, beam 5→6.5→7.5, collector 6→7, relay 6→7.
 - Lessons: a 3-fold spinning part must turn a third of a turn per loop (or 2-fold, half a turn), or the 4 sampled frames alias. Rune slits go on the face apothem, not the corner radius. Emissive flame reads as salmon in the preview, so use the saturated `fire` / `ray_red`.
+
+## 2026-10-08: military models (Gregory: "more military, less futuristic brass")
+Bertha 7, Thor 7, Terp 8, Nullifier 7, Outpost 8 (Sonnet grader, up to 3 rounds each). Branch `art/3-models`.
+- Lessons: concrete or olive on the grey preview floor blends, so use dark concrete with bold hazard bands. Emissive colours need to be saturated (void 9a2bff, arc 00b4ff). Thin parts disappear at RTS distance; titans need about 1.5x part thickness.
+- 2-part models: `weapon_kit.run(..., parts=("base", "core"))`. The Terp `Spin` and the Nullifier `Core` stay code-driven.
