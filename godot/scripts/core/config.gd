@@ -98,6 +98,7 @@ const SPRAYER := { "name": "Null Sprayer", "range": 10.0, "half_angle": 0.45, "r
 const VM_KICK_BACK := 0.075       # m the weapon snaps back per unit of kick
 const VM_KICK_PITCH := 0.12       # rad the muzzle flips up per unit of kick (~7 deg)
 const VM_CAM_KICK := 0.016        # rad of camera pitch per unit of kick (~0.9 deg, always returns)
+const VM_YAW_KICK := 0.006        # rad of random camera yaw per unit of kick (recovers, never accumulates)
 const VM_KICK_MAX := 1.7          # stacked kick cap (rapid fire)
 const VM_SPRING_K := 1300.0       # recoil spring stiffness; damping below gives a slight overshoot
 const VM_SPRING_DAMP := 34.0

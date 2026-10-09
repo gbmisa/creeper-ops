@@ -104,6 +104,7 @@ func update(dt: float, input: InputState) -> void:
 		_vitals(dt, depth)
 		return
 	controller.kick_pitch = weapons.motion.cam_pitch()
+	controller.kick_yaw = weapons.motion.cam_yaw()
 	controller.update(dt, input, g, Config.CREEPER_SLOW if in_creeper else 1.0)
 	body.position = controller.pos
 	var building := builder != null and world == builder.structures.world and builder.update(input, world, camera)

@@ -129,7 +129,7 @@ func _rail(dt: float, trigger: bool, world: World) -> void:
 	if not _pay("railgun"):
 		return
 	_pierce(world, float(WEAPONS.railgun.damage))
-	weapons.kick(1.9)
+	weapons.kick("railgun")
 	weapons.muzzle.flash(Color("e8fbff"), 0.4, 0.1, 4.0)
 	Sfx.play("railshot")
 
@@ -175,7 +175,7 @@ func _plasma(dt: float, trigger: bool, world: World, feet: Vector3) -> void:
 	stockpile.spend("salvage", bill)
 	firing = true
 	_plasma_cone(dt, world, feet)
-	weapons.kick(0.16)  # buzzes the gun while it burns
+	weapons.kick("plasma")  # buzzes the gun while it burns
 	if not weapons.muzzle.active():
 		weapons.muzzle.flash(Color("c45bff"), 0.32, 0.08, 2.5)
 	Sfx.play("spray")
@@ -218,5 +218,5 @@ func _throw(world: World) -> void:
 	if _pay("demo"):
 		var dir := -weapons.camera.global_transform.basis.z
 		demo.launch(world, weapons.gun.global_position, dir)
-		weapons.kick(1.2)
+		weapons.kick("demo")
 		weapons.muzzle.flash(Color("ff8844"), 0.3, 0.08, 2.0)

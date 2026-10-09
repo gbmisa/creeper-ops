@@ -10,6 +10,7 @@ static func run(g) -> void:
 	_spray(g)
 	_effects(g)
 	_feedback()
+	_gunfeel(g)
 
 
 static func _recoil(g) -> void:
@@ -18,7 +19,7 @@ static func _recoil(g) -> void:
 	var m := w.motion
 	w.current = "rifle"
 	m.update(0.5, ctrl, g.input)  # settle whatever earlier checks left
-	w.kick(1.0)
+	w.kick("rifle")
 	m.update(1.0 / 60.0, ctrl, g.input)
 	var back := w.gun.position.z - ViewmodelMotion.BASE.z
 	var pitch := w.gun.rotation.x
@@ -37,7 +38,7 @@ static func _camera(g) -> void:
 	var base := ctrl.pitch
 	var peak := 0.0
 	for i in 30:
-		w.kick(1.0)
+		w.kick("rifle")
 		for j in 8:
 			ctrl.kick_pitch = w.motion.cam_pitch()
 			ctrl._sync()
@@ -113,3 +114,66 @@ static func _feedback() -> void:
 		and f.vignette_t > 0.0 and f.arcs.size() == 1)
 	f.update(3.0)
 	SmokeTest._check("feel: hit feedback fades out", f.marker_t == 0.0 and f.kill_t == 0.0 and f.vignette_t == 0.0 and f.arcs.is_empty())
+
+
+## Art 3 brief F: recoil data, yaw punch recovery, and the TTK hard rule (bloom at max
+## must not change the number of shots that kill the test target).
+static func _gunfeel(g) -> void:
+	var w: OperativeWeapons = g.fps.weapons
+	var ctrl: PlayerController = g.fps.controller
+	var rd: Dictionary = RecoilDefs.of("rifle")
+	SmokeTest._check("gunfeel: recoil data sane (kick, cam, yaw, bloom)", rd.kick > 0.0 and rd.cam > 0.0
+		and rd.yaw > 0.0 and rd.bloom_add > 0.0 and rd.bloom_max > rd.bloom_add and rd.bloom_recover > 0.0,
+		"(kick %.2f, bloom_max %.1f deg)" % [rd.kick, rd.bloom_max])
+	SmokeTest._check("gunfeel: every weapon has recoil data", RecoilDefs.of("crossbow").kick > rd.kick
+		and RecoilDefs.of("rocket").kick > RecoilDefs.of("crossbow").kick)
+	w.motion.update(0.5, ctrl, g.input)  # settle
+	var base_yaw := ctrl.yaw
+	var peaked := 0.0
+	for i in 12:
+		w.kick("rifle")
+		for j in 8:
+			ctrl.kick_pitch = w.motion.cam_pitch()
+			ctrl.kick_yaw = w.motion.cam_yaw()
+			ctrl._sync()
+			peaked = maxf(peaked, absf(ctrl.camera.rotation.y - base_yaw))
+			w.motion.update(1.0 / 60.0, ctrl, g.input)
+	for i in 90:
+		ctrl.kick_yaw = w.motion.cam_yaw()
+		w.motion.update(1.0 / 60.0, ctrl, g.input)
+	ctrl.kick_yaw = w.motion.cam_yaw()
+	ctrl._sync()
+	SmokeTest._check("gunfeel: yaw punch fires and recovers with no drift",
+		peaked > 0.0005 and absf(ctrl.camera.rotation.y - base_yaw) < 0.001 and w.motion.at_rest(),
+		"(peak %.4f rad)" % peaked)
+	ctrl.kick_pitch = 0.0
+	ctrl.kick_yaw = 0.0
+	_ttk(g)
+
+
+## Full magazine at worst-case bloom still kills the test target in the same 4 shots.
+static func _ttk(g) -> void:
+	var w: OperativeWeapons = g.fps.weapons
+	var world: World = g.surface
+	var grid := world.grid
+	var node := Node3D.new()
+	world.add_child(node)
+	var from := grid.cell_ground(30, 30) + Vector3(0, 30, 0)
+	node.position = from + Vector3(25, 0.0, 0)
+	var log := { "hits": 0, "alive": true }
+	var target := { "node": node, "oy": 0.0, "radius": 1.5, "alive": func(): return log.alive,
+		"on_hit": func(d, _p): log.hits += 1; log.alive = log.hits < 4 }
+	world.targets.append(target)
+	w.camera.global_position = from
+	w.camera.rotation = Vector3(0, -PI / 2.0, 0)  # look along +X at the target
+	w.current = "rifle"
+	w.cooldown = 0.0
+	var shots := 0
+	while log.alive and shots < 12:
+		w.bloom = RecoilDefs.of("rifle").bloom_max  # worst case spread on every shot
+		w._fire(world)
+		shots += 1
+	world.targets.erase(target)
+	node.queue_free()
+	SmokeTest._check("gunfeel: rifle TTK unchanged with bloom at max (4 shots kill)",
+		not log.alive and log.hits == 4 and shots == 4, "(%d shots, %d hits)" % [shots, log.hits])

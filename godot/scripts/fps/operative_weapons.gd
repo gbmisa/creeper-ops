@@ -11,6 +11,7 @@ var tank := Config.TANK_MAX
 var spraying := false
 var debug_trigger := false  # --fire: hold the trigger for a screenshot
 var hit_marker := 0.0
+var bloom := 0.0          # Pulse Rifle spread (degrees): grows per shot while firing, recovers on release
 var feel := HitFeel.new()
 var motion: ViewmodelMotion
 var xbow: CrossbowFx
@@ -133,19 +134,26 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 		var d := -camera.global_transform.basis.z
 		if crossbow.fire(world, gun.global_position + d * 0.6, d):
 			xbow.shoot()
-			kick(2.0)
+			kick("crossbow")
 			Sfx.play("crossbow")
+			Sfx.play("crossbow_clack")
 		else:
 			Sfx.play("deny")
 	elif current == "rocket" and trigger and cooldown <= 0.0:
 		cooldown = 0.6
 		var d := -camera.global_transform.basis.z
 		if launcher.fire(world, gun.global_position + d * 0.4, d, AmmoGrades.op_rocket(advanced.stockpile)):
-			kick(2.4)  # heavy recoil
+			kick("rocket")  # heavy recoil
 			muzzle.flash(Color("ffb347"), 0.26, 0.12, 5.0)
 			Sfx.play("launch")
+			Sfx.play("launch_rumble")
 		else:
 			Sfx.play("deny")
+	var rd: Dictionary = RecoilDefs.of("rifle")
+	if current == "rifle" and trigger:
+		pass  # bloom grows per shot in _fire; it recovers only on release
+	else:
+		bloom = maxf(0.0, bloom - rd.bloom_recover * dt)
 
 
 ## Distance along a ray to a sphere, or INF.
@@ -165,6 +173,12 @@ func _fire(world: World) -> void:
 	var grade := AmmoGrades.op_shot("rifle", advanced.stockpile)
 	var o := camera.global_position
 	var d := -camera.global_transform.basis.z
+	var b := deg_to_rad(bloom)  # sustained-fire spread: grows per shot, recovers on release
+	if b > 0.0001:
+		var basis := camera.global_transform.basis
+		d = d.rotated(basis.x, randf_range(-b, b)).rotated(basis.y, randf_range(-b, b)).normalized()
+	var rd: Dictionary = RecoilDefs.of("rifle")
+	bloom = minf(bloom + rd.bloom_add, rd.bloom_max)
 	var reach: float = Config.RIFLE.range
 	var best: Dictionary = {}
 	var bt := reach
@@ -191,14 +205,17 @@ func _fire(world: World) -> void:
 	world.effects.beam(start, end, AmmoGrades.color(grade), 0.12, 0.035)
 	world.effects.tracer(start, end, Color("b8f8ff"), Config.VM_TRACER_SPEED * 1.6, 2.5, 0.08)
 	Sfx.play("rifle")
+	Sfx.play("rifle_crack")
+	Sfx.play("rifle_tail")
 	_coil_flare = 1.0
 	muzzle.flash(Color("9ff6ff"), 0.11, 0.06, 2.0)
-	kick(0.85)
+	kick("rifle")
 
 
-## Recoil for any weapon (1.0 = crossbow shot): gun, string and camera all react.
-func kick(strength: float) -> void:
-	motion.kick(strength)
+## Recoil for any weapon, driven by RecoilDefs (feel only; damage/rate/range untouched).
+func kick(id: String) -> void:
+	var r: Dictionary = RecoilDefs.of(id)
+	motion.kick(r.kick, r.yaw)
 
 
 ## An enemy was hit by something the Operative fired. Marker + tick, or red cross + crunch.
