@@ -19,6 +19,7 @@ var economy: Economy
 var stockpile: Stockpile
 var flying: Array[Dictionary] = []
 var _cursor := 0
+var _node_atk := {}  # structure id -> last launch-attack msec (0.5 s rate limit)
 
 # Rolling stats (packets/s) for the HUD.
 var sent_rate := 0.0
@@ -108,6 +109,7 @@ func update(dt: float, list: Array, sender_ready: bool) -> void:
 				if kind == "ammo":
 					fly["grade"] = AmmoGrades.surcharge(s, stockpile)  # Salvage surcharge for improved ammo
 				flying.append(fly)
+				_node_launch_anim(list, route)
 		if economy.energy < 1.0:
 			for s in list:
 				if s.req_acc >= 1.0 and need(s) != "":
@@ -194,3 +196,25 @@ func launch_route(route: PackedVector3Array, kind: String, n: float, s: Structur
 
 func count() -> int:
 	return flying.size()
+
+
+## Attack swing on the Command Node's model when a packet leaves it, at most
+## once every 0.5 s. The route starts at the sender's link_point().
+func _node_launch_anim(list: Array, route: PackedVector3Array) -> void:
+	if route.is_empty():
+		return
+	var from: Vector3 = route[0]
+	for t in list:
+		var s: Structure = t
+		if s.type != "node" or s.body == null:
+			continue
+		if s.link_point().distance_squared_to(from) > 0.0001:
+			continue
+		var model := CreatureAnim.of(s.body)
+		if model == null:
+			return
+		var now := Time.get_ticks_msec()
+		if now - int(_node_atk.get(s.id, 0)) >= 500:
+			_node_atk[s.id] = now
+			CreatureAnim.attack(model)
+		return

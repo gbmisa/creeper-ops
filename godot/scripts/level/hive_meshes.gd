@@ -14,13 +14,17 @@ static func anchor() -> Node3D:
 
 static func part(kind: String) -> Node3D:
 	var root := Node3D.new()
+	# Animated .glb when present (fixed per-kind glow materials: pass null so the
+	# model keeps its authored colours). Procedural mesh is the fallback, and is
+	# what CreatureAnim.disabled selects.
+	var anim := CreatureAnim.make("hive_" + kind, 1.0, null)
+	if anim != null:
+		root.add_child(anim)
+		CreatureAnim.move(anim, 0.0)  # idle
+		return root
 	match kind:
 		"core":
-			var anim := CreatureAnim.make("hive_core", 1.0, StructureMeshes.glow(Color("ff3355"), 1.4))
-			if anim != null:
-				root.add_child(anim)
-			else:
-				_core(root)
+			_core(root)
 		"pit":
 			_pit(root)
 		"spitter":

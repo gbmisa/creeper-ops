@@ -5,7 +5,7 @@ class_name FlyerMeshes
 
 
 static func make(row: Dictionary) -> Node3D:
-	var glow := StructureMeshes.glow(row.color, 1.1)
+	var glow := CreatureAnim.creature_glow(row.color)
 	var anim := CreatureAnim.make(CreatureAnim.id_of(str(row.name)), float(row.size), glow)
 	if anim != null:
 		return anim

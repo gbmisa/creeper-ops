@@ -65,6 +65,7 @@ static func launch(host, hive: Dictionary, roost: Dictionary, at_node: bool, row
 		fl.spawn(row, base + Vector3(cos(a), 0, sin(a)) * 1.5, { "node_bias": at_node, "home": roost.pos,
 			"cd": 1.0 + randf() * 1.5 })
 	if n > 0:
+		HiveParts.attack_anim(roost)
 		Sfx.play("screech", base)
 		Sfx.play("flap", base)
 		Bus.say("%s%s launch from %s." % ["%d " % n if n > 1 else "A ", row.name + ("s" if n > 1 else ""), hive.name], "warn")

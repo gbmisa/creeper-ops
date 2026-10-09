@@ -38,7 +38,7 @@ func deploy_totem() -> void:
 	if down:
 		_deny("Operative is down. %s." % status_text())
 		return
-	if not _pod.is_empty():
+	if _pod_falling():
 		_deny("A drop pod is already falling.")
 		return
 	if g.teleport_cooldown > 0.0:
@@ -49,6 +49,9 @@ func deploy_totem() -> void:
 		_deny("No finished Totem. Drop one (Orbital tab) outside Blight, then press T.")
 		return
 	_spawn(Vector2i(b.x, b.z - 1), 0.0)
+	var totem_model := CreatureAnim.of(b.body)
+	if totem_model != null:
+		CreatureAnim.attack(totem_model)
 	Bus.metric.emit("deploy", { "how": "totem" })
 	Bus.say("Operative deployed. The creeper won't wait for you.", "radio")
 
@@ -58,7 +61,7 @@ func can_drop(cell: Vector2i) -> Dictionary:
 		return { "ok": false, "reason": "Land the Command Node first" }
 	if down:
 		return { "ok": false, "reason": "Operative is down" }
-	if not _pod.is_empty():
+	if _pod_falling():
 		return { "ok": false, "reason": "A drop pod is already falling" }
 	if not g.surface.grid.in_bounds(cell.x, cell.y):
 		return { "ok": false, "reason": "Off the map" }
@@ -79,10 +82,29 @@ func start_drop(cell: Vector2i) -> void:
 	if not g.economy.spend(cost):
 		_deny("Drop needs %d energy." % ceili(cost))
 		return
-	_pod = { "cell": cell, "t": 0.0, "tick": 0.0 }
+	_begin_pod(cell)
 	Bus.metric.emit("deploy", { "how": "drop", "cost": cost })
 	Sfx.play("lift")
 	Bus.say("Drop pod inbound (%d energy)." % ceili(cost), "info")
+
+
+## Spawn the falling pod node (factored out so the smoke test can drive the lifecycle).
+func _begin_pod(cell: Vector2i) -> void:
+	var prev := _pod.get("node") as Node3D
+	if prev != null and is_instance_valid(prev):
+		prev.queue_free()
+	var at: Vector3 = g.surface.grid.cell_ground(cell.x, cell.y)
+	var pod := CreatureAnim.make("drop_pod", 1.0, null)
+	if pod == null:
+		pod = Node3D.new()  # no model: beam-only, as before
+	g.surface.add_child(pod)
+	# The pod's origin is mid-body: rest its lowest point on the ground at touchdown.
+	var to := at + Vector3(0, CreatureAnim.ground_offset(pod), 0)
+	var from := to + Vector3(0, 60, 0)
+	pod.position = from
+	CreatureAnim.move(pod, 1.0)  # walk clip: falling, flame on
+	_pod = { "cell": cell, "t": 0.0, "tick": 0.0, "node": pod,
+		"from": from, "to": to, "ground": at, "phase": "fall" }
 
 
 func drop_cost(cell: Vector2i) -> float:
@@ -183,19 +205,51 @@ func _finish_respawn() -> void:
 	Bus.say("Operative respawned aboard the Command Node.", "good")
 
 
+## A drop is in flight (falling). Once it has landed, new drops are allowed even
+## while the old pod sits out its linger.
+func _pod_falling() -> bool:
+	return not _pod.is_empty() and str(_pod.get("phase", "fall")) == "fall"
+
+
 func _tick_pod(dt: float) -> void:
 	if _pod.is_empty():
 		return
-	_pod["t"] = float(_pod["t"]) + dt
-	_pod["tick"] = float(_pod["tick"]) - dt
-	var cell: Vector2i = _pod["cell"]
-	var at: Vector3 = g.surface.grid.cell_ground(cell.x, cell.y)
-	if float(_pod["t"]) < Config.DROP_TIME:
+	var node := _pod.get("node") as Node3D
+	if node == null or not is_instance_valid(node):
+		_pod = {}
+		return
+	if str(_pod.get("phase", "fall")) == "fall":
+		_pod["t"] = float(_pod["t"]) + dt
+		var k := clampf(float(_pod["t"]) / Config.DROP_TIME, 0.0, 1.0)
+		node.position = (_pod["from"] as Vector3).lerp(_pod["to"] as Vector3, k * k)  # ease-in: accelerates
+		_pod["tick"] = float(_pod["tick"]) - dt
+		var at: Vector3 = _pod["ground"]
 		if float(_pod["tick"]) <= 0.0:
 			_pod["tick"] = 0.15
 			g.surface.effects.beam(at + Vector3(0, 70, 0), at, Color("9fd4ff"), 0.16, 0.25 + float(_pod["t"]) * 0.12)
-		return
-	_pod = {}
+		if k >= 1.0:
+			_pod_touchdown()
+	else:  # "linger": pod sits, then sinks; "die": wait for the clip's callback
+		if str(_pod.get("phase")) != "linger":
+			return
+		_pod["t"] = float(_pod["t"]) + dt
+		if float(_pod["t"]) >= Config.POD_LINGER:
+			_pod["phase"] = "die"
+			CreatureAnim.die(node, func() -> void:
+				if is_instance_valid(node):
+					node.queue_free()
+				_pod = {})
+
+
+func _pod_touchdown() -> void:
+	var node := _pod.get("node") as Node3D
+	var cell: Vector2i = _pod["cell"]
+	var at: Vector3 = _pod["ground"]
+	_pod["phase"] = "linger"
+	_pod["t"] = 0.0
+	if node != null and is_instance_valid(node):
+		CreatureAnim.attack(node)  # touchdown: dust ring, doors open
+	g.surface.effects.burst(at, Color("b09a7a"), 3.0, 0.6)  # dust ring
 	if down:
 		Bus.say("The pod arrived, but the Operative is down.", "warn")
 		return

@@ -23,6 +23,9 @@ static func start(mgr, s: Structure, x: int, z: int) -> void:
 	s.z = z
 	mgr.occupy(s)
 	mgr.dirty = true
+	var lift_model := CreatureAnim.of(s.body)
+	if lift_model != null:
+		CreatureAnim.move(lift_model, 1.0)  # walk clip: lift jets on
 	Sfx.play("lift", s.pos)
 
 
@@ -49,6 +52,9 @@ static func update(s: Structure, dt: float) -> bool:
 		s.pos = f.to
 		s.node.position = f.to + Vector3(0, hover_offset(s), 0)
 		s.flight = null
+		var land_model := CreatureAnim.of(s.body)
+		if land_model != null:
+			CreatureAnim.move(land_model, 0.0)
 		return true
 	return false
 

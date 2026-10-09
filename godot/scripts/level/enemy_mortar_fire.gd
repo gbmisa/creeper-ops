@@ -42,6 +42,8 @@ static func advance(host, m: Dictionary, dt: float) -> void:
 		return
 	var at: Vector3 = shot.at
 	m.telegraph = null
+	HiveParts.face_at(m, at)
+	HiveParts.attack_anim(m)
 	EnemyMortarHit.detonate(host, at)
 
 

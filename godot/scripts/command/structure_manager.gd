@@ -16,6 +16,7 @@ var list: Array[Structure] = []
 var occupied := {}            # grid idx -> Structure
 var selected_beacon: Structure = null
 var dirty := true
+var _anim_hit := {}  # structure id -> last hit-clip msec (model rate limit)
 var network: Network
 var packets: Packets
 var field: CollectorField
@@ -114,6 +115,7 @@ func remove(s: Structure, reason := "") -> void:
 	list.erase(s)
 	s.dead = true
 	vacate(s)
+	_anim_hit.erase(s.id)
 	if selected_beacon == s:
 		selected_beacon = null
 	if reason == "destroyed" or reason == "recycled":
@@ -127,7 +129,14 @@ func remove(s: Structure, reason := "") -> void:
 			Bus.node_destroyed.emit()
 		else:
 			Bus.say("%s destroyed%s" % [s.def.label, " by creeper" if s.wet > Config.MIN_DEPTH else ""], "bad")
-	s.node.queue_free()
+	var model: Node3D = CreatureAnim.of(s.body) if reason == "destroyed" else null
+	if model != null:
+		var sn := s.node
+		CreatureAnim.die(model, func() -> void:
+			if is_instance_valid(sn):
+				sn.queue_free())
+	else:
+		s.node.queue_free()
 	dirty = true
 	Bus.structure_removed.emit(s)
 
@@ -145,6 +154,12 @@ func damage(s: Structure, amount: float) -> void:
 		return
 	s.hp -= amount
 	s.hurt = 0.25
+	var model := CreatureAnim.of(s.body)
+	if model != null:
+		var now := Time.get_ticks_msec()
+		if now - int(_anim_hit.get(s.id, 0)) >= 300:
+			_anim_hit[s.id] = now
+			CreatureAnim.hit(model)
 	if s.type == "node":
 		Bus.node_hit.emit()
 	if s.hp <= 0.0:
