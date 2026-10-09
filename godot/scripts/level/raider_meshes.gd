@@ -24,9 +24,12 @@ static func bone() -> StandardMaterial3D:
 
 
 static func make(tier: Dictionary) -> Node3D:
+	var glow := StructureMeshes.glow(tier.color, 1.0)
+	var anim := CreatureAnim.make(CreatureAnim.id_of(str(tier.get("name", ""))), anim_scale(tier), glow)
+	if anim != null:
+		return anim
 	var root := Node3D.new()
 	var s: float = tier.size
-	var glow := StructureMeshes.glow(tier.color, 1.0)
 	match tier.get("name", ""):
 		"Skitter": _skitter(root, s * 2.0, glow)
 		"Brute": _brute(root, s * 1.8, glow)
@@ -37,6 +40,25 @@ static func make(tier: Dictionary) -> Node3D:
 			RaiderMeshesRanged.add(root, tier.name, s * 1.8, glow)
 		_: _bug(root, s, glow)
 	return root
+
+
+## The scale Opus authors the .glb at (u=1, same unit the procedural builders take):
+## the same tier.size * k the procedural mesh uses; Sentinel is a fixed design.
+static func anim_scale(tier: Dictionary) -> float:
+	var s: float = tier.size
+	match str(tier.get("name", "")):
+		"Skitter":
+			return s * 2.0
+		"Brute", "Ravager":
+			return s * 1.8
+		"Behemoth":
+			return s * 1.7
+		"Sentinel":
+			return 1.0
+		"Spitter", "Lancer", "Warden", "Spotter", "Burrower":
+			return s * 1.8
+		_:
+			return s
 
 
 static func _p(pts: Array, u: float) -> PackedVector2Array:

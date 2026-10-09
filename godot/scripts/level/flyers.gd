@@ -75,6 +75,7 @@ func hurt(f: Dictionary, dmg: float) -> bool:
 		return false
 	f.hp = float(f.hp) - dmg
 	if float(f.hp) > 0.0:
+		CreatureAnim.hit(f.node)
 		return false
 	kill(f)
 	return true
@@ -152,6 +153,7 @@ func fly(f: Dictionary, goal: Vector3, dt: float, speed_mul := 1.0, y_goal := NA
 	var rate := vy if vy > 0.0 else (FLY_UP if want > p.y else FLY_DOWN)
 	p.y = move_toward(p.y, want, rate * dt)
 	node.position = p
+	CreatureAnim.move(node, step / maxf(dt, 0.0001))
 	return maxf(0.0, dist - step)
 
 
