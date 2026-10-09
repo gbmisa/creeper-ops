@@ -121,17 +121,17 @@ def idle(arm):
 
 def attack(arm):
     def pose(t):
-        rear = lib.pulse(t, 0.0, 0.5)
-        lunge = lib.pulse(t, 0.3, 0.8)
-        front = lambda side, i: (0.3 * rear, 0.9 * rear if i == 0 else 0.0, 0.5 * rear if i == 0 else 0.0)
+        rear = min(1.0, 1.5 * lib.pulse(t, 0.0, 0.65))  # held at the top for a beat
+        lunge = lib.pulse(t, 0.45, 0.9)
+        front = lambda side, i: (0.35 * rear, 1.3 * rear if i == 0 else 0.4 * rear if i == 1 else 0.0, 0.6 * rear if i == 0 else 0.0)
         p = all_legs(arm, front)
-        p["body"] = (lib.world_rot(arm, "body", (0, 1, 0), -0.35 * rear + 0.3 * lunge),
-                     lib.world_loc(arm, "body", (0.14 * lunge, 0, 0.05 * rear - 0.04 * lunge)))
-        snap = 0.5 * rear - 0.45 * lunge
+        p["body"] = (lib.world_rot(arm, "body", (0, 1, 0), -0.7 * rear + 0.35 * lunge),
+                     lib.world_loc(arm, "body", (-0.05 * rear + 0.25 * lunge, 0, 0.13 * rear - 0.05 * lunge)))
+        snap = 0.7 * rear - 0.6 * lunge
         for side, s in SIDES.items():
             p["fang_" + side] = (lib.world_rot(arm, "fang_" + side, (0, 0, 1), s * snap), None)
         return p
-    lib.action(arm, "attack", 14, pose, step=1)
+    lib.action(arm, "attack", 18, pose, step=1)
 
 
 def hit(arm):

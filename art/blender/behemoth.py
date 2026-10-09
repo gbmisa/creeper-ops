@@ -55,9 +55,10 @@ def still(arm, fn=None):
 def walk(arm):
     def pose(t):
         p = LEGS.walk(arm, t, 0.4, lift=0.6, bend=0.5, duty=0.7)
-        p["body"] = (rot(arm, "body", (1, 0, 0), 0.05 * math.sin(2 * math.pi * t)),
-                     lib.world_loc(arm, "body", (0, 0, 0.06 * math.cos(4 * math.pi * t))))
-        p["head"] = (rot(arm, "head", (0, 0, 1), 0.08 * math.sin(2 * math.pi * t)), None)
+        stomp = abs(math.sin(2 * math.pi * t))  # 0 at each footfall: sharp drop, slow rise
+        p["body"] = (rot(arm, "body", (1, 0, 0), 0.06 * math.sin(2 * math.pi * t)),
+                     lib.world_loc(arm, "body", (0, 0, 0.16 * stomp - 0.08)))
+        p["head"] = (rot(arm, "head", (0, 0, 1), 0.08 * math.sin(2 * math.pi * t)) @ rot(arm, "head", (0, 1, 0), 0.08 * (1 - stomp)), None)
         return p
     lib.action(arm, "walk", 14, pose, step=1, loop=True)
 

@@ -32,8 +32,10 @@ cam = bpy.data.objects.new("cam", cam_data)
 sc.collection.objects.link(cam)
 sc.camera = cam
 size = max(mesh.dimensions) or 1.0
-cam.location = Vector((1.1, -1.5, 0.9)) * size * 1.1 + Vector((0, 0, mesh.dimensions.z * 0.2))
-cam.rotation_euler = (Vector((0, 0, mesh.dimensions.z * 0.42)) - cam.location).to_track_quat("-Z", "Y").to_euler()
+zs = [(mesh.matrix_world @ Vector(c)).z for c in mesh.bound_box]
+centre = Vector((0, 0, (min(zs) + max(zs)) * 0.5))  # frame the bounding box, whatever the origin
+cam.location = centre + Vector((1.1, -1.5, 0.9)) * size * 1.1
+cam.rotation_euler = (centre - cam.location).to_track_quat("-Z", "Y").to_euler()
 cam_data.lens = 40
 
 sun_data = bpy.data.lights.new("sun", "SUN")
