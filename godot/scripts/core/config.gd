@@ -163,6 +163,8 @@ const ENEMY_WEAVER_RESPAWN := 8.0
 const ENEMY_LEECH_RANGE := 16.0        # a pump emits while an undenied Leech is this close
 const ENEMY_LEECH_MAT := 0.15          # material/s one grown Leech adds to its hub
 const ENEMY_BLIGHT_DPS := 1.5          # HP/s a Blight Pylon deals to structures in its radius
+const ENEMY_BUILD_MAX_PER_KIND := {"spitter": 2, "pylon": 2, "lancer": 2}  # per-castle base cap; +2 at full pressure
+const ENEMY_SPITTER_FAIR_RANGE := 20.0  # cells; a spitter site needs a buildable sniper cell with LOS inside this. Must match the sniper's range in structure_defs.
 const JUMP_PAD_MARGIN := 1.5      # levels above the column top the pad throws you
 ## Castle stakes (castle_raids.gd). Levels override any key with their CASTLE_RULES.
 const CASTLE_RULES := {

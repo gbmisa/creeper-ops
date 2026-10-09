@@ -24,6 +24,29 @@ func _init(w: World, cs: Strongholds, sn: SporeNests, sm: StructureManager, pile
 	structures = sm
 	stockpile = pile
 	w.updaters.append(update)
+	Bus.terrain_changed.connect(_on_terrain)
+
+
+## Terrain edits (enemy mortars, hive growth, burrowers, breaches) skip only
+## player-occupied cells, so the ground can move under an enemy structure after it is
+## placed. Re-seat anything whose cell changed so it stands on the visible ground.
+func _on_terrain(w: World, cells: Array) -> void:
+	if w != world:
+		return
+	var touched := {}
+	for c in cells:
+		touched[c] = true
+	for raw in list:
+		var s: Dictionary = raw
+		if not bool(s.alive):
+			continue
+		if not touched.has(s.cell):
+			continue
+		var p := world.grid.cell_ground(s.cell.x, s.cell.y)
+		var node := s.node as Node3D
+		if node != null and is_instance_valid(node):
+			node.position = p
+		s.pos = p
 
 
 func update(dt: float) -> void:
