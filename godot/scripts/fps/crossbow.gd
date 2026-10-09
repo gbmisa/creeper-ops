@@ -86,7 +86,7 @@ static func _target_hit(w: World, o: Vector3, d: Vector3, seg: float) -> Diction
 		if not t.alive.call():
 			continue
 		var c: Vector3 = (t.node as Node3D).global_position + Vector3(0, t.get("oy", 0.0), 0)
-		var dist := OperativeWeapons.ray_sphere(o, d, c, t.radius)
+		var dist := RifleFire.ray_sphere(o, d, c, t.radius)
 		if dist <= bt:
 			bt = dist
 			best = { "t": t, "dist": dist }

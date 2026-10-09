@@ -69,7 +69,7 @@ static func _counters(g, fl: Flyers) -> void:
 	var w: OperativeWeapons = g.fps.weapons
 	w.camera.global_position = at + Vector3(0, 6, 0)
 	w.camera.look_at((wy.node as Node3D).position, Vector3.UP)
-	w._fire(g.surface)
+	w.rifle.fire(g.surface)
 	SmokeTest._check("flyers: an Operative rifle shot hits a Wyvern", float(wy.hp) < 90.0, "(%.1f)" % wy.hp)
 	fl.clear()
 	for s in [beam, cannon, sniper]:

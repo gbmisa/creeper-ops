@@ -47,7 +47,7 @@ func enter(w: World, cell: Vector2i, facing: float, cave_mites: CaveMites = null
 	controller.spawn(w.grid, cell.x, cell.y, facing)
 	body.position = controller.pos
 	recall_hold = 0.0
-	weapons.bloom = 0.0
+	weapons.rifle.bloom = 0.0
 	weapons.climb = 0.0
 	weapons.climb_yaw = 0.0
 	mites = cave_mites
@@ -74,7 +74,7 @@ func reset_suit() -> void:
 	suit = OperativeUpgrades.suit_max()
 	shield = OperativeUpgrades.shield_max()
 	weapons.tank = Config.TANK_MAX
-	weapons.bloom = 0.0
+	weapons.rifle.bloom = 0.0
 	weapons.climb = 0.0
 	weapons.climb_yaw = 0.0
 
