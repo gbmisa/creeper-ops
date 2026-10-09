@@ -74,7 +74,7 @@ const OP_CREEPER_BASE_DPS := 9.0
 const OP_CREEPER_DPS := 14.0
 const CREEPER_SLOW := 0.5
 const TANK_MAX := 100.0
-const TANK_REGEN := 9.0
+const TANK_REGEN := 4.0   # tank refills in 25 s (was 11)
 const RECALL_HOLD := 2.0
 const TOTEM_FREE_RADIUS := 3.0   # metres: deploy to a Totem, and recall this close, are free and instant
 const DROP_BASE := 20.0          # energy to drop on a Totem's own cell
@@ -93,7 +93,7 @@ const ROCKET := { "name": "Rocket Launcher", "speed": 30.0, "range": 90.0, "blas
 	"damage": 5.0, "mag": 4, "reload": 6.0 }  # blast in cells; power = creeper removed at the centre
 const CROSSBOW := { "name": "Crossbow", "damage": 4.0, "speed": 75.0, "gravity": 14.0, "reload": 1.2,
 	"range": 120.0, "stick_time": 5.0 }  # one physical bolt per shot, 4x a rifle pulse; stuck bolts stay stick_time s
-const SPRAYER := { "name": "Null Sprayer", "range": 10.0, "half_angle": 0.45, "anti_per_sec": 5.0, "tank_per_sec": 20.0 }
+const SPRAYER := { "name": "Null Sprayer", "range": 10.0, "half_angle": 0.45, "anti_per_sec": 1.7, "tank_per_sec": 12.5 }   # nerfed (playtest 3): ~1/3 removal, tank empties in 8 s
 
 # ---- First-person feel (Stage 23): viewmodel motion, spray, hit feedback --------
 const VM_KICK_BACK := 0.075       # m the weapon snaps back per unit of kick
@@ -201,6 +201,9 @@ const MITE_SPAWN := 6.0
 const MITE_MAX := 6
 const MITE_SPEED := 4.5
 const MITE_DAMAGE := 12.0
+const MITE_LIFE := 14.0          # s before a mite that cannot reach you pops
+const MITE_CLEARANCE := 0.5      # m of free space it needs ahead of it
+const MITE_STEER_ANGLES := [0.0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5]   # rad yaw tried around the direct line
 const NEST_HP := 40.0
 const NEST_HP_GROWTH := 0.1    # nests heal/grow by this share of NEST_HP per minute (max +10%/min)
 const NEST_AGGRO := 22.0       # guards attack prey this close (metres)...
