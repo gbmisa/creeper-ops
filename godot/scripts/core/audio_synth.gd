@@ -1,54 +1,12 @@
 extends Node
-## Autoload "Sfx": procedural sound effects, no asset files. Each voice is synthesised once
-## into an AudioStreamWAV at startup. play(name, pos) throttles repeats per voice and
-## attenuates by distance from the listener (the active camera).
+## Autoload "Sfx": procedural sound effects, no asset files. Voices (SfxVoices) are synthesised
+## by SfxRender on a worker thread at startup; play() before they are ready is silent.
+## play(name, pos) throttles repeats per voice, jitters pitch, and attenuates by distance from
+## the listener (set by the active mode). One-shots go through the "Sfx" bus (short reverb,
+## compressor, limiter); looping ambience beds (set_bed) go through "Amb".
 
-const RATE := 22050
-## name: [min seconds between plays, falloff distance m (0 = no falloff), recipe]
-## recipe: list of [kind, start s, dur s, f0, f1, vol]; kind "sin"/"sq"/"saw"/"tri"/"noise"
-const VOICES := {
-	"blaster": [0.07, 70.0, [["sq", 0.0, 0.06, 1400, 500, 0.10]]],
-	"mortar": [0.15, 90.0, [["sin", 0.0, 0.2, 160, 60, 0.5]]],
-	"boom": [0.1, 110.0, [["noise", 0.0, 0.45, 600, 0, 0.6]]],
-	"rifle": [0.04, 60.0, [["saw", 0.0, 0.09, 900, 120, 0.25], ["noise", 0.0, 0.06, 3000, 0, 0.2]]],
-	"rifle_crack": [0.04, 60.0, [["noise", 0.0, 0.03, 6000, 0, 0.3]]],
-	"rifle_tail": [0.04, 60.0, [["saw", 0.02, 0.12, 300, 90, 0.12]]],
-	"beam": [0.08, 70.0, [["saw", 0.0, 0.1, 2200, 1800, 0.12]]],
-	"spray": [0.1, 0.0, [["noise", 0.0, 0.16, 3500, 0, 0.16], ["noise", 0.0, 0.16, 800, 0, 0.1]]],
-	"fizz": [0.09, 0.0, [["noise", 0.0, 0.09, 9000, 0, 0.1]]],
-	"crossbow": [0.04, 60.0, [["saw", 0.0, 0.12, 1500, 260, 0.2], ["sin", 0.0, 0.14, 150, 45, 0.55], ["noise", 0.0, 0.05, 3200, 0, 0.18]]],
-	"crossbow_clack": [0.04, 60.0, [["sq", 0.0, 0.03, 900, 400, 0.2], ["noise", 0.0, 0.04, 2500, 0, 0.15]]],
-	"tick": [0.03, 0.0, [["tri", 0.0, 0.04, 2600, 2100, 0.28]]],
-	"crunch": [0.08, 0.0, [["noise", 0.0, 0.2, 900, 0, 0.5], ["sq", 0.0, 0.12, 220, 70, 0.22], ["tri", 0.0, 0.08, 1500, 900, 0.2]]],
-	"launch": [0.1, 90.0, [["noise", 0.0, 0.45, 1400, 0, 0.35], ["sin", 0.0, 0.25, 110, 40, 0.6]]],
-	"launch_rumble": [0.1, 90.0, [["sin", 0.0, 0.5, 60, 30, 0.4], ["noise", 0.05, 0.4, 300, 0, 0.25]]],
-	"railshot": [0.1, 90.0, [["saw", 0.0, 0.25, 3000, 200, 0.3], ["sin", 0.0, 0.2, 90, 30, 0.6]]],
-	"hit": [0.05, 0.0, [["tri", 0.0, 0.05, 1800, 1200, 0.25]]],
-	"hurt": [0.25, 0.0, [["saw", 0.0, 0.18, 220, 90, 0.3]]],
-	"sizzle": [0.3, 0.0, [["noise", 0.0, 0.3, 4000, 0, 0.15]]],
-	"build": [0.2, 120.0, [["sin", 0.0, 0.08, 520, 520, 0.2], ["sin", 0.08, 0.12, 780, 780, 0.2]]],
-	"lift": [0.2, 120.0, [["sin", 0.0, 0.5, 220, 520, 0.25]]],
-	"lost": [0.3, 200.0, [["sq", 0.0, 0.3, 330, 160, 0.2], ["noise", 0.0, 0.3, 800, 0, 0.3]]],
-	"alarm": [2.5, 0.0, [["sq", 0.0, 0.12, 880, 880, 0.15], ["sq", 0.2, 0.12, 660, 660, 0.15]]],
-	"teleport": [0.5, 0.0, [["sin", 0.0, 0.6, 200, 1600, 0.35]]],
-	"good": [0.4, 0.0, [["tri", 0.0, 0.25, 523, 523, 0.25], ["tri", 0.09, 0.25, 659, 659, 0.25], ["tri", 0.18, 0.25, 784, 784, 0.25]]],
-	"click": [0.03, 0.0, [["sin", 0.0, 0.03, 900, 700, 0.15]]],
-	"deny": [0.15, 0.0, [["sq", 0.0, 0.12, 180, 150, 0.18]]],
-	"unit": [0.1, 0.0, [["tri", 0.0, 0.08, 600, 900, 0.2]]],
-	"pop": [0.05, 60.0, [["sin", 0.0, 0.1, 700, 200, 0.3]]],
-	"lance": [1.0, 0.0, [["saw", 0.0, 1.2, 80, 1200, 0.25], ["noise", 0.9, 0.6, 1500, 0, 0.5]]],
-	"thump": [0.2, 90.0, [["sin", 0.0, 0.18, 90, 40, 0.55], ["noise", 0.0, 0.2, 200, 0, 0.35]]],
-	"whistle": [0.4, 140.0, [["sin", 0.0, 0.7, 880, 1760, 0.22]]],
-	"flap": [0.35, 40.0, [["noise", 0.0, 0.05, 900, 0, 0.14], ["noise", 0.12, 0.05, 700, 0, 0.12]]],
-	"drip": [0.3, 90.0, [["sin", 0.0, 0.35, 900, 180, 0.3], ["noise", 0.3, 0.08, 500, 0, 0.12]]],
-	"roar": [1.5, 120.0, [["saw", 0.0, 0.9, 140, 60, 0.3], ["noise", 0.0, 0.9, 700, 0, 0.3]]],
-	"screech": [1.2, 80.0, [["sq", 0.0, 0.25, 1800, 2600, 0.12], ["sq", 0.3, 0.2, 2400, 1500, 0.1]]],
-	# Burrower surfacing warning: rising low rumble at its position (counterplay cue).
-	"burrower_rumble": [0.8, 130.0, [["sin", 0.0, 0.45, 48, 110, 0.55], ["noise", 0.0, 0.4, 250, 0, 0.3]]],
-	# Burrower detonation: deep sub thump + crack, distinct from "boom"/mortar, audible across the base.
-	"burrower_blast": [0.4, 170.0, [["sin", 0.0, 0.6, 65, 25, 0.75], ["noise", 0.0, 0.55, 1100, 0, 0.55], ["noise", 0.1, 0.4, 250, 0, 0.4]]],
-}
-const POOL := 12
+const POOL := 16
+const BED_SMOOTH := 1.5  # bed volume follows its target at this rate per second
 
 var listener := Vector3.ZERO
 var muted := false
@@ -56,83 +14,124 @@ var _streams := {}
 var _last := {}
 var _players: Array[AudioStreamPlayer] = []
 var _next := 0
+var _beds := {}  # name -> AudioStreamPlayer
+var _bed_target := {}
+var _bed_now := {}
+var _task := -1
 
 
 func _ready() -> void:
-	for n in VOICES:
-		_streams[n] = _render(VOICES[n][2])
+	_make_buses()
 	for i in POOL:
 		var p := AudioStreamPlayer.new()
+		p.bus = "Sfx"
 		add_child(p)
 		_players.append(p)
+	if DisplayServer.get_name() == "headless":
+		_streams = _render_voices()  # tests check _last right away; no beds headless
+	else:
+		_task = WorkerThreadPool.add_task(_render_all)
+
+
+func _exit_tree() -> void:
+	if _task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_task)
 
 
 func toggle_mute() -> bool:
 	muted = not muted
+	AudioServer.set_bus_mute(AudioServer.get_bus_index("Amb"), muted)
 	return muted
 
 
 func play(voice: String, pos: Variant = null) -> void:
-	if muted or not VOICES.has(voice):
+	if muted or not _streams.has(voice):
 		return
-	var v: Array = VOICES[voice]
+	var v: Array = SfxVoices.VOICES[voice]
 	var now := Time.get_ticks_msec() / 1000.0
 	if now - _last.get(voice, -99.0) < v[0]:
 		return
 	var vol := 1.0
 	if pos != null and v[1] > 0.0:
-		vol = 1.0 - (pos as Vector3).distance_to(listener) / v[1]
-		if vol < 0.05:
+		vol = pow(maxf(0.0, 1.0 - (pos as Vector3).distance_to(listener) / v[1]), 1.5)
+		if vol < 0.03:
 			return
 	_last[voice] = now
 	var p := _players[_next]
 	_next = (_next + 1) % POOL
+	var jitter: float = v[3] if v.size() > 3 else 0.03
 	p.stream = _streams[voice]
+	p.pitch_scale = 1.0 + randf_range(-jitter, jitter)
 	p.volume_db = linear_to_db(vol * 0.6)
 	p.play()
 
 
-func _render(recipe: Array) -> AudioStreamWAV:
-	var total := 0.0
-	for part in recipe:
-		total = maxf(total, part[1] + part[2])
-	var n := int((total + 0.02) * RATE)
-	var buf := PackedFloat32Array()
-	buf.resize(n)
-	for part in recipe:
-		_voice(buf, part)
-	var bytes := PackedByteArray()
-	bytes.resize(n * 2)
-	for i in n:
-		bytes.encode_s16(i * 2, int(clampf(buf[i], -1.0, 1.0) * 32000.0))
-	var s := AudioStreamWAV.new()
-	s.format = AudioStreamWAV.FORMAT_16_BITS
-	s.mix_rate = RATE
-	s.data = bytes
-	return s
+## Target loudness (0..1) of a looping ambience bed ("wind", "cave", "creeper").
+func set_bed(bed: String, vol: float) -> void:
+	_bed_target[bed] = clampf(vol, 0.0, 1.0)
 
 
-func _voice(buf: PackedFloat32Array, part: Array) -> void:
-	var kind: String = part[0]
-	var start := int(part[1] * RATE)
-	var len := int(part[2] * RATE)
-	var phase := 0.0
-	var lp := 0.0
-	for i in len:
-		var t := float(i) / len
-		var env: float = pow(0.001, t) * part[5]  # exponential decay like the WebAudio version
-		var s := 0.0
-		if kind == "noise":
-			var a := clampf(part[3] / RATE * TAU, 0.0, 1.0)  # one-pole low-pass at cutoff
-			lp += (randf() * 2.0 - 1.0 - lp) * a
-			s = lp * 2.0
-		else:
-			var f: float = part[3] * pow(maxf(20.0, part[4]) / part[3], t)
-			phase = fmod(phase + f / RATE, 1.0)
-			match kind:
-				"sin": s = sin(phase * TAU)
-				"sq": s = 1.0 if phase < 0.5 else -1.0
-				"saw": s = phase * 2.0 - 1.0
-				"tri": s = 4.0 * absf(phase - 0.5) - 1.0
-		if start + i < buf.size():
-			buf[start + i] += s * env
+func _process(delta: float) -> void:
+	for bed in _beds:
+		var p: AudioStreamPlayer = _beds[bed]
+		var now: float = _bed_now.get(bed, 0.0)
+		now = move_toward(now, _bed_target.get(bed, 0.0), delta * BED_SMOOTH)
+		_bed_now[bed] = now
+		p.volume_db = linear_to_db(maxf(now, 0.0001))
+		if now > 0.001 and not p.playing:
+			p.play(randf() * 3.0)
+		elif now <= 0.001 and p.playing:
+			p.stop()
+
+
+func _render_voices() -> Dictionary:
+	var out := {}
+	for n in SfxVoices.VOICES:
+		out[n] = SfxRender.render(SfxVoices.VOICES[n][2])
+	return out
+
+
+func _render_all() -> void:
+	_set_streams.call_deferred(_render_voices())
+	var loops := {}
+	var defs := SfxVoices.beds()
+	for n in defs:
+		loops[n] = SfxRender.render(defs[n][1], defs[n][0])
+	_set_beds.call_deferred(loops)
+
+
+func _set_streams(out: Dictionary) -> void:
+	_streams = out
+
+
+func _set_beds(loops: Dictionary) -> void:
+	for n in loops:
+		var p := AudioStreamPlayer.new()
+		p.bus = "Amb"
+		p.stream = loops[n]
+		p.volume_db = -80.0
+		add_child(p)
+		_beds[n] = p
+
+
+func _make_buses() -> void:
+	if AudioServer.get_bus_index("Sfx") >= 0:
+		return
+	var i := AudioServer.bus_count
+	AudioServer.add_bus(i)
+	AudioServer.set_bus_name(i, "Sfx")
+	var rev := AudioEffectReverb.new()
+	rev.room_size = 0.35
+	rev.damping = 0.6
+	rev.wet = 0.1
+	AudioServer.add_bus_effect(i, rev)
+	var comp := AudioEffectCompressor.new()
+	comp.threshold = -14.0
+	comp.ratio = 3.0
+	AudioServer.add_bus_effect(i, comp)
+	var lim := AudioEffectHardLimiter.new()
+	lim.ceiling_db = -1.0
+	AudioServer.add_bus_effect(i, lim)
+	AudioServer.add_bus(i + 1)
+	AudioServer.set_bus_name(i + 1, "Amb")
+	AudioServer.set_bus_volume_db(i + 1, -6.0)
