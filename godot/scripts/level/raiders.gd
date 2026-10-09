@@ -185,40 +185,75 @@ func _route(r: Dictionary, p: Vector3) -> Variant:
 	return field.next_step(p.x, p.z)
 
 
-## Returns false when the raider couldn't move at all (blocked on both axes).
+## Stuck handling: a raider that can only crawl far from its goal for STUCK_TIME
+## stops chasing and idles STUCK_REST instead of orbiting it (e.g. a patrol
+## point circling behind a wall). Full-speed movement clears it.
+const STUCK_TIME := 1.5  # s of crawling before the raider gives up chasing
+const STUCK_REST := 2.0  # s of idling before it tries again
+const STUCK_ARRIVE := 0.6  # m: close enough to the goal to count as arrived
+
+## Returns false when the raider couldn't move at all (blocked on both axes)
+## or is resting after getting stuck.
 func _walk(r: Dictionary, goal: Vector2, dt: float) -> bool:
 	var p: Vector3 = r.node.position
-	var v: Vector2 = goal - Vector2(p.x, p.z)
+	var sx := p.x
+	var sz := p.z
+	# Resting after getting stuck: idle in place, don't chase.
+	var rest: float = maxf(0.0, float(r.get("_stuck_rest", 0.0)) - dt)
+	r["_stuck_rest"] = rest
+	if rest > 0.0:
+		CreatureAnim.move(r.node, 0.0)
+		return false
+	var v: Vector2 = goal - Vector2(sx, sz)
 	if v.length() > 0.001:
 		v = v.normalized()
 	for o in list:  # separation so a pack doesn't merge into one mesh
 		if o == r:
 			continue
 		var op: Vector3 = o.node.position
-		var d := Vector2(p.x - op.x, p.z - op.z)
+		var d := Vector2(sx - op.x, sz - op.z)
 		var mn: float = r.size + o.size
 		if d.length() > 0.001 and d.length() < mn:
 			v += d.normalized() * (mn - d.length())
 	v = v.limit_length(1.0)  # separation steers; it must not add speed (a packed group would outrun its slowest)
 	var speed: float = RaiderGroups.speed(self, r)
 	var step: float = speed * dt
-	var nx := p.x + v.x * step
-	var nz := p.z + v.y * step
+	var nx := sx + v.x * step
+	var nz := sz + v.y * step
 	var ws := world.grid.world_size()
 	nx = clampf(nx, 0.5, ws.x - 0.5)
 	nz = clampf(nz, 0.5, ws.y - 0.5)
 	# Per axis, so a cliff blocks that axis and the raider slides along it.
 	var moved := false
-	if _step_into(p.x, p.z, nx, p.z):
-		moved = moved or absf(nx - p.x) > 0.001
+	if _step_into(sx, sz, nx, sz):
+		moved = moved or absf(nx - sx) > 0.001
 		p.x = nx
-	if _step_into(p.x, p.z, p.x, nz):
-		moved = moved or absf(nz - p.z) > 0.001
+	if _step_into(p.x, sz, p.x, nz):
+		moved = moved or absf(nz - sz) > 0.001
 		p.z = nz
 	p.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY)
 	r.node.position = p
 	_face(r, v)
-	CreatureAnim.move(r.node, speed if moved else 0.0)
+	# A stuck raider idles instead of chasing an unreachable point in circles.
+	# Stuck = crawling far from the goal (blocked, wall-sliding, hopeless pack
+	# jostling). Full-speed chases (kiting targets) and arrived raiders never
+	# count as stuck.
+	var actual := Vector2(p.x - sx, p.z - sz).length() / maxf(dt, 0.0001)
+	var d_after := Vector2(p.x, p.z).distance_to(goal)
+	var stuck: float = float(r.get("_stuck_t", 0.0))
+	if actual < speed * 0.25 and d_after >= STUCK_ARRIVE:
+		stuck += dt
+	else:
+		stuck = 0.0
+	r["_stuck_t"] = stuck
+	if stuck > STUCK_TIME:
+		r["_stuck_t"] = 0.0
+		r["_stuck_rest"] = STUCK_REST
+		CreatureAnim.move(r.node, 0.0)
+		return false
+	# Animate at the speed actually travelled: wall-slides and pack jostling
+	# must not play the walk clip at full sprint.
+	CreatureAnim.move(r.node, actual if moved else 0.0)
 	return moved
 
 
