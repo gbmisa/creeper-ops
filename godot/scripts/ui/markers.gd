@@ -16,7 +16,14 @@ func _label(i: int) -> Label:
 	while _labels.size() <= i:
 		var l := UiKit.label("", 16)
 		l.add_theme_color_override("font_outline_color", Color.BLACK)
-		l.add_theme_constant_override("outline_size", 4)
+		l.add_theme_constant_override("outline_size", 2)
+		var plate := UiTheme.box(Color(0.03, 0.035, 0.025, 0.62), Color.WHITE, 0, 0)  # tag plate, edge = marker colour
+		plate.border_width_left = 3
+		plate.content_margin_left = 6
+		plate.content_margin_right = 5
+		plate.content_margin_top = 1
+		plate.content_margin_bottom = 1
+		l.add_theme_stylebox_override("normal", plate)
 		add_child(l)
 		_labels.append(l)
 	return _labels[i]
@@ -56,6 +63,9 @@ func refresh(world: World, cam: Camera3D, fps: bool) -> void:
 		l.visible = true
 		l.text = "%s  %dm" % [text, roundi(dist)] if fps else text
 		l.add_theme_color_override("font_color", m.color)
+		l.add_theme_font_size_override("font_size", 14 if m.get("minor", false) else 16)
+		(l.get_theme_stylebox("normal") as StyleBoxFlat).border_color = m.color
+		l.reset_size()
 		l.position = sp - Vector2(l.size.x * 0.5, l.size.y)
 	for i in range(n, _labels.size()):
 		_labels[i].visible = false

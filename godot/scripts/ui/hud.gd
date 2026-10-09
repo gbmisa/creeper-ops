@@ -90,13 +90,20 @@ func add_log(text: String, kind: String) -> void:
 		return
 	var l := UiKit.label(text, 16, UiKit.KIND_COLORS.get(kind, UiKit.TEXT))
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size.x = 400  # stays clear of the centred build menu
+	var w := UiTheme.font().get_string_size(text + "  x99", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 16.0
+	l.custom_minimum_size.x = minf(w, 430.0)  # plate hugs short lines; long ones wrap
 	l.set_meta("text", text)
 	l.set_meta("count", 1)
 	l.set_meta("age", 0.0)
 	l.set_meta("life", life)
 	l.add_theme_color_override("font_outline_color", Color.BLACK)
-	l.add_theme_constant_override("outline_size", 4)
+	l.add_theme_constant_override("outline_size", 2)
+	var plate := UiTheme.box(Color(0.03, 0.035, 0.025, 0.55), UiKit.KIND_COLORS.get(kind, UiKit.TEXT), 0, 0)
+	plate.border_width_left = 3
+	plate.content_margin_left = 7
+	plate.content_margin_right = 6
+	l.add_theme_stylebox_override("normal", plate)
+	l.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_log.add_child(l)
 	_trim_log()
 
