@@ -311,8 +311,64 @@ Tests:
 - Castle smokes (shape/walk/capture/engines/perks/turrets) all PASS.
 
 Unfinished: none for P5.
-## P6 castle guards — FILL
-## P6 castle guards — FILL
+## P6 castle guards
+
+Done (2026-10-09 ~12:00 UTC):
+- `level/castle_patrols.gd` (new, `CastlePatrols`, ~200 lines):
+  - `ensure(s, c, lay, v)`: on the first hostile tick builds the wall route and spawns
+    2 wall patrol raiders (guard=true, `r.wall_patrol = { cells, i }`) plus one Warden
+    (`RaiderDefs.named("Warden")`, `r.hall_guard = true`) in the keep hall beside the
+    crown. Live state lives in the **views** dict (`v.patrol`), never in `c` — the
+    castle dict stays plain data so `state()`/`load_state()` round-trip.
+  - `wall_route(grid, lay)`: the longest contiguous walk-height stretch of the outer
+    wall walk (one row of the 2-thick wall, same side, breached cells skipped — t/k
+    recovered by inverting `CastleShape.at`), with the nearest walk-level tower door
+    hung on each end ("lay.segments of ring outer + tower doors").
+  - `waypoint(r)`: the patrol raider's current goal — next route cell, advancing
+    within 2 m. Read by the guard branch of `Raiders._think` (one-line hook); all
+    combat (target acquisition, melee, detour, separation) is the normal raider AI.
+  - `on_garrison_tick`: replaces dead patrols / the Warden when the garrison timer
+    fires (the bailey garrison itself is unchanged — patrols are extra, not counted
+    against `CASTLE_GARRISON`).
+  - `clear(s, v)`: capture — kills the patrols and the Warden, erases the state.
+  - `release(v)`: retake/abandon — strips the patrol keys so the old raiders stand
+    down to ordinary garrison; fresh ones spawn on the wall.
+- `level/raiders.gd`: one-line hook in the guard branch —
+  `goal = CastlePatrols.waypoint(r) if r.has("wall_patrol") else _patrol(home, r)`.
+- `level/stronghold_tick.gd`: `hostile` calls `on_garrison_tick` inside the garrison
+  spawn block and `ensure` every tick (both concentric-only, `lay.stages.size() > 1`);
+  capturing→held calls `clear`; capture-abandon and siege-retake call `release`
+  (before the retake loop converts inside raiders to garrison).
+- `core/smoke_castles2b_guards.gd` (new, `SmokeCastles2bGuards`, registered): 7
+  checks on the Level 2 rig — 2 patrols + Warden spawn, route all outer wall walk
+  (29 cells), patrols stay on the walk for 60 s of sim, they actually walk (not
+  stuck), the Warden stands in the keep hall beside the crown, respawn on the
+  garrison timer, gone after capture.
+- Screenshots: not run (no display); Opus judges visuals.
+
+Spec gaps filled:
+- Patrols are extra on top of the 4-bailey garrison (the brief keeps garrison spawns
+  at `home()` but doesn't cap the wall/hall guards; `RAIDER_MAX_TOTAL` still caps
+  everything).
+- The Warden just stands (guard AI's 4 m wander); it uses the roster row as-is
+  (aura attack, 0 dps).
+- The `--held` debug cheat doesn't clear patrols (debug-only path; the game path
+  does).
+
+Tests:
+- Parse: `--headless --path godot --import` — 0 script errors.
+- Full suite `-- --smoke --quit=0.1`: first run 882 PASS / 2 FAIL — both real bugs of
+  mine: (1) `c.patrol` held raider Node refs, breaking the "castle: state is plain
+  data / round-trips" checks — moved live state to the views dict; (2) the 60 s walk
+  checks never printed — the smoke used mutating raider dicts as Dictionary keys
+  (Godot hashes container keys by value; mutation breaks lookup) — switched to
+  index-based tracking. Also lengthened the route (was one ≤5-column segment =
+  6 cells; now same-side concatenation = 29 cells). One suite run was killed by a
+  service restart mid-run (no log); re-ran: **[smoke] OK: 0 failure(s), 886 PASS**.
+- Castle smokes (shape/walk/capture/engines/perks/turrets) and the Stage 7
+  castle-garrison checks all PASS.
+
+Unfinished: none for P6.
 ## P7 castle-only production — FILL
 ## P8 Stage 21 leftovers — FILL
 
