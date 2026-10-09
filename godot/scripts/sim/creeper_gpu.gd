@@ -90,6 +90,7 @@ func update(dt: float) -> void:
 		_acc -= Config.CREEPER_TICK
 		_emit(Config.CREEPER_TICK)
 		_tick()
+		_anti_tick()  # anti-creeper is CPU-only; annihilation removes creeper via remove()
 		ticks += 1
 		ran = true
 	if not ran:

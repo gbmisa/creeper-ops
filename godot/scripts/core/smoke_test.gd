@@ -209,6 +209,12 @@ static func _run_only(g) -> void:
 				SmokePlaytestSmall.run(g)
 			"enemy_build":
 				SmokeEnemyBuild.run(g)
+			"cw3":
+				SmokeCw3.run(g)
+			"feel":
+				SmokeFpsFeel.run(g)
+			"armoury":
+				SmokeArmoury.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 

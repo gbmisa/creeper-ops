@@ -119,7 +119,7 @@ func fizz_nodes() -> int:
 	return _fizz.size()
 
 
-## White steam where creeper really evaporated. `cells` are the cells that lost depth this frame.
+## White steam where the spray lands. `cells` are the cells sprayed this frame.
 func fizz(world: World, cells: Array[Vector2i], dt: float) -> void:
 	_cool -= dt
 	if cells.is_empty() or _cool > 0.0:
