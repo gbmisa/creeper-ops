@@ -75,7 +75,10 @@ static func _move(host: Raiders, r: Dictionary, dt: float, target: Dictionary, t
 			away = Vector2(1, 0)
 		host._walk(r, Vector2(p.x, p.z) + away.normalized() * 3.0, dt)
 		return
+	# Holding position to shoot: idle the walk clip instead of leaving a stale
+	# sprint playing while standing still.
 	node.position.y = host.world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY)
+	CreatureAnim.move(node, 0.0)
 
 
 static func _beam(host: Raiders, r: Dictionary, dt: float, target: Dictionary, tier: Dictionary, prey: Array) -> void:
