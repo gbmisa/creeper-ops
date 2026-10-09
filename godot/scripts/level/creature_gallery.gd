@@ -5,7 +5,7 @@ class_name CreatureGallery
 
 const IDS := ["skitter", "spitter", "brute", "lancer", "burrower", "warden",
 	"ravager", "spotter", "behemoth", "sentinel",
-	"spore_bat", "gasbag", "wyvern", "soldier", "crawler", "core"]
+	"spore_bat", "gasbag", "wyvern", "soldier", "crawler", "hive_core"]
 const CLIPS := ["idle", "walk", "attack", "hit", "die"]
 const CYCLE := 2.0
 const SPACING := 6.0
@@ -95,7 +95,7 @@ static func _spec(id: String) -> Dictionary:
 	if id == "soldier" or id == "crawler":
 		return { "scale": 1.0, "glow": StructureMeshes.glow(Color("9dff7a"), 2.0),
 			"proc": func() -> Node3D: return UnitMeshes.make(id) }
-	if id == "core":
+	if id == "hive_core":
 		return { "scale": 1.0, "glow": StructureMeshes.glow(Color("ff3355"), 1.4),
 			"proc": func() -> Node3D: return HiveMeshes.part("core") }
 	return {}
