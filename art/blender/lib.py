@@ -23,6 +23,12 @@ PALETTE = {
     "glow": ("a8ff5a", 0.4, 0.0, 3.0),
     "eye": ("ffe27a", 0.3, 0.0, 4.0),
     "robe": ("6e3a7c", 0.85, 0.0, 0.0),
+    "bat_skin": ("3a2a3e", 0.85, 0.0, 0.0),
+    "bat_wing": ("8a5aa0", 0.9, 0.0, 0.0),
+    "gas_skin": ("6a7a3a", 0.7, 0.0, 0.0),
+    "gas_fin": ("8a9a4a", 0.9, 0.0, 0.0),
+    "wyv_skin": ("4a2a22", 0.75, 0.05, 0.0),
+    "wyv_wing": ("7a3a2a", 0.9, 0.0, 0.0),
 }
 
 
@@ -104,6 +110,13 @@ class Builder:
             if r > 1e-4:
                 self.bm.faces.new(ring if ring is rings[-1] else list(reversed(ring)))
         self._tag([v for ring in rings for v in ring], mat, bone, smooth)
+
+    def poly(self, pts, bones, mat, smooth=False):
+        """One flat face (wing membrane); each corner is skinned to its own bone, so it bends."""
+        vs = [self.bm.verts.new(Vector(p)) for p in pts]
+        self.bm.faces.new(vs)
+        for v, bn in zip(vs, bones):
+            self._tag([v], mat, bn, smooth)
 
     def limb(self, a, b, r0, r1, mat, bone, seg=6, smooth=False, bone_b=None):
         """Tapered cylinder (cone when r1 == 0) from a to b; bone_b skins the b half to another bone."""

@@ -12,4 +12,5 @@ Contract: u = 1, feet z = 0, faces +X, clips idle/walk/attack/hit/die, material 
 | behemoth | done | 1686 |
 | sentinel | done (fixed size: game scale 1) | 595 |
 | spitter lancer warden spotter burrower | done (`bug_kit.py` shares idle/walk/hit/die) | 1140/580/728/786/698 |
-| flyers, soldier/wagon units, hive core | todo | |
+| spore_bat gasbag wyvern | done (`flyer_kit.py`; origin = body centre; walk = flap) | 502/1756/658 |
+| soldier/crawler units, hive core | todo | |

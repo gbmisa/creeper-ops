@@ -21,7 +21,7 @@ arm = next(o for o in sc.objects if o.type == "ARMATURE")
 mesh = next(o for o in sc.objects if o.type == "MESH")
 print("[preview] tris", sum(len(p.vertices) - 2 for p in mesh.data.polygons), "materials", [m.name for m in mesh.data.materials])
 
-bpy.ops.mesh.primitive_plane_add(size=6)
+bpy.ops.mesh.primitive_plane_add(size=6, location=(0, 0, min(0.0, min((mesh.matrix_world @ __import__("mathutils").Vector(c)).z for c in mesh.bound_box))))
 ground = sc.objects[-1] if sc.objects[-1].type == "MESH" else bpy.context.active_object
 gm = bpy.data.materials.new("ground")
 gm.diffuse_color = (0.18, 0.2, 0.16, 1)
