@@ -1,7 +1,8 @@
 class_name CommandSelect
 ## Orders on the current selection: train, recycle, relocate, supply, hold fire, and
-## drag-box picks (units first; with no units in the box, your weapons, CW3 style). Orders
-## apply to every structure in `cm.group`. CommandMode keeps the public entry points.
+## drag-box picks (movable weapons win over units in the box, so towers can be grabbed
+## next to your army; with no towers in the box, units). Orders apply to every
+## structure in `cm.group`. CommandMode keeps the public entry points.
 
 
 static func train(cm: CommandMode, type: String) -> void:
@@ -51,22 +52,54 @@ static func begin_move(cm: CommandMode) -> void:
 		Sfx.play("deny")
 
 
-## Moves every movable structure in the group: the primary to `c`, the rest keep their
-## offsets from it. Returns the primary's result (for the warning/deny message).
+## Moves every movable structure in the group into a compact formation centred on
+## `c`: the primary (cm.selected) takes the centre slot and lands exactly on `c`,
+## the rest fill a tight footprint-aware grid around it. Members whose slot is
+## blocked stay put (counted in the warning). Returns the primary's result (for the
+## warning/deny message).
 static func move_group(cm: CommandMode, c: Vector2i) -> Dictionary:
+	var members: Array[Structure] = []
 	var lead := cm.selected
-	var from := Vector2i(lead.x, lead.z)  # read before the lead lifts off (move updates x/z)
-	var res: Dictionary = cm.structures.move(lead, c.x, c.y)
-	var failed := 0
+	if lead != null and lead.def.get("movable", false):
+		members.append(lead)
 	for s in cm.group:
-		if s == lead or not s.def.get("movable", false):
-			continue
-		var r: Dictionary = cm.structures.move(s, c.x + s.x - from.x, c.y + s.z - from.y)
-		if not r.ok:
+		if s != lead and s.def.get("movable", false):
+			members.append(s)
+	var slots := _formation_slots(members)
+	var failed := 0
+	var res := { "ok": false, "reason": "Nothing to move" }
+	for i in members.size():
+		var t := Vector2i(c.x + slots[i].x, c.y + slots[i].y)
+		var r: Dictionary = cm.structures.move(members[i], t.x, t.y)
+		if i == 0:
+			res = r
+		elif not r.ok:
 			failed += 1
 	if failed > 0:
 		Bus.say("%d of the group can't land there (blocked ground). They stay put." % failed, "warn")
 	return res
+
+
+## Compact grid slots for a group move: row-major, footprint-aware spacing, slot 0
+## at the origin so the primary lands exactly on the target cell.
+static func _formation_slots(members: Array[Structure]) -> Array[Vector2i]:
+	var slots: Array[Vector2i] = []
+	var n := members.size()
+	if n <= 0:
+		return slots
+	var spacing := 2
+	for m in members:
+		spacing = maxi(spacing, 2 + int(m.def.get("footprint", 0)))
+	var cols := int(ceil(sqrt(float(n))))
+	var rows := int(ceil(float(n) / float(cols)))
+	var bx := 0 * spacing - (cols - 1) * spacing / 2
+	var by := 0 * spacing - (rows - 1) * spacing / 2
+	for i in n:
+		var col := i % cols
+		var row := i / cols
+		slots.append(Vector2i(col * spacing - (cols - 1) * spacing / 2 - bx,
+			row * spacing - (rows - 1) * spacing / 2 - by))
+	return slots
 
 
 static func toggle_supply(cm: CommandMode) -> void:
@@ -92,25 +125,29 @@ static func box_select(cm: CommandMode, r: Rect2, additive: bool) -> void:
 	for u in cm.units.list:
 		if _in_box(cm, r, u.pos + Vector3.UP):
 			picked.append(u)
-	if not picked.is_empty():
+	var weapons: Array[Structure] = []
+	for s in cm.structures.list:
+		if s.def.get("movable", false) and s.type != "node" and not s.dead and _in_box(cm, r, s.pos + Vector3.UP):
+			weapons.append(s)
+	if weapons.is_empty() and not picked.is_empty():
 		cm.units.select(picked, additive)
 		cm.select_structure(null)
 		Sfx.play("click")
 		Bus.selection_changed.emit()
 		return
-	var weapons: Array[Structure] = []
-	for s in cm.structures.list:
-		if s.def.get("movable", false) and s.type != "node" and not s.dead and _in_box(cm, r, s.pos + Vector3.UP):
-			weapons.append(s)
 	if weapons.is_empty() and not additive:
 		cm.units.select([])
 		cm.select_structure(null)
 		return
-	var keep: Array[Structure] = cm.group.duplicate() if additive else []
+	# Movable towers win over units: right-click can only order one kind, and the old
+	# units-always-win rule made towers unselectable next to your army.
+	var keep: Array[Structure] = []
+	if additive:
+		keep.assign(cm.group)
 	for s in weapons:
 		if not keep.has(s):
 			keep.append(s)
-	cm.units.select([])
+	cm.units.select([], false)
 	cm.select_structure(null if keep.is_empty() else keep[0])
 	cm.group = keep
 	Sfx.play("click")
