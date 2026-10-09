@@ -2,6 +2,9 @@
 
 Opus pushes new notes here on `main`. **Before you start or resume a brief, fetch `main` and read this file.** Newest first. A note only changes the brief it names.
 
+## 2026-10-08 (late): A3 task 9 added (Command Node)
+`command_node.glb` and task 9 are on `art/3-hive-models` (`997942b`). If you cloned before that commit, pull first.
+
 ## 2026-10-08 (late): in-game pass on `art/3-hive-models` → A3 task 0 details
 - **Cream glow:** the tier colours are pale (`a8ff5a`, `e6d2ff`, …), and `StructureMeshes.glow(tier.color, 1.0)` makes the emission bloom out to near white. For the creature glow, try an albedo of `tier.color.darkened(0.3)` with an emission energy around 0.5–0.6, so the hue survives. Don't change the tier colours themselves; the UI uses them.
 - **Gallery:** `--gallery=anim:wyvern --sim=2 --shot=…` shows the base, not the wyvern, so the camera misses it. Flyers hover, so aim at the model's AABB centre.

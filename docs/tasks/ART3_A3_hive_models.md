@@ -36,6 +36,15 @@
    - Then play `idle`. After `Config.POD_LINGER` (a new tunable, about 6 s) play `die` (it sinks) and free it.
    - Smoke rule: the pod node exists while the drop is pending and is gone after linger + die.
 
+## Command Node (Opus model, added late)
+9. **`command_node.glb` is the structure `node`.** Use it in `SupportMeshes.node` (keep the procedural mesh as fallback) and drop the code-driven `Spin` rotation when the model is used, because the clips turn the wheel. Clips:
+   - `idle` while landed.
+   - `walk` while it flies (`mover.gd`): lift jets on.
+   - `attack` when a packet launches from it, at most once every 0.5 s.
+   - `hit` on damage, at most once every 0.3 s.
+   - `die` on destruction.
+   It's about 11.3 m tall; `top_y("node")` is 11.5, so leave it unless the bars clip. Its glow materials are fixed (blue), not tier-swapped. Smoke rule: `node` gets the model when the file exists, procedural otherwise.
+
 ## Must not change
 Hive HP, damage, ranges, rates and spawn logic. Run L1 `--autostart --sim=600` and `--demo --units --sim=900` before and after; the results must match within noise. Put the numbers in your report.
 
