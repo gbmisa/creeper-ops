@@ -12,11 +12,7 @@ var markers: Markers
 var fps: FpsHud
 var keys: KeybindMenu
 var _log: VBoxContainer
-var _alert: Label
-var _alert_panel: PanelContainer
-var _alert_t := 0.0
-var _reason: Label
-var _reason_panel: PanelContainer
+var alerts: HudAlerts
 var _selbox: Panel
 var _help: Label
 var _overlay: Control
@@ -43,27 +39,8 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	_log.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_log.position = Vector2(12, -12)
 	add_child(_log)
-	_alert_panel = UiKit.panel(Color(0.04, 0.06, 0.09, 0.72))
-	_alert_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_alert_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_alert_panel.position.y = 100
-	_alert = UiKit.label("", Config.HUD_BANNER_SIZE, UiKit.BAD)
-	_alert.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_alert.add_theme_color_override("font_outline_color", Color.BLACK)
-	_alert.add_theme_constant_override("outline_size", 6)
-	_alert_panel.add_child(_alert)
-	_alert_panel.visible = false
-	add_child(_alert_panel)
-	_reason_panel = UiKit.panel(Color(0.04, 0.06, 0.09, 0.72))
-	_reason_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_reason_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_reason_panel.position.y = -180
-	_reason = UiKit.label("", 16, UiKit.WARN)
-	_reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_reason.add_theme_color_override("font_outline_color", Color.BLACK)
-	_reason.add_theme_constant_override("outline_size", 5)
-	_reason_panel.add_child(_reason)
-	add_child(_reason_panel)
+	alerts = HudAlerts.new()
+	alerts.setup(self)
 	_selbox = Panel.new()
 	_selbox.add_theme_stylebox_override("panel", UiKit.style(Color(0.6, 1.0, 0.5, 0.12), Color(0.6, 1.0, 0.5, 0.8), 0, 0))
 	_selbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -171,11 +148,7 @@ func log_line(text: String) -> String:
 
 
 func alert(text: String, kind := "bad", _secs := 0.0) -> void:
-	_alert.text = text
-	_alert.add_theme_color_override("font_color", UiKit.KIND_COLORS.get(kind, UiKit.BAD))
-	_alert.modulate.a = 1.0
-	_alert_panel.visible = true
-	_alert_t = Config.HUD_BANNER_LIFE
+	alerts.alert(text, kind, _secs)
 
 
 func set_mode(mode: String) -> void:
@@ -184,7 +157,7 @@ func set_mode(mode: String) -> void:
 	fps.visible = not cmd
 	build.visible = cmd
 	info.visible = false
-	_reason_panel.visible = cmd
+	alerts.set_reason_visible(cmd)
 	var k := Keybinds.short
 	_help.text = ("%s%s%s%s/edge pan · %s/%s rotate · wheel zoom · right-click move/order · %s move · %s recycle · %s Operative · %s pause · %s/%s speed · %s controls" % [
 		k.call("cam_forward"), k.call("cam_left"), k.call("cam_back"), k.call("cam_right"), k.call("cam_rot_left"), k.call("cam_rot_right"),
@@ -223,15 +196,12 @@ func refresh(g, dt: float) -> void:
 	objectives.refresh(dt, g.input, g.mode != "command")
 	_tick_log(dt)
 	_help.visible = g.time < Config.HUD_HINT_SECS
-	_alert_t -= dt
-	_alert_panel.modulate.a = clampf(_alert_t, 0.0, 1.0)
-	_alert_panel.visible = _alert_t > 0.0
+	alerts.tick(dt)
 	var world: World = g.cave if g.mode == "cave" else g.surface
 	var cam: Camera3D = g.command.cam if g.mode == "command" else g.fps.camera
 	markers.refresh(world, cam, g.mode != "command")
 	if g.mode == "command":
-		_reason.text = g.command.reason
-		_reason_panel.visible = _reason.text != ""
+		alerts.set_reason(g.command.reason)
 		build.level = g.level
 		build.refresh(g.economy.energy)
 		info.refresh()

@@ -27,6 +27,8 @@ static func run(g) -> void:
 		_run_only(g)
 		return
 
+	SmokeDeploy._spawn_cam(g)  # Brief B1: spawn camera clear of world geometry (runs before dynamic checks)
+
 	# CW3 packets: no launch cap. 12 unbuilt relays at once should all be served at REQ_BUILD.
 	var relays := []
 	for i in 12:

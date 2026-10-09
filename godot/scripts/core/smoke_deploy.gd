@@ -27,6 +27,65 @@ static func run(g) -> void:
 	_death(g, origin)
 
 
+## Brief B1: the Operative's spawn camera must not sit inside (or hard against) world
+## geometry. L1 runs the real totem-deploy path; L2 checks its engine meshes against the
+## analogous spawn point.
+static func _spawn_cam(g) -> void:
+	var rift: Dictionary = g.level.rift
+	var spawn := Vector2i(int(rift.x) + 16, int(rift.z) - 1)
+	g.fps.enter(g.surface, spawn, PI / 2.0)
+	var cam: Vector3 = g.fps.camera.global_position
+	var bad := _near_meshes(g.surface, cam)
+	SmokeTest._check("L1: spawn camera clear of world meshes", bad.is_empty(), str(bad).left(200))
+	g.flow.to_command("")
+	_spawn_cam_l2(g)
+
+
+static func _spawn_cam_l2(g) -> void:
+	var lvl := Levels.build(2)
+	var grid: Grid = lvl.grid
+	var rift: Dictionary = lvl.rift
+	var spawn := Vector2i(int(rift.x) + 16, int(rift.z) - 1)
+	var cam: Vector3 = grid.cell_ground(spawn.x, spawn.y) + Vector3(0, Config.EYE, 0)
+	var holder := Node3D.new()
+	holder.name = "SpawnCamCheck"
+	g.add_child(holder)
+	for row in lvl.engines:
+		holder.add_child(EngineMeshes.model(row))
+	var bad := _near_meshes(holder, cam)
+	holder.queue_free()
+	SmokeTest._check("L2: spawn camera clear of engine meshes", bad.is_empty(), str(bad).left(200))
+
+
+## Visible meshes whose AABB contains cam, excluding the Operative viewmodel and
+## terrain chunks (the camera always stands inside a terrain chunk's broad AABB).
+static func _near_meshes(root: Node, cam: Vector3) -> Array:
+	var bad := []
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if not m.is_visible_in_tree() or m.mesh == null:
+			continue
+		var n: Node = m
+		var excluded := false
+		while n != null and n != root:
+			var nm := str(n.name)
+			if nm == "Operative" or nm.begins_with("Chunk") or nm == "Terrain":
+				excluded = true
+				break
+			n = n.get_parent()
+		if excluded:
+			continue
+		var box: AABB = m.global_transform * m.get_aabb()
+		if box.has_point(cam):
+			var chain := []
+			var n2: Node = m
+			while n2 != null and chain.size() < 5:
+				chain.append(str(n2.name))
+				n2 = n2.get_parent()
+			bad.append(" / ".join(chain))
+	return bad
+
+
 static func _line(grid: Grid, n: int) -> Vector2i:
 	for z in range(1, grid.h):
 		for x in range(0, grid.w - n):

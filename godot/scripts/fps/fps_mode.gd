@@ -47,6 +47,9 @@ func enter(w: World, cell: Vector2i, facing: float, cave_mites: CaveMites = null
 	controller.spawn(w.grid, cell.x, cell.y, facing)
 	body.position = controller.pos
 	recall_hold = 0.0
+	weapons.bloom = 0.0
+	weapons.climb = 0.0
+	weapons.climb_yaw = 0.0
 	mites = cave_mites
 	if mites:
 		mites.target = body
@@ -71,6 +74,9 @@ func reset_suit() -> void:
 	suit = OperativeUpgrades.suit_max()
 	shield = OperativeUpgrades.shield_max()
 	weapons.tank = Config.TANK_MAX
+	weapons.bloom = 0.0
+	weapons.climb = 0.0
+	weapons.climb_yaw = 0.0
 
 
 ## Shield (Armour tier 3) soaks first. What remains hits the suit.
@@ -103,8 +109,8 @@ func update(dt: float, input: InputState) -> void:
 		prompt = ""
 		_vitals(dt, depth)
 		return
-	controller.kick_pitch = weapons.motion.cam_pitch()
-	controller.kick_yaw = weapons.motion.cam_yaw()
+	controller.kick_pitch = weapons.motion.cam_pitch() + weapons.climb
+	controller.kick_yaw = weapons.motion.cam_yaw() + weapons.climb_yaw
 	controller.update(dt, input, g, Config.CREEPER_SLOW if in_creeper else 1.0)
 	body.position = controller.pos
 	var building := builder != null and world == builder.structures.world and builder.update(input, world, camera)
