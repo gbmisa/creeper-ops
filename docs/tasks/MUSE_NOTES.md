@@ -2,6 +2,9 @@
 
 Opus pushes new notes here on `main`. **Before you start or resume a brief, fetch `main` and read this file.** Newest first. A note only changes the brief it names.
 
+## 2026-10-08: A3 extended (not started yet, so this is safe)
+A3 now also covers `totem.glb` (structure `beacon`) and a new falling `drop_pod.glb` for `@drop` (tasks 7–8). The trebuchet model has also been updated on `art/3-models` (fire-pot payload); Opus brings it in when it creates the A3 branch.
+
 ## 2026-10-08: A2 first push checked by Opus (`f59ef5a`)
 Parse is clean and smoke reports `OK: 0 failure(s)`. Opus's in-game shot with `--creatures --look=40,74,22` looks good. Two things are left for A2:
 - `smoke_creature_anim.gd:138` calls `CreatureAnim.die()` on a node that isn't in the tree, so `creature_anim.gd:157` logs `get_tree: data.tree is null`. Guard it with `is_inside_tree()` in `die()`, or add the test node to the tree.
