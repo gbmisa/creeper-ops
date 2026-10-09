@@ -43,6 +43,9 @@ class_name Debug
 ##   --castle2=I[,spot] / --stage=I,N / --held=I   concentric castles (CastleDebug)
 ##   --guardsfire  every Sentinel is ready to fire now (screenshots of a bolt in flight)
 ##   --gallery     one of every structure, unit and raider tier in rows (art screenshots)
+##   --gallery=anim  every creature model id in a row with labels, cycling animation
+##                 clips every 2 s (art screenshots of the .glb work; procedural fallback
+##                 when no .glb is present)
 ##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
 ##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
 ##   --fire=rifle|sprayer|rocket  (with --surface) hold the trigger so --shot catches the weapon firing

@@ -88,6 +88,8 @@ func damage(u: Unit, amount: float) -> void:
 	u.hurt = 0.2
 	if u.hp <= 0.0:
 		kill(u)
+	else:
+		CreatureAnim.hit(u.node.get_node("Mesh"))
 
 
 func kill(u: Unit) -> void:
@@ -150,6 +152,7 @@ func _move(u: Unit, dt: float) -> void:
 		p.z = nz
 	p.y = g.stand_y(p.x, p.z, Grid.Faction.PLAYER)
 	u.pos = p
+	CreatureAnim.move(u.node.get_node("Mesh"), v.length() * u.def.speed)
 
 
 func _sync(u: Unit) -> void:

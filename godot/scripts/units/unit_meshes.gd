@@ -4,6 +4,9 @@ class_name UnitMeshes
 
 
 static func make(type: String) -> Node3D:
+	var anim := CreatureAnim.make(CreatureAnim.id_of(type), 1.0, StructureMeshes.glow(Color("9dff7a"), 2.0))
+	if anim != null:
+		return anim
 	var root := Node3D.new()
 	if type == "soldier":
 		_soldier(root)
