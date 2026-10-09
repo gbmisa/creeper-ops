@@ -158,7 +158,7 @@ static func run(g) -> void:
 	SmokeKeeps.run(g)
 	SmokeTerp.run(g)
 	SmokeArmoury.run(g)
-	SmokePt3.run(g)
+	SmokeCaveSpray.run(g)
 	SmokeHud.run(g)
 	SmokeDragbuild.run(g)
 	SmokeRoster.run(g)
@@ -235,8 +235,8 @@ static func _run_only(g) -> void:
 				SmokeFpsFeel.run(g)
 			"armoury":
 				SmokeArmoury.run(g)
-			"pt3":
-				SmokePt3.run(g)
+			"cavespray":
+				SmokeCaveSpray.run(g)
 			"structure":
 				SmokeStructureAnim.run(g)
 			"circ":
