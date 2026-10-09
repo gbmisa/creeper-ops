@@ -9,10 +9,11 @@ Logged by Opus. Not briefed yet. Items marked (branch) may already be covered by
 5. **Operative survivability:** too tanky and HP regenerates. Fine for testing. Later: med kits and ammo bought with Salvage (not packets) in a shop UI. Down the road.
 6. **Railgun UX:** pressing 4 shows "Unlock the Railgun (60 Salvage)" with no hint of where to buy it. The prompt stays on screen after switching guns. The Armoury is at the Command Node (walk up and press E, or select the Node in command mode). The prompt should say so and clear on weapon switch.
 7. **Routing (clarified):** while a relay is unfinished, the Node routes packets through *finished* structures instead of directly to targets in its own range. Once the relay is built it switches to the direct route. The desired behaviour is a direct route from the start. fix/network-planned-relays may have misread this.
-8. **Trebuchets:** take too long to kill. Add a plantable explosive the Operative places to destroy one. Infinite for testing; it will take inventory space later.
+8. **Trebuchets (decided):** keep high HP, killable by guns. No charge required; there will be many of them and Salvage is sparse.
 9. **Info:** Gregory wants a player-readable reference for enemies (stats live in raider_defs.gd, flyer_defs.gd, castle_defs.gd, and config.gd NEST_*).
-10. **Demolition charge vs siege engines:** a mortar died without a demo charge. Trebuchets and enemy mortars should keep high HP and be killable *only* by a demolition charge (Salvage-paid), which destroys one in a single plant. Gun damage should not finish them.
-11. **Totems look like Collectors:** the Totem (beacon) model needs a clearly different silhouette and colour.
-12. **Lancer range (open question):** Lancer beams reach 32 cells against Sniper 20 (raider_defs.gd:21). Same problem as item 3 unless Lancers are meant to be the Operative's job.
+10. **Mortars need a charge (decided):** enemy mortars can only be destroyed by a demolition charge; one plant kills one. Guns must not finish them (one died to gunfire in play). Charges infinite while testing; inventory space later.
+11. **Totems look like Collectors:** make the Totem taller with a glowing red ball on top (art/blender/totem.py -> assets/models/totem.glb).
+12. **Lancers guard castles (decided):** Lancers stay at their castle (beam range 32) and nothing can be built within a radius of a hostile castle. The Operative must clear the castle to use the land around it.
+13. **Spitter towers (decided):** sabotaging one gives no Salvage. Some respawn instantly, which allows Salvage farming; that must stop. Spitter towers should be constructed by the enemy over time, not pre-placed and respawning.
 
 Done: item 3 (Spitter range 14, smoke rule in smoke_rules.gd `_balance`).
