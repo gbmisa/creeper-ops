@@ -1,44 +1,31 @@
-# Handoff: 2026-10-09 (session 15g: playtest 3 + sound pass, Opus)
-
-## This session
-- Gregory playtests **`integ/2026-10-09`** (worktree `creeper fps td-worktrees/integ`). Log: `docs/tasks/PLAYTEST3_feedback.md` (items 1-27).
-- **`ui/overhaul` merged into integ** (`5cffe27`, 2 small conflicts, smoke OK, screenshot checked). `art/3-models` not merged yet: Gregory checks it later.
-- **Sound pass 1** on `pt3/sound` (worktree `sound`, `c2cfe12`, smoke OK, NOT merged, not heard by a human): `SfxRender` (synth), `SfxVoices` (data + beds), `SfxAmbience` (wind/cave/creeper beds), reverb/limiter bus, pitch jitter; new packet/step/jump/land sounds. Merge into integ when Gregory approves.
-- **Muse briefs pushed** (branches from integ `51f7569`): PT3-A `pt3/spore-spire`, PT3-B `pt3/build-on-creeper`, PT3-C `pt3/pause-button`, PT3-D `pt3/sprayer-emitter` (`docs/tasks/MUSE_PT3*.md`).
+# Handoff: 2026-10-10 (playtest 4: fixes merged, perf work in flight, Opus)
 
 ## State
-Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md). Run: [RUN.md](RUN.md).
-Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHub branches; **Opus** orchestrates, merges and does the visuals.
+Godot 4.7 game in `godot/`. **Gregory plays this worktree** (`creeper fps td-worktrees/integ`, branch `integ/2026-10-09`, see RUN.md), not `main`. Do all gameplay work on branches cut from it.
+Plan and log: [docs/tasks/PLAYTEST4_plan.md](docs/tasks/PLAYTEST4_plan.md) (feedback, decisions, perf findings). Briefs: `PLAYTEST4_briefs.md`. Logic audit: `PLAYTEST4_audit.md`.
+Nothing is pushed to GitHub. `main` is 170+ commits behind integ.
 
-**Everything lives on `integ/2026-10-09`** (worktree `creeper fps td-worktrees/integ`, local only, not pushed, not on main). Gregory is playtesting it:
-`cd "…/creeper fps td-worktrees/integ" && godot --path godot`
+## Merged into integ today (smoke only, not yet played by Gregory)
+`pt4/port` (Z deactivate, Esc pause menu), `pt4/units` (attack order, move beats combat, retaliation, auto-patrol, mortars untargetable, free mortar sabotage), `pt4/alerts` (base alerts in first person, castle grace until the reprisal launches, trebuchets revive only on retake), `pt4/deploy` (choose Node or any Totem, recall measured to the nearest site), `pt4/trebrange` (click a trebuchet for range rings), `pt4/l2space` (L1/L2 trebuchet `engine_range` 12, one engine moved), plus Opus inline: Shield Dome needs no charge, crown nest takes a charge, Burrower banned on L1/L2 (`raider_ban`), prompts follow rebinds (`Keybinds.fill`), marker label caching.
 
-## In integ (full smoke OK: 0 failures, parse clean)
-- Muse's 12 overnight branches: 13 tuning, plasma recoil, K split, playtest-small, shot tour, 21b castles, Q spitter towers, anti-creeper, playtest2 pressure, A3 hive models, A4 structure models, art/3-models.
-- Muse's 9 follow-ups: enemy-los, beam-intercept-lobs, enemy-castle-mortars, spitter-vs-structures, network-planned-relays, raider-circle-anim, bailey-standard-ux, ammo-float-snap, deploy-from-node. **deploy-from-node changes a settled rule** (deploy from the Node when there's no Totem; the Totem is cheap and builds itself). Gregory hasn't confirmed it.
-- Playtest 3 fixes ([docs/tasks/PLAYTEST3_feedback.md](docs/tasks/PLAYTEST3_feedback.md), status line at item list end):
-  - Spitter range 14, with a smoke rule that acid reach stays below Sniper range.
-  - `art/totem-red`: taller Totem with a red glowing ball, unviewed.
-  - `pt3/enemy-builds`: mortars die only to the demo charge (free while `DEMO_CHARGE_FREE`); spitter towers pay 0 Salvage; enemy rebuilds wait `ENEMY_REBUILD_DELAY` 30 s.
-  - `pt3/castle-guard`: Lancers garrison hostile castles (`castle_lancers.gd`); no building within `BUILD_BAN_RADIUS` 24 of an unheld castle (`castle_exclusion.gd`, red rings in the shader, unviewed).
-  - `pt3/small-fixes`: raiders stand on creeper (`raider_perch.gd`); a connected flying Node launches packets (CLAUDE.md contract updated); the Railgun prompt names the Armoury and clears on weapon switch.
-- Later pt3 (2026-10-09, items 16-21 in PLAYTEST3): planted demo charge (Armoury, 15 Salvage, max 3; kills mortars, Trebuchets, enemy builds); network: only finished collectors/relays relay, senders feed in-range pieces directly (reverts planned-relay transit); castle build-ban ring REMOVED (Lancer fire denies land); Pulse Rifle small bloom + vertical climb; Null Sprayer ~1/3 removal, 8 s tank; cave mites steer around rock; unit patrols (P) + castle auto-patrol; turret socket fixtures; deploy-site pick.
-- Muse's round 4: unit-attack-move, bailey-capture-broken, barracks-cap-spawn (cap 8), troops-into-castle, burrower-telegraph.
-- Muse's round 3: drawbridge-solid, rally-point-marker, spawn-pacing, blight-pylon-aura, fps-build-wheel (hold B for the radial wheel, HoldBar). Sabotage prompts show the real payout (0 for spitter towers).
+## Perf (top priority). Tool: `core/perf_probe.gd`
+`godot --path godot --rendering-driver vulkan -- --level=2 --demo --units --nocapture --probe-base --perf-probe=28` (real display, ~15 min). Headless gives sim numbers only: `godot --headless --path godot -- --level=2 --demo --units --perf-probe=4 | grep "^\[probe\]"` (~90 s). `HITCH` lines = one update over 60 ms, with ms per surface updater (index 5 = EnemyBuilder).
+Findings (L2, minute 28, 1440p, RTX 5090): sim-bound, not GPU-bound (240 fps cap with the sim frozen; 62 fps command / 49 fps first person running). Zero terrain edits, no node leak: **the static-map / pathing rework is dropped.**
+Agents running at handoff, each in its own worktree, Sonnet, not merged:
+- `pt4/perf-builder`: EnemyBuilder planner hitches (1.1 s at raid start, 60-110 ms every 5 s).
+- `pt4/perf-enemies`: enemy logic 3.75-4.5 ms/frame -> target 1.2 ms.
+- `pt4/perf-units`: with `--units`, 56 hitches outside the updaters (up to 949 ms; runs of ~175 ms per update): suspected unit pathfinding. Also asked to fix the flaky smoke check below.
+Open, not assigned: creeper GPU sim CPU side 5.3 ms per `update(0.05)` (readback + CPU anti-creeper tick, `sim/creeper_gpu.gd`); shadow pass doubles draw calls in first person (10.5k vs 5.5k; 150 -> 204 fps with shadows off, sim frozen).
 
-## Open (playtest 3)
-1. Towers can't be built in anti-creeper: placement only checks `depth`, so the cause is unknown; waiting for Gregory's symptom (red ghost vs. places-then-fails).
-2. Ashmote Keep over-the-wall Lancer shot unreproduced. Crawler-stuck fix untested vs. the real symptom.
-3. Socket look: gems hard to see from the ground, rings hidden under towers, off-screen labels pile up. Deploy-pick visuals unviewed.
-4. Items 5 (shop/med kits), 9 (enemy reference) later.
+## Known issues
+- Smoke `attack order: holds after kill (attack)` (smoke_unit_orders.gd) fails about 2 runs in 3 on integ. Everything else passes.
+- L2 spacing only partly met: engines e3, e4, e5, e10 still inside or near trebuchet reach; safe corridor reaches W and S edges only. Gregory will direct moves from playtesting.
+- Retaliation targets the nearest enemy within 30 m, so not Lancers (64 m).
+- Audit item 3: Operative respawn can wait forever if Salvage runs out. Gregory: will judge in playtests.
+- `smoke_test.gd` 330 lines, `config.gd` 351, `weapon_logic.gd` ~354: split.
 
-## Decisions pending from Gregory
-- UI: `ui/overhaul` (Opus) vs `fix/ui-viewport-fit` (Muse). Screenshots are in the session scratchpad `ui/`; regenerate if gone.
-- Tuning (Lance cooldown 60→45, Wyvern HP 90→70): deferred until after more playtests.
-- When to merge integ → main and push.
-
-## Debt
-`raiders.gd` 304 lines, `weapon_logic.gd` 356, `shot_tour.gd` 300, `smoke_test.gd` 300+: split. A4 `_relay_pass` is O(n) per waypoint.
-
-## Not verified
-No human look at: the Totem, the build-ban rings, the 21b castles, the anti-creeper fluid, military glb pivots. GPU (Vulkan) path not checked.
+## Next steps
+1. As each perf agent reports: review the diff, merge into integ, run smoke, re-run the probe (display) and record before/after in PLAYTEST4_plan.md.
+2. Creeper sim CPU cost and first-person shadows (Opus or a Sonnet brief with probe numbers).
+3. Ask Gregory to playtest the merged build; log feedback as Update N in the plan (workflow: log, brief, cheap agents, Opus merges).
+4. Push integ to GitHub and tell Muse (docs/tasks/MUSE_NOTES.md) when Gregory agrees.
