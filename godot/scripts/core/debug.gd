@@ -33,6 +33,7 @@ class_name Debug
 ##   --select=T    select the first structure of type T (T=all-weapons: every movable weapon)
 ##   --keys        open the Controls (keybind) menu
 ##   --gpu-parity / --perf-sim=N   GPU creeper sim checks (SimBench; need a display)
+##   --bench-l2[=S]  play S s and print fps / draw calls (L2Bench; real display)
 ##   --bench-field  time one RaiderField rebuild/label/on-foot search (FieldBench)
 ##   --cpu-sim     force the CPU creeper sim
 ##   --level=N     play Level N (1 Hollow Ridge, 2 The Crown Marches); see Levels
@@ -203,6 +204,8 @@ static func apply(g) -> void:
 	if args.has("gpu-parity") or args.has("perf-sim"):
 		SimBench.run(g, args)
 		return
+	if args.has("bench-l2"):
+		L2Bench.run(g, args)
 	if args.has("bench-field"):
 		FieldBench.run(g)
 		return

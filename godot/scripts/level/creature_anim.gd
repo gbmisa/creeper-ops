@@ -22,6 +22,7 @@ const ST_HIT := 3
 const ST_DIE := 4
 
 static var _scenes := {}  # id -> PackedScene (only ids that have a .glb)
+static var lod := true  # CreatureLod drives clip stepping (tests may turn it off)
 static var disabled := false  # test switch: make() returns null, callers use the procedural fallback
 
 
@@ -110,6 +111,8 @@ static func _wrap(node: Node3D, glow: Material) -> Node3D:
 				(player.get_animation(clip) as Animation).loop_mode = Animation.LOOP_LINEAR
 	if glow != null:
 		_replace_glow(node, glow)
+	if player != null and lod:
+		CreatureLod.register(node, player)
 	return node
 
 

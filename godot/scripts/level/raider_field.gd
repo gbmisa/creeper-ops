@@ -3,7 +3,8 @@ extends RefCounted
 ## One flow field shared by every nest raider: breadth-first distance (in steps) from every
 ## cell to the nearest player structure. A step may rise or fall by one terrace only
 ## (RAIDER_CLIMB / RAIDER_DROP). Raiders walk toward the neighbour with the lowest distance.
-## Rebuilt every RAIDER_FIELD_INTERVAL, so a hundred raiders cost one search instead of a
+## Checked every RAIDER_FIELD_INTERVAL and rebuilt only when the goals (your structures) or
+## the ground (Bus.terrain_changed: craters, Terp, breaches, gates) changed, so a hundred raiders cost one search instead of a
 ## hundred A* runs. -1 means no walking route; raiders do not scale that cliff.
 ## A rebuild (RaiderFieldBuild) runs RAIDER_FIELD_BUDGET_MS a frame; raiders follow the old
 ## field until it is done.
@@ -17,6 +18,8 @@ var has_goals := false
 var areas := PackedInt32Array()  # walking area id per cell (4-way, one terrace a step)
 var _areas_dirty := true
 var _job: RaiderFieldBuild = null
+var _goal_key := 0  # hash of the goal cells the field was built for
+var _dirty := true  # terrain, gates or decks changed since the last build
 var _wh := PackedFloat32Array()  # enemy walk height per cell (_refresh_heights)
 var _special := PackedInt32Array()  # gate and deck cells
 var _special_scanned := false
@@ -37,6 +40,11 @@ func update(dt: float, goal_cells: Array) -> void:
 	if timer > 0.0:
 		return
 	timer = Config.RAIDER_FIELD_INTERVAL
+	var key := goal_cells.hash()
+	if key == _goal_key and not _dirty:
+		return  # same goals, same ground: the field is still right
+	_goal_key = key
+	_dirty = false
 	_refresh_heights()
 	_job = RaiderFieldBuild.new(grid, _wh, goal_cells)
 	if _job.step(int(Config.RAIDER_FIELD_BUDGET_MS * 1000.0)):
@@ -47,6 +55,7 @@ func update(dt: float, goal_cells: Array) -> void:
 ## RAIDER_FIELD_COALESCE share one rebuild; a build already running restarts on new heights.
 func invalidate() -> void:
 	timer = minf(timer, Config.RAIDER_FIELD_COALESCE)
+	_dirty = true
 	_job = null
 	_areas_dirty = true
 
