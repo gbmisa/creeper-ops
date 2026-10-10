@@ -51,3 +51,12 @@ Smoke (synthetic terrain, the harness cannot load L2 cheaply): (a) plateau two l
 8. **Units** (`units/unit_attack.gd`, `ATTACK_REPATH` 1 s): same lock-on rule for an attack order on a moving enemy: straight when clear, re-path only when the target has moved `PATH_REPATH_CELLS` from the path's end.
 Smoke: a prey dict moved every tick for 10 s: the raider closes and hits it, target unchanged, searches <= 3; a shooter keeps one pick across 5 s with a nearer second prey added; a unit attack order on a moving raider makes <= 3 searches in 10 s.
 **Perf (both phases, report numbers):** headless `godot --headless --path godot -- --level=2 --demo --units --perf-probe=4 | grep "^\[probe\]"` before and after: no new `HITCH` lines, and the `nests: raiders` cost line not above the before value. A capped raider search must stay under 5 ms.
+
+## G: castle garrison does not respawn (NAME = guards; Sonnet `feature-dev`, 1 phase)
+Gregory (screenshot of the hooded archers on a castle wall): "these guys should not respawn either", i.e. the same rule the trebuchets got in brief A.
+Files: `godot/scripts/level/castle_guards.gd` (slot regrow about line 120, `Config.GUARD_RESPAWN`), `level/castle_patrols.gd` (wall patrols "respawn on the garrison timer"), `level/castle_lancers.gd` if it refills posts, `level/stronghold_tick.gd` (line 86 is where `CastleEngines.revive(c)` runs on a retake), `core/config.gd`, the castle smoke files that assert a regrow.
+1. Remove every timed respawn of a castle's defenders: wall Sentinels/archers, wall patrols and castle Lancers. One killed stays dead while the castle's state does not change.
+2. They come back in full only where the trebuchets do: when the enemy retakes the castle (follow `CastleEngines.revive` in `stronghold_tick.gd`). A castle that starts the level hostile starts with its full garrison, as now.
+3. Delete `GUARD_RESPAWN` and any tunable left unused. Do not change reprisal raids or sieges (`castle_raids.gd`): those are raiders arriving from outside, not garrison respawns. Do not touch `raiders.gd`, `raider_move.gd`, `raider_shots.gd` or `raider_field.gd` (another agent is editing them).
+Smoke: kill one guard of each kind on a hostile castle, simulate longer than the old respawn time: still dead; capture and let it be retaken: garrison back to full.
+Report also every other castle thing that still respawns on a timer (name, file, line), unchanged, so Gregory can rule on it.

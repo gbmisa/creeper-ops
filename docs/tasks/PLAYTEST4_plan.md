@@ -77,6 +77,10 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 ## Update 10 (Gregory, 2026-10-10, screenshot)
 - **Spitters still shoot straight into a wall** (seen at a Salvage Engine). They must have a clear projectile path before firing. Cause: `RaiderShots._pick` checks sight for beams only; acid is launched at anything in range and the lob is clipped where it meets terrain. -> added to brief R phase 2 as item 7b (fire only when the lob reaches the target, otherwise reposition along the committed path).
 
+## Update 11 (Gregory, 2026-10-10, screenshot of wall archers)
+- **Castle wall defenders should not respawn either** (same as the trebuchets). Cause: `castle_guards.gd:120` regrows a slot after `GUARD_RESPAWN`; wall patrols share the garrison timer. -> brief **G** (Sonnet `feature-dev`): no timed respawn, full garrison returns only on a retake.
+- Brief R phase 1 started (Sonnet `stage-runner`, `pt4/raider-commit`). Phase 2 follows after review.
+
 ## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
 Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
 - **Terrain edits: 0 in 28 minutes.** The static-map / pathing rework is dropped; it would fix nothing.
