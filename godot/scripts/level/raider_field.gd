@@ -14,6 +14,7 @@ const DIRS := RaiderFieldBuild.DIRS
 var grid: Grid
 var dist := PackedInt32Array()
 var timer := 0.0
+var version := 0  # bumped by invalidate(): raiders re-check their committed path
 var has_goals := false
 var areas := PackedInt32Array()  # walking area id per cell (4-way, one terrace a step)
 var _areas_dirty := true
@@ -58,6 +59,7 @@ func update(dt: float, goal_cells: Array) -> void:
 ## Terrain changed: rebuild soon instead of waiting out the interval. Edits within
 ## RAIDER_FIELD_COALESCE share one rebuild; a build already running restarts on new heights.
 func invalidate() -> void:
+	version += 1
 	timer = minf(timer, Config.RAIDER_FIELD_COALESCE)
 	_dirty = true
 	_job = null

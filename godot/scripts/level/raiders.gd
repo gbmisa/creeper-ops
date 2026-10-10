@@ -24,6 +24,7 @@ var seen := {}  # tier name -> how many have spawned this mission
 var in_update := false  # true inside update(): buckets and group speeds are fresh
 var buckets := {}  # Vector2i (RAIDER_SEP_BUCKET m) -> raiders, for separation
 var group_slow := {}  # group id -> slowest member speed
+var paths: RaiderPaths  # committed routes to targets
 var loot_host = null  # SporeNests, so a death can drop its Salvage pickup
 
 
@@ -31,6 +32,7 @@ func _init(w: World) -> void:
 	world = w
 	field = RaiderField.new(w.grid)
 	castle_field = RaiderField.new(w.grid)
+	paths = RaiderPaths.new(self)
 	Bus.terrain_changed.connect(func(cw, _cells):
 		if cw == world:
 			field.invalidate()
@@ -103,6 +105,8 @@ func update(dt: float, prey: Array, goal_cells: Array) -> void:
 		if q.alive.call() and _grounded(q):
 			reachable.append(q)
 	_index()
+	paths.begin_update()
+	paths.serve()
 	in_update = true
 	for r in list.duplicate():
 		_think(r, dt, reachable)
@@ -121,7 +125,7 @@ func _index() -> void:
 		else:
 			buckets[k] = [r]
 		var gid := int(r.get("group", -1))
-		if gid >= 0:
+		if gid >= 0 and r.alive:
 			group_slow[gid] = minf(float(group_slow.get(gid, INF)), float(r.tier.speed))
 
 
@@ -146,16 +150,41 @@ func _nearest(from: Vector3, prey: Array, max_d: float, leash_home = null) -> Di
 	return best
 
 
-## _nearest, re-run per raider every RAIDER_ACQUIRE_MIN..MAX seconds (spread by a random
-## offset); in between the last pick is kept while it lives. Movement still runs every frame.
+## A raider keeps its target until it dies, leaves the ground, becomes unwalkable-to (checked when
+## the field is invalidated), a moving one gets past RAIDER_LOSE, or a guard's passes NEST_LEASH.
+## Only a raider with no target scans (staggered RAIDER_ACQUIRE_MIN..MAX); a nearer prey never
+## steals the pick. Movement still runs every frame (RaiderPaths).
 func _acquire(r: Dictionary, prey: Array, max_d: float, leash_home = null) -> Dictionary:
 	var held: Dictionary = r.get("_tgt", {})
-	if time < float(r.get("_tgt_at", 0.0)) and (held.is_empty() or held.alive.call()):
-		return held
+	if not held.is_empty():
+		if _keep(r, held, leash_home):
+			return held
+		r["_tgt"] = {}
+		r["_tgt_at"] = 0.0
+		paths.forget(r)
+	if time < float(r.get("_tgt_at", 0.0)):
+		return {}
 	r["_tgt_at"] = time + randf_range(Config.RAIDER_ACQUIRE_MIN, Config.RAIDER_ACQUIRE_MAX)
 	held = _nearest(r.node.position, prey, max_d, leash_home)
 	r["_tgt"] = held
+	r["_tgt_ver"] = field.version
 	return held
+
+
+func _keep(r: Dictionary, q: Dictionary, leash_home) -> bool:
+	if not q.alive.call() or not _grounded(q):
+		return false
+	var qp: Vector3 = q.node.position
+	if leash_home != null and qp.distance_to(leash_home) > Config.NEST_LEASH:
+		return false
+	var p: Vector3 = r.node.position
+	if leash_home == null and not q.has("struct") and Vector2(qp.x - p.x, qp.z - p.z).length() > Config.RAIDER_LOSE:
+		return false
+	if int(r.get("_tgt_ver", -1)) != field.version:
+		if not field.reachable(p, qp, q.radius):
+			return false
+		r["_tgt_ver"] = field.version
+	return true
 
 
 func _think(r: Dictionary, dt: float, prey: Array) -> void:
@@ -210,14 +239,11 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
 			r.node.position.y = RaiderPerch.y(world, p.x, p.z) + absf(sin(time * 12.0 + r.phase)) * 0.2
 			return
-		# Straight at the target; if a wall is in the way (a garrison inside its castle,
-		# a cliff), follow the flow field round it instead of pressing into the wall.
-		r["detour"] = r.get("detour", 0.0) - dt
-		if r.detour <= 0.0:
-			if _walk(r, Vector2(tp.x, tp.z), dt):
-				return
-			r.detour = Config.RAIDER_DETOUR_TIME
-		goal = _route(r, p)
+		# One committed route: straight when clear, else the A* waypoints (RaiderPaths);
+		# the flow field only while a search waits.
+		goal = paths.goal(r, target, dt)
+		if goal == null:
+			goal = _route(r, p)
 	if goal == null:
 		return
 	_walk(r, goal, dt)
