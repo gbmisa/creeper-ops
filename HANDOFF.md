@@ -28,4 +28,5 @@ Open, not assigned: creeper GPU sim CPU side 5.3 ms per `update(0.05)` (readback
 1. As each perf agent reports: review the diff, merge into integ, run smoke, re-run the probe (display) and record before/after in PLAYTEST4_plan.md.
 2. Creeper sim CPU cost and first-person shadows (Opus or a Sonnet brief with probe numbers).
 3. Ask Gregory to playtest the merged build; log feedback as Update N in the plan (workflow: log, brief, cheap agents, Opus merges).
-4. Push integ to GitHub and tell Muse (docs/tasks/MUSE_NOTES.md) when Gregory agrees.
+4. **Pathfinding in Rust (Gregory, 2026-10-10: noted, not started; do it in a fresh session, not a long one).** Port unit pathfinding (`units/pathfind.gd`), then the raider flow field (`level/raider_field*.gd`) if still over budget, to a Rust GDExtension (`gdext`) behind the same `Pathfind.find` / `RaiderField` interface, keeping the GDScript version as the headless/test fallback. First land and measure `pt4/perf-units`; record the PerfProbe before/after so the Rust port has a number to beat. Needs a brief (build steps, `.gdextension` file, Linux target) and a Sonnet agent; Opus reviews.
+5. Push integ to GitHub and tell Muse (docs/tasks/MUSE_NOTES.md) when Gregory agrees.
