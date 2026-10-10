@@ -123,10 +123,7 @@ func update(dt: float) -> void:
 		Hives.tick(self, n, dt)
 		if not n.alive:
 			continue
-		var sac: Node3D = n.get("sac")
-		if sac == null:
-			sac = n.node.get_node("Sac") as Node3D
-			n["sac"] = sac
+		var sac := n.node.get_node("Sac") as Node3D
 		var growth: float = 1.0 + minutes() * 0.1
 		sac.scale = sac.scale.lerp(Vector3.ONE * growth * (1.0 + 0.08 * sin(time * 3.0 + n.x)), 0.2)
 		n.timer += dt
