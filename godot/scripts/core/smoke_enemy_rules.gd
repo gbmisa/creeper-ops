@@ -1,5 +1,5 @@
 class_name SmokeEnemyRules
-## Playtest 3: enemy mortars die only to a demolition charge; spitter towers pay no Salvage
+## Playtest 3: enemy mortars die only to sabotage or a charge blast; spitter towers pay no Salvage
 ## and are not re-raised instantly.
 
 
@@ -21,7 +21,7 @@ static func _mortar(g) -> void:
 	SmokeTest._check("mortar survives heavy gun damage", m.alive and float(m.hp) > 0.0)
 	DemoCharge.plant(nests.world, m.pos)
 	DemoCharge.tick(nests.world, Config.DEMO_FUSE + 0.1)
-	SmokeTest._check("a planted charge destroys the mortar", not m.alive)
+	SmokeTest._check("a charge blast also destroys the mortar", not m.alive)
 	EnemyMortars.clear(nests, hive)
 
 

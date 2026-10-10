@@ -94,7 +94,7 @@ static func add_rows(parent: Container, pile: Stockpile, done: Callable, fps: Fp
 		Sfx.play("deny" if why != "" else "good")
 		Bus.say(why if why != "" else "Armoury: %s." % OperativeUpgrades.charge_text(), "warn" if why != "" else "good")
 		done.call())
-	cb.tooltip_text = "Plant on an enemy mortar (hold %s) to destroy it. Fuse %d s. Carry up to %d." % [Keybinds.short("use"), int(Config.DEMO_FUSE), Config.DEMO_CHARGE_MAX]
+	cb.tooltip_text = "Plant on a big enemy structure or the crown nest (hold %s) for an instant kill. Fuse %d s. Carry up to %d." % [Keybinds.short("use"), int(Config.DEMO_FUSE), Config.DEMO_CHARGE_MAX]
 	parent.add_child(cb)
 
 

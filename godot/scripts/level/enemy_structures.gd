@@ -17,7 +17,7 @@ const DEFS := {
 		"color": Color("d4a6ff")},
 	"pump": {"label": "Creeper Pump", "hp": 100.0, "cost": 1.0, "amount": 1.0, "every": 2.0,
 		"color": Color("3d7bff")},
-	"mortar": {"label": "Enemy Mortar", "hp": 80.0, "cost": 1.0, "color": Color("ff6a4a")},
+	"mortar": {"label": "Enemy Mortar", "hp": 80.0, "cost": 1.0, "salvage": 0.0, "color": Color("ff6a4a")},
 }
 
 

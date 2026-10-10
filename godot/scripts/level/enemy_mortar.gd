@@ -2,7 +2,7 @@ class_name EnemyMortars
 ## Enemy mortars (§4.3). Stage 3 builds one, stage 4 a second. Any active hive also builds
 ## one within 60 s after the Node has had no walking route for 60 s. Each mortar keeps a
 ## Spotter. A shell is a growing red ring on the terrain shader, then a blast.
-## Killed mortars are not rebuilt. Only a planted demolition charge (DemoCharge) destroys one; no payout.
+## Killed mortars are not rebuilt. Guns cannot hurt them: only Operative sabotage (EnemyMortarSabotage) or a charge blast destroys one; no payout.
 
 
 static func tick(host, dt: float) -> void:
@@ -13,6 +13,7 @@ static func tick(host, dt: float) -> void:
 		_grow(host, hive, dt)
 		EnemyMortarFire.volley(host, hive, dt)
 	EnemyMortarFire.shells(host)
+	EnemyMortarSabotage.tick(host, dt)
 
 
 static func note_route(host, dt: float) -> void:
@@ -138,16 +139,16 @@ static func _make(host, hive: Dictionary, index: int) -> Dictionary:
 	var m := {
 		"mid": "%s#%d" % [str(hive.name), index], "hive": hive, "node": node, "pos": pos,
 		"alive": true, "grown": false, "grow": Config.HIVE_GROW, "hp": hp, "max_hp": hp,
-		"boosted": boosted, "cd": Config.MORTAR_INTERVAL, "telegraph": null, "channel": 0.0,
+		"boosted": boosted, "cd": Config.MORTAR_INTERVAL, "telegraph": null, "channel": 0.0, "kind": "mortar",
 		"spotted": false, "spotter": {}, "spotter_t": 0.0,
 	}
 	node.scale = Vector3.ONE * 0.15
 	var hit := func(dmg: float, _p = null): _hurt(host, m, dmg)
 	var boom := func(): _kill(host, m)
 	m["enemy"] = { "node": node, "oy": 0.9, "radius": 1.1, "alive": func(): return m.alive, "hit": hit, "immune": true, "targetable": func(): return false }
-	m["target"] = { "node": node, "oy": 0.9, "radius": 1.15, "alive": func(): return m.alive, "on_hit": hit, "charge_kill": boom }
+	m["target"] = { "node": node, "oy": 0.9, "radius": 1.15, "alive": func(): return m.alive, "on_hit": hit, "charge_kill": boom, "no_charge": true }
 	host.world.add_target(m.target)
-	var it := DemoCharge.interactable(host.world, pos, Config.MORTAR_SABOTAGE_RANGE, func(): return m.alive, m.target)
+	var it := EnemyMortarSabotage.interactable(host, m)
 	m["interact"] = it
 	host.world.interactables.append(it)
 	return m
@@ -166,7 +167,7 @@ static func _cell(hive: Dictionary, index: int) -> Vector2i:
 
 
 static func _hurt(host, m: Dictionary, dmg: float) -> void:
-	## Only a demolition charge (target "charge_kill") destroys a mortar: guns just flash it.
+	## Guns just flash a mortar; sabotage or a charge blast ("charge_kill") destroys it.
 	if not m.alive:
 		return
 	var node := m.node as Node3D
