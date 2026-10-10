@@ -146,6 +146,30 @@ static func _split(g) -> void:
 	print("[probe] prey %d  goal cells %d  markers %d  targets %d  interactables %d  updaters %d" % [
 		prey.size(), goals.size(), w.markers.size(), w.targets.size(), w.interactables.size(), w.updaters.size()])
 	_time("nests: raiders", func(): nn.raiders.update(0.05, prey, goals))
+	var rr: Raiders = nn.raiders
+	_time("raiders: prey filter", func(): prey.filter(func(q): return q.alive.call()))
+	_time("raiders: nearest all", func():
+		for r in rr.list:
+			rr._nearest(r.node.position, prey, Config.RAIDER_AGGRO))
+	_time("raiders: route all", func():
+		for r in rr.list:
+			rr._route(r, r.node.position))
+	_time("raiders: perch all", func():
+		for r in rr.list:
+			RaiderPerch.y(rr.world, r.node.position.x, r.node.position.z))
+	rr._index()
+	rr.in_update = true
+	_time("raiders: walk all (dt 0)", func():
+		for r in rr.list:
+			var q: Vector3 = r.node.position
+			RaiderMove.walk(rr, r, Vector2(q.x + 5, q.z), 0.0))
+	rr.in_update = false
+	_time("raiders: anim move all", func():
+		for r in rr.list:
+			CreatureAnim.move(r.node, 1.0))
+	_time("raiders: group speed all", func():
+		for r in rr.list:
+			RaiderGroups.speed(rr, r))
 	_time("nests: raider field", func(): nn.raiders.field.update(0.05, goals))
 	for i in g.surface.updaters.size():
 		var t0 := Time.get_ticks_usec()
