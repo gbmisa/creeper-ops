@@ -196,6 +196,7 @@ static func run(g) -> void:
 	SmokeCastles2bReadability.run(g)
 	SmokeCastles2bTurrets.run(g)
 	SmokeCastles2bGuards.run(g)
+	SmokeCastleRate.run(g)
 	SmokeCastles2bSiege.run(g)
 	SmokeCastles2bLeftovers.run(g)
 	SmokeMetrics.run(g)
@@ -256,6 +257,8 @@ static func _run_only(g) -> void:
 				SmokeNetwork.run(g)
 			"los":
 				SmokeEnemyLos.run(g)
+			"castlerate":
+				SmokeCastleRate.run(g)
 			"pacing":
 				SmokeSpawnPacing.run(g)
 			"enemybuild":
