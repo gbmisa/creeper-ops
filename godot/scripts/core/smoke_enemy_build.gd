@@ -72,11 +72,23 @@ static func _q_fair(g, b: EnemyBuilder) -> void:
 		if str(c.owner) != "enemy":
 			continue
 		hubs += 1
-		var cell: Vector2i = EnemyBuildPlan._cell(b, c, "spitter")
+		var cell := Vector2i(-1, -1)
+		var worst := 0
+		var passes := 0
+		while passes < 3000:  # the planner is time-sliced: resume until it finishes
+			passes += 1
+			b.plan_more = false
+			b.fair_new = 0
+			b.plan_t0 = Time.get_ticks_usec()
+			cell = EnemyBuildPlan._cell(b, c, "spitter")
+			worst = maxi(worst, Time.get_ticks_usec() - b.plan_t0)
+			if not b.plan_more:
+				break
+		SmokeTest._check("q: %s planner pass stays sliced (worst %d us, %d passes)" % [str(c.id), worst, passes], worst < 25000 and passes < 3000)
 		if cell.x < 0:
 			continue
 		sited += 1
-		SmokeTest._check("q: %s spitter site is fair" % str(c.id), EnemyBuildPlan._fair_spitter_site(b, cell), str(cell))
+		SmokeTest._check("q: %s spitter site is fair" % str(c.id), EnemyBuildSites._fair_spitter_site(b, cell), str(cell))
 	SmokeTest._check("q: spitters still placeable (a fair site exists)", sited > 0, "%d of %d hubs" % [sited, hubs])
 	b.clear()
 

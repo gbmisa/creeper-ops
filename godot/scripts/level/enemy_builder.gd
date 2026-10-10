@@ -15,6 +15,11 @@ var hold := false
 var time := 0.0
 var _seq := 1
 var _cool := {}
+var fair_cache := {}  # cell -> fair spitter site? (cleared on terrain change)
+var scans := {}  # hub id -> edge-cell scan job (EnemyBuildScan)
+var plan_more := false  # last planner pass ran out of time
+var plan_t0 := 0
+var fair_new := 0  # uncached fair-site tests this pass
 
 
 func _init(w: World, cs: Strongholds, sn: SporeNests, sm: StructureManager, pile: Stockpile) -> void:
@@ -33,6 +38,8 @@ func _init(w: World, cs: Strongholds, sn: SporeNests, sm: StructureManager, pile
 func _on_terrain(w: World, cells: Array) -> void:
 	if w != world:
 		return
+	fair_cache.clear()
+	scans.clear()
 	var touched := {}
 	for c in cells:
 		touched[c] = true
