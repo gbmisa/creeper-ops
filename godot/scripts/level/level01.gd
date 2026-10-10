@@ -48,14 +48,14 @@ const DEMO := [
 	["cannon", 35, 61], ["cannon", 41, 61], ["cannon", 49, 62],
 	["reactor", 36, 66], ["reactor", 40, 66], ["reactor", 44, 66], ["reactor", 36, 69], ["reactor", 44, 69], ["storage", 40, 69],
 ]
-## Salvage Engines (EngineDefs). One safe wreck near the base; the rest sit beside hives and the
-## Bastion, where hooking is a risk: `hive` / `castle` engines ship only once that is razed / held.
+## Salvage Engines (EngineDefs). Hooking one to the network is the only
+## requirement to ship Salvage; the ones beside hives and the Bastion are a risk to reach, not gated.
 const ENGINES := [
 	{ "id": "e1", "x": 58, "z": 67, "kind": "wreck" },
-	{ "id": "e2", "x": 28, "z": 22, "kind": "forge", "hive": "Central knoll" },
-	{ "id": "e3", "x": 47, "z": 15, "kind": "wreck", "castle": "bastion" },
-	{ "id": "e4", "x": 66, "z": 26, "kind": "bore", "hive": "Spire Heights" },
-	{ "id": "e5", "x": 22, "z": 42, "kind": "forge", "hive": "Rift" },
+	{ "id": "e2", "x": 28, "z": 22, "kind": "forge" },
+	{ "id": "e3", "x": 47, "z": 15, "kind": "wreck" },
+	{ "id": "e4", "x": 66, "z": 26, "kind": "bore" },
+	{ "id": "e5", "x": 22, "z": 42, "kind": "forge" },
 ]
 ## Castle stakes (CastleRaids; keys default to Config.CASTLE_RULES). Level 1 is gentle.
 const CASTLE_RULES := { "aggression": 0.5, "reprisal_warn": 90.0, "nest_buff": 0.15 }
