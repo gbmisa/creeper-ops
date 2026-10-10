@@ -52,8 +52,10 @@ func update(dt: float) -> void:
 		r.last = c.state
 		if c.state == "hostile" or c.state == "capturing":
 			r.kind = ""  # lost or never held: nothing to raid
+			r.grace = false
 			continue
 		if was == "hostile" or was == "capturing":
+			r.grace = true  # safe from retake until the reprisal launches
 			_warn(c, "reprisal", rules.reprisal_warn)
 			continue
 		if r.kind != "":
@@ -84,6 +86,8 @@ func _launch(c: Dictionary) -> void:
 	var r: Dictionary = c.raid
 	var kind: String = r.kind
 	r.kind = ""
+	if kind == "reprisal":
+		r.grace = false
 	r.next = interval()
 	var src := _source(c)
 	if src.is_empty():

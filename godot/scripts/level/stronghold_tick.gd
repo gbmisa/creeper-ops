@@ -55,7 +55,8 @@ static func holding(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 		s.stockpile.add("salvage", Config.CASTLE_SALVAGE_RATE * c.get("yield", 1.0) * dt)
 	CastleTurretFire.tick(s.world, c, v, nests.raiders, dt)
 	CastlePerks.ward(s, c, lay, dt)
-	var inside := nests.raiders.list.filter(func(r): return StrongholdRules.in_courtyard(lay, r.node.position))
+	var grace: bool = c.get("raid", {}).get("grace", false)  # until the reprisal launches nobody can retake or besiege
+	var inside := [] if grace else nests.raiders.list.filter(func(r): return StrongholdRules.in_courtyard(lay, r.node.position))
 	if inside.is_empty():
 		if c.state == "siege":
 			c.state = "held"
@@ -82,6 +83,7 @@ static func holding(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 		r.erase("mission")
 		v.garrison.count += 1
 	CastleStages.set_stage(s, c, 0)
+	CastleEngines.revive(c)  # the trebuchets come back only when the enemy retakes the castle
 	Sfx.play("lost")
 	Bus.say("%s has fallen. The crown nest is growing back." % c.name, "bad")
 	StrongholdMeshes.refresh(v, c)

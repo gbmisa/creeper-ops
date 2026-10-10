@@ -145,6 +145,7 @@ static func run(g) -> void:
 	SmokeTerrain.run(g)
 	SmokeStrongholds.run(g)
 	SmokeCastleRaids.run(g)
+	SmokeBaseAlerts.run(g)
 	SmokeSenders.run(g)
 	SmokePt3.run(g)
 	SmokeDeploy.run(g)

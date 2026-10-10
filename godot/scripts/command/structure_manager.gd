@@ -129,6 +129,7 @@ func remove(s: Structure, reason := "") -> void:
 		if s.type == "node":
 			Bus.node_destroyed.emit()
 		else:
+			Bus.base_lost.emit(s.type)
 			Bus.say("%s destroyed%s" % [s.def.label, " by creeper" if s.wet > Config.MIN_DEPTH else ""], "bad")
 	if not StructureMeshes.model_parts(s).is_empty():
 		# A4: die clip on the multi-part models; free the node when the base clip ends.
@@ -159,6 +160,8 @@ func damage(s: Structure, amount: float, source := "") -> void:
 		return
 	if source != "":
 		s.last_hit_by = source
+		if s.type != "node":
+			Bus.base_attacked.emit(s.type)
 	s.hp -= amount
 	s.hurt = 0.25
 	if not StructureMeshes.model_parts(s).is_empty():

@@ -8,7 +8,7 @@ class_name StrongholdHooks
 static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary) -> void:
 	var world := s.world
 	var enemy_owned := func(p: Dictionary, ring: String): return CastleStages.ring_owner(c, lay, ring) == "enemy" and p.hp > 0.0
-	var ours_sealed := func(p: Dictionary, ring: String): return c.owner == "player" and p.hp > 0.0 and StrongholdRules.sealed(c, lay, ring)
+	var ours_sealed := func(p: Dictionary, ring: String): return c.owner == "player" and not c.get("raid", {}).get("grace", false) and p.hp > 0.0 and StrongholdRules.sealed(c, lay, ring)
 	world.add_target({ "node": v.crown, "radius": 1.9, "oy": 2.0, "chargeable": true,
 		"charge_ok": func(): return CastleStages.crown_open(c, lay),  # no charge wasted on a warded crown
 		"alive": func(): return c.state == "hostile", "on_hit": func(d, _p = null): s._hit_crown(c, d) })
@@ -89,7 +89,11 @@ static func label(c: Dictionary, lay: Dictionary) -> String:
 		"hostile": return CastleStages.marker(c, lay)
 		"capturing": return "%s: hold the %s %d%%" % [c.name, "keep hall" if lay.stages.size() > 1 else "spire top", roundi(c.capture.progress * 100.0)]
 		"siege": return "%s UNDER SIEGE %ds" % [c.name, ceili(Config.RETAKE_TIME - c.capture.retake)]
-	return "%s (yours) +%.0f Æ/min" % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)]
+	var yours := "%s (yours) +%.0f Æ/min" % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)]
+	var rd: Dictionary = c.get("raid", {})
+	if rd.get("grace", false) and rd.get("kind", "") == "reprisal":
+		yours += " | reprisal in %ds" % ceili(rd.warn)
+	return yours
 
 
 ## Where raiders gather to break into a sealed ring of a castle you hold (outside its walls).
