@@ -97,6 +97,11 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 - Open question to Gregory: does the first sentence also mean field nests (outside castles)? Those are 20 -> 5 s per nest, cap 3 -> 10 live raiders, scaling with the Threat curve that Update 13 just stretched.
 - Threat curve (Update 13) started on `pt4/threat` (Haiku).
 
+## Update 15 (Gregory, 2026-10-10)
+- **Regression, his words:** "the thing that was working before was that I was able to take a tower but now I'm not able to kill the enemies faster than they spawn". He expects the threat stretch (Update 13) plus a cap to fix it: **HP spawned in a castle <= 75% of the Pulse Rifle's DPS at level 3** (Firepower tier 3: 7.14 x 1.75 = 12.5 DPS, so 9.4 HP/s per castle). Brief C updated with that number.
+- Opus note: at 9.4 HP/s the cap only bites on Behemoths (120 HP every 5 s = 24 HP/s today); Ravagers at the fastest cadence are 8 HP/s. So the cap alone may not explain or cure what he saw. -> Sonnet `auditor` (read-only): what puts enemies into a hostile castle today, in HP/s over mission time, and what changed in that since the last build he played (`0859412`, pushed 2026-10-09). Findings go here before C starts.
+- **Process (Gregory):** a change to working behaviour is written up in `CHANGES.md` (repo root), not asked as yes/no in chat; remind him to review it whenever it gains an entry. Added to CLAUDE.md and AGENTS.md. First version lists the 15 unrequested changes that came in with today's merges.
+
 ## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
 Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
 - **Terrain edits: 0 in 28 minutes.** The static-map / pathing rework is dropped; it would fix nothing.
