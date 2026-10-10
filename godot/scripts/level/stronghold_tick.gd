@@ -11,11 +11,13 @@ static func hostile(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 	c.crown.max_hp = Config.CROWN_HP * growth
 	c.crown.hp = minf(c.crown.max_hp, c.crown.hp + Config.CROWN_HP * Config.NEST_HP_GROWTH / 60.0 * dt)
 	c.garrison_timer += dt
-	if c.garrison_timer >= nests.spawn_interval() and v.garrison.count < Config.CASTLE_GARRISON \
+	if c.garrison_timer >= maxf(nests.spawn_interval(), c.get("garrison_wait", 0.0)) and v.garrison.count < Config.CASTLE_GARRISON \
 			and nests.raiders.list.size() < Config.RAIDER_MAX_TOTAL:
 		c.garrison_timer = 0.0
 		nests.raiders.spawn(v.garrison, nests.pick_tier(), true)
-		nests.raiders.list.back().node.position = v.garrison.pos  # not on the wall
+		var born: Dictionary = nests.raiders.list.back()
+		born.node.position = v.garrison.pos  # not on the wall
+		c["garrison_wait"] = float(born.hp) / CastleDefs.spawn_budget()  # HP budget: the next one waits
 		if lay.stages.size() > 1:
 			CastlePatrols.on_garrison_tick(s, c, lay, v)
 	if lay.stages.size() > 1:

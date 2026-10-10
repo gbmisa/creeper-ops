@@ -72,3 +72,16 @@ const MUSTER := true         # a held castle gets a free barracks in its ward
 # ---- Lancer guards (CastleLancers) ------------------------------------------------------
 # No artificial build ban (Gregory, playtest 3): the Lancers' fire is what denies the land.
 const LANCERS_PER_CASTLE := 3    # Lancers a hostile castle keeps posted; extra Lancer rolls breed Spitters
+
+# ---- garrison pacing (StrongholdTick.hostile) -------------------------------------------
+# A hostile castle's garrison may not spawn more HP per second than this share of the Pulse
+# Rifle's DPS at Firepower tier CASTLE_SPAWN_RIFLE_TIER, whatever the player actually owns.
+const CASTLE_SPAWN_SHARE := 0.75
+const CASTLE_SPAWN_RIFLE_TIER := 3
+
+
+## HP per second one castle's garrison may spawn.
+static func spawn_budget() -> float:
+	var per: float = OperativeUpgrades.DEFS.firepower.per
+	var dps: float = Config.RIFLE.damage / Config.RIFLE.cooldown * (1.0 + CASTLE_SPAWN_RIFLE_TIER * per)
+	return CASTLE_SPAWN_SHARE * dps
