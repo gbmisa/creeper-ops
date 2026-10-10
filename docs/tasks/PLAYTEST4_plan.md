@@ -56,6 +56,18 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 ## Update 6 (Gregory)
 - **Deploy from any Totem or the Node, by choice**, and **recall cooldown measured to the nearest Totem/Node**, not the home one. A picker (`fps/deploy_pick.gd`) exists but did not give him the choice in play; the agent diagnoses first. Brief D, branch `pt4/deploy`, Sonnet.
 
+## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
+Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
+- **Terrain edits: 0 in 28 minutes.** The static-map / pathing rework is dropped; it would fix nothing.
+- **No node leak** (8.7k -> 9.2k nodes). An earlier reading of 27k was the probe not yielding frames.
+- **Frame is sim-bound, not GPU-bound:** command view 82-111 fps running, 240 (vsync cap) with the sim frozen.
+- **Hitches:** `EnemyBuilder.update` 1,088 / 468 / 731 ms at raid start (t=182-197 s), then 62-110 ms every 5 s from t=525 to 930 (80+). -> `pt4/perf-builder` (Sonnet).
+- **Per frame:** enemy logic 3.75 ms (raiders 1.85, hives 0.66, mortars 0.57, flyers 0.28) for <100 creatures. -> `pt4/perf-enemies` (Sonnet).
+- **Creeper GPU sim:** 5.6 ms per `update(0.05)` on the CPU side (readback + CPU anti-creeper tick), 30 ticks/s. Open (Opus, needs the display).
+- **First person:** HUD markers cost 6.7 ms a frame (every label rewritten every frame). Fixed: 0.07 ms. Shadow pass doubles draw calls (10.5k -> 5.5k without). Open.
+- Not yet measured: a surviving late-game player base (`--probe-base`).
+- Merged into integ, smoke green: `pt4/port`, `pt4/units`, `pt4/alerts`, `pt4/deploy`, `pt4/trebrange`. Pending: `pt4/l2space` (L2 trebuchet range 12 by Gregory's call).
+
 ## Questions for Gregory
 - Static map: do **castle walls** stop being breakable (gates only)? Craters would become marks with no height change.
 - OK to run the bench (a game window opens on your screen for a few minutes)?
