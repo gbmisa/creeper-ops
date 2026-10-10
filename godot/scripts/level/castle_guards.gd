@@ -7,8 +7,8 @@ extends RefCounted
 ##  - each shot is announced by a glow that swells for GUARD_CHARGE seconds, then a slow
 ##    arcing bolt flies to the spot the target stood at the moment of firing, so anyone who
 ##    keeps moving is missed; whatever is still there when it lands takes the damage
-## Killing the crown nest clears the garrison; a slot regrows after GUARD_RESPAWN while the
-## castle is hostile again. They are Operative targets, unit enemies and sniper/Lance foes.
+## Killing the crown nest clears the garrison. A dead Sentinel stays dead (no timer); the whole
+## garrison returns only when the enemy retakes a held castle (held/siege -> hostile). They are Operative targets, unit enemies and sniper/Lance foes.
 
 var world: World
 var castles: Strongholds
@@ -25,7 +25,7 @@ func _init(w: World, s: Strongholds, rows: Array) -> void:
 			continue
 		var c: Dictionary = s.list.filter(func(x): return x.id == row.id)[0]
 		for p in posts(w.grid, row.layout, row.guards):
-			var slot := { "castle": c, "post": p, "alive": false, "hp": 0.0, "node": null, "timer": 0.0,
+			var slot := { "castle": c, "post": p, "alive": false, "hp": 0.0, "node": null, "prev": "hostile",
 				"index": list.size(), "cd": 0.0, "charge": -1.0, "aim": null, "glow": null }
 			list.append(slot)
 			_spawn(slot)
@@ -98,7 +98,6 @@ func _hurt(s: Dictionary, dmg: float) -> void:
 
 func _remove(s: Dictionary, killed: bool) -> void:
 	s.alive = false
-	s.timer = 0.0
 	s.charge = -1.0
 	world.remove_target(s.target)
 	if killed:
@@ -114,13 +113,11 @@ func update(dt: float) -> void:
 		if s.castle.state != "hostile":
 			if s.alive:
 				_remove(s, true)  # the crown nest fell: the garrison with it
-			s.timer = 0.0
-		elif not s.alive:
-			s.timer += dt
-			if s.timer >= Config.GUARD_RESPAWN * (1.0 + 0.15 * (s.index % 4)):
-				_spawn(s)
-		else:
+		elif s.prev != "hostile" and s.prev != "capturing" and not s.alive:
+			_spawn(s)  # the enemy retook the castle: the garrison is back in full
+		elif s.alive:
 			_tick(s, dt)
+		s.prev = s.castle.state
 
 
 func _tick(s: Dictionary, dt: float) -> void:

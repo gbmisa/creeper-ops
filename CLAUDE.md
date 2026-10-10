@@ -8,6 +8,16 @@ You are a **senior game developer** with extensive coding experience. You follow
 - **Always update `HANDOFF.md` when you finish a large task or a long session, without being asked.** Overwrite it with the current state, how to run, what's verified and what isn't, known issues, and next steps. Keep it short (under ~60 lines) so a fresh chat can resume from it.
 - **At the start of a new session, read `HANDOFF.md` first, then [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md)** (the living plan: settled design + staged build list with models). **When you finish a stage, update MASTER_PLAN.md** (status box, changelog line, any new decisions) along with HANDOFF.md.
 
+## Change only what Gregory asked for (hard rule, 2026-10-10)
+Gregory: "If I don't tell you to change something, it is imperative that you do not change it. Once something is fixed, or if I do not tell you to change it, you cannot change it."
+- **Change only the behaviour Gregory named.** Everything he did not mention stays exactly as it is: rules, numbers, timings, AI behaviour, UI, level data.
+- **Fixed means frozen.** Once he has accepted a fix or a feature, do not touch it again unless he asks.
+- **Performance and refactor work must be behaviour-identical.** A timer, throttle, stagger, cooldown or cache that can change what the player sees is a behaviour change: stop and ask first, with the trade-off stated.
+- **If the requested change cannot be made without changing something else, stop.** Name the other thing in `CHANGES.md` (next rule).
+- **Briefs list what must not change. Reviews reject any diff that changes behaviour outside the brief,** even if smoke passes. Never weaken or delete a smoke check to make a change pass; report it instead.
+- **A change to behaviour that works is never a yes/no question in chat.** Write it in `CHANGES.md` (repo root): what it is today, what it would become, why, and what else it touches. Build nothing from it until Gregory rules on it there. **Whenever work finishes and `CHANGES.md` gained an entry, end the reply by reminding him to review `CHANGES.md`.** Delegated agents never write to it: they stop and report, and the orchestrator adds the entry.
+- **Every report and merge note lists every behaviour change,** including side effects, so nothing changes silently.
+
 ## Roles (orchestration)
 - **Claude Opus is the orchestrator:** writes task briefs in `docs/tasks/`, reviews every branch, and is the **only** agent that merges into `main`.
 - **Delegated agents (Grok Build, subagents) follow [AGENTS.md](AGENTS.md):** do only their brief or what the user explicitly says, commit only on their own worktree branch, never merge, never start the next stage, report and stop.

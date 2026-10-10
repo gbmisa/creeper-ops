@@ -20,7 +20,7 @@ static func run(g) -> void:
 	SmokeTest._check("ship: a relay chain puts the engine in reach", eng.anchor_for(top) != null and eng.anchor_for(side) != null)
 	_hold(g, e, side)
 	SmokeTest._check("ship: hooking the second socket works", eng.hook(e, top) and top.hooked and top.cable != null)
-	SmokeTest._check("ship: hooked sockets are raider prey", eng.prey().size() == 2 and eng.prey()[0].alive.call())
+	SmokeTest._check("ship: hooked sockets are not prey", top.hooked and side.hooked and not top.has("prey"))
 	eng.unhook(side, "test")
 	var s0: float = g.stockpile.salvage
 	var r0: float = e.reserve
@@ -37,11 +37,10 @@ static func run(g) -> void:
 	SmokeTest._check("ship: two sockets ship twice as fast", one >= 7.0 and two / maxf(one, 1.0) > 1.8 and two / maxf(one, 1.0) < 2.2,
 		"(%d vs %d in 48 s)" % [int(one), int(two)])
 	SmokeTest._check("ship: sockets_hooked counts them", eng.total_hooked() == 2)
-	side.prey.hit.call(EngineDefs.CLAMP_HP + 1.0)
-	SmokeTest._check("ship: a raider can cut a clamp", not side.hooked and eng.total_hooked() == 1 and eng.prey().size() == 1)
+	eng.unhook(side, "test")
 	a = eng.shipped
 	SmokeTest._sim(g, 48.0)
-	SmokeTest._check("ship: shipping drops after the cut", eng.shipped - a < two * 0.7 and eng.shipped - a > 6.0, "(%d)" % int(eng.shipped - a))
+	SmokeTest._check("ship: shipping drops after one unhook", eng.shipped - a < two * 0.7 and eng.shipped - a > 6.0, "(%d)" % int(eng.shipped - a))
 	top.acc = EngineDefs.RATE - 0.5  # about to ship: only creeper can stop it
 	a = eng.shipped
 	var wet_always := true
@@ -55,8 +54,10 @@ static func run(g) -> void:
 	SmokeTest._check("ship: a dry engine resumes", not eng.is_wet(top))
 	eng.unhook(top, "test end")
 	_guards(g, e, top)
+	_anchor_rules(g, e, top)
 	for s in made:
-		sm.remove(s)
+		if not s.dead:
+			sm.remove(s)
 	_restore(g, calm)
 	SmokeTest._sim(g, 0.2)
 
@@ -111,7 +112,7 @@ static func _hold(g, e: Dictionary, s: Dictionary) -> void:
 	up.pressed = false
 	Input.parse_input_event(up)
 	Input.flush_buffered_events()
-	SmokeTest._check("ship: holding E for 2.5 s hooks the socket", s.hooked and e.sockets.has(s), str(s.hp))
+	SmokeTest._check("ship: holding E for 2.5 s hooks the socket", s.hooked and e.sockets.has(s))
 	g.fps.leave()
 
 
@@ -125,10 +126,44 @@ static func _guards(g, e: Dictionary, s: Dictionary) -> void:
 	var owner: String = c.owner
 	c.owner = "enemy"
 	SmokeTest._check("ship: an engine beside a live hive and hostile castle hooks", eng.hook(e, s))
-	s.hp = 1.0e9
 	var a := eng.shipped
 	SmokeTest._sim(g, 22.0)
 	SmokeTest._check("ship: ... and ships with no hive or castle condition", eng.shipped > a, "(%d)" % int(eng.shipped - a))
 	hive.alive = was
 	c.owner = owner
 	eng.unhook(s, "test end")
+
+
+## Only losing the anchor relay unhooks; every other condition just pauses shipping.
+static func _anchor_rules(g, e: Dictionary, top: Dictionary) -> void:
+	var eng: SalvageEngines = g.engines
+	var sm: StructureManager = g.structures
+	if not top.hooked:
+		eng.hook(e, top)
+	var anc: Structure = top.anchor
+	SmokeTest._sim(g, 60.0)  # a minute with no prey row: nothing to cut
+	SmokeTest._check("hook: stays hooked for 60 s", top.hooked and top.cable != null)
+	anc.active = false  # Z does not pause shipping (as before)
+	top.acc = EngineDefs.RATE
+	var a := eng.shipped
+	SmokeTest._sim(g, 3.0)
+	SmokeTest._check("hook: a deactivated anchor still ships", top.hooked and eng.shipped > a)
+	anc.active = true
+	a = eng.shipped
+	top.acc = EngineDefs.RATE
+	for i in 40:
+		g.surface.creeper.set_depth(top.cell.x, top.cell.y, 0.3)
+		g.update(0.05)
+	SmokeTest._check("hook: wet socket pauses, still hooked", top.hooked and eng.shipped == a)
+	_dry(g)
+	SmokeTest._sim(g, 3.0)
+	SmokeTest._check("hook: dried socket resumes", top.hooked and eng.shipped > a)
+	var second := sm.place("relay", anc.x + 1, anc.z, true)
+	second.hp = 1.0e9
+	SmokeTest._sim(g, 0.3)
+	anc.connected = false  # route lost: the cable moves to the second relay in reach
+	eng._ship(e, top, 0.05, false)
+	SmokeTest._check("hook: route loss re-anchors to a second relay", top.hooked and top.anchor == second)
+	sm.remove(top.anchor)
+	SmokeTest._sim(g, 0.2)
+	SmokeTest._check("hook: destroying the anchor unhooks", not top.hooked and top.cable == null)

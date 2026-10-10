@@ -8,16 +8,16 @@ const H := 160
 ## Raids start early and the nests toughen fast: turtling loses.
 const RAID_SCHEDULE := {
 	"raid_delay": 180.0,   # nothing marches before this (grace: first raid is a few Skitters),
-	"tier_times": [0.0, 300.0, 600.0, 900.0],
+	"tier_times": [0.0, 420.0, 1020.0, 1620.0],
 }
-## Harder clock: Brute ~5 min, Ravager ~10, Behemoth ~15. Grace matches the raid start.
-const PRESSURE := { "grace": 180.0, "cap": 1800.0 }
+## Harder clock: Brute ~7 min, Ravager ~17, Behemoth ~27. Grace matches the raid start.
+const PRESSURE := { "grace": 180.0, "cap": 3420.0 }
 const PRESSURE_POINTS := [
 	{ "t": 180.0, "p": 0.0 },
-	{ "t": 300.0, "p": 0.20 },
-	{ "t": 600.0, "p": 0.60 },
-	{ "t": 900.0, "p": 0.85 },
-	{ "t": 1800.0, "p": 1.0 },
+	{ "t": 420.0, "p": 0.20 },
+	{ "t": 1020.0, "p": 0.60 },
+	{ "t": 1620.0, "p": 0.85 },
+	{ "t": 3420.0, "p": 1.0 },
 ]
 ## Stage 21: every castle is concentric (outer wall + bailey + inner wall + keep; CastleShape2).
 ## Ground castles keep a moat; raised ones a drawbridge. `guards`: Sentinels on gatehouse towers,

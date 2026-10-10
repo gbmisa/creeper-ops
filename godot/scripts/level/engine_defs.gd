@@ -14,7 +14,6 @@ const HOOK_RANGE := 1.5       # metres from the socket (horizontal)
 const HOOK_REACH_Y := 1.7     # metres of height difference (chest to socket) still in reach
 const LINK := 8.0             # cells: a connected relaying structure must be this close
 const RATE := 6.0             # seconds per Salvage, per hooked socket
-const CLAMP_HP := 30.0
 const HIVE_R := 9.0           # an engine this close to a live hive counts as inside it
 const CAVE_CASH := 0.4        # cave engines pay this share of their reserve once, by hand
 const KINDS := {
