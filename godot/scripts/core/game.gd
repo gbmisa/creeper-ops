@@ -238,6 +238,7 @@ func update(dt: float) -> void:
 func render(dt: float) -> void:
 	(cave if mode == "cave" else surface).refresh_visuals()
 	ambience.update(self, dt)
+	CreatureLod.tick(get_tree(), get_viewport().get_camera_3d(), dt)
 	hud.refresh(self, dt)
 
 
