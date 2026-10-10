@@ -1,16 +1,10 @@
 class_name EngineHook
 extends RefCounted
 ## First-person side of a Salvage Engine socket: the hold-E interactable, the gauntlet cable
-## while holding, the permanent cable and its pulse, and the raiders' view of a hooked socket.
+## while holding, the permanent cable and its pulse, (a hook is not prey: only losing its anchor relay ends it).
 
 
 static func register(host: SalvageEngines, e: Dictionary, s: Dictionary) -> void:
-	s["prey"] = { "kind": "socket", "type": "socket", "weapon": false, "node": s.node, "radius": 0.9,
-		"alive": func(): return bool(s.hooked),
-		"hit": func(d: float):
-			s.hp = float(s.hp) - d
-			if float(s.hp) <= 0.0:
-				host.unhook(s, "cut by raiders") }
 	var it := { "pos": s.pos, "radius": EngineDefs.HOOK_RANGE, "hold": EngineDefs.HOOK_TIME,
 		"near": func(feet: Vector3) -> bool: return absf(feet.y + 1.2 - float(s.pos.y)) <= EngineDefs.HOOK_REACH_Y,
 		"prompt": func() -> String: return prompt(host, e, s),

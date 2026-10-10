@@ -181,7 +181,6 @@ func surface_prey() -> Array:
 		row["weapon"] = bool(s.def.get("weapon", false))
 		prey.append(row)
 	prey.append_array(castles.prey())
-	prey.append_array(engines.prey())
 	if mode == "surface":
 		prey.append(fps.prey)
 	return prey
