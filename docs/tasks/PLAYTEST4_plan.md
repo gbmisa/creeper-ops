@@ -43,6 +43,12 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 - **Move orders are ignored while units are firing** (crawlers locked on the mortar would not leave). A player order must always override combat. Added to brief U.
 - **Logic audit** requested: a read-only Sonnet pass over who can damage what, looking for more dead ends like that. Findings go in `PLAYTEST4_audit.md`.
 
+## Update 4 (Gregory)
+- **Spacing rule for L2:** a trebuchet-free, buildable corridor from the landing mesa to every map edge and every Salvage Engine (added to brief L, with a flood-fill smoke check).
+- **Click an enemy trebuchet to see its range** (ground rings, plus a warning ring while placing inside its reach). Brief R, branch `pt4/trebrange`, Sonnet.
+- `pt4/port` (deactivate + Esc pause menu) is done and reviewed, commit `52316c1`. Merge waits until Gregory stops playing.
+- Audit item 3 (respawn can wait forever) still needs Gregory's call.
+
 ## Questions for Gregory
 - Static map: do **castle walls** stop being breakable (gates only)? Craters would become marks with no height change.
 - OK to run the bench (a game window opens on your screen for a few minutes)?
