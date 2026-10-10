@@ -89,11 +89,20 @@ static func _retake(s: Strongholds, c: Dictionary, lay: Dictionary, p: Variant, 
 
 
 static func _raiders_in(s: Strongholds, lay: Dictionary, zone: String) -> bool:
+	var memo: Dictionary = lay.get("_ri", {})
+	lay["_ri"] = memo
+	var hit: Array = memo.get(zone, [-INF, false])
+	if s.time - float(hit[0]) < Config.CASTLE_SCAN_INTERVAL:
+		return hit[1]
+	var found := false
+	var z: Dictionary = lay.zones[zone]
 	for r in s.nests.raiders.list:
-		var cell := s.world.grid.world_to_cell(r.node.position.x, r.node.position.z)
-		if cell in lay.zones[zone].cells:
-			return true
-	return false
+		var p: Vector3 = r.node.position
+		if StrongholdRules.has_cell(z, Vector2i(floori(p.x / Config.CELL), floori(p.z / Config.CELL))):
+			found = true
+			break
+	memo[zone] = [s.time, found]
+	return found
 
 
 ## Sets the stage, re-hangs gates and the bailey's build rights, and moves the garrison home.

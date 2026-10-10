@@ -296,6 +296,15 @@ const OVERRUN_PER_TIER := 2
 const RAIDER_MAX_TOTAL := 60
 const RAIDER_AGGRO := 9.0      # metres: a marching raider attacks anything this close
 const RAIDER_CLIMB := 1.1      # max terrain levels a raider may step up between cells
+const RAIDER_ACQUIRE_MIN := 0.3  # s between a raider's target scans (staggered per raider)
+const RAIDER_ACQUIRE_MAX := 0.5
+const RAIDER_SEP_BUCKET := 3.0  # m: separation bucket size (>= largest size pair, 2.8)
+const FLYER_GROUND_SAMPLE := 0.75  # m a flyer moves before it re-samples the ground height under it
+const HIVE_SYNC_INTERVAL := 0.25  # s between a hive's bookkeeping passes (stage unlock, HP caps, mortar count)
+const MORTAR_AIM_INTERVAL := 0.3  # s between a mortar's target scans
+const MORTAR_ROUTE_INTERVAL := 0.25  # s between "is the Node reachable by walking" checks
+const NEST_SPAWN_CHECK := 0.25  # s between a nest's spawn-due checks
+const CASTLE_SCAN_INTERVAL := 0.2  # s between "raiders in this castle zone" scans
 const RAIDER_DETOUR_TIME := 2.0  # s a raider blocked on its way to a target follows the flow field
 const RAIDER_DROP := RAIDER_CLIMB # one terrace down as well; steeper ground is a wall
 const RAIDER_FIELD_INTERVAL := 2.0

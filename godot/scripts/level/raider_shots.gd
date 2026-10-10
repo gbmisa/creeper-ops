@@ -9,7 +9,7 @@ static func step(host: Raiders, r: Dictionary, dt: float, prey: Array) -> void:
 	var tier: Dictionary = r.tier
 	var beam := str(tier.attack) == "beam"
 	var grid: Grid = host.world.grid
-	var target := _pick(r, prey, beam, grid)
+	var target := _held_pick(host, r, prey, beam, grid)
 	_move(host, r, dt, target, tier)
 	var cd: float = float(r.get("shot_cd", 0.0))
 	if cd > 0.0:
@@ -24,6 +24,25 @@ static func step(host: Raiders, r: Dictionary, dt: float, prey: Array) -> void:
 	else:
 		_launch(host.world, r, target, prey, float(tier.get("splash", 1.5)) * Config.CELL, Config.RAIDER_SHOT_SPEED, 0.5, 0.15)
 		r["shot_cd"] = float(tier.interval)
+
+
+## _pick, re-run per raider every RAIDER_ACQUIRE_MIN..MAX s; between scans the last pick
+## stays while it is alive and still within reach (Lancers re-check sight on the next scan).
+static func _held_pick(host: Raiders, r: Dictionary, prey: Array, beam: bool, grid: Grid) -> Dictionary:
+	var held: Dictionary = r.get("_pick", {})
+	if host.time < float(r.get("_pick_at", 0.0)):
+		if held.is_empty():
+			return held
+		if held.alive.call():
+			var a: Vector3 = (r.node as Node3D).position
+			var b: Vector3 = (held.node as Node3D).position
+			var reach: float = float(r.tier.range) * Config.CELL
+			if Vector2(b.x - a.x, b.z - a.z).length_squared() <= reach * reach:
+				return held
+	r["_pick_at"] = host.time + randf_range(Config.RAIDER_ACQUIRE_MIN, Config.RAIDER_ACQUIRE_MAX)
+	held = _pick(r, prey, beam, grid)
+	r["_pick"] = held
+	return held
 
 
 ## Sniper (band 0), then other weapons (band 1), then anyone else. Nearest inside a band.

@@ -21,6 +21,9 @@ var on_march := func(_r: Dictionary) -> void: pass  # injected: may give a march
 var time := 0.0
 var next_group := 1
 var seen := {}  # tier name -> how many have spawned this mission
+var in_update := false  # true inside update(): buckets and group speeds are fresh
+var buckets := {}  # Vector2i (RAIDER_SEP_BUCKET m) -> raiders, for separation
+var group_slow := {}  # group id -> slowest member speed
 var loot_host = null  # SporeNests, so a death can drop its Salvage pickup
 
 
@@ -95,9 +98,31 @@ func update(dt: float, prey: Array, goal_cells: Array) -> void:
 	time += dt
 	field.update(dt, goal_cells)
 	castle_field.update(dt, castle_goals.call())
-	var reachable := prey.filter(func(q): return q.alive.call() and _grounded(q))
+	var reachable: Array = []
+	for q in prey:
+		if q.alive.call() and _grounded(q):
+			reachable.append(q)
+	_index()
+	in_update = true
 	for r in list.duplicate():
 		_think(r, dt, reachable)
+	in_update = false
+
+
+## Per-frame lookups shared by every raider: separation buckets and group speeds.
+func _index() -> void:
+	buckets.clear()
+	group_slow.clear()
+	for r in list:
+		var p: Vector3 = r.node.position
+		var k := Vector2i(floori(p.x / Config.RAIDER_SEP_BUCKET), floori(p.z / Config.RAIDER_SEP_BUCKET))
+		if buckets.has(k):
+			buckets[k].append(r)
+		else:
+			buckets[k] = [r]
+		var gid := int(r.get("group", -1))
+		if gid >= 0:
+			group_slow[gid] = minf(float(group_slow.get(gid, INF)), float(r.tier.speed))
 
 
 ## Raiders can't reach hovering Thors or structures in flight.
@@ -119,6 +144,18 @@ func _nearest(from: Vector3, prey: Array, max_d: float, leash_home = null) -> Di
 			bd = d
 			best = q
 	return best
+
+
+## _nearest, re-run per raider every RAIDER_ACQUIRE_MIN..MAX seconds (spread by a random
+## offset); in between the last pick is kept while it lives. Movement still runs every frame.
+func _acquire(r: Dictionary, prey: Array, max_d: float, leash_home = null) -> Dictionary:
+	var held: Dictionary = r.get("_tgt", {})
+	if time < float(r.get("_tgt_at", 0.0)) and (held.is_empty() or held.alive.call()):
+		return held
+	r["_tgt_at"] = time + randf_range(Config.RAIDER_ACQUIRE_MIN, Config.RAIDER_ACQUIRE_MAX)
+	held = _nearest(r.node.position, prey, max_d, leash_home)
+	r["_tgt"] = held
+	return held
 
 
 func _think(r: Dictionary, dt: float, prey: Array) -> void:
@@ -145,11 +182,11 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 	var goal = null  # Vector2 XZ
 	var target: Dictionary
 	if r.guard:
-		target = _nearest(p, prey, Config.NEST_AGGRO, home)
+		target = _acquire(r, prey, Config.NEST_AGGRO, home)
 		if target.is_empty():
 			goal = CastlePatrols.waypoint(r) if r.has("wall_patrol") else _patrol(home, r)
 	else:
-		target = _nearest(p, prey, Config.RAIDER_AGGRO)
+		target = _acquire(r, prey, Config.RAIDER_AGGRO)
 		if target.is_empty():
 			goal = _route(r, p)
 			if goal == null:
@@ -199,100 +236,8 @@ func _route(r: Dictionary, p: Vector3) -> Variant:
 	return field.next_step(p.x, p.z)
 
 
-## Stuck handling: a raider that can only crawl far from its goal for STUCK_TIME
-## stops chasing and idles STUCK_REST instead of orbiting it (e.g. a patrol
-## point circling behind a wall). Full-speed movement clears it.
-const STUCK_TIME := 1.5  # s of crawling before the raider gives up chasing
-const STUCK_REST := 2.0  # s of idling before it tries again
-const STUCK_ARRIVE := 0.6  # m: close enough to the goal to count as arrived
-
-## Returns false when the raider couldn't move at all (blocked on both axes)
-## or is resting after getting stuck.
 func _walk(r: Dictionary, goal: Vector2, dt: float) -> bool:
-	var p: Vector3 = r.node.position
-	var sx := p.x
-	var sz := p.z
-	# Resting after getting stuck: idle in place, don't chase.
-	var rest: float = maxf(0.0, float(r.get("_stuck_rest", 0.0)) - dt)
-	r["_stuck_rest"] = rest
-	if rest > 0.0:
-		CreatureAnim.move(r.node, 0.0)
-		return false
-	var v: Vector2 = goal - Vector2(sx, sz)
-	if v.length() > 0.001:
-		v = v.normalized()
-	for o in list:  # separation so a pack doesn't merge into one mesh
-		if o == r:
-			continue
-		var op: Vector3 = o.node.position
-		var d := Vector2(sx - op.x, sz - op.z)
-		var mn: float = r.size + o.size
-		if d.length() > 0.001 and d.length() < mn:
-			v += d.normalized() * (mn - d.length())
-	v = v.limit_length(1.0)  # separation steers; it must not add speed (a packed group would outrun its slowest)
-	var speed: float = RaiderGroups.speed(self, r)
-	var step: float = speed * dt
-	var nx := sx + v.x * step
-	var nz := sz + v.y * step
-	var ws := world.grid.world_size()
-	nx = clampf(nx, 0.5, ws.x - 0.5)
-	nz = clampf(nz, 0.5, ws.y - 0.5)
-	# Per axis, so a cliff blocks that axis and the raider slides along it.
-	var moved := false
-	if _step_into(sx, sz, nx, sz):
-		moved = moved or absf(nx - sx) > 0.001
-		p.x = nx
-	if _step_into(p.x, sz, p.x, nz):
-		moved = moved or absf(nz - sz) > 0.001
-		p.z = nz
-	p.y = RaiderPerch.y(world, p.x, p.z)
-	r.node.position = p
-	_face(r, v)
-	# A stuck raider idles instead of chasing an unreachable point in circles.
-	# Stuck = crawling far from the goal (blocked, wall-sliding, hopeless pack
-	# jostling). Full-speed chases (kiting targets) and arrived raiders never
-	# count as stuck.
-	var actual := Vector2(p.x - sx, p.z - sz).length() / maxf(dt, 0.0001)
-	var d_after := Vector2(p.x, p.z).distance_to(goal)
-	var stuck: float = float(r.get("_stuck_t", 0.0))
-	if actual < speed * 0.25 and d_after >= STUCK_ARRIVE:
-		stuck += dt
-	else:
-		stuck = 0.0
-	r["_stuck_t"] = stuck
-	if stuck > STUCK_TIME:
-		r["_stuck_t"] = 0.0
-		r["_stuck_rest"] = STUCK_REST
-		CreatureAnim.move(r.node, 0.0)
-		return false
-	# Animate at the speed actually travelled: wall-slides and pack jostling
-	# must not play the walk clip at full sprint.
-	CreatureAnim.move(r.node, actual if moved else 0.0)
-	return moved
-
-
-## True when the move stays in this cell or enters a neighbour one terrace away.
-func _step_into(x0: float, z0: float, x1: float, z1: float) -> bool:
-	var g := world.grid
-	var a := g.world_to_cell(x0, z0)
-	var b := g.world_to_cell(x1, z1)
-	if not g.in_bounds(b.x, b.y):
-		return false
-	# Stay off the sloped foot of a tall wall: the ground there is already partway up it.
-	var off := _off_floor(x1, z1, b)
-	if off > Config.RAIDER_CLIMB and off > _off_floor(x0, z0, a):
-		return false
-	if a == b:
-		return true
-	if maxi(absi(b.x - a.x), absi(b.y - a.y)) > 1:
-		return false
-	return field.step_ok(a.x, a.y, b.x, b.y)
-
-
-## How far (levels) the drawn ground at a point sits from its own cell's floor.
-func _off_floor(x: float, z: float, c: Vector2i) -> float:
-	var g := world.grid
-	return absf(g.stand_y(x, z, Grid.Faction.ENEMY) / Config.LEVEL_H - g.walk_height(c.x, c.y, Grid.Faction.ENEMY))
+	return RaiderMove.walk(self, r, goal, dt)
 
 
 func _patrol(home: Vector3, r: Dictionary) -> Vector2:

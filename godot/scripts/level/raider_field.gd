@@ -23,12 +23,15 @@ var _dirty := true  # terrain, gates or decks changed since the last build
 var _wh := PackedFloat32Array()  # enemy walk height per cell (_refresh_heights)
 var _special := PackedInt32Array()  # gate and deck cells
 var _special_scanned := false
+var _next := PackedInt32Array()  # cached next_step per cell: target cell index, -1 no route, -2 unset
 
 
 func _init(g: Grid) -> void:
 	grid = g
 	dist.resize(g.w * g.h)
 	dist.fill(-1)
+	_next.resize(g.w * g.h)
+	_next.fill(-2)
 
 
 func update(dt: float, goal_cells: Array) -> void:
@@ -40,6 +43,7 @@ func update(dt: float, goal_cells: Array) -> void:
 	if timer > 0.0:
 		return
 	timer = Config.RAIDER_FIELD_INTERVAL
+	_next.fill(-2)  # gates and decks can flip without a terrain edit
 	var key := goal_cells.hash()
 	if key == _goal_key and not _dirty:
 		return  # same goals, same ground: the field is still right
@@ -58,6 +62,7 @@ func invalidate() -> void:
 	_dirty = true
 	_job = null
 	_areas_dirty = true
+	_next.fill(-2)
 
 
 ## Build the whole field now (tests, and anything that needs it this frame).
@@ -70,6 +75,7 @@ func rebuild(goal_cells: Array) -> void:
 
 func _finish() -> void:
 	dist = _job.dist
+	_next.fill(-2)
 	has_goals = _job.has_goals
 	_job = null
 
@@ -173,9 +179,20 @@ func next_step(x: float, z: float) -> Variant:
 	var c := grid.world_to_cell(x, z)
 	if not grid.in_bounds(c.x, c.y):
 		return null
+	var i := grid.idx(c.x, c.y)
+	var hit := _next[i]
+	if hit == -2:
+		hit = _compute_next(c)
+		_next[i] = hit
+	if hit < 0:
+		return null
+	return Vector2((hit % grid.w + 0.5) * Config.CELL, (hit / grid.w + 0.5) * Config.CELL)
+
+
+func _compute_next(c: Vector2i) -> int:
 	var here := dist[grid.idx(c.x, c.y)]
 	if here < 0:
-		return null
+		return -1
 	var best := c
 	var bd := here
 	for d in DIRS:
@@ -186,7 +203,7 @@ func next_step(x: float, z: float) -> Variant:
 		if v >= 0 and v < bd:
 			bd = v
 			best = n
-	return Vector2((best.x + 0.5) * Config.CELL, (best.y + 0.5) * Config.CELL)
+	return grid.idx(best.x, best.y)
 
 
 ## Nearest prey (straight line) in the raider's walking area, or {}. Areas are the same

@@ -50,6 +50,8 @@ static func speed(host: Raiders, r: Dictionary) -> float:
 	var gid := int(r.get("group", -1))
 	if gid < 0:
 		return own
+	if host.in_update and host.group_slow.has(gid):
+		return minf(own, float(host.group_slow[gid]))
 	var slow := own
 	for o in host.list:
 		if not o.alive or int(o.get("group", -1)) != gid:

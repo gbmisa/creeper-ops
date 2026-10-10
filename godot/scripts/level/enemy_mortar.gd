@@ -6,10 +6,12 @@ class_name EnemyMortars
 
 
 static func tick(host, dt: float) -> void:
-	note_route(host, dt)
+	host.mortar_route_t += dt
+	if host.mortar_route_t >= Config.MORTAR_ROUTE_INTERVAL:
+		note_route(host, host.mortar_route_t)
+		host.mortar_route_t = 0.0
 	for n in host.nests:
 		var hive: Dictionary = n
-		reconcile(host, hive)
 		_grow(host, hive, dt)
 		EnemyMortarFire.volley(host, hive, dt)
 	EnemyMortarFire.shells(host)

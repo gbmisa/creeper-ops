@@ -95,10 +95,10 @@ func stand_y(wx: float, wz: float, faction: int) -> float:
 	var fz := wz / Config.CELL - 0.5
 	var x0 := floori(fx)
 	var z0 := floori(fz)
-	var any := false
-	for c in [Vector2i(x0, z0), Vector2i(x0 + 1, z0), Vector2i(x0, z0 + 1), Vector2i(x0 + 1, z0 + 1)]:
-		if in_bounds(c.x, c.y) and on_deck(c.y * w + c.x, faction):
-			any = true
+	var any := (in_bounds(x0, z0) and on_deck(z0 * w + x0, faction)) \
+		or (in_bounds(x0 + 1, z0) and on_deck(z0 * w + x0 + 1, faction)) \
+		or (in_bounds(x0, z0 + 1) and on_deck((z0 + 1) * w + x0, faction)) \
+		or (in_bounds(x0 + 1, z0 + 1) and on_deck((z0 + 1) * w + x0 + 1, faction))
 	if not any:
 		return smooth_y(wx, wz)
 	var tx := terrace(fx - x0)
