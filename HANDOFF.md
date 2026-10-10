@@ -1,4 +1,4 @@
-# Handoff: 2026-10-10 (playtest 4: fixes merged, perf work in flight, Opus)
+# Handoff: 2026-10-10 (playtest 4: fixes and perf merged, ready for Gregory's playtest, Opus)
 
 ## State
 Godot 4.7 game in `godot/`. **Gregory plays this worktree** (`creeper fps td-worktrees/integ`, branch `integ/2026-10-09`, see RUN.md), not `main`. Do all gameplay work on branches cut from it.
@@ -11,10 +11,7 @@ Nothing is pushed to GitHub. `main` is 170+ commits behind integ.
 ## Perf (top priority). Tool: `core/perf_probe.gd`
 `godot --path godot --rendering-driver vulkan -- --level=2 --demo --units --nocapture --probe-base --perf-probe=28` (real display, ~15 min). Headless gives sim numbers only: `godot --headless --path godot -- --level=2 --demo --units --perf-probe=4 | grep "^\[probe\]"` (~90 s). `HITCH` lines = one update over 60 ms, with ms per surface updater (index 5 = EnemyBuilder).
 Findings (L2, minute 28, 1440p, RTX 5090): sim-bound, not GPU-bound (240 fps cap with the sim frozen; 62 fps command / 49 fps first person running). Zero terrain edits, no node leak: **the static-map / pathing rework is dropped.**
-Agents running at handoff, each in its own worktree, Sonnet, not merged:
-- `pt4/perf-builder`: EnemyBuilder planner hitches (1.1 s at raid start, 60-110 ms every 5 s).
-- `pt4/perf-enemies`: enemy logic 3.75-4.5 ms/frame -> target 1.2 ms.
-- `pt4/perf-units`: with `--units`, 56 hitches outside the updaters (up to 949 ms; runs of ~175 ms per update): suspected unit pathfinding. Also asked to fix the flaky smoke check below.
+**Perf branches merged 2026-10-10** (`pt4/perf-builder`, `pt4/perf-enemies`, `pt4/perf-units`; smoke 0 failures twice; numbers in PLAYTEST4_plan.md, "Perf merge"). Headless L2 `--units --perf-probe=4` on the merged build: 2 hitches of ~80 ms (was ~56, up to 949 ms). Enemy update 2.65 -> 1.63 ms (target 1.2 missed; the rest is per-raider `RaiderMove.walk`). **Display probe not re-run**, so fps at minute 28 is unknown.
 Open, not assigned: creeper GPU sim CPU side 5.3 ms per `update(0.05)` (readback + CPU anti-creeper tick, `sim/creeper_gpu.gd`); shadow pass doubles draw calls in first person (10.5k vs 5.5k; 150 -> 204 fps with shadows off, sim frozen).
 
 ## Known issues
@@ -22,11 +19,11 @@ Open, not assigned: creeper GPU sim CPU side 5.3 ms per `update(0.05)` (readback
 - L2 spacing only partly met: engines e3, e4, e5, e10 still inside or near trebuchet reach; safe corridor reaches W and S edges only. Gregory will direct moves from playtesting.
 - Retaliation targets the nearest enemy within 30 m, so not Lancers (64 m).
 - Audit item 3: Operative respawn can wait forever if Salvage runs out. Gregory: will judge in playtests.
-- `smoke_test.gd` 330 lines, `config.gd` 351, `weapon_logic.gd` ~354: split.
+- File length: ~250 lines is a default, not a cap (Gregory, 2026-10-10). Split only files that mix responsibilities.
 
 ## Next steps
-1. As each perf agent reports: review the diff, merge into integ, run smoke, re-run the probe (display) and record before/after in PLAYTEST4_plan.md.
-2. Creeper sim CPU cost and first-person shadows (Opus or a Sonnet brief with probe numbers).
-3. Ask Gregory to playtest the merged build; log feedback as Update N in the plan (workflow: log, brief, cheap agents, Opus merges).
-4. **Pathfinding in Rust (Gregory, 2026-10-10: noted, not started; do it in a fresh session, not a long one).** Port unit pathfinding (`units/pathfind.gd`), then the raider flow field (`level/raider_field*.gd`) if still over budget, to a Rust GDExtension (`gdext`) behind the same `Pathfind.find` / `RaiderField` interface, keeping the GDScript version as the headless/test fallback. First land and measure `pt4/perf-units`; record the PerfProbe before/after so the Rust port has a number to beat. Needs a brief (build steps, `.gdextension` file, Linux target) and a Sonnet agent; Opus reviews.
+1. **Gregory playtests integ** (L2 with units is the perf case). Log feedback as Update N in the plan (workflow: log, brief, cheap agents, Opus merges).
+2. Re-run the display probe (`--probe-base`, minute 28) and record fps before/after in PLAYTEST4_plan.md.
+3. Creeper sim CPU cost and first-person shadows (Opus or a Sonnet brief with probe numbers).
+4. **Pathfinding in Rust (Gregory, 2026-10-10: noted, not started; do it in a fresh session, not a long one).** Port unit pathfinding (`units/pathfind.gd`), then the raider flow field (`level/raider_field*.gd`) if still over budget, to a Rust GDExtension (`gdext`) behind the same `Pathfind.find` / `RaiderField` interface, keeping the GDScript version as the headless/test fallback. `pt4/perf-units` has landed (GDScript A* is now ~9 us per node, so measure first whether a port is still worth it); the remaining enemy cost is `RaiderMove.walk`, so a raider port must move the whole walk step in one batched call, not just the field lookup. Needs a brief (build steps, `.gdextension` file, Linux target) and a Sonnet agent; Opus reviews.
 5. Push integ to GitHub and tell Muse (docs/tasks/MUSE_NOTES.md) when Gregory agrees.
