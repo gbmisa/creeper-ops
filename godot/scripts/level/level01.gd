@@ -11,17 +11,17 @@ const H := 80
 ## When raids start, and when each Config.RAIDER_TIERS index unlocks (seconds).
 const RAID_SCHEDULE := {
 	"raid_delay": 300.0,
-	"tier_times": [0.0, 480.0, 900.0, 1320.0],
+	"tier_times": [0.0, 660.0, 1500.0, 2340.0],
 }
-## Pressure curve (§4.1). Points hold the old unlocks: Brute ~8 min (0.20), Ravager ~15 (0.60),
-## Behemoth ~22 (0.85). Grace matches the raid start; cap is the spec's 2400 s.
-const PRESSURE := { "grace": 300.0, "cap": 2400.0 }
+## Pressure curve (§4.1). Points hold the old unlocks: Brute ~11 min (0.20), Ravager ~25 (0.60),
+## Behemoth ~39 (0.85). Grace matches the raid start; cap is 4500 s.
+const PRESSURE := { "grace": 300.0, "cap": 4500.0 }
 const PRESSURE_POINTS := [
 	{ "t": 300.0, "p": 0.0 },
-	{ "t": 480.0, "p": 0.20 },
-	{ "t": 900.0, "p": 0.60 },
-	{ "t": 1320.0, "p": 0.85 },
-	{ "t": 2400.0, "p": 1.0 },
+	{ "t": 660.0, "p": 0.20 },
+	{ "t": 1500.0, "p": 0.60 },
+	{ "t": 2340.0, "p": 0.85 },
+	{ "t": 4500.0, "p": 1.0 },
 ]
 ## Castles (CastleShape rows). The Operative takes them; raiders take them back.
 ## Ashmoat (Stage 21): a compact concentric castle in the SW (outer wall, bailey, inner wall,
