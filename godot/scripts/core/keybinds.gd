@@ -49,7 +49,7 @@ const DEFAULTS := {
 	"build_9": ["Command", "Build slot 9", [KEY_9]],
 	"recycle": ["Command", "Recycle selected", [KEY_X, KEY_DELETE]],
 	"move": ["Command", "Move selected", [KEY_M]],
-	"supply": ["Command", "Toggle ammo supply", [KEY_Z]],
+	"supply": ["Command", "Deactivate / activate", [KEY_Z]],
 	"hold_fire": ["Command", "Toggle hold fire", [KEY_V]],
 	"train_soldier": ["Command", "Train Soldier", [KEY_F]],
 	"train_crawler": ["Command", "Train Crawler", [KEY_G]],
