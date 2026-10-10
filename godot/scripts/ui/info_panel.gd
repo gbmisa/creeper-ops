@@ -109,6 +109,18 @@ func refresh() -> void:
 		_hp_lbl.text = "HP %d / %d" % [ceili(s.hp), s.def.hp]
 		_body.text = _structure_text(s)
 		return
+	var ei := EnemyRangeView.info(command)
+	if not ei.is_empty():
+		visible = true
+		_hp_row.visible = true
+		_title.text = ei.title
+		_hp_bar.value = ei.frac
+		UiKit.set_bar_color(_hp_bar, UiKit.BAD)
+		_hp_lbl.text = ei.hp
+		_body.text = ei.body
+		for c in _actions.get_children():
+			c.queue_free()
+		return
 	if not units.selected.is_empty():
 		visible = true
 		_hp_row.visible = false

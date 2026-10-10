@@ -104,6 +104,8 @@ static func click(cm: CommandMode, shift: bool) -> void:
 				cm.structures.place(cm.tool, c.x, c.y)
 				Sfx.play("click")  # CW3: the tool stays armed; right-click or Esc to stop
 		return
+	if EnemyRangeView.click(cm):
+		return
 	var u := cm.units.nearest(cm.hover.point)
 	if u:
 		cm.units.select([u], shift)
