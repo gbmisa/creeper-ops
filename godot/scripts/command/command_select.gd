@@ -70,11 +70,12 @@ static func move_group(cm: CommandMode, c: Vector2i) -> Dictionary:
 
 
 static func toggle_supply(cm: CommandMode) -> void:
-	if cm.selected and cm.selected.has_ammo_store():
-		var on := not cm.selected.supply_on
+	if cm.selected and cm.selected.type != "node":
+		var on := not cm.selected.active
 		for s in cm.group:
-			if s.has_ammo_store():
-				s.supply_on = on
+			if s.type != "node":
+				s.active = on
+		Bus.say("%s %s." % [cm.selected.def.label, "activated" if on else "deactivated"])
 		Bus.selection_changed.emit()
 
 

@@ -27,7 +27,7 @@ static func transit_headroom(network: Network, s: Structure) -> float:
 
 ## "build" | "ammo" | "unit" | "terp" | "". Counts packets already in flight so we never over-send.
 static func need(network: Network, s: Structure) -> String:
-	if not s.connected or s.dead or s.def.get("self_build", false):
+	if not s.connected or s.dead or not s.active or s.def.get("self_build", false):
 		return ""
 	if not s.is_built():  # a wet site asks for nothing (CW3)
 		if s.wet > Config.MIN_DEPTH:
@@ -35,7 +35,7 @@ static func need(network: Network, s: Structure) -> String:
 		return "build" if s.delivered - s.lost + s.in_flight < s.def.cost else ""
 	if s.is_flying():
 		return ""
-	if s.has_ammo_store() and s.supply_on:
+	if s.has_ammo_store():
 		var a: Dictionary = s.def.ammo
 		# A full magazine never asks: the packet would arrive with nowhere to go.
 		if s.ammo <= a.max - a.per_packet + 0.001 \

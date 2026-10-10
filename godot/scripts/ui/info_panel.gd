@@ -61,8 +61,8 @@ func _rebuild_actions() -> void:
 		_btn("Deploy here [%s]" % Keybinds.short("teleport"), command.deploy.deploy_totem)
 	if s.def.get("movable", false):
 		_btn("Move [%s]" % Keybinds.short("move"), command.begin_move)
-	if s.has_ammo_store():
-		_btn("Supply %s [%s]" % ["ON" if s.supply_on else "OFF", Keybinds.short("supply")], command.toggle_supply)
+	if s.type != "node":
+		_btn("%s [%s]" % ["Deactivate" if s.active else "Activate", Keybinds.short("supply")], command.toggle_supply)
 	if s.def.has("fire_rate"):
 		_btn("Hold fire %s [%s]" % ["ON" if s.hold_fire else "OFF", Keybinds.short("hold_fire")], command.toggle_hold)
 	if s.type == "barracks":
@@ -124,13 +124,15 @@ func _structure_text(s: Structure) -> String:
 	var lines := []
 	if not s.is_built():
 		lines.append("[color=#5fd4ff]Building: %d / %d packets[/color]" % [s.delivered - s.lost, s.def.cost])
+	if not s.active:
+		lines.append("[color=#ffc857]DEACTIVATED: requests no packets, does nothing [%s][/color]" % Keybinds.short("supply"))
 	if s.is_flying():
 		lines.append("[color=#ffc857]In flight: no packets, no firing[/color]")
 	elif not s.connected:
 		lines.append("[color=#ff5a4a]NOT CONNECTED: no packets reach it[/color]")
 	if s.has_ammo_store():
 		var what := "Supply stock" if s.type == "barracks" else "Ammo"
-		lines.append("%s %d / %d%s" % [what, roundi(s.ammo), s.ammo_max(), "" if s.supply_on else "  [color=#ffc857](supply OFF)[/color]"])
+		lines.append("%s %d / %d%s" % [what, roundi(s.ammo), s.ammo_max(), "" if s.active else "  [color=#ffc857](deactivated)[/color]"])
 	if AmmoGrades.has_grades(s):
 		var gl := AmmoDefs.label(s.grade)
 		lines.append("Ammo grade: %s%s  [color=#8899aa](%s switches%s)[/color]" % [gl, "" if s.grade == "std" else " (%d graded)" % roundi(s.grade_ammo),
