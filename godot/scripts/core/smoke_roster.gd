@@ -26,9 +26,9 @@ static func _pressure(g) -> void:
 			mono = false
 		prev = p
 	SmokeTest._check("pressure monotonic", mono, "(last %.2f)" % prev)
-	SmokeTest._check("pressure holds brute time", absf(Pressure.value(level, 480.0) - 0.20) < 0.021)
-	SmokeTest._check("pressure holds ravager time", absf(Pressure.value(level, 900.0) - 0.60) < 0.021)
-	SmokeTest._check("pressure holds behemoth time", absf(Pressure.value(level, 1320.0) - 0.85) < 0.021)
+	SmokeTest._check("pressure holds brute time", absf(Pressure.value(level, 660.0) - 0.20) < 0.021)
+	SmokeTest._check("pressure holds ravager time", absf(Pressure.value(level, 1500.0) - 0.60) < 0.021)
+	SmokeTest._check("pressure holds behemoth time", absf(Pressure.value(level, 2340.0) - 0.85) < 0.021)
 
 
 static func _spawn_curve(g) -> void:
