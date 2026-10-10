@@ -49,6 +49,10 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 - `pt4/port` (deactivate + Esc pause menu) is done and reviewed, commit `52316c1`. Merge waits until Gregory stops playing.
 - Audit item 3 (respawn can wait forever) still needs Gregory's call.
 
+## Update 5 (Gregory)
+- `pt4/units` done (`76169de`, `14f0495`): attack order, move order beats combat, retaliation (nearest enemy within 30 m, so not Lancers), auto-patrol, mortars untargetable. The "mortar rows" smoke check found 0 rows; tighten at merge.
+- **Mortars: free Operative sabotage, no charge needed** (overrides PT3 item 10). Chosen over "units can destroy them" to keep one rule; units still ignore mortars. Third commit on `pt4/units`.
+
 ## Questions for Gregory
 - Static map: do **castle walls** stop being breakable (gates only)? Craters would become marks with no height change.
 - OK to run the bench (a game window opens on your screen for a few minutes)?
