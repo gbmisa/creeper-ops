@@ -23,6 +23,7 @@ var tool := ""
 var hover: Dictionary = {}        # { cell: Vector2i, point: Vector3 }
 var reason := ""
 var selected: Structure = null
+var enemy_sel: Dictionary = {}    # EnemyRangeView: selected enemy artillery piece
 var group: Array[Structure] = []  # every selected structure (box select); selected is group[0]
 var drag_rect := Rect2()          # for the HUD selection box (size 0 = hidden)
 var drag_start := Vector2i(-1, -1)  # press cell while a build tool is armed (DragBuild)
@@ -69,6 +70,7 @@ func cancel_drag() -> void:
 
 func select_structure(s: Structure) -> void:
 	selected = s
+	enemy_sel = {}
 	group.clear()
 	if s:
 		group.append(s)
@@ -90,6 +92,7 @@ func update(dt: float, input: InputState) -> void:
 	Sfx.listener = cam.target.lerp(cam.global_position, 0.3)  # hear the ground you look at
 	CommandHover.refresh(self, input)
 	overlay.show_selection(selected, group, tool != "")
+	EnemyRangeView.update(self)
 	CastleSocketLook.highlight(castles, CommandHover._turret_type(tool) != "", hover)
 	if input.right_clicked:
 		CommandInput.right_click(self)

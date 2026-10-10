@@ -30,6 +30,7 @@ static func refresh(cm: CommandMode, input: InputState) -> void:
 	var at := cm.world.grid.cell_ground(c.x, c.y)
 	var res := check(cm, c)
 	cm.reason = res.reason if not res.ok else res.get("warn", "")
+	cm.reason = EnemyRangeView.hint(cm, cm.reason)
 	if _turret_type(cm.tool) != "":  # any castle turret (ward lamps have no range: no ring)
 		var rg: float = float(CastleTurrets.DEFS[_turret_type(cm.tool)].get("range", 0.0))
 		cm.overlay.show_ghost("", at, res.ok, 1.2 * Config.CELL, rg * Config.CELL, [])
