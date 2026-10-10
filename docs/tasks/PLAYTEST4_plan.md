@@ -68,8 +68,16 @@ Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapt
 - Not yet measured: a surviving late-game player base (`--probe-base`).
 - Merged into integ, smoke green: `pt4/port`, `pt4/units`, `pt4/alerts`, `pt4/deploy`, `pt4/trebrange`. Pending: `pt4/l2space` (L2 trebuchet range 12 by Gregory's call).
 
+## Perf merge (2026-10-10, Opus; all three in integ, smoke 0 failures twice)
+- `pt4/perf-builder`: planner edge scan time-sliced (`ENEMY_PLAN_BUDGET_US`), fair-spitter test best-first and cached. Agent's L2 12-min headless probe: HITCH lines 44 -> 0, worst update 1090 -> 39.6 ms, same 13 enemy builds.
+- `pt4/perf-enemies`: target scans, hive bookkeeping, mortar aim and castle zone scans on timers; bucketed raider separation; cached `RaiderField.next_step`. `hazards.nests.update` 2.65 -> 1.63 ms (target 1.2 not met; the rest is per-raider `RaiderMove.walk`, ~0.6 ms for 50 raiders). Mortar and late-game castle cost not measured (base lost by 720 s).
+- `pt4/perf-units`: `Pathfind.find` rewritten (reused packed buffers, binary heap, windowed smoothing in `PathSmooth`), `UnitPaths` budget queue (`PATH_FRAME_MS` 3) and 3 s unreachable-goal cooldown. Search ~175 ms -> ~9 us per node (capped 6000-node worst case ~55 ms). Units hitches in 4 min: ~56 (up to 949 ms) -> 1-2 of ~80 ms.
+- Merged build, Opus headless `--level=2 --demo --units --perf-probe=4`: 2 HITCH lines (79 and 81 ms at t=29-32 s, outside the updaters). **Not re-measured on the display** (fps, minute 28, `--probe-base`).
+- Behaviour to watch in play: raiders and enemy mortars re-pick targets every 0.3-0.5 s; units with a queued path order stand a few frames; a goal found unreachable is not searched again for 3 s (per unit type and goal cell).
+- The two smoke fixes are test-side: `attack order: holds after kill` removes the bystander raider first; the dry-unit retreat check no longer requires the unit to survive the Spitter.
+
 ## Noted for later (Gregory)
-- **Reconfigure pathfinding in Rust** (GDExtension via `gdext`, same interface, GDScript fallback). Not started. Start it from a fresh session after `pt4/perf-units` is merged and measured. Details in HANDOFF.md, next step 4.
+- **Reconfigure pathfinding in Rust** (GDExtension via `gdext`, same interface, GDScript fallback). Not started. `pt4/perf-units` is merged (numbers above are the ones to beat); start from a fresh session. Details in HANDOFF.md, next step 4.
 
 ## Questions for Gregory
 - Static map: do **castle walls** stop being breakable (gates only)? Craters would become marks with no height change.
