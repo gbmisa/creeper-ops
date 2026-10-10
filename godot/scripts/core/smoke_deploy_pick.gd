@@ -1,5 +1,5 @@
 class_name SmokeDeployPick
-## Deploy-site pick: several Totems -> choose one; single site is immediate; respawn timeout uses last-used.
+## Deploy-site pick: several Totems + the Node -> choose one; respawn timeout uses last-used. See SmokeDeploySites.
 
 
 static func run(g) -> void:
@@ -30,7 +30,7 @@ static func run(g) -> void:
 	g.structures.selected_beacon = null
 	var pick: DeployPick = g.deploy.pick
 	g.deploy.deploy_totem()
-	SmokeTest._check("pick: opens with 3 sites, no spawn", pick.active and g.mode == "command" and pick.sites.size() == 3)
+	SmokeTest._check("pick: opens with 3 sites, no spawn", pick.active and g.mode == "command" and pick.sites.size() == 4)  # 3 Totems + the Command Node
 	pick.hover = 1
 	SmokeTest._check("pick: hover highlights", pick.highlighted() == 1 and ">>" in pick.label(1) and ">>" not in pick.label(0))
 	pick.choose(t[1])
@@ -40,7 +40,7 @@ static func run(g) -> void:
 	g.flow.to_command("")
 	# Last used is the default next time.
 	g.deploy.deploy_totem()
-	SmokeTest._check("pick: default is last used", pick.active and pick.highlighted() == 1)
+	SmokeTest._check("pick: default is last used", pick.active and pick.sites[pick.highlighted()] == t[1])
 	pick.cancel()
 	SmokeTest._check("pick: cancel stays aboard", not pick.active and g.mode == "command")
 	# A selected Totem deploys directly.
@@ -54,13 +54,6 @@ static func run(g) -> void:
 	SmokeTest._check("pick: respawn opens", pick.active and pick.respawn)
 	pick.update(Config.RESPAWN_PICK_TIME + 0.5)
 	SmokeTest._check("pick: respawn timeout -> last used", not pick.active and g.mode == "surface" and _near(g, t[2]))
-	g.flow.to_command("")
-	# One site: immediate.
-	g.structures.remove(t[0])
-	g.structures.remove(t[1])
-	g.structures.selected_beacon = null
-	g.deploy.deploy_totem()
-	SmokeTest._check("pick: single site deploys immediately", not pick.active and g.mode == "surface" and _near(g, t[2]))
 	g.flow.to_command("")
 
 

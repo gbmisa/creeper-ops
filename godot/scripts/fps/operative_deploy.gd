@@ -1,8 +1,8 @@
 class_name OperativeDeploy
 extends RefCounted
-## Totem deploy (site pick: DeployPick), drop pods (DeployPod), recall (DeployRecall), death and respawn (design §5.4).
-## drop_blocked is the Shield Dome hook. No finished Totem: deploy from the
-## Command Node instead. No Totem: recall cooldown is measured to the Command Node.
+## Site deploy (Totems + Command Node, chosen by DeployPick), drop pods (DeployPod), recall (DeployRecall),
+## death and respawn (design §5.4). drop_blocked is the Shield Dome hook. Recall cooldown is measured to
+## the nearest Totem or Command Node by walk path.
 
 var g
 var down := false
@@ -58,14 +58,17 @@ func deploy_totem() -> void:
 		return
 	var b := pick.chosen()
 	if b == null:
-		_deploy_from_node()
+		_deploy_from_node(g.structures.command_node())
 		return
 	deploy_from(b)
 
 
-## Deploy at one specific finished Totem (also what the pick mode calls).
+## Deploy at one specific finished Totem or Command Node (also what the pick mode calls).
 func deploy_from(b: Structure) -> void:
 	pick.remember(b)
+	if b.type == "node":
+		_deploy_from_node(b)
+		return
 	_spawn(Vector2i(b.x, b.z - 1), 0.0)
 	var totem_model := CreatureAnim.of(b.body)
 	if totem_model != null:
@@ -76,8 +79,7 @@ func deploy_from(b: Structure) -> void:
 
 ## No finished Totem: fall back to the Command Node, so the Operative can get
 ## boots on the ground before any base exists. Spawns on a free cell beside it.
-func _deploy_from_node() -> void:
-	var node: Structure = g.structures.command_node()
+func _deploy_from_node(node: Structure) -> void:
 	if node == null:
 		_deny("No Command Node.")
 		return

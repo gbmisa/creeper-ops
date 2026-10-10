@@ -1,10 +1,11 @@
 class_name DeployPick
 extends RefCounted
-## Choose which Totem the Operative deploys from. Pressing deploy with several finished
-## Totems and none selected enters pick mode in command view: every site gets a marker
-## and a ground beam, hovering highlights one, click (or deploy again) confirms, Esc or
-## right-click cancels. After a respawn the same pick runs with a timeout that falls back
-## to the last-used site. The Command Node is only a site while no Totem exists.
+## Choose which site the Operative deploys from. Sites = every finished Totem plus the
+## Command Node (StructureManager.deploy_sites). Pressing deploy with 2+ sites and none
+## selected enters pick mode in command view: every site gets a marker and a ground beam,
+## hovering highlights one, click (or deploy again) confirms, Esc or right-click cancels.
+## After a respawn the same pick runs with a timeout that falls back to the last-used site.
+## One site deploys straight away; a selected site (info panel Deploy button) too.
 
 var g
 var active := false
@@ -21,16 +22,16 @@ func _init(game) -> void:
 	g = game
 
 
-## Explicitly selected Totem, else the lone one; with several unselected this is the last used.
+## Explicitly selected site, else the lone one; with several unselected this is the last used.
 func chosen() -> Structure:
-	var beacons: Array = g.structures.beacons()
+	var all: Array = g.structures.deploy_sites()
 	var sel: Structure = g.command.selected
-	if sel != null and beacons.has(sel):
+	if sel != null and all.has(sel):
 		return sel
 	var sb: Structure = g.structures.selected_beacon
-	if beacons.has(sb):
+	if all.has(sb):
 		return sb
-	return null if beacons.is_empty() else (default_site(beacons) as Structure)
+	return null if all.is_empty() else (default_site(all) as Structure)
 
 
 func default_site(list: Array) -> Structure:
@@ -44,22 +45,22 @@ func remember(b: Structure) -> void:
 	last_id = b.id
 
 
-## True when pick mode took over (several sites, no Totem selected).
+## True when pick mode took over (several sites, none selected).
 func begin_if_needed() -> bool:
-	var beacons: Array = g.structures.beacons()
-	if beacons.size() < 2 or beacons.has(g.command.selected):
+	var all: Array = g.structures.deploy_sites()
+	if all.size() < 2 or all.has(g.command.selected):
 		return false
 	begin(false)
 	return true
 
 
 func begin_respawn() -> void:
-	if g.structures.beacons().size() > 1:
+	if g.structures.deploy_sites().size() > 1:
 		begin(true)
 
 
 func begin(is_respawn: bool) -> void:
-	sites.assign(g.structures.beacons())
+	sites.assign(g.structures.deploy_sites())
 	if sites.size() < 2:
 		return
 	active = true
@@ -73,7 +74,7 @@ func begin(is_respawn: bool) -> void:
 			"color": Color("ffd24a"), "visible": func() -> bool: return active and not s.dead, "pick": true }
 		_marks.append(m)
 		g.surface.markers.append(m)
-	Bus.say("Pick a deploy site: click a Totem (%s confirms the gold one, Esc cancels)." % Keybinds.short("teleport"), "info")
+	Bus.say("Pick a deploy site: click a Totem or the Command Node (%s confirms the gold one, Esc cancels)." % Keybinds.short("teleport"), "info")
 
 
 func highlighted() -> int:
@@ -87,9 +88,11 @@ func label(i: int) -> String:
 		return ""
 	var s: Structure = sites[i]
 	var node: Structure = g.structures.command_node()
-	var txt := "Totem %d" % (i + 1)
-	if node != null:
-		txt += "  %dm from Node" % roundi(Vector2(s.pos.x - node.pos.x, s.pos.z - node.pos.z).length())
+	var txt := "Command Node"
+	if s.type != "node":
+		txt = "Totem %d" % (i + 1 - sites.filter(func(o): return o.type == "node").size())
+		if node != null:
+			txt += "  %dm from Node" % roundi(Vector2(s.pos.x - node.pos.x, s.pos.z - node.pos.z).length())
 	if s.id == last_id:
 		txt += "  (last used)"
 	if creeper_near(s):

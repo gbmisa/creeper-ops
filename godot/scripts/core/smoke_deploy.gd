@@ -62,11 +62,13 @@ static func _node_deploy(g) -> void:
 
 	# A finished Totem takes priority over the node.
 	var tb := _line(grid, 30)
-	g.structures.place("beacon", tb.x, tb.y, true)
+	var placed: Structure = g.structures.place("beacon", tb.x, tb.y, true)
+	g.command.select_structure(placed)  # Node + Totem is a choice now; a selected Totem deploys directly
 	g.deploy.deploy_totem()
 	var tc := grid.world_to_cell(g.fps.controller.pos.x, g.fps.controller.pos.z)
 	SmokeTest._check("totem priority", tc == Vector2i(tb.x, tb.y - 1), str(tc))
 	g.structures.remove(g.structures.beacons().back())
+	g.command.select_structure(null)
 	g.flow.to_command("")
 
 	# Deny paths still fire.
@@ -169,8 +171,10 @@ static func _recall(g, origin: Vector2i, far: Vector2i) -> void:
 	g.deploy.deploy_totem()
 	SmokeTest._check("cooldown blocks totem", g.mode == "command")
 	g.teleport_cooldown = 0.0
+	g.command.select_structure(g.structures.beacons()[0])
 	g.deploy.deploy_totem()
 	SmokeTest._check("totem deploy instant", g.mode == "surface")
+	g.command.select_structure(null)
 	g.flow.to_command("")
 	g.fps.enter(g.surface, origin, 0.0)
 	g.fps.controller.pos.x += 2.5
