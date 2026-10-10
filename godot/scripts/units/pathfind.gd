@@ -1,145 +1,179 @@
 class_name Pathfind
 ## A* over the terrain grid (8-way, no corner cutting). Limits come from the unit def:
 ## `climb` (max rise between neighbours) and `drop` (max fall). Creeper adds cost so units
-## route around pools. `solid(x, z)` marks cells units can't walk through (structures); the
-## start and goal cells are exempt. Returns world-space XZ waypoints, string-pulled where walkable.
+## route around pools. `solid` marks cells units can't walk through (structures): a Dictionary
+## keyed by grid idx (fast) or a Callable(x, z); the start and goal cells are exempt. Returns
+## world-space XZ waypoints, string-pulled by PathSmooth. State lives in reused packed buffers
+## stamped with a generation, so a search allocates nothing and never clears 25k cells.
 
-const DIRS := [[1, 0, 1.0], [-1, 0, 1.0], [0, 1, 1.0], [0, -1, 1.0],
-	[1, 1, 1.414], [1, -1, 1.414], [-1, 1, 1.414], [-1, -1, 1.414]]
+const DX := [1, -1, 0, 0, 1, 1, -1, -1]
+const DZ := [0, 0, 1, -1, 1, -1, 1, -1]
+const DC := [1.0, 1.0, 1.0, 1.0, 1.414, 1.414, 1.414, 1.414]
+
+static var _gen := 0
+static var _cost := PackedFloat32Array()
+static var _came := PackedInt32Array()
+static var _seen := PackedInt32Array()     # == _gen when _cost/_came are valid this search
+static var _done := PackedInt32Array()     # == _gen when the node was expanded
+static var _hv := PackedFloat32Array()     # walk height cache
+static var _hseen := PackedInt32Array()
+static var _hk := PackedFloat32Array()     # heap keys (f)
+static var _hi := PackedInt32Array()       # heap node ids
+static var last_visited := 0               # nodes expanded by the latest find (stats/tests)
+static var last_reached := false
 
 
 static func step_ok(g: Grid, ax: int, az: int, bx: int, bz: int, def: Dictionary) -> bool:
 	return g.step_ok(ax, az, bx, bz, def.climb, def.drop, Grid.Faction.PLAYER)
 
 
-static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, def: Dictionary, max_nodes := 6000, solid := Callable()) -> Array[Vector2]:
+static func is_solid(solid: Variant, w: int, x: int, z: int) -> bool:
+	if solid is Dictionary:
+		return solid.has(z * w + x)
+	if solid is Callable and solid.is_valid():
+		return solid.call(x, z)
+	return false
+
+
+static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, def: Dictionary, max_nodes := 6000, solid: Variant = null) -> Array[Vector2]:
 	goal = Vector2i(clampi(goal.x, 0, g.w - 1), clampi(goal.y, 0, g.h - 1))
 	start = Vector2i(clampi(start.x, 0, g.w - 1), clampi(start.y, 0, g.h - 1))
 	var w := g.w
 	var n := w * g.h
-	var cost := PackedFloat32Array()
-	cost.resize(n)
-	cost.fill(INF)
-	var came := PackedInt32Array()
-	came.resize(n)
-	came.fill(-1)
+	if _cost.size() != n:
+		_cost.resize(n)
+		_came.resize(n)
+		_seen.resize(n)
+		_done.resize(n)
+		_hv.resize(n)
+		_hseen.resize(n)
+		_seen.fill(0)
+		_done.fill(0)
+		_hseen.fill(0)
+		_gen = 0
+	_gen += 1
+	var gen := _gen
+	var climb: float = def.climb
+	var drop: float = def.drop
+	var depth := creeper.depth
 	var s := start.y * w + start.x
 	var t := goal.y * w + goal.x
-	var heap := [[_h(s, w, goal), s]]
-	cost[s] = 0.0
+	var gx := goal.x
+	var gz := goal.y
+	var sd: Dictionary = solid if solid is Dictionary else {}
+	var use_set: bool = solid is Dictionary
+	var use_call: bool = solid is Callable and solid.is_valid()
+	var ok := [false, false, false, false, false, false, false, false]
+	_hk.resize(256)
+	_hi.resize(256)
+	var hn := 0
+	_cost[s] = 0.0
+	_came[s] = -1
+	_seen[s] = gen
 	var best := s
-	var best_h := _h(s, w, goal)
+	var best_h := Vector2(start.x - gx, start.y - gz).length()
+	_hk[0] = best_h
+	_hi[0] = s
+	hn = 1
 	var visited := 0
-	while not heap.is_empty() and visited < max_nodes:
+	var reached := false
+	while hn > 0 and visited < max_nodes:
+		# pop min
+		var cur := _hi[0]
+		hn -= 1
+		if hn > 0:
+			var lk := _hk[hn]
+			var li := _hi[hn]
+			var i := 0
+			while true:
+				var l := i * 2 + 1
+				if l >= hn:
+					break
+				if l + 1 < hn and _hk[l + 1] < _hk[l]:
+					l += 1
+				if _hk[l] >= lk:
+					break
+				_hk[i] = _hk[l]
+				_hi[i] = _hi[l]
+				i = l
+			_hk[i] = lk
+			_hi[i] = li
+		if _done[cur] == gen:
+			continue
+		_done[cur] = gen
 		visited += 1
-		var cur: int = _pop(heap)[1]
 		if cur == t:
 			best = t
+			reached = true
 			break
 		var cx := cur % w
 		var cz := cur / w
-		for d in DIRS:
-			var nx: int = cx + d[0]
-			var nz: int = cz + d[1]
-			if not _ok(g, cx, cz, nx, nz, def, solid, start, goal):
-				continue
-			if d[0] != 0 and d[1] != 0 and (not _ok(g, cx, cz, cx + d[0], cz, def, solid, start, goal) or not _ok(g, cx, cz, cx, cz + d[1], def, solid, start, goal)):
+		var hc := _height(g, cur, cx, cz)
+		var cc: float = _cost[cur]
+		for k in 8:
+			if k >= 4:
+				var a: int = 0 if DX[k] > 0 else 1
+				var b: int = 2 if DZ[k] > 0 else 3
+				if not ok[a] or not ok[b]:
+					ok[k] = false
+					continue
+			var nx: int = cx + DX[k]
+			var nz: int = cz + DZ[k]
+			ok[k] = false
+			if nx < 0 or nz < 0 or nx >= w or nz >= g.h:
 				continue
 			var j := nz * w + nx
-			var ng: float = cost[cur] + d[2] + creeper.depth[j] * 4.0
-			if ng >= cost[j]:
+			var dh := _height(g, j, nx, nz) - hc
+			if dh > climb or -dh > drop:
 				continue
-			cost[j] = ng
-			came[j] = cur
-			var hj := _h(j, w, goal)
+			if j != s and j != t:
+				if use_set:
+					if sd.has(j):
+						continue
+				elif use_call and solid.call(nx, nz):
+					continue
+			ok[k] = true
+			var ng: float = cc + DC[k] + depth[j] * 4.0
+			if _seen[j] == gen and ng >= _cost[j]:
+				continue
+			_seen[j] = gen
+			_cost[j] = ng
+			_came[j] = cur
+			var hj := Vector2(nx - gx, nz - gz).length()
 			if hj < best_h:
 				best_h = hj
 				best = j
-			_push(heap, [ng + hj, j])
+			if hn >= _hk.size():
+				_hk.resize(hn * 2)
+				_hi.resize(hn * 2)
+			var p := hn
+			hn += 1
+			var fk := ng + hj
+			while p > 0:
+				var q := (p - 1) >> 1
+				if _hk[q] <= fk:
+					break
+				_hk[p] = _hk[q]
+				_hi[p] = _hi[q]
+				p = q
+			_hk[p] = fk
+			_hi[p] = j
+	last_visited = visited
+	last_reached = reached
 	var cells: Array[int] = []
 	var i := best
 	while i != -1:
-		cells.push_front(i)
-		i = came[i]
+		cells.append(i)
+		i = _came[i]
+	cells.reverse()
 	var out: Array[Vector2] = []
-	for c in _smooth(g, cells, def, solid, start, goal):
+	for c in PathSmooth.run(g, cells, def, solid, start, goal):
 		out.append(Vector2((c % w + 0.5) * Config.CELL, (c / w + 0.5) * Config.CELL))
 	return out
 
 
-static func _ok(g: Grid, ax: int, az: int, bx: int, bz: int, def: Dictionary, solid: Callable, start: Vector2i, goal: Vector2i) -> bool:
-	if not step_ok(g, ax, az, bx, bz, def):
-		return false
-	var b := Vector2i(bx, bz)
-	return not solid.is_valid() or b == start or b == goal or not solid.call(bx, bz)
-
-
-static func _h(i: int, w: int, goal: Vector2i) -> float:
-	return Vector2(i % w - goal.x, i / w - goal.y).length()
-
-
-static func _push(heap: Array, item: Array) -> void:
-	heap.append(item)
-	var i := heap.size() - 1
-	while i > 0:
-		var p := (i - 1) >> 1
-		if heap[p][0] <= heap[i][0]:
-			break
-		var tmp = heap[p]
-		heap[p] = heap[i]
-		heap[i] = tmp
-		i = p
-
-
-static func _pop(heap: Array) -> Array:
-	var top: Array = heap[0]
-	var last: Array = heap.pop_back()
-	if not heap.is_empty():
-		heap[0] = last
-		var i := 0
-		while true:
-			var l := i * 2 + 1
-			var r := l + 1
-			var m := i
-			if l < heap.size() and heap[l][0] < heap[m][0]: m = l
-			if r < heap.size() and heap[r][0] < heap[m][0]: m = r
-			if m == i:
-				break
-			var tmp = heap[m]
-			heap[m] = heap[i]
-			heap[i] = tmp
-			i = m
-	return top
-
-
-## Drop intermediate cells when a straight walk between kept points is legal.
-static func _smooth(g: Grid, cells: Array[int], def: Dictionary, solid: Callable, start: Vector2i, goal: Vector2i) -> Array[int]:
-	var out: Array[int] = []
-	if cells.size() < 3:
-		return cells.slice(1)
-	var anchor := 0
-	for i in range(2, cells.size()):
-		if not _line_ok(g, cells[anchor], cells[i], def, solid, start, goal):
-			out.append(cells[i - 1])
-			anchor = i - 1
-	out.append(cells[cells.size() - 1])
-	return out
-
-
-## Walks the straight segment between two cell centres in quarter-cell samples, so every
-## cell the unit's centre actually crosses is checked (no clipping past a tower corner).
-static func _line_ok(g: Grid, a: int, b: int, def: Dictionary, solid: Callable, start: Vector2i, goal: Vector2i) -> bool:
-	var w := g.w
-	var pa := Vector2(a % w + 0.5, a / w + 0.5)
-	var pb := Vector2(b % w + 0.5, b / w + 0.5)
-	var n := maxi(1, ceili(pa.distance_to(pb) * 4.0))
-	var cur := Vector2i(a % w, a / w)
-	for k in range(1, n + 1):
-		var q := pa.lerp(pb, float(k) / n)
-		var c := Vector2i(floori(q.x), floori(q.y))
-		if c == cur:
-			continue
-		if not _ok(g, cur.x, cur.y, c.x, c.y, def, solid, start, goal):
-			return false
-		cur = c
-	return true
+static func _height(g: Grid, i: int, x: int, z: int) -> float:
+	if _hseen[i] != _gen:
+		_hseen[i] = _gen
+		_hv[i] = g.walk_height(x, z, Grid.Faction.PLAYER)
+	return _hv[i]

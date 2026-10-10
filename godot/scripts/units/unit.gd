@@ -40,6 +40,7 @@ var forced := false             # player move order in progress: no engaging, no
 var target: Dictionary = {}     # "attack" state: the enemy dict being hunted (UnitAttack)
 var target_leash := false       # true = retaliation (gives up past RETALIATE_LEASH of leash_from)
 var leash_from := Vector2.ZERO
+var wait := false               # path request queued (UnitPaths); stands still until served
 var attack_t := 0.0             # re-path timer
 var prey: Dictionary            # what enemies see: { node, radius, alive, hit }
 

@@ -10,6 +10,7 @@ var list: Array[Unit] = []
 var selected: Array[Unit] = []
 var castles: Strongholds = null   # injected: units from a barracks in a held castle garrison it
 var lines := PatrolLines.new()
+var paths: UnitPaths
 var enemies: Array = []   # last frame's shootable enemies (attack picks, retaliation)
 
 
@@ -18,14 +19,17 @@ func setup(w: World, sm: StructureManager) -> void:
 	world = w
 	structures = sm
 	lines.mgr = self
+	paths = UnitPaths.new(self)
 	add_child(lines)
 	Bus.unit_trained.connect(_on_trained)
 	Bus.terrain_changed.connect(func(cw, _cells):  # re-path anyone walking a stale route
 		if cw == world:
+			paths.clear_fails()   # a changed map may open a route
 			for u in list:
 				if not u.path.is_empty():
 					walk_to(u, u.path.back()))
 	Bus.structure_removed.connect(func(s):
+		paths.clear_fails()
 		for u in list:
 			if u.home == s:
 				u.home = null)
@@ -94,7 +98,8 @@ func order(units: Array, dest: Vector2, player := false) -> void:
 		var a := i * 2.4
 		var r := 0.0 if i == 0 else 1.4 * sqrt(i)
 		var goal := dest + Vector2(cos(a), sin(a)) * r
-		walk_to(u, goal)
+		u.wait = true   # stands still until its (possibly queued) path is ready
+		walk_to(u, goal, true)
 		u.post = goal
 		u.patrol = []  # any move order cancels a patrol
 		u.target = {}
@@ -105,32 +110,15 @@ func order(units: Array, dest: Vector2, player := false) -> void:
 		Sfx.play("click")
 
 
-func walk_to(u: Unit, goal: Vector2) -> void:
-	var g := world.grid
-	var from := g.world_to_cell(u.pos.x, u.pos.z)
-	var gc := g.world_to_cell(goal.x, goal.y)
-	if world.occupied.call(gc.x, gc.y):
-		# Goal inside a structure (e.g. rally set on the barracks): step to the
-		# nearest free cell instead of pushing against the wall forever.
-		var nc := _free_cell(gc)
-		goal = Vector2((nc.x + 0.5) * Config.CELL, (nc.y + 0.5) * Config.CELL)
-	var start := from
-	var prefix: Array[Vector2] = []
-	if world.occupied.call(from.x, from.y):
-		# Pathfind can't start inside a solid block (every neighbour is solid):
-		# step out to the nearest free cell first. _move allows leaving an
-		# occupied cell, so the prefix walks out through the wall.
-		var nc := _free_cell(from)
-		if nc == from:
-			u.path = []
-			return
-		prefix = [Vector2((nc.x + 0.5) * Config.CELL, (nc.y + 0.5) * Config.CELL)]
-		start = nc
-	var found := Pathfind.find(g, world.creeper, start, g.world_to_cell(goal.x, goal.y), u.def, 6000, world.occupied)
-	u.path = prefix
-	u.path.append_array(found)
-	if not u.path.is_empty():
-		u.path[u.path.size() - 1] = goal
+## Plan a route. `defer` (bulk requests: group orders, terrain re-paths) queues the search once
+## this update's time budget is spent; the unit keeps its old path (or waits, see Unit.wait).
+func walk_to(u: Unit, goal: Vector2, defer := false) -> void:
+	if defer and paths.over_budget():
+		paths.enqueue(u, goal)
+		return
+	paths.forget(u)
+	u.wait = false
+	paths.plan(u, goal)
 
 
 ## Backstop: a unit whose path ran out while standing inside an occupied cell
@@ -164,6 +152,7 @@ func kill(u: Unit) -> void:
 	u.node.queue_free()
 	selected.erase(u)
 	list.erase(u)
+	paths.forget(u)
 	Sfx.play("lost", u.pos)
 	Bus.say("%s lost." % u.def.label, "bad")
 
@@ -180,7 +169,12 @@ func select(units: Array, additive := false) -> void:
 
 func update(dt: float, enemy_list: Array) -> void:
 	enemies = enemy_list
+	paths.begin_update(dt)
+	paths.serve()
 	for u in list.duplicate():
+		if u.wait:
+			_sync(u)   # order accepted, route not planned yet: stand still, stay "move"
+			continue
 		if (u.state == "move" or u.state == "return" or u.state == "patrol") and not u.path.is_empty() and u.ammo >= 1.0 and not u.forced:
 			# Attack-move: hold the route and fight anything already in gun range.
 			# No chasing — the unit never leaves its path for a target. Dry units

@@ -29,6 +29,10 @@ static func _attack_order(g) -> void:
 		SmokeTest._sim(g, 0.5)
 		t += 0.5
 	SmokeTest._check("attack order: closes in and kills the chosen target", not far.alive, "(%.1f s)" % t)
+	# The kill can land after the unit's tick (it lets go on the next one), and the bystander
+	# beside the target would hit it and start a fresh retaliation: remove it, then tick once.
+	g.hazards.nests.raiders.kill(near)
+	SmokeTest._sim(g, 0.5)
 	SmokeTest._check("attack order: holds after kill", u.state == "idle" and u.target.is_empty(), "(%s)" % u.state)
 	g.units.kill(u)
 	SmokeAttackMove._clear(g)

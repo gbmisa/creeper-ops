@@ -15,6 +15,7 @@ var height_tex: ImageTexture  # one texel per cell; terrain + creeper shaders re
 var props: Node3D
 ## Injected by the game: is a structure standing on this cell? TerrainEdit skips those.
 var occupied := func(_x: int, _z: int) -> bool: return false
+var occupied_set := {}   # grid idx -> Structure, same dict StructureManager fills (fast path for Pathfind)
 var effects: Effects
 var env: WorldEnvironment
 
