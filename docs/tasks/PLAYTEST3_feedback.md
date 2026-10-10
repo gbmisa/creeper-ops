@@ -42,3 +42,6 @@ Briefed 2026-10-09: PT3-A (25, 27), PT3-B (22), PT3-C (24), PT3-D (26). 23 done:
 31 (cont.): Brief PT3-H (`pt3/bertha-target`).
 30 (cont.): GPU profile done (Opus). See the PT3-G addendum: RaiderField spikes 150-185 ms, cost scales with enemy count (skeletons/draws), GPU creeper ~3.4 ms CPU side.
 Muse paused until Wed 2026-10-14 (weekly limit; handoff on origin/fount/handoff-2026-10-09). Only PT3-C pushed; A, B, D-H stopped mid-flight.
+
+## 32. Spitters shoot at walls they can't hit (2026-10-09)
+Gregory: "spitters are shooting at the wall without being able to hit anything." Likely a target/line-of-sight check in `raider_shots.gd` picking prey behind castle or terrace walls. **Frozen:** gameplay change, wait until the L2 FPS fix lands (Gregory: no gameplay changes until FPS is fixed). Model: Muse/Sonnet.
