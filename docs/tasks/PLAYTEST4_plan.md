@@ -56,6 +56,12 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 ## Update 6 (Gregory)
 - **Deploy from any Totem or the Node, by choice**, and **recall cooldown measured to the nearest Totem/Node**, not the home one. A picker (`fps/deploy_pick.gd`) exists but did not give him the choice in play; the agent diagnoses first. Brief D, branch `pt4/deploy`, Sonnet.
 
+## Update 7 (Gregory, 2026-10-10, after the perf merge)
+- **Skitters walk back and forth and cannot attack a tower; "pathing seems a lot worse".** Not reproduced yet; level, tower and terrain not known.
+- Cheap diagnosis (Opus, reading only): `RaiderMove.walk` is line-for-line the old `Raiders._walk` apart from the bucketed neighbour list. Behaviour differences from `pt4/perf-enemies`: melee target held 0.3-0.5 s (`Raiders._acquire`, no range or reach re-check in between), `RaiderField.next_step` cached per cell until the 2 s field interval, group speed cached per frame. None of these obviously explains pacing. The older straight-walk / 2 s flow-field detour loop in `Raiders._think` can oscillate when the target is in the same walking area but a cliff blocks the straight line; unchanged today.
+- Found while reading: `Raiders._index` counts dead raiders in `group_slow` (the old `RaiderGroups.speed` skipped them). Small, not the reported bug.
+- Plan (not started, ask first): one Sonnet `feature-dev` run. Reproduce headless with a debug hook from Gregory's description, bisect `09aa016` (before the perf merges) against HEAD, fix on a `pt4/raider-pacing` branch with a smoke check, fix `group_slow`. Opus reviews and merges. Sonnet because it is a scoped bug with a repro in existing systems.
+
 ## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
 Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
 - **Terrain edits: 0 in 28 minutes.** The static-map / pathing rework is dropped; it would fix nothing.
