@@ -116,6 +116,8 @@ static func arm(b, s: Dictionary, label: String) -> void:
 		var flash := func(_d: float, _p = null) -> void: b.world.effects.burst(s.pos + Vector3.UP, Color("ffcc88"), 0.5, 0.15)
 		s.target["on_hit"] = flash  # guns only flash a mortar; a planted charge destroys it
 		s.enemy["hit"] = flash
+		s.enemy["targetable"] = func(): return false
+		s.enemy["immune"] = true  # units must not waste ammo on it (UnitSupply.acquire)
 	s["interact"] = it
 	b.world.interactables.append(it)
 	var marker := {

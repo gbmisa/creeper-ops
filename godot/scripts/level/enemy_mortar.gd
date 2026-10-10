@@ -144,7 +144,7 @@ static func _make(host, hive: Dictionary, index: int) -> Dictionary:
 	node.scale = Vector3.ONE * 0.15
 	var hit := func(dmg: float, _p = null): _hurt(host, m, dmg)
 	var boom := func(): _kill(host, m)
-	m["enemy"] = { "node": node, "oy": 0.9, "radius": 1.1, "alive": func(): return m.alive, "hit": hit }
+	m["enemy"] = { "node": node, "oy": 0.9, "radius": 1.1, "alive": func(): return m.alive, "hit": hit, "immune": true, "targetable": func(): return false }
 	m["target"] = { "node": node, "oy": 0.9, "radius": 1.15, "alive": func(): return m.alive, "on_hit": hit, "charge_kill": boom }
 	host.world.add_target(m.target)
 	var it := DemoCharge.interactable(host.world, pos, Config.MORTAR_SABOTAGE_RANGE, func(): return m.alive, m.target)

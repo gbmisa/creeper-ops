@@ -200,6 +200,7 @@ static func run(g) -> void:
 	SmokeAmmo.run(g)
 	SmokeAttackMove.run(g)
 	SmokeUnitPatrol.run(g)
+	SmokeUnitOrders.run(g)
 	SmokePlacement.run(g)
 	SmokeTuning.run(g)
 	SmokeShotTour.run(g)
@@ -261,6 +262,8 @@ static func _run_only(g) -> void:
 				SmokeTroopsCastle.run(g)
 			"patrol":
 				SmokeUnitPatrol.run(g)
+			"orders":
+				SmokeUnitOrders.run(g)
 			"burrow":
 				SmokeBurrow.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
