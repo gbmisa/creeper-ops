@@ -37,3 +37,10 @@ AGENTS.md format with before/after bench numbers and the L2 per-frame worst case
 - GPU creeper sim costs ~3.4 ms/frame on the CPU side (readback `to_float32_array` + log replay on 25.6k cells): look at doing the replay in packed ops or every other readback.
 - The rest of the frame grows with enemy count outside `Game.update`: AnimationPlayers/skeleton poses per raider, per-raider meshes. Pause looks smooth because `CreatureAnim.set_all_paused` zeroes `speed_scale` (pose stops changing).
 - Extra tasks: (6) animation LOD: raiders off-screen or farther than ~60 m get `callback_mode_process` manual and are advanced at 10 Hz (or paused); (7) report draw calls per raider and merge static sub-meshes per raider type if > 3; (8) a `--bench-l2` hook that prints avg/worst frame ms after 5 min of `--autostart`, before and after.
+
+## Done by Opus (2026-10-09, merged into integ 483b3b8). Muse: don't redo these.
+- RaiderField: cached walk heights, rebuild sliced at 1 ms/frame (`RaiderFieldBuild`), invalidations coalesce, timed rebuild skipped when goals and ground are unchanged; `nearest_on_foot` uses walking areas. L2 worst field frame 150 ms → 1.2 ms. `--bench-field`.
+- AntiCreeperMesh rebuilt its 160×160 surface every tick even when empty: 11 ms/frame. Now skipped when unchanged, plus a sparse shoreline pass. **This was the main L2 FPS loss.**
+- `CreatureLod`: shadows off past 90 m, clips stepped at 15 Hz (mid) or 5 Hz (far/off-screen). `--bench-l2[=S]`.
+- L2 `--autostart`, RTX 5090: 39 → 155 fps.
+- Left: about 4 engine-side spikes of ~75 ms per 75 s (script time ~10 ms in those frames, so probably shader or pipeline compiles). Castles are about 2,500 separate MeshInstances (most of the 5,000 draw calls); merge them into MultiMesh or combined meshes if the GPU ever becomes the limit.
