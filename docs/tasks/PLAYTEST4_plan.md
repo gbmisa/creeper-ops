@@ -38,6 +38,10 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 - Perf is the top priority; craters/height changes may go if they cost frames. Bench first (Opus, when Gregory stops playing).
 - Go-ahead given: briefs U, A, P, L in `PLAYTEST4_briefs.md`, Sonnet agents, own worktrees `pt4-*`. Opus integrates.
 
+## Update 3 (Gregory)
+- **Units must not shoot what they cannot destroy** (they empty their ammo into an enemy mortar, which only a charge kills). Added to brief U.
+- **Logic audit** requested: a read-only Sonnet pass over who can damage what, looking for more dead ends like that. Findings go in `PLAYTEST4_audit.md`.
+
 ## Questions for Gregory
 - Static map: do **castle walls** stop being breakable (gates only)? Craters would become marks with no height change.
 - OK to run the bench (a game window opens on your screen for a few minutes)?
