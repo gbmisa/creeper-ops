@@ -128,12 +128,20 @@ func update(dt: float) -> void:
 
 # ---- movement ----------------------------------------------------------------------
 ## Highest ground in the 3x3 cells around a point: flyers glide over cliffs before they reach them.
-func ground_max(x: float, z: float) -> float:
+func ground_max(x: float, z: float, f := {}) -> float:
+	if not f.is_empty():  # reuse the last sample while the flyer is within FLYER_GROUND_SAMPLE of it
+		var at: Vector2 = f.get("_gm_at", Vector2(INF, INF))
+		if absf(at.x - x) < Config.FLYER_GROUND_SAMPLE and absf(at.y - z) < Config.FLYER_GROUND_SAMPLE:
+			return f._gm
 	var g := world.grid
 	var y := 0.0
-	for dx in [-1.0, 0.0, 1.0]:
-		for dz in [-1.0, 0.0, 1.0]:
-			y = maxf(y, g.smooth_y(x + dx * Config.CELL, z + dz * Config.CELL))
+	var c := Config.CELL
+	for dx in 3:
+		for dz in 3:
+			y = maxf(y, g.smooth_y(x + (dx - 1) * c, z + (dz - 1) * c))
+	if not f.is_empty():
+		f["_gm_at"] = Vector2(x, z)
+		f["_gm"] = y
 	return y
 
 
@@ -149,7 +157,7 @@ func fly(f: Dictionary, goal: Vector3, dt: float, speed_mul := 1.0, y_goal := NA
 		p.x += d.x / dist * step
 		p.z += d.y / dist * step
 		node.rotation.y = lerp_angle(node.rotation.y, atan2(-d.y, d.x), minf(1.0, dt * 5.0))
-	var want := y_goal if not is_nan(y_goal) else ground_max(p.x, p.z) + float(f.row.alt)
+	var want := y_goal if not is_nan(y_goal) else ground_max(p.x, p.z, f) + float(f.row.alt)
 	var rate := vy if vy > 0.0 else (FLY_UP if want > p.y else FLY_DOWN)
 	p.y = move_toward(p.y, want, rate * dt)
 	node.position = p

@@ -135,22 +135,22 @@ static func attack_anim(part: Dictionary) -> void:
 
 
 static func combat(host, hive: Dictionary, dt: float) -> void:
-	var prey: Array = host.prey.call()
 	for part in hive.parts:
 		var p: Dictionary = part
 		if not p.alive or not p.grown:
 			continue
 		var kind := str(p.kind)
 		if kind == "spitter":
-			_spitter(host, p, dt, prey)
+			_spitter(host, p, dt)
 		elif kind == "launcher":
 			_launcher(host, p, dt)
 
 
-static func _spitter(host, part: Dictionary, dt: float, prey: Array) -> void:
+static func _spitter(host, part: Dictionary, dt: float) -> void:
 	part.cd = float(part.cd) - dt
 	if float(part.cd) > 0.0:
 		return
+	var prey: Array = host.prey.call()
 	var reach := Config.HIVE_SPITTER_RANGE * Config.CELL
 	var from: Vector3 = (part.node as Node3D).position
 	var best: Dictionary = {}

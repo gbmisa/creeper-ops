@@ -133,7 +133,17 @@ static func in_zone(lay: Dictionary, p: Variant, zone := "keep") -> bool:
 		return false
 	var z: Dictionary = lay.zones[zone]
 	var cell := Vector2i(floori(p.x / Config.CELL), floori(p.z / Config.CELL))
-	return cell in z.cells and p.y >= (z.y - 0.5) * Config.LEVEL_H and p.y < (z.y_max - 1.0) * Config.LEVEL_H
+	return has_cell(z, cell) and p.y >= (z.y - 0.5) * Config.LEVEL_H and p.y < (z.y_max - 1.0) * Config.LEVEL_H
+
+
+## Zone cell membership through a Dictionary built on first use (zone cell lists are fixed at build).
+static func has_cell(zone: Dictionary, cell: Vector2i) -> bool:
+	var set: Dictionary = zone.get("_set", {})
+	if set.is_empty():
+		for c in zone.cells:
+			set[c] = true
+		zone["_set"] = set
+	return set.has(cell)
 
 
 static func in_courtyard(lay: Dictionary, p: Vector3) -> bool:

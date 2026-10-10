@@ -20,6 +20,7 @@ var level: Dictionary = {}
 var overrun_t := 0.0
 var seal := 0.0
 var seal_arm := 0.0
+var mortar_route_t := 0.0
 var operative: Callable = func(): return null
 var node_pos := func() -> Vector3: return Vector3.ZERO
 var builder = null                 # EnemyBuilder: Lance scale inside a Shield Dome
@@ -122,11 +123,17 @@ func update(dt: float) -> void:
 		Hives.tick(self, n, dt)
 		if not n.alive:
 			continue
-		var sac := n.node.get_node("Sac") as Node3D
+		var sac: Node3D = n.get("sac")
+		if sac == null:
+			sac = n.node.get_node("Sac") as Node3D
+			n["sac"] = sac
 		var growth: float = 1.0 + minutes() * 0.1
 		sac.scale = sac.scale.lerp(Vector3.ONE * growth * (1.0 + 0.08 * sin(time * 3.0 + n.x)), 0.2)
 		n.timer += dt
-		try_spawn(n)
+		n["chk"] = float(n.get("chk", 0.0)) - dt
+		if float(n.chk) <= 0.0:  # spawn-due check is staggered; the timer keeps counting
+			n.chk = Config.NEST_SPAWN_CHECK
+			try_spawn(n)
 	EnemyMortars.tick(self, dt)
 	flyers.update(dt)
 	raiders.update(dt, prey.call(), goal_cells.call())
@@ -186,30 +193,7 @@ func _wait(n: Dictionary, guard: bool) -> float:
 
 
 func _overrun(dt: float) -> void:
-	if pressure() < 1.0 or alive_count() == 0:
-		overrun_t = 0.0
-		return
-	overrun_t += dt
-	if overrun_t < Config.OVERRUN_INTERVAL:
-		return
-	overrun_t = 0.0
-	var dest: Vector3 = node_pos.call()
-	var wave := Config.OVERRUN_BASE + Config.OVERRUN_PER_TIER * Pressure.legacy_tier(pressure())
-	for n in nests:
-		if not n.alive:
-			continue
-		for _i in wave:
-			if raiders.list.size() >= Config.RAIDER_MAX_TOTAL:
-				return
-			var tier_pick := pick_tier()
-			if CastleLancers.is_lancer(tier_pick):
-				tier_pick = RaiderDefs.named("Spitter")  # Lancers hold castles, they never march
-			raiders.spawn(n, tier_pick, false)
-			var r: Dictionary = raiders.list.back()
-			r.guard = false
-			r["overrun"] = true
-			r["rush"] = dest
-	Bus.say("The nests overrun: a wave is marching straight at the Command Node.", "bad")
+	NestOverrun.tick(self, dt)
 
 
 func on_lance(ats: Array) -> void:

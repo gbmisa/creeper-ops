@@ -304,6 +304,7 @@ const HIVE_SYNC_INTERVAL := 0.25  # s between a hive's bookkeeping passes (stage
 const MORTAR_AIM_INTERVAL := 0.3  # s between a mortar's target scans
 const MORTAR_ROUTE_INTERVAL := 0.25  # s between "is the Node reachable by walking" checks
 const NEST_SPAWN_CHECK := 0.25  # s between a nest's spawn-due checks
+const CASTLE_SCAN_INTERVAL := 0.2  # s between "raiders in this castle zone" scans
 const RAIDER_DETOUR_TIME := 2.0  # s a raider blocked on its way to a target follows the flow field
 const RAIDER_DROP := RAIDER_CLIMB # one terrace down as well; steeper ground is a wall
 const RAIDER_FIELD_INTERVAL := 2.0

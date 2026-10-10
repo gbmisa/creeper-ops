@@ -16,6 +16,10 @@ static func volley(host, hive: Dictionary, dt: float) -> void:
 			advance(host, m, dt)
 			continue
 		m.cd = float(m.cd) - dt
+		m.aim_t = float(m.get("aim_t", 0.0)) - dt
+		if float(m.aim_t) > 0.0:
+			continue  # target scans are staggered; the cooldown keeps running
+		m.aim_t = randf_range(0.8, 1.2) * Config.MORTAR_AIM_INTERVAL
 		var picked := aim(host, m)
 		var op := str(picked.get("kind", "")) == "operative"
 		if op and not bool(m.spotted):

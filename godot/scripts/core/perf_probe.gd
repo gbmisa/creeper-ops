@@ -70,6 +70,33 @@ static func _forward(g, seconds: float, keep_base := false) -> void:
 		edits[0] += 1
 		edits[1] += cells.size())
 	var acc: Array = []  # ms per surface updater inside the current update
+	var st = g.castles
+	_time("castles: engine_prey", func(): st.engine_prey.call())
+	_time("castles: per-castle tick", func():
+		var o = st.op.call()
+		var pp = o.pos if o != null else null
+		for c in st.list:
+			var lay: Dictionary = st.lays[c.id]
+			var v: Dictionary = st.views[c.id]
+			if c.state == "hostile":
+				StrongholdTick.hostile(st, c, lay, v, pp, 0.05)
+			elif c.state == "capturing":
+				StrongholdTick.capturing(st, c, lay, pp, 0.05)
+			else:
+				StrongholdTick.holding(st, c, lay, v, pp, 0.05))
+	_time("castles: engines", func():
+		var tg: Array = st.engine_prey.call()
+		for c in st.list:
+			CastleEngines.tick(st, c, st.views[c.id], tg, 0.05))
+	_time("castles: pump+turret+look", func():
+		for c in st.list:
+			SpirePump.update(st.world, c, st.lays[c.id], 0.05)
+			CastleTurretFire.refresh(st.views[c.id], c)
+			CastleSocketLook.update(st.views[c.id], c, st.time))
+	_time("castles: animate", func():
+		for c in st.list:
+			StrongholdMeshes.animate(st.views[c.id], c, st.time))
+	_time("guards: update", func(): g.guards.update(0.05))
 	for i in g.surface.updaters.size():
 		acc.append(0.0)
 		var orig: Callable = g.surface.updaters[i]
