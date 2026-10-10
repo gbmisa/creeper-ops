@@ -106,6 +106,15 @@ static func text(id: String) -> String:
 
 
 ## Primary key only (compact hints).
+## Swap "{action}" tokens in player text for the keys bound right now (const hints can't call short()).
+static func fill(text: String) -> String:
+	if not text.contains("{"):
+		return text
+	for id in DEFAULTS:
+		text = text.replace("{%s}" % id, short(id))
+	return text
+
+
 static func short(id: String) -> String:
 	var k := keys(id)
 	return key_name(k[0]) if not k.is_empty() else "-"

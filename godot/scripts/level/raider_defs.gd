@@ -53,12 +53,16 @@ static func named(n: String) -> Dictionary:
 	return {}
 
 
-## Rows whose unlock is at or below `p`, in unlock order. Includes Spotter.
+## Raider names the current level never spawns (level key `raider_ban`, set by SurfaceHazards).
+static var banned: Array = []
+
+
+## Rows whose unlock is at or below `p`, in unlock order. Includes Spotter. Skips `banned`.
 static func unlocked(p: float) -> Array:
 	var rows: Array = []
 	for row in ROWS:
 		var d: Dictionary = row
-		if float(d.unlock) <= p + 0.0001:
+		if float(d.unlock) <= p + 0.0001 and not banned.has(d.name):
 			rows.append(d)
 	rows.sort_custom(func(a, b): return float(a.unlock) < float(b.unlock))
 	return rows

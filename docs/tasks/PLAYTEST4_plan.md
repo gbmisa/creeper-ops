@@ -1,0 +1,42 @@
+# Playtest 4 feedback and plan (Gregory, 2026-10-10)
+
+Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md). All work branches from integ.
+
+## Done inline on integ (uncommitted, smoke green)
+- **Shield Dome needs no charge:** def key `no_charge` (enemy_structures.gd); `DemoCharge.chargeable` skips it, so the 3 s Sabotage prompt always shows.
+- **Crown nest takes a charge:** crown target is `chargeable`, gated by `charge_ok` (no plant while the crown is warded).
+- **Burrower out of L1 and L2:** level key `raider_ban: ["Burrower"]` -> `RaiderDefs.banned`, read in `unlocked()`. The Burrower itself is untouched.
+- **Prompts follow rebinds:** `Keybinds.fill()` swaps `{use}` / `{teleport}` tokens in objective hints; Spire, Rift, Deep Core and Armoury texts now read the live bind instead of a literal E / R / T.
+- Smoke `holdbar` hard-coded `[E]`; it failed with the player's F bind. Now reads `Keybinds.short("use")`.
+
+## Not on integ yet
+- **A. Deactivate (Z) + Esc pause menu:** commit `5a7f2f7` on `feat/deactivate-pause-menu` was cut from `main`, which is 172 commits behind integ. Port it to integ (cherry-pick, expect conflicts in game_flow.gd / info_panel.gd / command_select.gd). *Sonnet `feature-dev`: mechanical port with a smoke file to prove it.*
+
+## Open items
+1. **FPS still bad at ~12 min.** Gregory's ask: make the map static (no runtime terrain changes) and redo raider pathing.
+   - Known from PT3-G (measured at 60 s only): the cost that grows with time was animated skeletons and draw calls (67 -> 100 skeletons, 5.4k -> 10k draws); the flow field was already time-sliced; castles are ~2,500 MeshInstances.
+   - Runtime terrain writers today: `terp.gd`, `enemy_mortar_hit.gd` (craters), `raider_shots.gd`, `raider_burrow.gd`, `stronghold_rules.gd` (wall breach), `wall_repair.gd`. Each fires `Bus.terrain_changed` -> chunk rebuild, GPU height upload, field invalidate, unit re-plan.
+   - **Step 1, measure (Haiku `balance-tester`):** L2 `--autostart --sim=720` and a `--demo` run; report per-system ms at minutes 1, 6, 12, the count of `terrain_changed` per minute, live raiders, skeletons, draw calls. Cheap, and it tells us whether terrain edits are the cost or enemy count is.
+   - **Step 2a, static map (Sonnet `stage-runner`, brief by Opus):** craters, acid and burrow dig become visual only (decal/tint, no height change). **Needs Gregory's call:** Terp (the whole tool edits terrain) and castle wall breach/repair (walls are terrain).
+   - **Step 2b, pathing (Sonnet):** with static ground the walk-height cache and area labels are built once per level; the field rebuilds only when goals change (structure placed/lost, gate opened). Opus reviews: this touches `Grid.step_ok` users across raiders, units and the Operative.
+   - **Step 2c, if step 1 blames enemy count (Sonnet):** animation LOD and a live raider cap; merge castle meshes.
+2. **Base losses are invisible in first person.** Only a log line bottom-left; the centre-screen alert exists only for the Node (`game_flow.gd:26`). Add: a centre alert + alarm sound when a structure is destroyed or the base is under attack (rate limited, with a count: "BASE UNDER ATTACK: 3 lost"), a red screen-edge pulse, and a persistent base-status chip on the FPS HUD. *Sonnet `feature-dev`: UI + a Bus signal, follows the Node alert pattern.*
+3. **Barracks units don't patrol on their own.** Only barracks inside a held castle auto-patrol (PT3 item 17). Make every new unit auto-patrol a loop around its barracks until given an order. *Sonnet `feature-dev`: small, in `unit_patrol.gd` / spawn.*
+4. **Castle is retaken before the reprisal.** Ordinary raiders walk in and run the 15 s `RETAKE_TIME` before any turret can be bought. Proposal: after a capture the castle cannot be sieged until the reprisal arrives (grace = the reprisal countdown), raiders with no castle mission ignore it during that window, and the countdown shows on the castle marker. *Sonnet `feature-dev` for the rule + smoke; Haiku `balance-tester` to check the reprisal still lands.*
+
+5. **Right-click an enemy = attack it.** Selected soldiers/crawlers walk to the clicked spot instead of targeting the enemy under the cursor. Add an attack order: pick the raider / hive part / enemy structure under the click, units close to weapon range and keep firing until it dies, then hold. Ground click stays a move. *Sonnet `feature-dev`: `command_select.gd` pick + a `Unit.focus` target in `unit_supply.gd`.*
+
+## Update, same day (Gregory)
+- **Terp is not available on L1/L2**, so the static-map question is only about castle walls and craters there.
+- FPS is still bad at 18 min and **much worse in first person** than in command view. Gregory suspects enemy count, not time. That points at rendering (skeletons, draw calls, the long first-person view distance over ~2,500 castle meshes), not the sim or pathing.
+- So item 1 reorders: **measure both views first** with `--bench-l2` (needs the real display, so it opens a game window for a few minutes; ask first), in command and Operative view with 20 / 40 / 60 live raiders. Then 2c (animation LOD, distance culling, castle mesh merge, shadow distance in FPS) before 2a/2b.
+
+## Update 2 (Gregory)
+- Trebuchet range stays. **L2 needs more space** between castles and Salvage Engines (brief L).
+- **Units must fight back** when shot, with nearby allies joining (brief U, with items 3 and 5).
+- Perf is the top priority; craters/height changes may go if they cost frames. Bench first (Opus, when Gregory stops playing).
+- Go-ahead given: briefs U, A, P, L in `PLAYTEST4_briefs.md`, Sonnet agents, own worktrees `pt4-*`. Opus integrates.
+
+## Questions for Gregory
+- Static map: do **castle walls** stop being breakable (gates only)? Craters would become marks with no height change.
+- OK to run the bench (a game window opens on your screen for a few minutes)?

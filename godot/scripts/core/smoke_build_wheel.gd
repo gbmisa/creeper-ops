@@ -151,7 +151,7 @@ static func _holdbar(g) -> void:
 	f.hold["use"] = true
 	fps._hold_use(it, f, 0.5)
 	SmokeTest._check("holdbar: holding E drives the bar with the prompt label",
-		is_equal_approx(fps.hold_frac, 0.25) and fps.hold_label == "SALVAGE THE CACHE [E]",
+		is_equal_approx(fps.hold_frac, 0.25) and fps.hold_label == "SALVAGE THE CACHE [%s]" % Keybinds.short("use"),
 		"%s %.2f" % [fps.hold_label, fps.hold_frac])
 	f.hold.clear()
 	fps._hold_use(it, f, 0.016)

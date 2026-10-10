@@ -9,7 +9,8 @@ static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 	var world := s.world
 	var enemy_owned := func(p: Dictionary, ring: String): return CastleStages.ring_owner(c, lay, ring) == "enemy" and p.hp > 0.0
 	var ours_sealed := func(p: Dictionary, ring: String): return c.owner == "player" and p.hp > 0.0 and StrongholdRules.sealed(c, lay, ring)
-	world.add_target({ "node": v.crown, "radius": 1.9, "oy": 2.0,
+	world.add_target({ "node": v.crown, "radius": 1.9, "oy": 2.0, "chargeable": true,
+		"charge_ok": func(): return CastleStages.crown_open(c, lay),  # no charge wasted on a warded crown
 		"alive": func(): return c.state == "hostile", "on_hit": func(d, _p = null): s._hit_crown(c, d) })
 	v["prey"] = []
 	v["enemies"] = []

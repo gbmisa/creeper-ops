@@ -120,7 +120,7 @@ func _destroy_core() -> void:
 	mites.enabled = false
 	mites.kill_all()
 	Sfx.play("good")
-	Bus.say("DEEP CORE DESTROYED. Get back to the pad or recall (hold R).", "good")
+	Bus.say("DEEP CORE DESTROYED. Get back to the pad or recall (hold %s)." % Keybinds.short("recall"), "good")
 	Bus.objective_done.emit("core")
 	Bus.core_destroyed.emit()
 

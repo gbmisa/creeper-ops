@@ -41,7 +41,9 @@ static func interactable(world: World, pos: Vector3, radius: float, alive: Calla
 ## Non-living, big enough, not a raider or flyer (those carry no max_hp). Mortars carry
 ## charge_kill and are handled by their own interactable.
 static func chargeable(t: Dictionary) -> bool:
-	if not t.alive.call() or t.get("deep_core", false) or t.get("living", false):
+	if not t.alive.call() or t.get("deep_core", false) or t.get("living", false) or t.get("no_charge", false):
+		return false
+	if t.has("charge_ok") and not (t.charge_ok as Callable).call():
 		return false
 	return t.get("chargeable", false) or float(t.get("max_hp", 0.0)) >= Config.DEMO_MIN_HP
 

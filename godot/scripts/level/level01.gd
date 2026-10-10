@@ -218,6 +218,7 @@ static func build() -> Dictionary:
 			{ "name": "Central knoll", "x": 40, "z": 23, "access": "blight" },
 		],
 		"raid_schedule": RAID_SCHEDULE,
+		"raider_ban": ["Burrower"],  # test levels: it levels a base before anything can answer (playtest 4)
 		"pressure": PRESSURE,
 		"pressure_points": PRESSURE_POINTS,
 		"spire": { "x": 66, "z": 9 },

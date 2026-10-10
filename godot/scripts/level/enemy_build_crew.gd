@@ -96,6 +96,8 @@ static func arm(b, s: Dictionary, label: String) -> void:
 		b.hurt(s, float(dmg))
 	s["enemy"] = {"node": s.node, "oy": 1.0, "radius": 1.0, "alive": func() -> bool: return bool(s.alive), "hit": hit}
 	s["target"] = {"node": s.node, "oy": 1.0, "radius": 1.1, "alive": func() -> bool: return bool(s.alive), "on_hit": hit, "max_hp": float(s.max_hp)}
+	if EnemyStructures.DEFS.get(str(s.kind), {}).get("no_charge", false):
+		s.target["no_charge"] = true  # sabotage only: never offers or needs a demolition charge
 	b.world.add_target(s.target)
 	var it := {
 		"pos": s.pos, "radius": Config.MORTAR_SABOTAGE_RANGE,

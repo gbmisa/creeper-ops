@@ -149,6 +149,8 @@ static func _shield(g, b: EnemyBuilder) -> void:
 	var open: Dictionary = g.deploy.can_drop(cell + Vector2i(0, 9))
 	SmokeTest._check("dome blocks the drop", not blocked.ok and "Shield" in str(blocked.reason), blocked.reason)
 	SmokeTest._check("a drop outside the dome is not blocked", "Shield" not in str(open.reason), open.reason)
+	SmokeTest._check("dome: sabotage only, never a demolition charge", not DemoCharge.chargeable(dome.target)
+		and "Sabotage" in str((dome.interact.prompt as Callable).call()))
 	g.landing = was_land
 	g.deploy.down = was_down
 	g.economy.energy = energy

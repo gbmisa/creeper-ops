@@ -13,7 +13,7 @@ const DEFS := {
 	"spitter": {"label": "Spitter Tower", "hp": 70.0, "cost": 1.0, "salvage": 0.0, "color": Color("d6ff3a")},
 	"lancer": {"label": "Lancer Spire", "hp": 90.0, "cost": 1.0, "range": 32.0, "damage": 25.0,
 		"interval": 1.5, "color": Color("e6d2ff")},
-	"dome": {"label": "Shield Dome", "hp": 120.0, "cost": 1.0, "radius": 8.0, "lance": 0.5,
+	"dome": {"label": "Shield Dome", "hp": 120.0, "cost": 1.0, "radius": 8.0, "lance": 0.5, "no_charge": true,
 		"color": Color("d4a6ff")},
 	"pump": {"label": "Creeper Pump", "hp": 100.0, "cost": 1.0, "amount": 1.0, "every": 2.0,
 		"color": Color("3d7bff")},
