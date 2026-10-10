@@ -150,6 +150,7 @@ static func run(g) -> void:
 	SmokePt3.run(g)
 	SmokeDeploy.run(g)
 	SmokeDeployPick.run(g)
+	SmokeDeploySites.run(g)
 	SmokeTraps.run(g)
 	SmokeGroupSelect.run(g)
 	SmokeRally.run(g)

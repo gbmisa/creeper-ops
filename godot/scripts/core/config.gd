@@ -89,6 +89,7 @@ const RESPAWN_SALVAGE := 25.0
 const RESPAWN_TIME := 45.0
 const RESPAWN_GROWTH := 1.5      # each further death this level multiplies both respawn costs
 const RESPAWN_PICK_TIME := 10.0  # seconds to choose a deploy site after respawning (several Totems); then the last-used one
+const RECALL_PATH_CANDIDATES := 3  # recall paths only to this many nearest (straight-line) sites
 const DEPLOY_PICK_RADIUS := 4.0  # cells: how near the pointer must be to a Totem to hover it
 const RIFLE := { "name": "Pulse Rifle", "damage": 1.0, "cooldown": 0.14, "range": 90.0 }
 const ROCKET := { "name": "Rocket Launcher", "speed": 30.0, "range": 90.0, "blast": 3.0, "power": 6.0,

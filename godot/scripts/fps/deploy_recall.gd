@@ -1,6 +1,7 @@
 class_name DeployRecall
 extends RefCounted
-## Recall cooldown (0 at a Totem, else scaled walking distance to the nearest anchor).
+## Recall cooldown: 0 within TOTEM_FREE_RADIUS of any Totem or Command Node, else scaled walking distance
+## to the nearest of them (straight-line pre-pick, path to the closest few).
 
 var g
 
@@ -26,12 +27,19 @@ func commit_recall() -> void:
 	g.flow.to_command(msg)
 
 
-## 0 at a Totem. Else RECALL_COOLDOWN_MULT × path / WALK (straight line × RECALL_NO_PATH_MULT if none).
+## 0 near a site. Else RECALL_COOLDOWN_MULT × path to the nearest site / WALK (straight line × RECALL_NO_PATH_MULT if none).
 func recall_cooldown_from(feet: Vector3, grid: Grid) -> float:
 	if near_totem(feet):
 		return 0.0
 	var frm := grid.world_to_cell(feet.x, feet.z)
-	return Config.RECALL_COOLDOWN_MULT * path_metres(grid, frm, nearest_anchor(frm)) / Config.WALK
+	var sites: Array = g.structures.deploy_sites()
+	sites.sort_custom(func(a, b): return Vector2(a.x - frm.x, a.z - frm.y).length_squared() < Vector2(b.x - frm.x, b.z - frm.y).length_squared())
+	var best := INF
+	for i in mini(Config.RECALL_PATH_CANDIDATES, sites.size()):
+		best = minf(best, path_metres(grid, frm, Vector2i(sites[i].x, sites[i].z)))
+	if best == INF:
+		return 0.0
+	return Config.RECALL_COOLDOWN_MULT * best / Config.WALK
 
 
 func path_metres(grid: Grid, frm: Vector2i, to: Vector2i) -> float:
@@ -73,7 +81,8 @@ func nearest_anchor(from: Vector2i) -> Vector2i:
 func near_totem(feet: Vector3) -> bool:
 	if g.fps.world != g.surface:
 		return false
-	for s in g.structures.beacons():
-		if Vector2(s.pos.x - feet.x, s.pos.z - feet.z).length() <= Config.TOTEM_FREE_RADIUS:
+	for s in g.structures.deploy_sites():
+		var reach := Config.TOTEM_FREE_RADIUS + (StructureDefs.footprint("node") * Config.CELL if s.type == "node" else 0.0)
+		if Vector2(s.pos.x - feet.x, s.pos.z - feet.z).length() <= reach:
 			return true
 	return false

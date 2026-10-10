@@ -51,6 +51,16 @@ func beacons() -> Array[Structure]:
 	return out
 
 
+## Every place the Operative can deploy from: finished Command Nodes (not flying), then finished Totems.
+func deploy_sites() -> Array[Structure]:
+	var out: Array[Structure] = []
+	for s in list:
+		if s.type == "node" and s.is_built() and not s.is_flying():
+			out.append(s)
+	out.append_array(beacons())
+	return out
+
+
 func count_type(type: String) -> int:
 	return list.filter(func(s): return s.type == type).size()
 
