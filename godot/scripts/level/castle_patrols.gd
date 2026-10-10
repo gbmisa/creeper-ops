@@ -6,8 +6,8 @@ class_name CastlePatrols
 ## Live state lives in the views dict (v.patrol = { nest, wall: [r, r], warden: r,
 ## route: [Vector2i] }): the castle dict itself stays plain data (state()/load_state
 ## round-trip it). Patrols and the warden are extra on top of the bailey garrison
-## (CASTLE_GARRISON is unchanged); they respawn on the garrison timer and are gone
-## once the castle is held.
+## (CASTLE_GARRISON is unchanged); a dead one stays dead (no timer); fresh ones come only when the enemy
+## retakes the castle (release), and all are gone once the castle is held.
 
 
 ## First hostile tick: build the route and spawn the guards. Cheap afterwards.
@@ -31,29 +31,11 @@ static func ensure(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 	v["patrol"] = { "nest": nest, "wall": wall, "warden": _spawn_warden(s, lay, v), "route": route }
 
 
-## The garrison timer fired: replace dead wall patrols and the hall guard.
+## The garrison timer fired: build the patrols if missing. Dead ones are NOT replaced.
 static func on_garrison_tick(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary) -> void:
 	if not v.has("patrol"):
 		ensure(s, c, lay, v)
 		return
-	var p: Dictionary = v.patrol
-	var raiders: Raiders = s.nests.raiders
-	var grid: Grid = s.world.grid
-	var wall: Array = []
-	for r in p.wall:
-		if r.alive:
-			wall.append(r)
-	while wall.size() < 2:
-		raiders.spawn(p.nest, s.nests.pick_tier(), true)
-		var r: Dictionary = raiders.list.back()
-		var route: Array = p.route
-		var cell: Vector2i = route[randi() % route.size()]
-		r.node.position = grid.cell_ground(cell.x, cell.y)
-		r["wall_patrol"] = { "cells": route, "i": (route.find(cell) + 1) % route.size() }
-		wall.append(r)
-	p.wall = wall
-	if not (p.warden as Dictionary).alive:
-		p.warden = _spawn_warden(s, lay, v)
 
 
 ## Capture: the patrols and the hall guard are gone.

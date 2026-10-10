@@ -82,11 +82,20 @@ static func _respawn(castles: Strongholds, v: Dictionary, lay: Dictionary) -> vo
 	var p: Dictionary = v.patrol
 	raiders.kill((p.wall as Array)[0])
 	raiders.kill(p.warden)
-	CastlePatrols.on_garrison_tick(castles, {}, lay, v)
+	for i in 3:  # garrison ticks long after the old timer: nothing comes back
+		CastlePatrols.on_garrison_tick(castles, {}, lay, v)
 	var q: Dictionary = v.patrol
-	SmokeTest._check("castles2b guards: patrols and the Warden respawn on the garrison timer",
+	SmokeTest._check("castles2b guards: a dead patrol and the Warden stay dead (no timer)",
+		not ((q.wall as Array)[0] as Dictionary).alive and not (q.warden as Dictionary).alive)
+	CastlePatrols.release(v)  # the retake
+	CastlePatrols.ensure(castles, {}, lay, v)
+	q = v.patrol
+	SmokeTest._check("castles2b guards: a retaken castle gets full patrols and a Warden",
 		(q.wall as Array).size() == 2 and (q.wall as Array).all(func(pr): return pr.alive)
 		and (q.warden as Dictionary).alive and str((q.warden as Dictionary).tier.name) == "Warden")
+	var g := { "lancers_posted": CastleDefs.LANCERS_PER_CASTLE }
+	CastleLancers.retaken(g)
+	SmokeTest._check("castles2b guards: a retake reopens the Lancer slots", not g.has("lancers_posted"))
 
 
 static func _capture_clears(castles: Strongholds, c: Dictionary, v: Dictionary, lay: Dictionary, w: World) -> void:
