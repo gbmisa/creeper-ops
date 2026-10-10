@@ -40,6 +40,7 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 
 ## Update 3 (Gregory)
 - **Units must not shoot what they cannot destroy** (they empty their ammo into an enemy mortar, which only a charge kills). Added to brief U.
+- **Move orders are ignored while units are firing** (crawlers locked on the mortar would not leave). A player order must always override combat. Added to brief U.
 - **Logic audit** requested: a read-only Sonnet pass over who can damage what, looking for more dead ends like that. Findings go in `PLAYTEST4_audit.md`.
 
 ## Questions for Gregory
