@@ -369,12 +369,11 @@ static func _mortars(g, b: EnemyBuilder) -> void:
 	OperativeUpgrades.reset()
 	var pay_before: float = g.stockpile.salvage
 	var plant: Dictionary = gun_s.interact
+	SmokeTest._check("built mortar offers sabotage with zero charges", "Sabotage" in str(plant.prompt.call()))
 	plant.use.call()
-	OperativeUpgrades.charges = 1
-	plant.use.call()
-	DemoCharge.tick(world, Config.DEMO_FUSE + 0.1)
-	SmokeTest._check("a planted charge destroys a built mortar for no Salvage",
-		not bool(gun_s.alive) and OperativeUpgrades.charges == 0 and is_equal_approx(g.stockpile.salvage, pay_before))
+	var done := b.apply_channel(gun_s, gun_s.pos, Config.MORTAR_SABOTAGE_TIME)
+	SmokeTest._check("sabotage destroys a built mortar for no Salvage",
+		done and not bool(gun_s.alive) and is_equal_approx(g.stockpile.salvage, pay_before))
 	for raw in b.list.duplicate():
 		var s: Dictionary = raw
 		if str(s.kind) == "mortar" and bool(s.alive):

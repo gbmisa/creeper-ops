@@ -111,11 +111,13 @@ static func arm(b, s: Dictionary, label: String) -> void:
 		"channel_what": label,
 	}
 	if str(s.kind) == "mortar":
-		it = DemoCharge.interactable(b.world, s.pos, Config.MORTAR_SABOTAGE_RANGE, func() -> bool: return bool(s.alive), s.target)
+		s.target["no_charge"] = true  # sabotage prompt only; a charge blast still kills via charge_kill
 		s.target["charge_kill"] = func() -> void: b.kill(s, true)
 		var flash := func(_d: float, _p = null) -> void: b.world.effects.burst(s.pos + Vector3.UP, Color("ffcc88"), 0.5, 0.15)
-		s.target["on_hit"] = flash  # guns only flash a mortar; a planted charge destroys it
+		s.target["on_hit"] = flash  # guns only flash a mortar; sabotage or a charge blast destroys it
 		s.enemy["hit"] = flash
+		s.enemy["targetable"] = func(): return false
+		s.enemy["immune"] = true  # units must not waste ammo on it (UnitSupply.acquire)
 	s["interact"] = it
 	b.world.interactables.append(it)
 	var marker := {

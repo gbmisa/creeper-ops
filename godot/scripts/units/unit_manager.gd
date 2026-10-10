@@ -10,6 +10,7 @@ var list: Array[Unit] = []
 var selected: Array[Unit] = []
 var castles: Strongholds = null   # injected: units from a barracks in a held castle garrison it
 var lines := PatrolLines.new()
+var enemies: Array = []   # last frame's shootable enemies (attack picks, retaliation)
 
 
 func setup(w: World, sm: StructureManager) -> void:
@@ -42,7 +43,8 @@ func _on_trained(type: String, b: Structure) -> void:
 	u.home = b
 	var rally: Vector3 = b.rally if b.rally != null else b.pos + Vector3(randf_range(-3, 3), 0, 9)
 	order([u], Vector2(rally.x, rally.z))
-	UnitPatrol.auto_castle(self, u, b.pos)
+	if not UnitPatrol.auto_castle(self, u, b.pos):
+		UnitPatrol.auto_loop(self, u, rally if b.rally != null else b.pos)
 	Bus.say("%s ready (%d/%d at this barracks)." % [u.def.label, living_for(b), Config.UNITS_PER_BARRACKS], "good")
 
 
@@ -78,7 +80,9 @@ func spawn(type: String, x: float, z: float) -> Unit:
 	u.node.add_child(u.ammo_bar)
 	add_child(u.node)
 	u.pos = Vector3(x, world.grid.stand_y(x, z, Grid.Faction.PLAYER), z)
-	u.prey = { "kind": "unit", "node": u.node, "radius": u.def.radius, "alive": func(): return u.alive, "hit": func(d): damage(u, d) }
+	u.prey = { "kind": "unit", "node": u.node, "radius": u.def.radius, "alive": func(): return u.alive, "hit": func(d):
+		damage(u, d)
+		UnitAttack.retaliate(self, u) }
 	list.append(u)
 	return u
 
@@ -93,6 +97,8 @@ func order(units: Array, dest: Vector2, player := false) -> void:
 		walk_to(u, goal)
 		u.post = goal
 		u.patrol = []  # any move order cancels a patrol
+		u.target = {}
+		u.forced = player
 		if u.state != "resupply" or player:
 			u.state = "move"
 	if not units.is_empty():
@@ -172,9 +178,10 @@ func select(units: Array, additive := false) -> void:
 		u.ring.visible = selected.has(u)
 
 
-func update(dt: float, enemies: Array) -> void:
+func update(dt: float, enemy_list: Array) -> void:
+	enemies = enemy_list
 	for u in list.duplicate():
-		if (u.state == "move" or u.state == "return" or u.state == "patrol") and not u.path.is_empty() and u.ammo >= 1.0:
+		if (u.state == "move" or u.state == "return" or u.state == "patrol") and not u.path.is_empty() and u.ammo >= 1.0 and not u.forced:
 			# Attack-move: hold the route and fight anything already in gun range.
 			# No chasing — the unit never leaves its path for a target. Dry units
 			# keep walking (their retreat is handled in UnitSupply.update).

@@ -1,7 +1,7 @@
 class_name DemoCharge
 ## Planted demolition charge. The Operative buys charges at the Armoury (carry cap
 ## DEMO_CHARGE_MAX), holds E on an enemy structure to stick one to it, and after
-## DEMO_FUSE seconds it blasts everything in reach. Enemy mortars die only this way.
+## DEMO_FUSE seconds it blasts everything in reach. A blast also destroys enemy mortars caught in it (they are sabotaged for free otherwise).
 ## The Deep Core target is skipped (cave_hazards marks it with deep_core). Charges tick
 ## from their World's updaters, so the fuse runs in command mode and after a recall.
 

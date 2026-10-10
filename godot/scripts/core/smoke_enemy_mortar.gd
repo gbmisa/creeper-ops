@@ -145,22 +145,18 @@ static func _sabotage(g, nests: SporeNests, hive: Dictionary) -> void:
 	var before: float = g.stockpile.salvage
 	OperativeUpgrades.reset()
 	DemoCharge.clear()
-	SmokeTest._check("mortar prompt without a charge points to the Armoury",
-		"Armoury" in String(it.prompt.call()) and not it.ready.call())
+	var old_op: Callable = nests.operative
+	var feet := { "controller": { "pos": m.pos + Vector3(1, 0, 0) } }
+	nests.operative = func(): return feet
+	SmokeTest._check("mortar offers sabotage with zero charges",
+		"Sabotage" in String(it.prompt.call()) and not DemoCharge.chargeable(m.target))
 	it.use.call()
-	DemoCharge.tick(w, Config.DEMO_FUSE + 1.0)
-	SmokeTest._check("E without a charge does not harm the mortar", m.alive and DemoCharge.list.is_empty())
-	OperativeUpgrades.charges = 2
-	SmokeTest._check("mortar prompt offers planting", "Plant demolition charge" in String(it.prompt.call()) and it.ready.call())
-	it.use.call()
-	SmokeTest._check("planting consumes one charge and arms a fuse", OperativeUpgrades.charges == 1 and DemoCharge.list.size() == 1 and m.alive)
-	it.use.call()
-	SmokeTest._check("a mortar takes only one charge", OperativeUpgrades.charges == 1 and DemoCharge.list.size() == 1)
-	DemoCharge.tick(w, Config.DEMO_FUSE - 0.5)
-	SmokeTest._check("mortar survives until the fuse runs out", m.alive)
-	DemoCharge.tick(w, 0.6)
-	SmokeTest._check("the planted charge destroys the mortar and pays no Salvage",
+	EnemyMortarSabotage.tick(nests, Config.MORTAR_SABOTAGE_TIME - 0.5)
+	SmokeTest._check("mortar survives until the channel completes", m.alive and DemoCharge.list.is_empty())
+	EnemyMortarSabotage.tick(nests, 0.6)
+	SmokeTest._check("completed sabotage destroys the mortar and pays no Salvage",
 		not m.alive and is_equal_approx(g.stockpile.salvage, before))
+	nests.operative = old_op
 	OperativeUpgrades.reset()
 	EnemyMortars.clear(nests, hive)
 

@@ -159,14 +159,14 @@ static func _trebuchet(s: Structure, mgr) -> bool:
 
 
 ## Every enemy build the Trebuchet may hit: built enemy structures (hub mortars die
-## with their parent), hive parts except the core (Operative/Lance-only), hive mortars.
+## with their parent), hive parts except the core (Operative/Lance-only). Never mortars: only a charge kills them.
 static func _siege_foes(mgr) -> Array:
 	var out: Array = []
 	if mgr.enemy_build != null:
 		for raw in (mgr.enemy_build as EnemyBuilder).list:
 			var e: Dictionary = raw
 			var foe: Dictionary = e.get("enemy", {})
-			if bool(e.alive) and bool(e.get("grown", true)) and not foe.is_empty():
+			if bool(e.alive) and bool(e.get("grown", true)) and not foe.is_empty() and not foe.get("immune", false):
 				out.append(foe)
 	if mgr.hazards == null:
 		return out
@@ -178,11 +178,6 @@ static func _siege_foes(mgr) -> Array:
 			var p: Dictionary = raw
 			var foe: Dictionary = p.get("enemy", {})
 			if bool(p.alive) and str(p.get("kind", "")) != "core" and not foe.is_empty():
-				out.append(foe)
-		for raw in hive.get("mortars", []):
-			var m: Dictionary = raw
-			var foe: Dictionary = m.get("enemy", {})
-			if bool(m.alive) and not foe.is_empty():
 				out.append(foe)
 	return out
 
