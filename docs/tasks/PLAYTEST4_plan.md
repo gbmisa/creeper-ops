@@ -92,6 +92,11 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
   - -> Haiku `balance-tester` on `pt4/threat` (data only, exact numbers given).
 - Brief H (engine hook) started on `pt4/hook`.
 
+## Update 14 (Gregory, 2026-10-10)
+- **"The spawn rate of the enemies needs to be at a more appropriate ratio. The HP value of the enemies spawning in a castle cannot be greater than the DPS of the operative."** Read as: HP spawned inside a castle per second must stay under the Operative's base DPS (Pulse Rifle 7.1). Today the courtyard garrison refills every 20 -> 5 s with pressure-scaled tiers: up to 8 HP/s with Ravagers, 24 HP/s with Behemoths. -> brief **C** (Sonnet `feature-dev`, after G merges: same files): per-castle HP budget of 0.5 x rifle DPS.
+- Open question to Gregory: does the first sentence also mean field nests (outside castles)? Those are 20 -> 5 s per nest, cap 3 -> 10 live raiders, scaling with the Threat curve that Update 13 just stretched.
+- Threat curve (Update 13) started on `pt4/threat` (Haiku).
+
 ## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
 Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
 - **Terrain edits: 0 in 28 minutes.** The static-map / pathing rework is dropped; it would fix nothing.
