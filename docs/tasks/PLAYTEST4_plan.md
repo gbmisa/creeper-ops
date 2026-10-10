@@ -85,6 +85,13 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 - **"Nothing should be able to unhook a salvage machine from a relay except for destroying the relay."** Cause: a hooked socket is raider prey with HP; raiders cut it (`engine_hook.gd:7-13`, "cut by raiders"). -> brief **H** (Sonnet `feature-dev`): sockets are not prey; a hook ends only when its anchor structure is destroyed; wet / deactivated / no route only pause shipping.
 - Brief G (castle garrison) started on `pt4/guards`.
 
+## Update 13 (Gregory, 2026-10-10)
+- **"Double the length of time for the threat level to increase."** (Also answers Update 9's "stronger enemies are coming out way too fast".) The Threat chip is `Pressure.value` (0 until `grace`, 1 at `cap`). Decision (Opus reading): first raid time unchanged; every later time is stretched to twice as far after grace, on both levels, with tier unlocks kept on the same curve points.
+  - L2 (`level02.gd`): tier_times [0, 300, 600, 900] -> [0, 420, 1020, 1620]; pressure points 300/600/900/1800 -> 420/1020/1620/3420; cap 1800 -> 3420. Brute 7:00, Ravager 17:00, Behemoth 27:00, full threat 57:00.
+  - L1 (`level01.gd`): tier_times [0, 480, 900, 1320] -> [0, 660, 1500, 2340]; points 480/900/1320/2400 -> 660/1500/2340/4500; cap 2400 -> 4500. Brute 11:00, Ravager 25:00, Behemoth 39:00, full threat 75:00.
+  - -> Haiku `balance-tester` on `pt4/threat` (data only, exact numbers given).
+- Brief H (engine hook) started on `pt4/hook`.
+
 ## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
 Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
 - **Terrain edits: 0 in 28 minutes.** The static-map / pathing rework is dropped; it would fix nothing.
