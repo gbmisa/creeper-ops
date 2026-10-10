@@ -190,7 +190,6 @@ const GUARD_BOLT_RADIUS := 2.0    # metres from the impact point that still gets
 const GUARD_DMG_OPERATIVE := 14.0 # suit damage (SUIT_MAX is 100)
 const GUARD_DMG_UNIT := 18.0
 const GUARD_DMG_STRUCT := 20.0
-const GUARD_RESPAWN := 90.0       # seconds for a dead Sentinel to regrow from the crown nest
 const SENTINEL := { "name": "Sentinel", "hp": 30.0, "dps": 0.0, "speed": 0.0, "size": 1.1, "color": Color("ff4a5a") }
 
 # ---- threats -------------------------------------------------------------------

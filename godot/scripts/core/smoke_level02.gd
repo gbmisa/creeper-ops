@@ -163,7 +163,15 @@ static func _capture(w: World, castles: Strongholds, guards: CastleGuards) -> vo
 	c.state = "capturing"
 	guards.update(0.05)
 	SmokeTest._check("guards: capture clears the garrison", guards.alive_at(id) == 0)
-	c.state = "hostile"
-	for i in int(Config.GUARD_RESPAWN * 2.0 / 0.5):
+	c.state = "hostile"  # an abandoned capture is not a retake
+	for i in 600:  # 300 s, far past the old 90 s regrow
 		guards.update(0.5)
-	SmokeTest._check("guards: a retaken castle regrows its garrison", guards.alive_at(id) > 0)
+	SmokeTest._check("guards: dead Sentinels stay dead with no timer", guards.alive_at(id) == 0)
+	c.state = "held"
+	guards.update(0.05)
+	c.state = "siege"
+	guards.update(0.05)
+	SmokeTest._check("guards: still dead while the castle is held", guards.alive_at(id) == 0)
+	c.state = "hostile"  # the enemy retook it
+	guards.update(0.05)
+	SmokeTest._check("guards: a retaken castle's garrison is back in full", guards.alive_at(id) > 0)
