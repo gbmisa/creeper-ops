@@ -128,8 +128,9 @@ static func _forward(g, seconds: float, keep_base := false) -> void:
 		if n % 100 == 0:
 			await g.get_tree().process_frame  # let queue_free and the renderer catch up, as in real play
 		if t - mark >= 240.0 or t >= seconds:
-			print("[probe] t=%4.0fs  update avg %.2f ms  worst %.1f ms  raiders %d  flyers %d  structures %d" % [
-				t, spent / 1000.0 / n, worst / 1000.0, g.hazards.nests.raiders.list.size(), g.hazards.nests.flyers.list.size(), g.structures.list.size()])
+			print("[probe] t=%4.0fs  update avg %.2f ms  worst %.1f ms  raiders %d  flyers %d  structures %d  enemy built %d" % [
+				t, spent / 1000.0 / n, worst / 1000.0, g.hazards.nests.raiders.list.size(), g.hazards.nests.flyers.list.size(), g.structures.list.size(),
+				g.structures.enemy_build.list.size() if g.structures.enemy_build != null else 0])
 			print("[probe]          terrain edits so far %d (%d cells)  nodes %d" % [edits[0], edits[1], g.get_tree().get_node_count()])
 			mark = t
 			spent = 0

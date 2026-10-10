@@ -169,6 +169,8 @@ const ENEMY_LEECH_MAT := 0.15          # material/s one grown Leech adds to its 
 const ENEMY_BLIGHT_DPS := 1.5          # HP/s a Blight Pylon deals to structures in its radius
 const ENEMY_BUILD_MAX_PER_KIND := {"spitter": 2, "pylon": 2, "lancer": 2}  # per-castle base cap; +2 at full pressure
 const ENEMY_SPITTER_FAIR_RANGE := 20.0  # cells; a spitter site needs a buildable sniper cell with LOS inside this. Must match the sniper's range in structure_defs.
+const ENEMY_PLAN_BUDGET_US := 1500      # microseconds one planner pass may spend on fair-site tests; it resumes next update
+const ENEMY_SCAN_TTL := 6.0            # seconds a finished edge-cell scan is reused
 const JUMP_PAD_MARGIN := 1.5      # levels above the column top the pad throws you
 ## Castle stakes (castle_raids.gd). Levels override any key with their CASTLE_RULES.
 const CASTLE_RULES := {
