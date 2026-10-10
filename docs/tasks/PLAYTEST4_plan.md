@@ -73,6 +73,9 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 - **Salvage Engines (Update 8) decided:** remove the hive gate. Castles do not contain engines and award Salvage on their own; engines get no castle condition either. -> brief **S** (Sonnet `feature-dev`).
 - **"The stronger enemies are coming out way too fast."** L2 `RAID_SCHEDULE` (`level02.gd:9`): first raid 3:00, Brute 5:00, Ravager 10:00, Behemoth 15:00, pressure cap 30:00. L1 is 5:00 / 8:00 / 15:00 / 22:00, cap 40:00. Data-only change (`RAID_SCHEDULE` + `PRESSURE_POINTS`, kept in step). Waiting on Gregory for target times and which level he was on. -> Haiku `balance-tester` once the numbers are set.
 
+## Update 10 (Gregory, 2026-10-10, screenshot)
+- **Spitters still shoot straight into a wall** (seen at a Salvage Engine). They must have a clear projectile path before firing. Cause: `RaiderShots._pick` checks sight for beams only; acid is launched at anything in range and the lob is clipped where it meets terrain. -> added to brief R phase 2 as item 7b (fire only when the lob reaches the target, otherwise reposition along the committed path).
+
 ## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
 Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
 - **Terrain edits: 0 in 28 minutes.** The static-map / pathing rework is dropped; it would fix nothing.
