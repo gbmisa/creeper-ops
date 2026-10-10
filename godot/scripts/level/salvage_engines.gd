@@ -5,8 +5,8 @@ extends RefCounted
 ## network leaf: it launches Salvage return packets at EngineDefs.RATE from the engine's reserve,
 ## along the cable to the nearest connected relaying structure and home.
 ## Pauses: creeper over the socket's cell (wet), a live hive named in `hive`, a castle named in
-## `castle` that you do not hold. Raiders and Weavers see hooked sockets as prey (30 HP).
-## Saveable state per engine: reserve + each socket's hooked/hp/acc (state()/load_state()).
+## `castle` that you do not hold. A hook is not prey; only losing its anchor relay unhooks it.
+## Saveable state per engine: reserve + each socket's hooked/acc (state()/load_state()).
 
 var world: World
 var structures: StructureManager
@@ -41,7 +41,6 @@ func _build(row: Dictionary) -> Dictionary:
 		s["node"] = vis.node
 		s["mat"] = vis.mat
 		s["hooked"] = false
-		s["hp"] = 0.0
 		s["acc"] = 0.0
 		s["anchor"] = null
 		s["cable"] = null
@@ -109,7 +108,7 @@ func hook(e: Dictionary, s: Dictionary) -> bool:
 	if a == null:
 		return false
 	s.hooked = true
-	s.hp = EngineDefs.CLAMP_HP
+	s.anchor = a
 	s.acc = 0.0
 	EngineHook.link(self, s, a)
 	world.effects.burst(s.pos, EngineMeshes.HOOKED, 1.4, 0.4)
@@ -122,22 +121,11 @@ func unhook(s: Dictionary, why: String) -> void:
 	if not s.hooked:
 		return
 	s.hooked = false
-	s.hp = 0.0
 	s.anchor = null
 	EngineHook.unlink(s)
 	world.effects.burst(s.pos, Color("ff6a3a"), 1.4, 0.4)
 	Sfx.play("boom", s.pos)
-	Bus.say("Salvage Engine socket %s. Go back and hook it again." % why, "warn")
-
-
-## Prey rows for the raider systems: only hooked sockets.
-func prey() -> Array:
-	var out := []
-	for e in list:
-		for s in e.sockets:
-			if bool(s.hooked):
-				out.append(s.prey)
-	return out
+	Bus.say("Salvage Engine socket unhooked: %s. Go back and hook it again." % why, "warn")
 
 
 func tick(dt: float) -> void:
@@ -153,8 +141,11 @@ func tick(dt: float) -> void:
 
 func _ship(e: Dictionary, s: Dictionary, dt: float, idle: bool) -> void:
 	var a: Structure = s.anchor
-	if a == null or a.dead or not a.connected or a.is_flying():
-		a = anchor_for(s)
+	if a != null and a.dead:
+		unhook(s, "relay lost")  # the only way a hook ends
+		return
+	if a == null or not a.connected or a.is_flying():
+		a = anchor_for(s)  # lost its route or took off: cable to another relay in reach, if any
 		s.anchor = a
 		EngineHook.link(self, s, a)
 	if idle or a == null or is_wet(s):
@@ -202,7 +193,7 @@ func tint(s: Dictionary) -> void:
 
 func state() -> Array:
 	return list.map(func(e): return { "id": e.id, "reserve": e.reserve,
-		"sockets": e.sockets.map(func(s): return { "hooked": s.hooked, "hp": s.hp, "acc": s.acc }) })
+		"sockets": e.sockets.map(func(s): return { "hooked": s.hooked, "acc": s.acc }) })
 
 
 func load_state(rows: Array) -> void:
@@ -215,8 +206,8 @@ func load_state(rows: Array) -> void:
 				var s: Dictionary = e.sockets[i]
 				var ds: Dictionary = d.sockets[i]
 				s.hooked = bool(ds.hooked)
-				s.hp = float(ds.hp)
 				s.acc = float(ds.acc)
 				if s.hooked:
-					EngineHook.link(self, s, anchor_for(s))
+					s.anchor = anchor_for(s)
+					EngineHook.link(self, s, s.anchor)
 				tint(s)
