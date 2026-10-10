@@ -1,4 +1,4 @@
-# Handoff: 2026-10-10 (playtest 4: fixes and perf merged, ready for Gregory's playtest, Opus)
+# Handoff: 2026-10-10 (playtest 4: fixes and perf merged, perf + nine playtest fixes merged, Opus)
 
 ## State
 Godot 4.7 game in `godot/`. **Gregory plays this worktree** (`creeper fps td-worktrees/integ`, branch `integ/2026-10-09`, see RUN.md), not `main`. Do all gameplay work on branches cut from it.
@@ -21,9 +21,17 @@ Open, not assigned: creeper GPU sim CPU side 5.3 ms per `update(0.05)` (readback
 - Audit item 3: Operative respawn can wait forever if Salvage runs out. Gregory: will judge in playtests.
 - File length: ~250 lines is a default, not a cap (Gregory, 2026-10-10). Split only files that mix responsibilities.
 
+## Playtest 4 afternoon (Updates 7-15 in PLAYTEST4_plan.md; briefs R, S, G, H, C in PLAYTEST4_briefs.md)
+**Hard rules added today (CLAUDE.md, AGENTS.md):** change only what Gregory named; perf/refactor must be behaviour-identical; a change to working behaviour goes in `CHANGES.md` (repo root) for his ruling, never a yes/no in chat; remind him to review it when it gains entries. `CHANGES.md` has 15 entries (unrequested changes from the perf merges) with no ruling yet.
+Merged into integ after the perf merges, smoke 0 failures: `pt4/salvage` (engines ship once hooked, no hive/castle gate), `pt4/guards` (Sentinels, wall patrols, Warden, castle Lancers never respawn; back only on a retake), `pt4/threat` (time after grace doubled on L1 and L2), `pt4/hook` (sockets are not prey; only a dead/removed anchor unhooks), `pt4/castle-rate` (garrison HP budget 0.75 x tier-3 rifle DPS = 9.4 HP/s; only bites after a Behemoth), `pt4/raider-commit` phase 1 at `af92d9f` (raiders keep one target and one route, `RaiderPaths`), and a one-line revert in `hive_spawning.gd` (cached Sac node threw "previously freed instance").
+**Phase 1 was merged at Gregory's request before its L2 check finished.** Unmeasured: route search cost on a long detour (cap 4000 nodes, about 9 us per node) and whether a capped search ends at the cliff edge. An agent is in the `pt4-raider-commit` worktree adding `--level=2 --raider-probe` and, if needed, replacing per-raider A* with time-sliced per-target fields; its work is uncommitted there. Review and merge it when it reports.
+Pushed to GitHub: integ at `463989f` only (before every fix above).
+
 ## Next steps
-1. **Gregory playtests integ** (L2 with units is the perf case). Log feedback as Update N in the plan (workflow: log, brief, cheap agents, Opus merges).
-2. Re-run the display probe (`--probe-base`, minute 28) and record fps before/after in PLAYTEST4_plan.md.
-3. Creeper sim CPU cost and first-person shadows (Opus or a Sonnet brief with probe numbers).
-4. **Pathfinding in Rust (Gregory, 2026-10-10: noted, not started; do it in a fresh session, not a long one).** Port unit pathfinding (`units/pathfind.gd`), then the raider flow field (`level/raider_field*.gd`) if still over budget, to a Rust GDExtension (`gdext`) behind the same `Pathfind.find` / `RaiderField` interface, keeping the GDScript version as the headless/test fallback. `pt4/perf-units` has landed (GDScript A* is now ~9 us per node, so measure first whether a port is still worth it); the remaining enemy cost is `RaiderMove.walk`, so a raider port must move the whole walk step in one batched call, not just the field lookup. Needs a brief (build steps, `.gdextension` file, Linux target) and a Sonnet agent; Opus reviews.
-5. Push integ to GitHub and tell Muse (docs/tasks/MUSE_NOTES.md) when Gregory agrees.
+1. Gregory playtests integ (restart the game). Log feedback as Update 16+.
+2. Review the raider L2 verify agent's report; merge if its `[rprobe]` numbers pass (Collector damaged, no backtracking, no frame over 5 ms of path work).
+3. Brief R phase 2 (fresh Sonnet `stage-runner`): lock-on for moving targets, shooters keep their pick, Spitters fire only with a clear lob (item 7b), unit attack orders.
+4. Gregory's rulings on `CHANGES.md` entries 1-15; revert what he rejects.
+5. Display perf probe (`--probe-base`, minute 28) not re-run since the perf merges.
+6. Pathfinding in Rust: noted, not started; measure first whether it is still needed (unit A* is about 9 us per node; raider cost is `RaiderMove.walk`).
+7. Push integ and note Muse (docs/tasks/MUSE_NOTES.md) when Gregory says so.
