@@ -4,6 +4,10 @@
 Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) (new Stage 25 row). Run: [RUN.md](RUN.md). Opus long-horizon plan: [docs/tasks/ART3_OPUS_plan.md](docs/tasks/ART3_OPUS_plan.md).
 Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHub branches; **Opus** orchestrates, merges and does the visuals. Opus → Muse notes go in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md); the latest note covers A4/A5 merge order and the new glbs.
 
+## 2026-10-09 local edits (Opus, not yet pushed to GitHub)
+- **CW3 deactivate** (Z, action id still `supply`): `Structure.active` (was `supply_on`) works on any structure but the Node. Off means it requests no packets (`PacketRequests.need`) and the manager tick skips firing, mining, collector field, income and behaviours. Smoke checks are in `smoke_group_select.gd`.
+- **Pause menu**: Muse's `feat/pause-menu` applied locally, then moved into `ui/pause_menu.gd` (`PauseMenu`). **Esc** opens it in both modes; in command mode Esc first cancels a tool or selection. Space is still a quick pause. Smoke: all pass.
+
 ## Done this session (Gregory: "military models + UI overhaul, work continuously")
 **`art/3-models`** (pushed, worktree `art3-models`; log in `docs/tasks/ART3M_progress.md`; sheets in `docs/art/military/`):
 - Restyled as military, with bone names and pivots kept: cannon, mortar, sniper, beam, collector, relay, command_node, totem, drop_pod, soldier (rifleman, new `flash` bone) and crawler (4x4 armoured car).

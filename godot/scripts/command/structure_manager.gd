@@ -207,6 +207,8 @@ func update(dt: float, time: float) -> void:
 		StructureUpkeep.bars(s, time)
 		if s.type == "outpost" and s.is_built():
 			outpost_storage += Config.OUTPOST_STORAGE
+		if not s.active:  # CW3 deactivate: no firing, mining, field or behaviour
+			continue
 		# A roaming weapon (Thor) fires from its magazine anywhere: off-network and in flight.
 		var roams: bool = s.is_built() and s.def.get("roams", false)
 		if roams:
