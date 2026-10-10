@@ -68,6 +68,11 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 - Decision (Gregory): remove the condition. Hooking to the network is the only requirement.
 - Plan (not started, ask first): Sonnet `feature-dev`, small. Remove the hive and castle gates from `salvage_engines.gd`, drop the `hive`/`castle` keys and the data comments from both level files, update the engine prompt text and the smoke checks that assert the gate. Sonnet rather than Haiku because rule code and smoke change, not only level data.
 
+## Update 9 (Gregory, 2026-10-10, with two screenshots)
+- **Pathing (Update 7) explained.** L2, hive plateau west of engine e4: Skitters on the plateau target a Collector at the cliff foot, cannot step down, and alternate every 2 s between the straight line and the flow field (`Raiders._think` detour timer). This loop is older than the perf merge. Gregory's rule: pick the most direct walkable path to the chosen target and keep both until the target dies or the path breaks; lock on to moving targets instead of re-deciding several times a second; applies to all pathfinding. -> brief **R** in PLAYTEST4_briefs.md (Sonnet `stage-runner`, 2 phases: raiders, then moving targets + shooters + unit attack orders).
+- **Salvage Engines (Update 8) decided:** remove the hive gate. Castles do not contain engines and award Salvage on their own; engines get no castle condition either. -> brief **S** (Sonnet `feature-dev`).
+- **"The stronger enemies are coming out way too fast."** L2 `RAID_SCHEDULE` (`level02.gd:9`): first raid 3:00, Brute 5:00, Ravager 10:00, Behemoth 15:00, pressure cap 30:00. L1 is 5:00 / 8:00 / 15:00 / 22:00, cap 40:00. Data-only change (`RAID_SCHEDULE` + `PRESSURE_POINTS`, kept in step). Waiting on Gregory for target times and which level he was on. -> Haiku `balance-tester` once the numbers are set.
+
 ## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
 Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
 - **Terrain edits: 0 in 28 minutes.** The static-map / pathing rework is dropped; it would fix nothing.
