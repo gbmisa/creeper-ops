@@ -11,8 +11,6 @@ extends RefCounted
 var world: World
 var structures: StructureManager
 var stockpile: Stockpile
-var nests: SporeNests = null      # hives (guard rule); injected
-var castles: Strongholds = null   # castles (guard rule); injected
 var cash_mode := false            # cave: no network, a hooked engine pays out by hand once
 var operative := func() -> Variant: return null  # Vector3 feet or null (hint only)
 var list: Array[Dictionary] = []
@@ -80,22 +78,7 @@ func label(e: Dictionary) -> String:
 	var text := "Salvage Engine %d/%d hooked, %d left" % [hooked_count(e), e.sockets.size(), int(ceil(float(e.reserve)))]
 	if float(e.reserve) <= 0.0:
 		return "Salvage Engine (spent)"
-	var why := guard_note(e)
-	return text if why == "" else "%s (%s)" % [text, why]
-
-
-## "" when the engine may ship, else the reason it is idle.
-func guard_note(e: Dictionary) -> String:
-	var row: Dictionary = e.row
-	if nests != null and row.has("hive"):
-		for n in nests.nests:
-			if str(n.name) == str(row.hive) and bool(n.alive):
-				return "ships nothing until the %s hive is razed" % str(row.hive)
-	if castles != null and row.has("castle"):
-		for c in castles.list:
-			if str(c.id) == str(row.castle) and str(c.owner) != "player":
-				return "ships only while you hold %s" % str(c.get("name", row.castle))
-	return ""
+	return text
 
 
 func is_wet(s: Dictionary) -> bool:
@@ -160,7 +143,7 @@ func prey() -> Array:
 func tick(dt: float) -> void:
 	_t += dt
 	for e in list:
-		var idle := guard_note(e) != "" or float(e.reserve) <= 0.0
+		var idle := float(e.reserve) <= 0.0
 		for s in e.sockets:
 			if s.hooked and not cash_mode:
 				_ship(e, s, dt, idle)

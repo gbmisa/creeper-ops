@@ -116,27 +116,19 @@ static func _hold(g, e: Dictionary, s: Dictionary) -> void:
 
 
 static func _guards(g, e: Dictionary, s: Dictionary) -> void:
+	# No hive or castle condition: a hooked engine ships even beside a live hive and a hostile castle.
 	var eng: SalvageEngines = g.engines
 	var hive: Dictionary = g.hazards.nests.nests[0]
 	var was: bool = hive.alive
-	e.row["hive"] = hive.name  # borrow the safe engine: the guard rule is data-driven
 	hive.alive = true
-	SmokeTest._check("ship: a hive engine hooks (risk) but reports its guard", eng.hook(e, s) and eng.guard_note(e).contains("hive"))
-	s.hp = 1.0e9
-	var a := eng.shipped
-	SmokeTest._sim(g, 15.0)
-	SmokeTest._check("ship: a hive engine ships nothing until razed", eng.shipped == a)
-	hive.alive = false
-	SmokeTest._sim(g, 22.0)
-	SmokeTest._check("ship: ... and ships once the hive is razed", eng.shipped > a, "(%d)" % int(eng.shipped - a))
-	hive.alive = was
-	e.row.erase("hive")
-	eng.unhook(s, "test end")
-	var c: Dictionary = g.castles.list.filter(func(x): return x.id == "bastion")[0]
-	var e3: Dictionary = eng.list.filter(func(x): return x.id == "e3")[0]
+	var c: Dictionary = g.castles.list[0]
 	var owner: String = c.owner
 	c.owner = "enemy"
-	SmokeTest._check("ship: a castle engine is idle while the castle is not held", eng.guard_note(e3).contains("hold"))
-	c.owner = "player"
-	SmokeTest._check("ship: ... and ships while you hold it", eng.guard_note(e3) == "")
+	SmokeTest._check("ship: an engine beside a live hive and hostile castle hooks", eng.hook(e, s))
+	s.hp = 1.0e9
+	var a := eng.shipped
+	SmokeTest._sim(g, 22.0)
+	SmokeTest._check("ship: ... and ships with no hive or castle condition", eng.shipped > a, "(%d)" % int(eng.shipped - a))
+	hive.alive = was
 	c.owner = owner
+	eng.unhook(s, "test end")

@@ -17,18 +17,9 @@ static func _level(n: int, lv: Dictionary) -> void:
 	var seen := SmokeEngines._flood(grid, lv.landing_hint)
 	var rows: Array = lv.engines
 	SmokeTest._check("placement %s: at least 3 engines" % tag, rows.size() >= 3, str(rows.size()))
-	var tagged := rows.filter(func(r): return r.has("hive") or r.has("castle")).size()
-	SmokeTest._check("placement %s: most engines are beside a hive or castle" % tag, tagged * 2 > rows.size() and tagged < rows.size(),
-		"(%d of %d)" % [tagged, rows.size()])
 	var kinds := {}
 	var clear := true
 	var reach := true
-	var names := {}
-	for h in lv.hives:
-		names[str(h.name)] = h
-	var castles := {}
-	for c in lv.castles:
-		castles[str(c.id)] = c
 	var bad := []
 	for r in rows:
 		var was := clear
@@ -42,20 +33,15 @@ static func _level(n: int, lv: Dictionary) -> void:
 				clear = clear and Vector2(c.x - e.x, c.y - e.z).length() > 3.0
 			for cs in lv.castles:
 				clear = clear and not Rect2i(int(cs.x) - 1, int(cs.z) - 1, int(cs.size) + 2, int(cs.size) + 2).has_point(c)
-		if r.has("hive"):
-			clear = clear and names.has(str(r.hive))
-		if r.has("castle"):
-			clear = clear and castles.has(str(r.castle))
 		if was and not clear:
 			bad.append(r.id)
 			clear = true
 	clear = bad.is_empty()
-	SmokeTest._check("placement %s: engines clear of hives, emitters and castle walls, tags name real ones" % tag, clear, str(bad))
+	SmokeTest._check("placement %s: engines clear of hives, emitters and castle walls" % tag, clear, str(bad))
 	SmokeTest._check("placement %s: every socket can be reached on foot from the landing site" % tag, reach)
 	SmokeTest._check("placement %s: more than one kind of engine" % tag, kinds.size() >= 2, str(kinds.keys()))
-	var safe := rows.filter(func(r): return not r.has("hive") and not r.has("castle"))
-	SmokeTest._check("placement %s: at least one safe engine within 40 cells of the landing site" % tag,
-		safe.any(func(r): return Vector2(r.x - lv.landing_hint.x, r.z - lv.landing_hint.y).length() <= 40.0))
+	SmokeTest._check("placement %s: at least one engine within 40 cells of the landing site" % tag,
+		rows.any(func(r): return Vector2(r.x - lv.landing_hint.x, r.z - lv.landing_hint.y).length() <= 40.0))
 	var top_climb := rows.filter(func(r): return EngineDefs.kind(r).stair).size()
 	SmokeTest._check("placement %s: some engines need the stair climbed" % tag, top_climb >= 2, str(top_climb))
 	var ore_ok := true

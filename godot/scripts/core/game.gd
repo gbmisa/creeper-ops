@@ -85,8 +85,6 @@ func _ready() -> void:
 	hazards.guards = guards
 
 	engines = SalvageEngines.new(surface, level.get("engines", []), structures, stockpile)
-	engines.nests = hazards.nests
-	engines.castles = castles
 
 	orbital = Orbital.new(surface, economy)
 	orbital.hazards = hazards

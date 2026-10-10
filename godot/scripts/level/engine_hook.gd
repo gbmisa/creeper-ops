@@ -91,7 +91,7 @@ static func animate(host: SalvageEngines, e: Dictionary, s: Dictionary, t: float
 	var bead := s.get("bead") as MeshInstance3D
 	if bead == null or not s.has("pts") or float(e.reserve) <= 0.0:
 		return
-	var live: bool = bool(s.hooked) and float(e.reserve) > 0.0 and host.guard_note(e) == "" and not host.is_wet(s)
+	var live: bool = bool(s.hooked) and float(e.reserve) > 0.0 and not host.is_wet(s)
 	bead.visible = live
 	if live:
 		bead.position = EngineMeshes.along(s.pts, fmod(t * 0.3 + float(s.pos.x) * 0.1, 1.0))
