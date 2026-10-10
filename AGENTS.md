@@ -22,3 +22,6 @@ Stop and report exactly:
 Say "committed on branch X". **Never say "merged"**: merging is the orchestrator's job, after review.
 
 Project conventions, architecture and tests: see CLAUDE.md.
+
+## Change only what the brief names (hard rule, 2026-10-10)
+The owner's rule: nothing changes unless he asked for it. Change only the behaviour your brief names. Do not alter any other rule, number, timing, AI behaviour, UI or level data, and do not "improve" things you pass. Performance and refactor work must be behaviour-identical: a timer, throttle, cooldown or cache that changes what the player sees needs the orchestrator's approval first, so stop and report. Never weaken or delete a smoke check to get to green; report the failing check. Your report must list every behaviour change you made, including side effects, or say "none outside the brief".
