@@ -49,15 +49,24 @@ static func _go(mgr: UnitManager, u: Unit) -> void:
 
 
 ## A unit from a barracks inside a held castle garrisons its courtyard without orders.
-static func auto_castle(mgr: UnitManager, u: Unit, at: Vector3) -> void:
+static func auto_castle(mgr: UnitManager, u: Unit, at: Vector3) -> bool:
 	if mgr.castles == null:
-		return
+		return false
 	var c := CastleVaults.castle_at(mgr.castles, mgr.world.grid.world_to_cell(at.x, at.z))
 	if c.is_empty() or c.owner != "player":
-		return
+		return false
 	var route := courtyard_loop(mgr.castles.lays[c.id])
-	if route.size() >= 2:
-		assign(mgr, [u], route)
+	if route.size() < 2:
+		return false
+	assign(mgr, [u], route)
+	return true
+
+
+## A new unit loops a small square around `center` until the player gives it an order.
+static func auto_loop(mgr: UnitManager, u: Unit, center: Vector3) -> void:
+	var r := Config.AUTO_PATROL_RADIUS
+	var c := Vector2(center.x, center.z)
+	assign(mgr, [u], [c + Vector2(r, r), c + Vector2(r, -r), c + Vector2(-r, -r), c + Vector2(-r, r)])
 
 
 ## Four corners of the courtyard's bounding box, pulled in and snapped to open yard cells.

@@ -5,6 +5,7 @@ extends RefCounted
 ##   "move"     walking an order path
 ##   "resupply" walking home (dry or hurt); docks within range of a barracks to restock
 ##   "return"   restocked, walking back to the post it left
+##   "attack"   hunting `target` until it dies (player order or retaliation), see UnitAttack
 ##   "patrol"   looping through `patrol` points forever (UnitPatrol), fighting what comes in range
 
 var type: String
@@ -35,6 +36,11 @@ var stuck_from := Vector3.ZERO
 var warned_dry := false
 var grade := "std"             # ammo grade of the rounds in grade_ammo (from its barracks)
 var grade_ammo := 0.0
+var forced := false             # player move order in progress: no engaging, no firing until it arrives
+var target: Dictionary = {}     # "attack" state: the enemy dict being hunted (UnitAttack)
+var target_leash := false       # true = retaliation (gives up past RETALIATE_LEASH of leash_from)
+var leash_from := Vector2.ZERO
+var attack_t := 0.0             # re-path timer
 var prey: Dictionary            # what enemies see: { node, radius, alive, hit }
 
 

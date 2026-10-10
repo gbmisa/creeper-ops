@@ -15,6 +15,9 @@ static func update(mgr: UnitManager, u: Unit, dt: float, enemies: Array) -> void
 		"move", "return":
 			if u.path.is_empty() and not mgr.unstick(u):
 				u.state = "idle"
+				u.forced = false
+		"attack":
+			UnitAttack.tick(mgr, u, dt)
 		"patrol":
 			if u.path.is_empty():
 				UnitPatrol.advance(mgr, u, dt)
@@ -23,6 +26,8 @@ static func update(mgr: UnitManager, u: Unit, dt: float, enemies: Array) -> void
 			return
 	if (u.ammo < 1.0 or u.hp < u.def.hp * UnitDefs.RETREAT_HP) and _head_home(mgr, u):
 		return
+	if u.forced and not u.path.is_empty():
+		return  # a player move order wins: no firing until it arrives
 	_fight(mgr, u, dt, enemies)
 
 
@@ -58,6 +63,7 @@ static func _head_home(mgr: UnitManager, u: Unit) -> bool:
 			Bus.say("%s is out of supply with no barracks to return to." % u.def.label, "warn")
 		return false
 	u.warned_dry = false
+	u.target = {}
 	u.state = "resupply"
 	mgr.walk_to(u, Vector2(b.pos.x, b.pos.z + 3.5))
 	if u.ammo < 1.0:
@@ -100,6 +106,8 @@ static func acquire(u: Unit, enemies: Array) -> Dictionary:
 	for e in enemies:
 		if not e.alive.call():
 			continue
+		if e.get("immune", false):
+			continue
 		if e.has("targetable") and not (e.targetable as Callable).call():
 			continue
 		var d := (e.node.position as Vector3).distance_to(u.pos)
@@ -117,7 +125,9 @@ static func _fight(mgr: UnitManager, u: Unit, dt: float, enemies: Array) -> void
 	var w := mgr.world
 	var gun: Dictionary = u.def.gun
 	var clear: Dictionary = u.def.clear
-	var best := acquire(u, enemies)
+	var best := UnitAttack.pick(u)
+	if best.is_empty():
+		best = acquire(u, enemies)
 	var muzzle := u.pos + Vector3(0, 1.0 if u.type == "crawler" else 0.9, 0)
 	if not best.is_empty():
 		var ep: Vector3 = best.node.position + Vector3(0, best.get("oy", 0.0), 0)

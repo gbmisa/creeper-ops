@@ -131,6 +131,11 @@ static func right_click(cm: CommandMode) -> void:
 	var c: Vector2i = cm.hover.cell
 	if not cm.units.selected.is_empty():
 		Bus.metric.emit("order", {})
+		var foe := UnitAttack.enemy_near(cm.units.enemies, p)
+		if not foe.is_empty():
+			UnitAttack.order(cm.units, cm.units.selected, foe)
+			cm.world.effects.burst(p + Vector3(0, 0.3, 0), Color("ff5a4a"), 1.2, 0.3)
+			return
 		cm.units.order(cm.units.selected, Vector2(p.x, p.z), true)
 		cm.world.effects.burst(p + Vector3(0, 0.3, 0), Color("9dff7a"), 1.2, 0.3)
 	elif cm.selected and cm.selected.type == "barracks":
