@@ -60,3 +60,13 @@ Files: `godot/scripts/level/castle_guards.gd` (slot regrow about line 120, `Conf
 3. Delete `GUARD_RESPAWN` and any tunable left unused. Do not change reprisal raids or sieges (`castle_raids.gd`): those are raiders arriving from outside, not garrison respawns. Do not touch `raiders.gd`, `raider_move.gd`, `raider_shots.gd` or `raider_field.gd` (another agent is editing them).
 Smoke: kill one guard of each kind on a hostile castle, simulate longer than the old respawn time: still dead; capture and let it be retaken: garrison back to full.
 Report also every other castle thing that still respawns on a timer (name, file, line), unchanged, so Gregory can rule on it.
+
+## H: only losing its relay unhooks a Salvage Engine (NAME = hook; Sonnet `feature-dev`, 1 phase)
+Gregory: "Nothing should be able to unhook a salvage machine from a relay except for destroying the relay."
+Today (`godot/scripts/level/engine_hook.gd` `register`, lines 7-13): a hooked socket is raider prey (`s["prey"]`, kind `socket`) with HP, and at 0 HP raiders call `host.unhook(s, "cut by raiders")`. That is the only `unhook` caller outside smoke. `s.anchor` is the relaying structure the cable runs to (`SalvageEngines.anchor_for`, `salvage_engines.gd`).
+Files: `level/engine_hook.gd`, `level/salvage_engines.gd`, `level/engine_defs.gd` (socket HP tunables), wherever `s.prey` is added to the prey list, `core/smoke_engines_ship.gd`.
+1. Sockets stop being prey: raiders, enemy mortars, trebuchets and flyers can neither target nor damage a hook. Remove the socket HP and its tunables if nothing else reads them.
+2. A hook ends in exactly one case: its anchor structure is destroyed (killed, recycled by the player, or removed any other way). Then `unhook` runs with a reason the player can read ("relay lost"). Check what happens today when the anchor dies and make it this.
+3. These do NOT unhook, they only pause shipping until the condition clears, and the cable stays: the anchor being deactivated (Z), the anchor losing its route to a sender, the socket cell being wet (`is_wet`), the anchor being mid-flight if it is movable. Say in the report which of these already behaved this way.
+4. Do not edit `level/raiders.gd`, `raider_move.gd`, `raider_shots.gd`, `raider_field.gd`, `castle_guards.gd`, `castle_patrols.gd`, `castle_lancers.gd` or `stronghold_tick.gd` (other agents are in them). If raiders need a change to stop targeting sockets beyond removing the prey entry, stop and report.
+Smoke: a hooked socket with raiders beside it for 60 s stays hooked and takes no damage; destroying the anchor unhooks it; deactivating the anchor and wetting the socket pause shipping and it resumes after, still hooked.

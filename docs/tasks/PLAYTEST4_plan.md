@@ -81,6 +81,10 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 - **Castle wall defenders should not respawn either** (same as the trebuchets). Cause: `castle_guards.gd:120` regrows a slot after `GUARD_RESPAWN`; wall patrols share the garrison timer. -> brief **G** (Sonnet `feature-dev`): no timed respawn, full garrison returns only on a retake.
 - Brief R phase 1 started (Sonnet `stage-runner`, `pt4/raider-commit`). Phase 2 follows after review.
 
+## Update 12 (Gregory, 2026-10-10)
+- **"Nothing should be able to unhook a salvage machine from a relay except for destroying the relay."** Cause: a hooked socket is raider prey with HP; raiders cut it (`engine_hook.gd:7-13`, "cut by raiders"). -> brief **H** (Sonnet `feature-dev`): sockets are not prey; a hook ends only when its anchor structure is destroyed; wet / deactivated / no route only pause shipping.
+- Brief G (castle garrison) started on `pt4/guards`.
+
 ## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
 Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
 - **Terrain edits: 0 in 28 minutes.** The static-map / pathing rework is dropped; it would fix nothing.
