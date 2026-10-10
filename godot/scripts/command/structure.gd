@@ -36,7 +36,7 @@ var regen_delay := 0.0  # seconds until passive healing resumes after taking dam
 var warned := false
 var grade := "std"       # selected ammo grade (AmmoGrades; snipers and barracks)
 var grade_ammo := 0.0      # rounds of that grade in the magazine / stock
-var supply_on := true       # CW3 toggle: stop requesting ammo
+var active := true          # CW3 deactivate: requests no packets and does nothing
 var hold_fire := false      # CW3 toggle: don't shoot (save ammo)
 var flight: Variant = null  # Dictionary while lifting/flying/settling (mover.gd)
 var hp_bar: Bar

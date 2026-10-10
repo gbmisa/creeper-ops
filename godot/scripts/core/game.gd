@@ -191,7 +191,7 @@ func surface_prey() -> Array:
 
 func _process(delta: float) -> void:
 	var dt := minf(delta, 0.05)
-	var menu := hud.keys.visible
+	var menu := hud.keys.visible or flow.pause_open
 	if mode == "command" and not menu:
 		command.update(dt, input)  # camera + planning work while paused too
 	var frozen := menu or mode != "command" and fps_paused

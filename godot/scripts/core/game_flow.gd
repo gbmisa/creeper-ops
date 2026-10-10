@@ -5,10 +5,14 @@ extends RefCounted
 
 var g  # Game
 var node_alert_cd := 0.0
+var pause: PauseMenu
+var pause_open: bool:
+	get: return pause.open
 
 
 func _init(game) -> void:
 	g = game
+	pause = PauseMenu.new(game)
 	Bus.enter_cave.connect(func():
 		g.fps.enter(g.cave, g.cave_data.pad, -PI / 2.0, g.cave_hazards.mites)
 		set_mode("cave")
@@ -47,7 +51,11 @@ func on_key(k: int) -> void:
 				ArmouryMenu.suppress_use = true
 			ArmouryMenu.close_menu()
 		return
-	if g.over or g.hud.keys.visible or g.hud.overlay_open() and not g.fps_paused:
+	if pause.open:
+		if k == KEY_ESCAPE and not g.hud.keys.visible:  # the Controls panel handles its own keys
+			pause.resume()
+		return
+	if g.over or g.hud.keys.visible or g.hud.overlay_open():
 		return
 	if Keybinds.matches("mute", k):
 		Bus.say("Sound muted." if Sfx.toggle_mute() else "Sound on.", "info")
@@ -58,10 +66,12 @@ func on_key(k: int) -> void:
 		elif k == KEY_ESCAPE:
 			if g.fps.builder != null and g.fps.builder.wheel_open():
 				return  # the build wheel closes itself this frame; don't pause
-			pause_operative()
+			pause.show()
 		return
 	if Keybinds.matches("keybinds", k):
 		g.hud.keys.open()
+	elif k == KEY_ESCAPE and not _command_busy():
+		pause.show()
 	elif Keybinds.matches("pause", k) and not g.landing:
 		g.paused = not g.paused
 		Bus.metric.emit("pause", { "paused": g.paused })
@@ -75,6 +85,12 @@ func on_key(k: int) -> void:
 		g.deploy.deploy_totem()
 	elif not g.landing:
 		g.hud.build.handle_key(k)
+
+
+## Esc first cancels a tool or selection (CommandInput); only a bare Esc opens the menu.
+func _command_busy() -> bool:
+	var cm: CommandMode = g.command
+	return cm.tool != "" or cm.selected != null or not cm.units.selected.is_empty()
 
 
 ## Build menu pick: structure types become tools, "@" items are actions.
@@ -100,24 +116,6 @@ func land(cell: Vector2i) -> void:
 	for i in range(1, lines.size()):
 		g.get_tree().create_timer(i * 3.0).timeout.connect(func(): Bus.say(lines[i][0], lines[i][1]))
 
-
-func pause_operative() -> void:
-	g.fps_paused = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	var cd: float = g.deploy.preview_recall()
-	var recall := "Recall to Node" if cd <= 0.0 else "Recall to Node (teleporter %ds)" % ceili(cd)
-	g.hud.show_overlay("[b]Operative paused[/b]\nThe battle is frozen.", [
-		{ "label": "Resume", "on_click": resume_operative },
-		{ "label": recall, "on_click": func(): g.deploy.commit_recall() },
-		{ "label": "Controls", "on_click": g.hud.keys.open },
-	])
-
-
-func resume_operative() -> void:
-	g.fps_paused = false
-	g.hud.hide_overlay()
-	if not g.ignore_capture:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func to_command(message: String, kind := "info") -> void:
@@ -163,11 +161,11 @@ Hold the line Creeper World 3 style, and drop an [b]Operative[/b] to finish what
 • [b]Spore Nests grow.[/b] They raid your base and breed tougher raiders the longer the mission runs. [b]Castles[/b] feed the Forge: the Operative climbs the spire, kills the crown nest and holds the top; raiders come to take them back. Barracks units can enter it, but they run dry and must walk home to restock.
 • Only the [b]Operative[/b] can plant charges or enter the Rift.""" % g.level.name,
 		[{ "label": "Begin: choose landing site", "on_click": begin }, { "label": "Controls", "on_click": g.hud.keys.open }]
-		+ _level_buttons())
+		+ level_buttons())
 
 
 ## One button per level: picks it and restarts the scene.
-func _level_buttons() -> Array:
+func level_buttons() -> Array:
 	var out := []
 	for i in Levels.NAMES.size():
 		out.append({ "label": "Level %d: %s" % [i + 1, Levels.NAMES[i]], "on_click": func():

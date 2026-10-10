@@ -204,6 +204,7 @@ static func run(g) -> void:
 	SmokeTuning.run(g)
 	SmokeShotTour.run(g)
 	SmokeSniperLos.run(g)
+	SmokePauseMenu.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 
@@ -263,6 +264,8 @@ static func _run_only(g) -> void:
 				SmokeUnitPatrol.run(g)
 			"burrow":
 				SmokeBurrow.run(g)
+			"pausemenu":
+				SmokePauseMenu.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
 
 
