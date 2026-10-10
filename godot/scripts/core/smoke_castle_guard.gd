@@ -22,6 +22,7 @@ static func _lancer(g, castles: Strongholds, c: Dictionary) -> void:
 	var nests: SporeNests = castles.nests
 	var host: Raiders = nests.raiders
 	var post: Vector3 = castles.views[c.id].garrison.pos
+	CastleLancers.retaken(castles.views[c.id].garrison)  # earlier smoke runs may have used the slots
 	host.spawn(nests.nests[0], RaiderDefs.named("Lancer"), false)
 	var r: Dictionary = host.list.back()
 	SmokeTest._check("guard: a Lancer is posted at a hostile castle",
@@ -41,3 +42,14 @@ static func _lancer(g, castles: Strongholds, c: Dictionary) -> void:
 	SmokeTest._check("guard: a castle posts at most LANCERS_PER_CASTLE", n <= CastleDefs.LANCERS_PER_CASTLE, str(n))
 	for x in host.list.duplicate():
 		host.kill(x)
+	CastleLancers.retaken(castles.views[c.id].garrison)
+	for i in CastleDefs.LANCERS_PER_CASTLE:
+		host.spawn(nests.nests[0], RaiderDefs.named("Lancer"), false)
+	for x in host.list.duplicate():
+		host.kill(x)  # the whole post is shot dead
+	host.spawn(nests.nests[0], RaiderDefs.named("Lancer"), false)
+	var again := host.list.filter(func(x): return x.has("guard_post") and x.guard_post.castle == c.id).size()
+	SmokeTest._check("guard: killed Lancers are not replaced until a retake", again == 0, str(again))
+	for x in host.list.duplicate():
+		host.kill(x)
+	CastleLancers.retaken(castles.views[c.id].garrison)

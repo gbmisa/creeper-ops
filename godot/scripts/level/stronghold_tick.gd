@@ -83,6 +83,7 @@ static func holding(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 		r.erase("mission")
 		v.garrison.count += 1
 	CastleStages.set_stage(s, c, 0)
+	CastleLancers.retaken(v.garrison)
 	CastleEngines.revive(c)  # the trebuchets come back only when the enemy retakes the castle
 	Sfx.play("lost")
 	Bus.say("%s has fallen. The crown nest is growing back." % c.name, "bad")
