@@ -29,6 +29,15 @@ static func active(c: Dictionary) -> bool:
 	return c.state == "hostile" and int(c.get("stage", 0)) < 2
 
 
+## Enemy retook the castle: every trebuchet returns at full HP.
+static func revive(c: Dictionary) -> void:
+	for e in c.engines:
+		e.hp = e.max_hp
+		e.dead = 0.0
+		e.cd = E.interval
+		e.shot = {}
+
+
 static func alive(e: Dictionary) -> bool:
 	return e.hp > 0.0
 
@@ -77,10 +86,7 @@ static func tick(s: Strongholds, c: Dictionary, v: Dictionary, prey: Array, dt: 
 		var node: Node3D = v.engines[i]
 		node.visible = alive(e) and on
 		if not alive(e):
-			e.dead += dt
-			if on and int(c.get("stage", 0)) < 2 and e.dead >= E.respawn:
-				e.hp = e.max_hp
-				e.cd = E.interval
+			e.dead += dt  # no timed respawn: revive() runs only when the castle is retaken
 			continue
 		if not on:
 			e.shot = {}

@@ -1,7 +1,7 @@
 class_name SmokeCastles2Engines
 ## Stage 21 war engines: trebuchets on a hostile concentric castle pick targets in range
 ## (weapons first, the Operative only in sight), telegraph a ring, and hit whatever stayed;
-## an Operative who walks out of the ring takes nothing. They die, respawn, and stop for good
+## an Operative who walks out of the ring takes nothing. They die, return only on a retake, and stop for good
 ## once the bailey is taken. Runs on its own Level 2 World (SmokeCastles2Capture.rig).
 
 
@@ -73,12 +73,15 @@ static func run(g) -> void:
 	for i in c.engines.size():
 		(v.engine_foes[i].enemy.hit as Callable).call(CastleDefs.ENGINE.hp + 1.0)
 	SmokeTest._check("castles2 engines: can be destroyed", CastleEngines.alive_count(c) == 0 and v.engine_foes.all(func(f): return not f.alive.call()))
-	CastleEngines.tick(castles, c, v, [], CastleDefs.ENGINE.respawn + 1.0)
-	SmokeTest._check("castles2 engines: rebuilt while the bailey is hostile", CastleEngines.alive_count(c) == c.engines.size())
+	CastleEngines.tick(castles, c, v, [], 1000.0)
+	SmokeTest._check("castles2 engines: no timed respawn", CastleEngines.alive_count(c) == 0)
+	CastleEngines.revive(c)
+	SmokeTest._check("castles2 engines: back at full HP when the castle is retaken", CastleEngines.alive_count(c) == c.engines.size()
+		and c.engines.all(func(x): return x.hp == x.max_hp))
 	CastleStages.set_stage(castles, c, 2)
 	for x in c.engines:
 		x.hp = 0.0
-	CastleEngines.tick(castles, c, v, [], CastleDefs.ENGINE.respawn + 1.0)
+	CastleEngines.tick(castles, c, v, [], 1000.0)
 	SmokeTest._check("castles2 engines: gone for good once the bailey is yours", CastleEngines.alive_count(c) == 0 and not CastleEngines.active(c))
 	for d in [op, gun, far, hidden, stay, mover]:
 		d.node.free()
