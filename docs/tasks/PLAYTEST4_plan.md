@@ -68,6 +68,9 @@ Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapt
 - Not yet measured: a surviving late-game player base (`--probe-base`).
 - Merged into integ, smoke green: `pt4/port`, `pt4/units`, `pt4/alerts`, `pt4/deploy`, `pt4/trebrange`. Pending: `pt4/l2space` (L2 trebuchet range 12 by Gregory's call).
 
+## Noted for later (Gregory)
+- **Reconfigure pathfinding in Rust** (GDExtension via `gdext`, same interface, GDScript fallback). Not started. Start it from a fresh session after `pt4/perf-units` is merged and measured. Details in HANDOFF.md, next step 4.
+
 ## Questions for Gregory
 - Static map: do **castle walls** stop being breakable (gates only)? Craters would become marks with no height change.
 - OK to run the bench (a game window opens on your screen for a few minutes)?
