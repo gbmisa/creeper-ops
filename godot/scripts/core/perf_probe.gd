@@ -2,7 +2,9 @@ class_name PerfProbe
 ## --perf-probe[=MIN]: fast-forward the loaded level MIN minutes (default 28) with the Node kept
 ## alive, printing sim ms per update along the way, then measure frame cost in command and
 ## Operative view while switching things off one at a time (sim, shadows, animation, the
-## biggest mesh groups). Needs a real display. Use with --level=2 --demo.
+## biggest mesh groups). Use with --level=2 --demo; add --probe-base to keep the whole base alive.
+## Headless it stops after the sim numbers (HITCH lines, cost per system); frame costs need a
+## real display. Nodes freed during the fast-forward only go away on the frames it yields.
 
 const PHASE := 5.0   # wall seconds per measurement
 const SKIP := 1.5    # settle time ignored at the start of each
@@ -12,9 +14,15 @@ static func run(g, args: Dictionary) -> void:
 	var mins := float(args["perf-probe"]) if str(args.get("perf-probe", "")) != "" else 28.0
 	var tree: SceneTree = g.get_tree()
 	await tree.process_frame
-	_forward(g, mins * 60.0)
+	_counts(g, tree)
+	await _forward(g, mins * 60.0, args.has("probe-base"))
+	await tree.process_frame
+	await tree.process_frame
 	_split(g)
 	_counts(g, tree)
+	if DisplayServer.get_name() == "headless":  # sim numbers only (CPU creeper sim); no frame costs
+		tree.quit()
+		return
 	for view in ["command", "operative"]:
 		if view == "operative":
 			var n: Structure = g.structures.command_node()
@@ -50,28 +58,52 @@ static func run(g, args: Dictionary) -> void:
 	tree.quit()
 
 
-static func _forward(g, seconds: float) -> void:
+static func _forward(g, seconds: float, keep_base := false) -> void:
 	var step := 0.05
 	var t := 0.0
 	var mark := 0.0
 	var spent := 0
 	var n := 0
 	var worst := 0
+	var edits := [0, 0]  # terrain_changed events, cells
+	Bus.terrain_changed.connect(func(_w, cells):
+		edits[0] += 1
+		edits[1] += cells.size())
+	var acc: Array = []  # ms per surface updater inside the current update
+	for i in g.surface.updaters.size():
+		acc.append(0.0)
+		var orig: Callable = g.surface.updaters[i]
+		var owner: Object = orig.get_object()
+		print("[probe] updater %d = %s" % [i, (owner.get_script() as Script).resource_path.get_file() if owner != null and owner.get_script() != null else "lambda"])
+		g.surface.updaters[i] = func(dt: float) -> void:
+			var u0 := Time.get_ticks_usec()
+			orig.call(dt)
+			acc[i] += (Time.get_ticks_usec() - u0) / 1000.0
 	while t < seconds:
+		acc.fill(0.0)
 		var node: Structure = g.structures.command_node()
 		if node != null:
 			node.hp = maxf(node.hp, 1000.0)
+		if keep_base:  # the whole base survives, so late-game player-side costs show up too
+			for s in g.structures.list:
+				s.hp = maxf(s.hp, s.def.get("hp", 1.0))
 		g.over = false
+		var e0: int = edits[0]
 		var t0 := Time.get_ticks_usec()
 		g.update(step)
 		var d := Time.get_ticks_usec() - t0
+		if d > 60000:
+			print("[probe] HITCH %.0f ms at t=%.0fs  terrain edits in it: %d  updaters ms %s" % [d / 1000.0, t, edits[0] - e0, str(acc.map(func(x): return roundi(x)))])
 		spent += d
 		worst = maxi(worst, d)
 		n += 1
 		t += step
+		if n % 100 == 0:
+			await g.get_tree().process_frame  # let queue_free and the renderer catch up, as in real play
 		if t - mark >= 240.0 or t >= seconds:
 			print("[probe] t=%4.0fs  update avg %.2f ms  worst %.1f ms  raiders %d  flyers %d  structures %d" % [
 				t, spent / 1000.0 / n, worst / 1000.0, g.hazards.nests.raiders.list.size(), g.hazards.nests.flyers.list.size(), g.structures.list.size()])
+			print("[probe]          terrain edits so far %d (%d cells)  nodes %d" % [edits[0], edits[1], g.get_tree().get_node_count()])
 			mark = t
 			spent = 0
 			n = 0
@@ -97,7 +129,24 @@ static func _split(g) -> void:
 	_time("world creeper.update", func(): w.creeper.update(0.05))
 	_time("world terrain.update", func(): w.terrain.update())
 	_time("world effects.update", func(): w.effects.update(0.05))
+	_time("structures.update", func(): g.structures.update(0.05, g.time))
+	_time("packets.update", func(): g.structures.packets.update(0.05, g.structures.list, true))
+	_time("network rebuild", func(): g.structures.network.rebuild(g.structures.list) if g.structures.network.has_method("rebuild") else null, 5)
 	_time("hazards.nests.update", func(): g.hazards.nests.update(0.05))
+	var nn = g.hazards.nests
+	_time("nests: hives tick", func():
+		for n in nn.nests:
+			Hives.tick(nn, n, 0.05))
+	_time("nests: mortars", func(): EnemyMortars.tick(nn, 0.05))
+	_time("nests: flyers", func(): nn.flyers.update(0.05))
+	_time("nests: prey list", func(): nn.prey.call())
+	_time("nests: goal cells", func(): nn.goal_cells.call())
+	var prey: Array = nn.prey.call()
+	var goals: Array = nn.goal_cells.call()
+	print("[probe] prey %d  goal cells %d  markers %d  targets %d  interactables %d  updaters %d" % [
+		prey.size(), goals.size(), w.markers.size(), w.targets.size(), w.interactables.size(), w.updaters.size()])
+	_time("nests: raiders", func(): nn.raiders.update(0.05, prey, goals))
+	_time("nests: raider field", func(): nn.raiders.field.update(0.05, goals))
 	for i in g.surface.updaters.size():
 		var t0 := Time.get_ticks_usec()
 		for j in 40:
@@ -139,6 +188,20 @@ static func _counts(g, tree: SceneTree) -> void:
 		all.size(), geo.size(), vis.size(), sk.size(), lights.size(), g.time])
 	for key in _top_groups(tree, 12):
 		print("[probe] geo %5d  %s" % [_group(tree, key).size(), key])
+	var top: Array = _top_groups(tree, 1)
+	if not top.is_empty():  # what the biggest group is made of: mesh class + size, and who owns the parent
+		var kinds := {}
+		var grp := _group(tree, top[0])
+		for c in grp:
+			var mi := c as MeshInstance3D
+			var k := "?" if mi == null or mi.mesh == null else "%s %s %s" % [mi.mesh.get_class(), str(mi.mesh.get_aabb().size.snappedf(0.1)), "cast" if mi.cast_shadow != 0 else "nocast"]
+			kinds[k] = int(kinds.get(k, 0)) + 1
+		var ks := kinds.keys()
+		ks.sort_custom(func(x, y): return kinds[x] > kinds[y])
+		for k in ks.slice(0, 8):
+			print("[probe]   in %s: %5d x %s" % [top[0], kinds[k], k])
+		var par: Node = (grp[0] as Node).get_parent()
+		print("[probe]   parent path %s  script %s  index %d" % [par.get_path(), par.get_script(), par.get_index()])
 
 
 static func _measure(_g, tree: SceneTree, label: String) -> void:
