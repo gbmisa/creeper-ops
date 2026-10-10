@@ -34,6 +34,7 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 ## Update 2 (Gregory)
 - Trebuchet range stays. **L2 needs more space** between castles and Salvage Engines (brief L).
 - **Units must fight back** when shot, with nearby allies joining (brief U, with items 3 and 5).
+- **Trebuchets must not respawn** unless the castle is retaken (brief A, phase 2).
 - Perf is the top priority; craters/height changes may go if they cost frames. Bench first (Opus, when Gregory stops playing).
 - Go-ahead given: briefs U, A, P, L in `PLAYTEST4_briefs.md`, Sonnet agents, own worktrees `pt4-*`. Opus integrates.
 
