@@ -61,11 +61,20 @@ func refresh(world: World, cam: Camera3D, fps: bool) -> void:
 		var l := _label(n)
 		n += 1
 		l.visible = true
-		l.text = "%s  %dm" % [text, roundi(dist)] if fps else text
-		l.add_theme_color_override("font_color", m.color)
-		l.add_theme_font_size_override("font_size", 14 if m.get("minor", false) else 16)
-		(l.get_theme_stylebox("normal") as StyleBoxFlat).border_color = m.color
-		l.reset_size()
+		# Theme and text writes re-lay the label out, so only touch what changed (PT4 perf:
+		# this loop cost 6.7 ms a frame in first person with every edge arrow rewritten).
+		var shown: String = "%s  %dm" % [text, roundi(dist)] if fps else text
+		var font := 14 if m.get("minor", false) else 16
+		var style := [m.color, font]
+		if l.get_meta("style", []) != style:
+			l.set_meta("style", style)
+			l.add_theme_color_override("font_color", m.color)
+			l.add_theme_font_size_override("font_size", font)
+			(l.get_theme_stylebox("normal") as StyleBoxFlat).border_color = m.color
+			l.text = ""
+		if l.text != shown:
+			l.text = shown
+			l.reset_size()
 		var at := sp - Vector2(l.size.x * 0.5, l.size.y)  # keep the whole tag on screen, below the top bar
 		l.position = Vector2(clampf(at.x, 4.0, size.x - l.size.x - 4.0), clampf(at.y, 46.0, size.y - l.size.y - 4.0))
 	for i in range(n, _labels.size()):
