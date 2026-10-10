@@ -33,6 +33,7 @@ class_name Debug
 ##   --select=T    select the first structure of type T (T=all-weapons: every movable weapon)
 ##   --keys        open the Controls (keybind) menu
 ##   --gpu-parity / --perf-sim=N   GPU creeper sim checks (SimBench; need a display)
+##   --bench-field  time one RaiderField rebuild/label/on-foot search (FieldBench)
 ##   --cpu-sim     force the CPU creeper sim
 ##   --level=N     play Level N (1 Hollow Ridge, 2 The Crown Marches); see Levels
 ##   --raise=x,z,r,by   raise (negative: lower) a disc of terrain through TerrainEdit
@@ -201,6 +202,9 @@ static func apply(g) -> void:
 			g.command.cam.pitch = float(xz[3])
 	if args.has("gpu-parity") or args.has("perf-sim"):
 		SimBench.run(g, args)
+		return
+	if args.has("bench-field"):
+		FieldBench.run(g)
 		return
 	if args.has("raise"):  # --raise=x,z,r,by: TerrainEdit a disc (terrain edit screenshots)
 		var p: PackedStringArray = args.raise.split(",")
