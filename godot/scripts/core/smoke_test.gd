@@ -156,6 +156,7 @@ static func run(g) -> void:
 	SmokeTraversal.run(g)
 	SmokeCw3.run(g)
 	SmokeLevel02.run(g)
+	SmokeL2Space.run(g)
 	SmokeKeeps.run(g)
 	SmokeTerp.run(g)
 	SmokeArmoury.run(g)

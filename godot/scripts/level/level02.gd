@@ -30,17 +30,17 @@ const CASTLES := [
 		"bridge": true, "gates": ["w"], "inner_gate": "n", "climbs": ["n"], "spire_h": 20, "guards": 5, "engine_range": 12.0 },
 	{ "id": "crown", "name": "Crown Keep", "x": 61, "z": 61, "size": 39, "floor": 3, "variant": "ground", "plan": "concentric",
 		"bailey": 7, "moat": true, "gates": ["s", "n"], "inner_gate": "e", "climbs": ["e"], "inner_climbs": ["w"], "spire_h": 24,
-		"guards": 8, "yield": 2.0 },
+		"guards": 8, "yield": 2.0, "engine_range": 12.0 },
 	{ "id": "northreach", "name": "Northreach", "x": 8, "z": 8, "size": 35, "floor": 4, "variant": "raised", "plan": "concentric",
-		"bridge": true, "gates": ["s"], "inner_gate": "e", "climbs": ["e"], "spire_h": 20, "guards": 6 },
+		"bridge": true, "gates": ["s"], "inner_gate": "e", "climbs": ["e"], "spire_h": 20, "guards": 6, "engine_range": 12.0 },
 	{ "id": "stormcrown", "name": "Stormcrown", "x": 117, "z": 8, "size": 35, "floor": 3, "variant": "ground", "plan": "concentric",
-		"moat": true, "gates": ["w"], "inner_gate": "s", "climbs": ["s"], "spire_h": 20, "guards": 5 },
+		"moat": true, "gates": ["w"], "inner_gate": "s", "climbs": ["s"], "spire_h": 20, "guards": 5, "engine_range": 12.0 },
 ]
 ## Salvage Engines (EngineDefs). Two safe ones by the landing mesa; the rest sit beside hives and castles
 ## (`hive`: ships nothing until that hive is razed; `castle`: ships only while you hold it).
 const ENGINES := [
 	{ "id": "e1", "x": 100, "z": 132, "kind": "bore" },
-	{ "id": "e2", "x": 60, "z": 132, "kind": "wreck" },
+	{ "id": "e2", "x": 64, "z": 132, "kind": "wreck" },
 	{ "id": "e3", "x": 55, "z": 70, "kind": "forge", "hive": "West Moor" },
 	{ "id": "e4", "x": 50, "z": 142, "kind": "wreck", "hive": "Southern Barrows" },
 	{ "id": "e5", "x": 104, "z": 114, "kind": "forge", "hive": "East Moor" },

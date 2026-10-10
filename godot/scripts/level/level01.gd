@@ -32,7 +32,7 @@ const PRESSURE_POINTS := [
 const CASTLES := [
 	{ "id": "ashmoat", "name": "Ashmoat Keep", "x": 0, "z": 49, "size": 31, "floor": 2, "plan": "concentric",
 		"bailey": 5, "variant": "ground", "moat": true, "gates": ["n"], "inner_gate": "e", "climbs": ["e"],
-		"spire_h": 20, "engines": 1, "engine_range": 24.0 },
+		"spire_h": 20, "engines": 1, "engine_range": 12.0 },
 	{ "id": "bastion", "name": "High Bastion", "x": 25, "z": 2, "size": 15, "floor": 4,
 		"variant": "raised", "bridge": true, "gates": ["s"], "climbs": ["e"], "spire_h": 20 },
 ]
