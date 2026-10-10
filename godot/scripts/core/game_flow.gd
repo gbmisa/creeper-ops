@@ -5,6 +5,7 @@ extends RefCounted
 
 var g  # Game
 var node_alert_cd := 0.0
+var base_alerts := BaseAlerts.new()
 
 
 func _init(game) -> void:
@@ -24,6 +25,7 @@ func _init(game) -> void:
 			node_alert_cd = 8.0
 			Sfx.play("alarm")
 			g.hud.alert("COMMAND NODE UNDER ATTACK", "bad", 2.5))
+	base_alerts.connect_bus(g)
 	Bus.node_destroyed.connect(func(): end_game(false))
 	Bus.victory.connect(func(): end_game(true))
 	g.command.on_land = land
@@ -37,6 +39,7 @@ func _init(game) -> void:
 
 func update(dt: float) -> void:
 	node_alert_cd -= dt
+	base_alerts.update(dt)
 
 
 ## Global keys (fired from InputState._input, before the frame update).

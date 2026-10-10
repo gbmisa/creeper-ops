@@ -12,6 +12,8 @@ signal objective_done(id: String)
 signal victory
 signal node_destroyed
 signal node_hit
+signal base_attacked(type: String)  # a non-Node structure took enemy damage
+signal base_lost(type: String)      # a non-Node structure was destroyed
 signal node_landed
 signal structure_built(s)
 signal structure_removed(s)

@@ -22,6 +22,9 @@ var _flash: ColorRect
 var _tint: ColorRect
 var _hit: HitOverlay
 var hold_bar: HoldBar
+var _edge: Panel
+var _edge_t := 0.0
+var _lost_chip: Label
 
 
 func _init() -> void:
@@ -84,6 +87,38 @@ func _init() -> void:
 	add_child(_recall_note)
 	hold_bar = HoldBar.new()
 	add_child(hold_bar)
+	_edge = Panel.new()
+	_edge.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0, 0, 0, 0)
+	sb.border_color = Color(1.0, 0.1, 0.05)
+	sb.set_border_width_all(36)
+	sb.shadow_color = Color(1.0, 0.1, 0.05, 0.5)
+	sb.shadow_size = 40
+	_edge.add_theme_stylebox_override("panel", sb)
+	_edge.modulate.a = 0.0
+	add_child(_edge)
+	_lost_chip = UiKit.label("", 15, UiKit.BAD)
+	_lost_chip.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_lost_chip.position = Vector2(-260, 48)
+	_lost_chip.visible = false
+	add_child(_lost_chip)
+
+
+## Red screen-edge pulse (base alert).
+func pulse() -> void:
+	_edge_t = Config.BASE_ALERT_PULSE
+
+
+func set_losses(n: int) -> void:
+	_lost_chip.visible = n > 0
+	_lost_chip.text = "BASE: %d lost / %ds" % [n, int(Config.BASE_LOST_WINDOW)]
+
+
+func _process(dt: float) -> void:
+	_edge_t = maxf(0.0, _edge_t - dt)
+	_edge.modulate.a = 0.6 * (_edge_t / Config.BASE_ALERT_PULSE) * (0.6 + 0.4 * sin(_edge_t * 25.0))
 
 
 func _rect(c: Color) -> ColorRect:

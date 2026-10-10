@@ -336,3 +336,8 @@ const UNIT_CREEPER_BASE_DPS := 6.0
 const UNIT_CREEPER_DPS := 12.0
 const PATROL_INSET := 3        # cells in from the courtyard's edge for a castle garrison's auto-patrol corners
 const PATROL_LINE_STEP := 2.5  # metres between samples when drawing a patrol route over terrain
+
+# Base alerts (BaseAlerts): centre alert + FPS pulse when structures are attacked or lost
+const BASE_ALERT_COOLDOWN := 4.0   # s between centre alerts / alarm sounds
+const BASE_LOST_WINDOW := 60.0     # s a loss counts toward the "lost recently" chip
+const BASE_ALERT_PULSE := 0.8      # s the red screen-edge pulse lasts
