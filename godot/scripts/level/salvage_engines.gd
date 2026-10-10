@@ -144,13 +144,11 @@ func _ship(e: Dictionary, s: Dictionary, dt: float, idle: bool) -> void:
 	if a != null and a.dead:
 		unhook(s, "relay lost")  # the only way a hook ends
 		return
-	if a == null:  # restored from a save without a relay in reach yet
-		a = anchor_for(s)
+	if a == null or not a.connected or a.is_flying():
+		a = anchor_for(s)  # lost its route or took off: cable to another relay in reach, if any
 		s.anchor = a
-		if a != null:
-			EngineHook.link(self, s, a)
-	# Paused, never unhooked: no relay, deactivated, off the network, in flight, or creeper on the socket.
-	if idle or a == null or not a.active or not a.connected or a.is_flying() or is_wet(s):
+		EngineHook.link(self, s, a)
+	if idle or a == null or is_wet(s):
 		return
 	s.acc += dt
 	if s.acc < EngineDefs.RATE:

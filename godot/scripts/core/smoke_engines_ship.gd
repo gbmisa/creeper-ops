@@ -143,14 +143,12 @@ static func _anchor_rules(g, e: Dictionary, top: Dictionary) -> void:
 	var anc: Structure = top.anchor
 	SmokeTest._sim(g, 60.0)  # a minute with no prey row: nothing to cut
 	SmokeTest._check("hook: stays hooked for 60 s", top.hooked and top.cable != null)
-	anc.active = false
+	anc.active = false  # Z does not pause shipping (as before)
 	top.acc = EngineDefs.RATE
 	var a := eng.shipped
 	SmokeTest._sim(g, 3.0)
-	SmokeTest._check("hook: deactivated anchor pauses, cable stays", top.hooked and top.cable != null and eng.shipped == a)
+	SmokeTest._check("hook: a deactivated anchor still ships", top.hooked and eng.shipped > a)
 	anc.active = true
-	SmokeTest._sim(g, 3.0)
-	SmokeTest._check("hook: reactivated anchor resumes", top.hooked and eng.shipped > a)
 	a = eng.shipped
 	top.acc = EngineDefs.RATE
 	for i in 40:
@@ -160,6 +158,12 @@ static func _anchor_rules(g, e: Dictionary, top: Dictionary) -> void:
 	_dry(g)
 	SmokeTest._sim(g, 3.0)
 	SmokeTest._check("hook: dried socket resumes", top.hooked and eng.shipped > a)
-	sm.remove(anc)
+	var second := sm.place("relay", anc.x + 1, anc.z, true)
+	second.hp = 1.0e9
+	SmokeTest._sim(g, 0.3)
+	anc.connected = false  # route lost: the cable moves to the second relay in reach
+	eng._ship(e, top, 0.05, false)
+	SmokeTest._check("hook: route loss re-anchors to a second relay", top.hooked and top.anchor == second)
+	sm.remove(top.anchor)
 	SmokeTest._sim(g, 0.2)
 	SmokeTest._check("hook: destroying the anchor unhooks", not top.hooked and top.cable == null)
