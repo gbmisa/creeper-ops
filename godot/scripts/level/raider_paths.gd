@@ -73,7 +73,7 @@ func goal(r: Dictionary, target: Dictionary, dt: float) -> Variant:
 	var tc := host.world.grid.world_to_cell(tp.x, tp.z)
 	if st.is_empty() or not is_same(st.tgt, target):
 		st = { "tgt": target, "mode": STRAIGHT, "cell": Vector2i(-9, -9), "ver": -1, "stk": false,
-			"nostr": false, "here": Vector2i(-9, -9), "next": null, "fver": -2 }
+			"nostr": false, "here": Vector2i(-9, -9), "next": null, "fver": -2, "rc": Vector2i(-9, -9) }
 		r["_pt"] = st
 	var p: Vector3 = r.node.position
 	if st.ver != host.field.version:
@@ -90,9 +90,14 @@ func goal(r: Dictionary, target: Dictionary, dt: float) -> Variant:
 		_request(st, target, true)
 	elif not rest:
 		st.stk = false
+	var moving := not target.has("struct")  # units and the Operative: lock on, test per cell change
 	if st.mode == STRAIGHT:
-		if tc != st.cell:
+		var rc := Vector2i(-9, -9)
+		if moving:
+			rc = host.world.grid.world_to_cell(p.x, p.z)
+		if tc != st.cell or rc != st.rc:
 			st.cell = tc
+			st.rc = rc
 			if not _clear(Vector2(p.x, p.z), Vector2(tp.x, tp.z), _reach(r, target)):
 				_request(st, target, false)
 				return null
@@ -104,6 +109,8 @@ func goal(r: Dictionary, target: Dictionary, dt: float) -> Variant:
 		st.mode = FIELD
 		st.here = Vector2i(-9, -9)
 	e.used = host.time
+	if moving and e.build == null:
+		_request(st, target, false)  # rebuilds only past RAIDER_REPATH_CELLS and RAIDER_REPATH_MIN
 	var c := host.world.grid.world_to_cell(p.x, p.z)
 	if c != st.here or e.ver != st.fver:
 		st.here = c
@@ -148,11 +155,17 @@ func _request(st: Dictionary, target: Dictionary, force: bool) -> void:
 	var e: Dictionary = fields.get(id, {})
 	if e.is_empty():
 		e = { "tgt": target, "dist": PackedInt32Array(), "build": null, "cell": tc, "ver": -1, "bver": -1,
-			"used": host.time, "builds": 0, "ms": 0.0, "slices": 0, "peak": 0.0 }
+			"used": host.time, "t_build": -1.0e9, "builds": 0, "ms": 0.0, "slices": 0, "peak": 0.0 }
 		fields[id] = e
 		_evict()
 	e.used = host.time
-	var stale: bool = e.ver != host.field.version or e.cell != tc
+	var stale: bool = e.ver != host.field.version
+	if not stale:
+		if target.has("struct"):
+			stale = e.cell != tc
+		else:  # a moving target: keep the old field until it is well away from the field's goal, and not too often
+			var off := Vector2(tc - e.cell).length()
+			stale = off > Config.RAIDER_REPATH_CELLS and host.time - float(e.t_build) >= Config.RAIDER_REPATH_MIN
 	if e.build == null and (force or stale):
 		e.cell = tc
 		_start(e)
@@ -163,6 +176,7 @@ func _start(e: Dictionary) -> void:
 	e.cell = host.world.grid.world_to_cell(tp.x, tp.z)
 	e.build = RaiderFieldBuild.new(host.world.grid, host.field.walk_heights(), [e.cell])
 	e.bver = host.field.version
+	e.t_build = host.time
 	e.ms = 0.0
 	e.slices = 0
 	e.peak = 0.0
