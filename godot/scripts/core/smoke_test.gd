@@ -164,6 +164,7 @@ static func run(g) -> void:
 	SmokeArmoury.run(g)
 	SmokeCaveSpray.run(g)
 	SmokeHud.run(g)
+	SmokeBuildMenu.run(g)
 	SmokeDragbuild.run(g)
 	SmokeRoster.run(g)
 	SmokeHives.run(g)
