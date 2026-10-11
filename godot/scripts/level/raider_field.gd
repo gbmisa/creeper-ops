@@ -67,6 +67,12 @@ func invalidate() -> void:
 	_next.fill(-2)
 
 
+## Current enemy walk heights (refreshed), for per-target walking fields (RaiderPaths).
+func walk_heights() -> PackedFloat32Array:
+	_refresh_heights()
+	return _wh
+
+
 ## Build the whole field now (tests, and anything that needs it this frame).
 func rebuild(goal_cells: Array) -> void:
 	_refresh_heights()

@@ -1,7 +1,7 @@
 class_name Pathfind
 ## A* over the terrain grid (8-way, no corner cutting). Limits come from the unit def:
 ## `climb` (max rise between neighbours) and `drop` (max fall). Creeper adds cost so units
-## route around pools (def.ignore_creeper skips that; def.faction picks the gate rules, default PLAYER; def.corners forbids diagonal corner cuts). `solid` marks cells units can't walk through (structures): a Dictionary
+## route around pools. `solid` marks cells units can't walk through (structures): a Dictionary
 ## keyed by grid idx (fast) or a Callable(x, z); the start and goal cells are exempt. Returns
 ## world-space XZ waypoints, string-pulled by PathSmooth. State lives in reused packed buffers
 ## stamped with a generation, so a search allocates nothing and never clears 25k cells.
@@ -21,17 +21,10 @@ static var _hk := PackedFloat32Array()     # heap keys (f)
 static var _hi := PackedInt32Array()       # heap node ids
 static var last_visited := 0               # nodes expanded by the latest find (stats/tests)
 static var last_reached := false
-static var _faction := Grid.Faction.PLAYER  # def.faction for the running search (raiders: ENEMY)
 
 
 static func step_ok(g: Grid, ax: int, az: int, bx: int, bz: int, def: Dictionary) -> bool:
-	var f: int = def.get("faction", Grid.Faction.PLAYER)
-	if not g.step_ok(ax, az, bx, bz, def.climb, def.drop, f):
-		return false
-	if def.get("corners", false) and ax != bx and az != bz:  # raiders: no cutting a cliff corner
-		return g.step_ok(ax, az, bx, az, def.climb, def.drop, f) and g.step_ok(bx, az, bx, bz, def.climb, def.drop, f) \
-			and g.step_ok(ax, az, ax, bz, def.climb, def.drop, f) and g.step_ok(ax, bz, bx, bz, def.climb, def.drop, f)
-	return true
+	return g.step_ok(ax, az, bx, bz, def.climb, def.drop, Grid.Faction.PLAYER)
 
 
 static func is_solid(solid: Variant, w: int, x: int, z: int) -> bool:
@@ -60,9 +53,6 @@ static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, 
 		_gen = 0
 	_gen += 1
 	var gen := _gen
-	_faction = def.get("faction", Grid.Faction.PLAYER)
-	var pool_cost: float = 0.0 if def.get("ignore_creeper", false) else 4.0  # raiders live in creeper
-	var strict: bool = def.get("corners", false)
 	var climb: float = def.climb
 	var drop: float = def.drop
 	var depth := creeper.depth
@@ -136,8 +126,6 @@ static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, 
 			var dh := _height(g, j, nx, nz) - hc
 			if dh > climb or -dh > drop:
 				continue
-			if strict and k >= 4 and not step_ok(g, cx, cz, nx, nz, def):
-				continue
 			if j != s and j != t:
 				if use_set:
 					if sd.has(j):
@@ -145,7 +133,7 @@ static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, 
 				elif use_call and solid.call(nx, nz):
 					continue
 			ok[k] = true
-			var ng: float = cc + DC[k] + depth[j] * pool_cost
+			var ng: float = cc + DC[k] + depth[j] * 4.0
 			if _seen[j] == gen and ng >= _cost[j]:
 				continue
 			_seen[j] = gen
@@ -187,5 +175,5 @@ static func find(g: Grid, creeper: CreeperSim, start: Vector2i, goal: Vector2i, 
 static func _height(g: Grid, i: int, x: int, z: int) -> float:
 	if _hseen[i] != _gen:
 		_hseen[i] = _gen
-		_hv[i] = g.walk_height(x, z, _faction)
+		_hv[i] = g.walk_height(x, z, Grid.Faction.PLAYER)
 	return _hv[i]

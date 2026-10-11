@@ -9,9 +9,12 @@ const BASE := 2.0
 
 
 static func run(g) -> void:
+	var spire_timer: float = g.hazards.spire.timer
+	g.hazards.spire.timer = -1.0e9  # a spore volley killing the target mid-test is not what this checks
 	_cliff_commit(g)
 	_nearer_later(g)
 	_wall_replan(g)
+	g.hazards.spire.timer = spire_timer
 	SmokeAttackMove._pad(g, X0, Z0, X0 + 30, Z0 + 26)
 
 
@@ -30,7 +33,7 @@ static func _terrain(g) -> void:
 	TerrainEdit.apply(g.surface, e)
 	SmokeAttackMove._clear_creeper(g, X0, Z0, X0 + 30, Z0 + 26)
 	SmokeAttackMove._clear(g)
-	g.hazards.nests.raiders.paths.queue.clear()
+	g.hazards.nests.raiders.paths.fields.clear()
 
 
 static func _setup(g, foot_x: int) -> Array:
@@ -41,17 +44,8 @@ static func _setup(g, foot_x: int) -> Array:
 	return [r, s]
 
 
-static func _remaining(r: Dictionary) -> float:
-	var st: Dictionary = r.get("_pt", {})
-	if st.is_empty() or st.mode != RaiderPaths.PATH:
-		return -1.0
-	var p: Vector3 = r.node.position
-	var here := Vector2(p.x, p.z)
-	var d := 0.0
-	for k in range(st.i, st.wps.size()):
-		d += here.distance_to(st.wps[k])
-		here = st.wps[k]
-	return d
+static func _remaining(g, r: Dictionary) -> float:
+	return g.hazards.nests.raiders.paths.remaining(r)
 
 
 static func _cliff_commit(g) -> void:
@@ -74,7 +68,7 @@ static func _cliff_commit(g) -> void:
 			first = cur
 		elif not cur.is_empty() and not is_same(cur, first):
 			switched = true
-		var rem := _remaining(r)
+		var rem := _remaining(g, r)
 		if rem >= 0.0 and last >= 0.0 and rem > last + 0.05:
 			rising += 0.05
 			worst = maxf(worst, rising)
@@ -85,8 +79,8 @@ static func _cliff_commit(g) -> void:
 	SmokeTest._check("raider commit (a): reaches a cliff-foot target by the ramp, no backtracking, target kept",
 		ok_hit and worst <= 0.5 and not switched and first != null,
 		"(hit %s after %.1f s, rising %.2f s, switched %s)" % [ok_hit, t, worst, switched])
-	SmokeTest._check("raider commit (d): exactly one search for the commit (a)", int(r.get("_searches", 0)) == 1,
-		"(%d searches)" % (int(r.get("_searches", 0))))
+	var nb: int = g.hazards.nests.raiders.paths.builds_for(r)
+	SmokeTest._check("raider commit (d): exactly one field build for the commit (a)", nb == 1, "(%d builds)" % nb)
 	_end(g, r, [s])
 
 
@@ -99,9 +93,12 @@ static func _nearer_later(g) -> void:
 	var t := 0.0
 	var kept := true
 	var took_b := false
+	var nb := -1  # builds spent on A's commit: counted when A dies (B is a second commit)
 	while t < 50.0 and r.alive and not took_b:
 		SmokeTest._sim(g, 0.05)
 		t += 0.05
+		if a.dead and nb < 0:
+			nb = g.hazards.nests.raiders.paths.builds_for(r)
 		var cur: Dictionary = r.get("_tgt", {})
 		if cur.is_empty():
 			continue
@@ -111,8 +108,7 @@ static func _nearer_later(g) -> void:
 			took_b = true
 	SmokeTest._check("raider commit (b): a nearer structure does not steal the target until the first dies",
 		kept and took_b and a.dead, "(kept %s, took B %s, A alive %s, %.1f s)" % [kept, took_b, (not a.dead), t])
-	SmokeTest._check("raider commit (d): one search per commit (b)", int(r.get("_searches", 0)) == 1,
-		"(%d searches)" % (int(r.get("_searches", 0))))
+	SmokeTest._check("raider commit (d): one field build per commit (b)", nb == 1, "(%d builds)" % nb)
 	_end(g, r, [a, b])
 
 
@@ -136,8 +132,8 @@ static func _wall_replan(g) -> void:
 			TerrainEdit.raise(g.surface, cells, 3.0)
 	var arrived: bool = s.hp < hp0 or s.dead
 	SmokeTest._check("raider commit (c): a wall across the path causes one re-plan, then it arrives",
-		walled and arrived and int(r.get("_searches", 0)) == 2,
-		"(walled %s, arrived %s, raider alive %s, struct dead %s, %d searches, %.1f s)" % [walled, arrived, r.alive, s.dead, int(r.get("_searches", 0)), t])
+		walled and arrived and g.hazards.nests.raiders.paths.builds_for(r) == 2,
+		"(walled %s, arrived %s, raider alive %s, struct dead %s, %d builds, %.1f s)" % [walled, arrived, r.alive, s.dead, g.hazards.nests.raiders.paths.builds_for(r), t])
 	_end(g, r, [s])
 
 
