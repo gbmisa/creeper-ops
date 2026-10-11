@@ -6,14 +6,14 @@ Anything here changes (or already changed) behaviour that was working and that G
 
 | # | What changed | Before | Now | Why it was done | Ruling |
 |---|---|---|---|---|---|
-| 1 | Raiders and castle guards choosing a target | Re-checked every frame | Re-checked every 0.3-0.5 s | Speed | Being replaced by the "commit to a target" fix you asked for; nothing to rule on unless you want the old version back first |
-| 2 | Spitters and Lancers choosing a target | Every frame | Every 0.3-0.5 s, last pick kept while in range | Speed | |
+| 1 | Raiders and castle guards choosing a target | Re-checked every frame | Re-checked every 0.3-0.5 s | Speed | **Gone (2026-10-10).** Replaced by the commit-to-a-target fix you asked for: a raider with a target no longer re-checks on a timer |
+| 2 | Spitters and Lancers choosing a target | Every frame | Every 0.3-0.5 s, last pick kept while in range | Speed | **Gone (2026-10-10).** Shooters now keep their pick until it dies, leaves range or (Lancers) sight; no timer |
 | 3 | Enemy mortars aiming | Every frame | Every 0.3 s; the "can raiders walk to the Node" test every 0.25 s | Speed | |
 | 4 | Hive bookkeeping (stage unlocks, health caps, mortar count) | Every frame | Every 0.25 s | Speed | |
 | 5 | Nests checking whether a spawn is due | Every frame | Every 0.25 s (spawn timing itself unchanged, at most 0.25 s late) | Speed | |
 | 6 | "Raiders are in this castle zone" test (used for retakes and stage changes) | Every frame | Every 0.2 s | Speed | |
 | 7 | Flyers' height over the ground | Re-measured every frame | Re-measured after moving 0.75 m | Speed | |
-| 8 | Raider group speed | Slowest living member | Slowest member, dead ones included until they are removed | Side effect of a cache (a bug) | Being put back by the pathing fix |
+| 8 | Raider group speed | Slowest living member | Slowest member, dead ones included until they are removed | Side effect of a cache (a bug) | **Fixed (2026-10-10).** Dead raiders are skipped again |
 | 9 | Enemy builder choosing a build site | Whole search in one frame (caused the 1 s freezes) | Search spread over several frames, same site chosen | Speed (fixes the freeze) | |
 | 10 | Your units getting a path when ordered as a group | Every unit pathed the same frame (caused 0.2-0.9 s freezes) | Up to 3 ms of path searches per frame; the rest wait a few frames | Speed (fixes the freeze) | |
 | 11 | A unit's destination that cannot be reached | Searched again every time | Not searched again for 3 s | Speed | |
