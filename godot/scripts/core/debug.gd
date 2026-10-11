@@ -35,6 +35,7 @@ class_name Debug
 ##   --gpu-parity / --perf-sim=N   GPU creeper sim checks (SimBench; need a display)
 ##   --bench-l2[=S]  play S s and print fps / draw calls (L2Bench; real display)
 ##   --perf-probe[=MIN]  fast-forward MIN minutes, then frame cost by cause in both views (PerfProbe)
+##   --raider-probe[=dump]  Level 2 plateau-to-cliff-foot raider route probe (RaiderProbe)
 ##   --bench-field  time one RaiderField rebuild/label/on-foot search (FieldBench)
 ##   --cpu-sim     force the CPU creeper sim
 ##   --level=N     play Level N (1 Hollow Ridge, 2 The Crown Marches); see Levels
@@ -209,6 +210,9 @@ static func apply(g) -> void:
 		L2Bench.run(g, args)
 	if args.has("perf-probe"):
 		PerfProbe.run(g, args)
+		return
+	if args.has("raider-probe"):
+		RaiderProbe.run(g, args)
 		return
 	if args.has("bench-field"):
 		FieldBench.run(g)

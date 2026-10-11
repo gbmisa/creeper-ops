@@ -1,13 +1,14 @@
 # PT4 R progress (raiders commit to a target and a path)
 
-## Phase 1: DONE (static targets, melee raiders)
-- `level/raider_paths.gd` (`RaiderPaths`, `Raiders.paths`): per-raider state in `r["_pt"]` = {tgt, mode STRAIGHT/WAIT/PATH, wps, i, cell, ver, stk, next}. `goal(r, target, dt)` returns the XZ to walk to, or null (caller uses the flow field while a search waits).
-- Straight test once per commit (`_clear`: quarter-cell samples, `RaiderField.step_ok` per cell change, success once within striking reach). Blocked: raider queued (Array + flag `r._pq`; never use raider dicts as dict keys, they mutate) and served under `RAIDER_PATH_FRAME_MS`, max `RAIDER_PATH_MAX_NODES`.
-- Re-plan triggers: `RaiderField.version` bumped by `invalidate()` (PATH mode only re-plans if the remaining polyline fails `_clear`; STRAIGHT mode re-tests), stuck handling (`_stuck_rest` starts), path spent short of the target (at most every `RAIDER_REPLAN_MIN`).
-- `Pathfind`: def keys `faction` (default PLAYER), `ignore_creeper`, `corners` (no diagonal corner cutting, matches `RaiderField.step_ok`; needed or smoothed paths were rejected and re-planned every tick). Units unchanged.
+## Phase 1: DONE (static targets, melee raiders), hardened after measurement
+- First version used a per-raider A* (`Pathfind.find`). `--level=2 --raider-probe` (RaiderProbe) showed on the real Southern Barrows plateau -> cliff-foot Collector case: 398 nodes cost 8.3-8.9 ms each (about 21 us/node headless), 43 searches in 90 s, 8 per raider, raiders walked away from the target for up to 10.7 s, Collector first hit at 21.4 s. So the A* was replaced.
+- Now: `level/raider_paths.gd` (`RaiderPaths`, `Raiders.paths`): per-raider state in `r["_pt"]` = {tgt, mode STRAIGHT/WAIT/FIELD, cell, ver, stk, nostr, here, next, fver}. Blocked straight line -> a per-target walking-distance field (`RaiderFieldBuild`, goal = the target cell, ENEMY rules), time-sliced in `serve()` under `Config.RAIDER_TARGET_FIELD_BUDGET_MS` (1 ms), shared by every raider on that target, cache of `RAIDER_TARGET_FIELDS` (8, least recently used dropped, dead targets dropped). Raiders step down it (same neighbour rule as `RaiderField.next_step`), switch to STRAIGHT once `_clear`. While the first field builds: shared flow field. No walking route (dist -1): press toward the target as integ did.
+- Rebuild only when: `RaiderField.version` changed AND the next `RAIDER_FIELD_CHECK_STEPS` (12) steps of the route fail step_ok; or stuck handling fired (also disables STRAIGHT for that raider). The old field keeps being walked while the new one builds.
+- Straight test once per commit (`_clear`, quarter-cell samples, `RaiderField.step_ok`, success within striking reach), re-tested when the target cell or version changes.
+- `RaiderField.walk_heights()` added (refresh + return). `units/pathfind.gd` is back to the integ version. Config: removed `RAIDER_PATH_FRAME_MS/MAX_NODES/REPLAN_MIN`; added `RAIDER_TARGET_FIELD_BUDGET_MS`, `RAIDER_TARGET_FIELDS`, `RAIDER_FIELD_CHECK_STEPS`.
 - `Raiders._acquire`: a held target is kept (`_keep`: alive, grounded, guard leash, `RAIDER_LOSE` for non-structure targets of marchers, reachable re-check once per field version). Scan only when no target. `detour` and `RAIDER_DETOUR_TIME` removed. `_index` skips dead raiders.
-- Config added: `RAIDER_LOSE` 18, `RAIDER_PATH_FRAME_MS` 3, `RAIDER_PATH_MAX_NODES` 4000, `RAIDER_REPLAN_MIN` 1.
-- Smoke `core/smoke_raider_commit.gd` (a)-(d), group `--smoke=raidercommit`. Per-raider search count is `r._searches`; `paths.total_searches` is global.
+- Smoke `core/smoke_raider_commit.gd` (a)-(d), group `--smoke=raidercommit`; counts are `paths.builds_for(r)` (global counter is polluted by nest raiders in the full smoke world).
+- Probe: `godot --headless --path godot -- --level=2 --raider-probe | grep rprobe` (`=dump` prints a height map). Hardened numbers: 1 build (37 slices, largest slice 1.2 ms), Collector hit at 21.3 s, every raider's distance-increase 0.00 s, largest path work in one frame 1.2 ms.
 
 ## For Phase 2
 - Moving targets already get lock-on + `RAIDER_LOSE`; straight mode re-tests when the target cell changes; PATH mode only re-plans at path end (item 6's `RAIDER_REPATH_CELLS` / `RAIDER_REPATH_MIN` distance rule is NOT done: add in `goal()` by comparing `st.cell` to the target cell).

@@ -239,8 +239,8 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
 			r.node.position.y = RaiderPerch.y(world, p.x, p.z) + absf(sin(time * 12.0 + r.phase)) * 0.2
 			return
-		# One committed route: straight when clear, else the A* waypoints (RaiderPaths);
-		# the flow field only while a search waits.
+		# One committed route: straight when clear, else down the target's walking field
+		# (RaiderPaths); the shared flow field only while that field builds.
 		goal = paths.goal(r, target, dt)
 		if goal == null:
 			goal = _route(r, p)
