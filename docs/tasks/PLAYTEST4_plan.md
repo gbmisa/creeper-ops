@@ -110,6 +110,7 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 
 ## Update 16 (Gregory, 2026-10-10, two screenshots)
 - **Build menu box changes size when a hovered description wraps to two lines.** Cause: `ui/build_menu.gd:41-43`, the tip label autowraps with a minimum height of one line (20 px), so the panel grows when the text needs two. -> Sonnet `feature-dev` on `pt4/menu-tip`: reserve the height of the tallest description once, so the panel never resizes on hover. Nothing else about the menu changes.
+- **`pt4/menu-tip` merged** (`a788a58`, smoke 0 failures): the tip label reserves the height of the tallest text (2 lines, 47 px at 1142 px width; re-measured on resize). One visible difference: the menu is always as tall as it used to get on the longest hover. Not checked in a screenshot.
 
 ## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
 Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
