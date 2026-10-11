@@ -24,4 +24,6 @@ Anything here changes (or already changed) behaviour that was working and that G
 
 ## Proposed (not built)
 
-None yet.
+| # | What would change | Today | Proposed | Why | Ruling |
+|---|---|---|---|---|---|
+| P1 | Your units chasing a moving enemy on an attack order | The unit works out a new path to the enemy once a second | Walk straight at it when the way is clear; work out a new path only when the enemy has moved about 4 cells from where the old path ended | Same "lock on, don't keep recalculating" rule you gave for enemies, applied to your own units. You did not ask for this one; units behave as they did until you approve it | |
