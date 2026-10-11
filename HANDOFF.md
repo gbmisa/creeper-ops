@@ -24,12 +24,11 @@ Open, not assigned: creeper GPU sim CPU side 5.3 ms per `update(0.05)` (readback
 ## Playtest 4 afternoon (Updates 7-15 in PLAYTEST4_plan.md; briefs R, S, G, H, C in PLAYTEST4_briefs.md)
 **Hard rules added today (CLAUDE.md, AGENTS.md):** change only what Gregory named; perf/refactor must be behaviour-identical; a change to working behaviour goes in `CHANGES.md` (repo root) for his ruling, never a yes/no in chat; remind him to review it when it gains entries. `CHANGES.md` has 15 entries (unrequested changes from the perf merges) plus proposal P1 (unit attack re-pathing), no rulings yet.
 Merged into integ after the perf merges, smoke 0 failures: `pt4/salvage` (engines ship once hooked, no hive/castle gate), `pt4/guards` (Sentinels, wall patrols, Warden, castle Lancers never respawn; back only on a retake), `pt4/threat` (time after grace doubled on L1 and L2), `pt4/hook` (sockets are not prey; only a dead/removed anchor unhooks), `pt4/castle-rate` (garrison HP budget 0.75 x tier-3 rifle DPS = 9.4 HP/s; only bites after a Behemoth), `pt4/raider-commit` phase 1 at `af92d9f` (raiders keep one target and one route, `RaiderPaths`), and a one-line revert in `hive_spawning.gd` (cached Sac node threw "previously freed instance").
-**Raider pathing phase 1 is verified on L2** (`--level=2 --raider-probe`): per-target walking-distance fields (`RaiderPaths`, 1 ms per frame builds), 0 s backtracking, 1.25 ms largest frame; `units/` untouched. The first version merged for the playtest (per-raider A*) was bad on the real map and is replaced.
+**Brief R is complete and merged (phase 2 `e1fef8e`: lock-on for moving targets, shooters keep their pick, Spitters fire only along a clear lob).** Raider pathing is verified on L2 (`--level=2 --raider-probe`): per-target walking-distance fields (`RaiderPaths`, 1 ms per frame builds), 0 s backtracking, 1.25 ms largest frame; `units/` untouched. The first version merged for the playtest (per-raider A*) was bad on the real map and is replaced.
 Pushed to GitHub: integ at `463989f` only (before every fix above).
 
 ## Next steps
 1. Gregory playtests integ (restart the game). Log feedback as Update 16+.
-3. Brief R phase 2 (fresh Sonnet `stage-runner`): lock-on for moving targets, shooters keep their pick, Spitters fire only with a clear lob (item 7b), no unit changes (that is `CHANGES.md` P1).
 4. Gregory's rulings on `CHANGES.md` entries 1-15; revert what he rejects.
 5. Display perf probe (`--probe-base`, minute 28) not re-run since the perf merges.
 6. Pathfinding in Rust: noted, not started; measure first whether it is still needed (unit A* is about 9 us per node; raider cost is `RaiderMove.walk`).
