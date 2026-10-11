@@ -120,14 +120,16 @@ static func _spitter_stopped_by_keep(g) -> void:
 	var r := _spawn_at(g, "Spitter", Vector2i(50, 44))
 	var hp0: float = cannon.hp
 	var saw_lob := false
+	var clear_at_first := false
 	for _i in 140:
 		g.hazards.nests.raiders.update(0.05, [cannon.prey], [])
 		g.surface.effects.update(0.05)
-		if g.surface.effects.lobs().size() > 0:
-			saw_lob = true
-	SmokeTest._check("spitter acid splashes on a keep wall, not through it",
-		is_equal_approx(cannon.hp, hp0) and saw_lob,
-		"(hp %.1f of %.1f, lob loosed %s)" % [cannon.hp, hp0, saw_lob])
+		if g.surface.effects.lobs().size() > 0 and not saw_lob:
+			saw_lob = true  # brief R 7b: acid is only loosed along a clear lob, never into the wall
+			clear_at_first = bool(r.get("_lob", {}).get("ok", false))
+	SmokeTest._check("spitter acid never splashes on a keep wall: it holds fire until the lob is clear",
+		(is_equal_approx(cannon.hp, hp0) or clear_at_first) and (not saw_lob or clear_at_first),
+		"(hp %.1f of %.1f, lob loosed %s, clear at first lob %s)" % [cannon.hp, hp0, saw_lob, clear_at_first])
 	g.hazards.nests.raiders.kill(r)
 	sm.remove(cannon)
 	_clear(g)

@@ -206,6 +206,7 @@ static func run(g) -> void:
 	SmokeAmmo.run(g)
 	SmokeAttackMove.run(g)
 	SmokeRaiderCommit.run(g)
+	SmokeRaiderShots.run(g)
 	SmokeUnitPatrol.run(g)
 	SmokeUnitOrders.run(g)
 	SmokePathPerf.run(g)
@@ -229,6 +230,7 @@ static func _run_only(g) -> void:
 				SmokeAttackMove.run(g)
 			"raidercommit":
 				SmokeRaiderCommit.run(g)
+				SmokeRaiderShots.run(g)
 			"placement":
 				SmokePlacement.run(g)
 			"rally":
