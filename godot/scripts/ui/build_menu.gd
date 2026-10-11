@@ -42,8 +42,38 @@ func _init() -> void:
 	_tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_tip.custom_minimum_size = Vector2(640, 20)
 	v.add_child(_tip)
+	resized.connect(_reserve_tip)
+	_reserve_tip()
 	Bus.tool_changed.connect(_on_tool)
 	show_tab(0)
+
+
+func tip_text(item: String) -> String:
+	var why := StructureDefs.lock_reason(level, item)
+	return why if why != "" else "%s: %s" % [StructureDefs.label(item), StructureDefs.desc(item)]
+
+
+## Reserve the tip's height for the longest text it can show, at the width it really has,
+## so hovering a long description never resizes the panel.
+func _reserve_tip() -> void:
+	var box := get_theme_stylebox("panel")
+	var w := maxf(size.x, custom_minimum_size.x) - box.get_content_margin(SIDE_LEFT) - box.get_content_margin(SIDE_RIGHT)
+	w = maxf(w, _tip.custom_minimum_size.x)
+	var font := _tip.get_theme_font("font")
+	var fs := _tip.get_theme_font_size("font_size")
+	var gap := _tip.get_theme_constant("line_spacing")  # Label adds this between lines
+	var texts: Array[String] = [HINT]
+	for t in StructureDefs.TABS:
+		for item in StructureDefs.MENU[t]:
+			texts.append("%s: %s" % [StructureDefs.label(item), StructureDefs.desc(item)])
+	texts.append("Not available on this level")
+	var h := 20.0
+	for t in texts:
+		var raw := font.get_multiline_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, w, fs,
+			-1, TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE).y
+		var lines := roundi(raw / font.get_height(fs))
+		h = maxf(h, raw + (lines - 1) * gap)
+	_tip.custom_minimum_size.y = ceilf(h)
 
 
 func _on_tool(t: String) -> void:
@@ -64,8 +94,7 @@ func show_tab(i: int) -> void:
 		var b := BuildCard.new(item, n)
 		b.pressed.connect(func(): _pick(item))
 		b.mouse_entered.connect(func():
-			var why := StructureDefs.lock_reason(level, item)
-			_tip.text = why if why != "" else "%s: %s" % [StructureDefs.label(item), StructureDefs.desc(item)])
+			_tip.text = tip_text(item))
 		b.mouse_exited.connect(func(): _tip.text = HINT)
 		_items.add_child(b)
 		_buttons[item] = b
