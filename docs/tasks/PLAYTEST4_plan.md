@@ -108,6 +108,9 @@ Logged by Opus. Gregory plays `integ/2026-10-09` (worktree `integ`, see RUN.md).
 - **`pt4/castle-rate` merged** (`3074ee7`, smoke 0 failures). `CastleDefs.spawn_budget()` = 0.75 x tier-3 rifle DPS = 9.38 HP/s; after a garrison spawn of HP H the next waits >= H / budget (`c.garrison_wait`). Measured in the smoke harness, one castle, garrison killed every step: HP/s before -> after at pressure 0: 0.3 -> 0.3; 0.5: 1.7 -> 1.7; 1.0: 6.2 -> 5.9. The cap only changes the wait after a Behemoth (12.8 s). The garrison alone never exceeded 9.4 HP/s; the relief for castle fights comes from G (no patrol/Warden/Sentinel/Lancer respawn) and the threat stretch.
 - **`pt4/raider-commit` phase 1 merged at `af92d9f` on Gregory's instruction ("merge for a new playtest")**, before the L2 verification finished. Smoke 0 failures; headless L2 `--units --perf-probe=4`: same 2 hitches (92, 90 ms at t=29-32 s), `nests: raiders` 0.91 ms. Route search cost on long detours and the real plateau case are still unmeasured; the verify agent continues on the branch.
 
+## Update 16 (Gregory, 2026-10-10, two screenshots)
+- **Build menu box changes size when a hovered description wraps to two lines.** Cause: `ui/build_menu.gd:41-43`, the tip label autowraps with a minimum height of one line (20 px), so the panel grows when the text needs two. -> Sonnet `feature-dev` on `pt4/menu-tip`: reserve the height of the tallest description once, so the panel never resizes on hover. Nothing else about the menu changes.
+
 ## Perf findings (Opus, PerfProbe, L2 `--demo`, 28 min, RTX 5090, 1440p)
 Tool: `godot --path godot --rendering-driver vulkan -- --level=2 --demo --nocapture --perf-probe=28` (headless: sim numbers only).
 - **Terrain edits: 0 in 28 minutes.** The static-map / pathing rework is dropped; it would fix nothing.
