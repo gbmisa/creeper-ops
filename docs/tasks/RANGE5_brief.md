@@ -78,7 +78,11 @@ GUNS-1: roster + ammo + mags + tests. GUNS-2: attachments (data, stat modifiers,
 sights/zoom) + tests. Tests: every gun builds, fires, reloads; each line's later tier beats the earlier on its stated
 advantage; each attachment changes exactly its stat; sight changes ADS line/zoom.
 
-## Track UTIL (Sonnet `stage-runner`, after GUNS-1 merges): utility items. Branch `feat/r5-util`
+## Track UTIL (Muse, in parallel with MP-1): utility items. Branch `feat/r5-util`
+Follow `docs/MULTIPLAYER.md` rules: items act through request functions, server-owned state (grenades, grapple
+attach point, smoke volumes) in entities with ids + to_dict, players list (not one player), seeded RNG, effects as
+events; sounds via `RangeAudio.util(...)` events already mapped in `scripts/range/sound_defs.gd`. Models exist in
+`godot/assets/models/utility/`. MP-1 refactors the same files on `feat/mp1`; keep your edits to shared files small.
 Items in a new inventory slot pair `utility1`/`utility2` (keys new actions `t_util_1` = 4, `t_util_2` = 5) plus grids.
 - **Grappling hook** (`grapple.gd`): aim, fire (hook projectile, 35 m), attaches to world geometry (not bots), reels the
   player toward the point (pull speed ~12 m/s, release on jump/use key or arrival, keeps momentum so you can swing up
