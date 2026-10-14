@@ -143,3 +143,32 @@ icon: always open / open after the boss dies / costs time to call). Enemies ~24:
 routes and posts per district; the Warlord moves between 2 districts. Navmesh over everything, stairs/ramps like the
 hotel. Graphics: same Kestrel look (LookEnv/LookMaterials, Hunyuan props, MultiMesh foliage), fps ≥ 90 at 1600x900.
 Tests: every district reachable from every spawn (navmesh path), each extract works, bot count, fps report.
+
+## Track MED (Sonnet): Tarkov-style medicine + status effects that build up. Branch `feat/r5-med`
+Gregory (2026-10-14): "Add healing items and things that can affect status effects that build up similar to Tarkov."
+MED owns all medical/consumable items **including the stim** (UTIL: skip `stim`, or leave a stub MED replaces).
+**Status model** (`scripts/tactical/status_effects.gd`, per player in PlayerState-compatible form, to_dict):
+- Wounds (exist in BodyHealth): light bleed, heavy bleed, fracture, blacked-out limb (0 HP; surgery restores it at a
+  lower max HP).
+- **Build-up meters** (0..1, rise with exposure, decay slowly, trigger an effect at 1, warning icon from 0.5):
+  pain (damage, fractures, heavy bleeds), radiation (hot zone around the Kestrel radar array; damage over time when
+  full), toxication (stim side effects, poison), dehydration/energy (drain over time, faster when sprinting or
+  bleeding), fatigue (sprinting/jumping while low on energy), contusion (explosions, helmet hits).
+- Effects: pain -> tremor (sway x2) + slower ADS; dehydration -> stamina regen halved, then HP loss; low energy ->
+  slower stamina regen; contusion -> muffled audio + blur, 10 s; tunnel vision (low HP/dehydrated); radiation full ->
+  slow HP drain + reduced max stamina; toxication full -> HP drain + nausea wobble; overweight already exists.
+**Items** (`item_defs.gd` rows, kind `med`/`food`/`stim`; Hunyuan models for the main ones; sounds via
+`sound_defs.gd`): Bandage (light bleed, 2 s), Esmarch tourniquet (heavy bleed, limb, 3 s), Splint (fracture, 5 s), CMS
+surgical kit (restores a blacked limb at 60 % max, 15 s, 3 uses), AI-2 (100 HP pool, 2 s), Car kit (220 HP, stops light
+bleeds), Salewa (400 HP, light + heavy bleeds), Grizzly (1800 HP, all wounds, slow), Analgin painkillers (pain off 95 s,
+4 uses), Morphine (pain off 300 s; dehydration side effect), Propital (regen 1 HP/s for 300 s; tremor at 240 s), SJ6
+(stamina +, faster regen 240 s; fatigue + tremor after), Adrenaline (pain off + stamina refill 60 s; dehydration),
+eTG-c (big regen 6.5 HP/s for 60 s; toxication build-up), Iodine pills (radiation build-up -60 % for 300 s), Water
+bottle, Juice, Crackers, MRE (hydration/energy).
+**Use:** right-click Use in the inventory, choose body part when relevant; quick-use keys for rig/pocket meds (new
+action ids, free keys; shown in Controls); using takes time, slows you (x0.6), interrupts on sprint/aim/swap; HP pools
+heal the worst zone first. Medkits/stims spawn in Skirmish loot crates and the range crate.
+**HUD:** health panel in the inventory (body silhouette, zone HP, wound icons) and status icons with timers +
+build-up bars on the main HUD (only when > 0).
+**Bots:** keep their Heal state; they can use bandages/medkits from their loot (no number changes).
+Multiplayer rules apply (requests, per-player state, events for sounds/visuals). Tests per item and per build-up.
