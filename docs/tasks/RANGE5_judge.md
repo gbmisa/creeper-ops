@@ -26,3 +26,12 @@ Score < 8 -> fixes go back to the producing track (max 3 rounds per area). Final
 ## Scores
 | Area | Round 1 | Round 2 | Round 3 |
 |---|---|---|---|
+| 1 Level design | Skirmish 6.5 / hub 6 | | |
+| 2 Textures/lighting | Skirmish 6.5 / hub 6 | | |
+| 3 Items | 6 | | |
+| 4 Hands | 5 | | |
+| 5 Modular function | 7 (141 PASS; flash removal unproven) | | |
+
+Round 1 fixes: LOOK-3 (areas 1-2), VIEW-FIX (4, 3 in-hand, 5: per-gun view data from mounts.json for the 11 new guns,
+rack labels, `--weapon` holster bug, flash test), ART-FIX (3: model shading/texture noise, same scale/origin).
+Judge shots: `/tmp/claude-1000/judge/`.
