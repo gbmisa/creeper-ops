@@ -43,3 +43,22 @@
 - Verified: parse clean; `--range-test` OK 56 (14 new); main smoke 0 FAIL (see commit). `RangeTest.run` now awaits `_wall_checks`
   (before, OK printed before they ran).
 - Not verified: real mouse play, audio, moving target hit timing, bench/station prompts by hand, damage-number readability at 300 m.
+
+## Review fixes 2 + Phase 4: Kill house + bots (done)
+- Fixes: AK-47 ADS pulled back (`ads_pos` z -0.95, y -0.113) so the stock is not a wall in the sight picture; P90 ADS z -0.85.
+  Dummy per-zone text moved from a tiny Label3D to a HUD panel (top-right, `RangeHitLog.set_target`).
+- Added `scripts/range/{kill_house,range_bots,scav_bot,bot_brain,bot_perception,bot_noise,bot_mesh,bot_shooting,bot_motion,
+  range_body_hud,range_test_bots}.gd`. Kill house: 30x30 m at `KillHouse.HOME` (46,0,-8), east of the booth through a gap in the
+  east berm (z -12..-2); brick outer walls, plywood/brick interior, doorways, 10 crates, 8 cover markers; NavigationRegion3D baked
+  from its colliders at load (needs ~8 physics frames to sync, so `_arrived()` waits for a path). Terminal at local (-19,3): F spawns 2 Scavs; `--bots` spawns at start.
+- Bots: AK-47 PS, class 2 vest, hitbox rig + BodyHealth, Gun/Magazine reloads, real Ballistics, NavigationAgent3D. Brain states Patrol,
+  Investigate, Engage, TakeCover, Heal, Flank, Search, Suppress (extra: first bot fires at the last known spot while the ally flanks).
+  Changes are logged in the hit log and printed as `[bot]`. Perception: 110 deg cone, 120 m, LOS rays to head+thorax, reaction 0.35-1.0 s
+  x (1+dist/120) x1.4 if the player is still/crouched; hearing via `BotNoise` (shots 150 m, sprint 20, walk 8, crouch 0). Bots ignore bot noise.
+- Player: `TacticalPlayer` has `body` (BodyHealth), hitbox rig (follows crouch), `hit_taken/died/respawned`, death (camera drops, 3.5 s) and
+  respawn at the booth. `RangeBodyHud`: 7-zone mini body (armour outline, bleed dot), red wedge toward the shooter, hit flash, death fade.
+- Small edits in tactical/: `BodyHealth.heal(frac)`, `Ballistics` body_hit result now carries `origin`. Hooks: `--god`, `--engage=x,y,z`; shot hook prints bot states.
+- Verified: parse clean; `--range-test` OK 80 (24 new: nav, LOS wall/doorway/cone, hearing, heal, brain sequence, shooting, death/respawn);
+  main smoke 1264 PASS 0 FAIL; 60 s headless `--bots` soak no errors. Shots: docs/art/range/killhouse.png, bot_engage.png.
+- Not verified: real mouse play, bot sounds (none: bots shoot silently), flank/suppress feel in play, bots in the open outside the house,
+  difficulty tuning, crouched-player hitbox accuracy.

@@ -18,6 +18,11 @@ func run(app: FiringRange) -> void:
 	if a.has("crouch"):
 		app.player.crouching = true
 	w.trigger_ads = a.has("ads")
+	if a.has("engage") and not app.bots.bots.is_empty():  # --engage: Scav 1 stands 6 m ahead of the player and is alerted
+		var bot: ScavBot = app.bots.bots[0]
+		bot.global_position = app.player.global_position + Vector3(0, 0, 6) if not a.has("look") else RangeArgs.vec3(str(a["engage"]))
+		bot.rotation.y = 0.0
+		bot.percept.alert(app.player.global_position)
 	var impacts := []
 	app.bal.impact.connect(func(i): impacts.append(i))
 	await app.get_tree().create_timer(0.8).timeout
@@ -31,6 +36,9 @@ func run(app: FiringRange) -> void:
 		w.start_reload(a.has("fast"))
 		await app.get_tree().create_timer(float(a.get("reload", 0.5)) if str(a["reload"]) != "true" else 0.4).timeout
 	await app.get_tree().create_timer(float(a.get("wait", 1.0))).timeout
+	for b in app.bots.bots:
+		if is_instance_valid(b):
+			print("[range] ", b.label_name, " ", b.global_position.snapped(Vector3(0.1, 0.1, 0.1)), " ", b.brain.state, " hp ", snappedf(b.body.total_frac(), 0.01))
 	print("[range] fired ", shots, " impacts ", impacts.size(), " mags ", w.gun.mag.count() if w.gun else -1)
 	if a.has("shot"):
 		await RenderingServer.frame_post_draw

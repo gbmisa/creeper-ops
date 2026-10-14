@@ -9,6 +9,11 @@ const SENS := 0.0022
 const JUMP_V := 4.2
 const ACCEL := 16.0
 const BASE_FOV := 75.0
+const RESPAWN_TIME := 3.5
+
+signal hit_taken(from: Vector3, res: Dictionary)
+signal died
+signal respawned
 
 var input: InputState
 var enabled := true
@@ -23,6 +28,11 @@ var move_mult := 1.0  # body health slows (fractured legs)
 var ads_amt := 0.0  # set by PlayerWeapons
 var recoil_off := Vector2.ZERO  # deg, x = pitch up, y = yaw
 var sway_off := Vector2.ZERO
+var body := BodyHealth.new()  # zones the bots shoot at
+var label_name := "You"
+var god := false  # --god (screenshots): body health never drops
+var dead_t := 0.0
+var rig := {}
 var head: Node3D
 var cam: Camera3D
 var _shape: CollisionShape3D
@@ -55,11 +65,60 @@ func _init() -> void:
 	head.add_child(cam)
 
 
+func _ready() -> void:
+	rig = HitboxRig.build(self, body, self)
+
+
+## Called by RangeFeedback with the Ballistics.body_hit dictionary (a bot's bullet).
+func on_hit(res: Dictionary) -> void:
+	hit_taken.emit(res.get("origin", global_position), res)
+
+
+## Bleeds, death and respawn. Called every frame, also when the menu is open.
+func tick_body(delta: float) -> void:
+	if god:
+		body.reset()
+	if dead_t > 0.0:
+		dead_t -= delta
+		if dead_t <= 0.0:
+			respawn()
+		return
+	body.tick(delta)
+	move_mult = body.move_mult()
+	if body.dead:
+		enabled = false
+		dead_t = RESPAWN_TIME
+		for z in rig:
+			(rig[z] as CollisionObject3D).collision_layer = 0
+		died.emit()
+
+
+func respawn() -> void:
+	body.reset()
+	global_position = RangeLayout.SPAWN
+	velocity = Vector3.ZERO
+	yaw = 0.0
+	pitch = 0.0
+	leg_stamina = 1.0
+	enabled = true
+	for z in rig:
+		(rig[z] as CollisionObject3D).collision_layer = TacticalConfig.LAYER_HITBOX
+	respawned.emit()
+
+
 func eye_pos() -> Vector3:
 	return cam.global_position
 
 
 func _process(delta: float) -> void:
+	tick_body(delta)
+	var crouch_k := (1.2 if crouching else 1.8) / 1.8
+	for z in rig:  # hitboxes follow a crouch
+		(rig[z] as Node3D).position.y = (HitboxRig.SHAPES[z][0] as Vector3).y * crouch_k
+	if dead_t > 0.0:  # down: the camera drops and rolls
+		_eye = lerpf(_eye, 0.3, minf(1.0, delta * 4.0))
+		head.position.y = _eye
+		head.rotation.z = lerpf(head.rotation.z, 0.9, minf(1.0, delta * 3.0))
 	if not enabled:
 		return
 	if input.act("t_jump"):
@@ -125,6 +184,7 @@ func _physics_process(delta: float) -> void:
 		_step_t = 1.7
 		if is_on_floor() and hv.length() > 0.5:
 			Sfx.play("step")
+			BotNoise.emit(global_position, BotNoise.step_radius(sprinting, crouching), "step", self)
 
 
 func horizontal_speed() -> float:

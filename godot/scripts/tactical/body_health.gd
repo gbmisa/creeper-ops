@@ -113,6 +113,16 @@ func hit(zone: String, dmg: float, info: Dictionary = {}) -> Dictionary:
 	return res
 
 
+## Field medical: stops bleeds and restores `frac` of each living zone's max HP (blacked-out zones stay down).
+func heal(frac: float) -> void:
+	if dead:
+		return
+	bleeds.clear()
+	for z in ZONES:
+		if hp[z] > 0.0:
+			hp[z] = minf(MAX[z], hp[z] + MAX[z] * frac)
+
+
 func tick(dt: float) -> void:
 	if dead:
 		return
