@@ -1,13 +1,20 @@
 # blender -b --python art/tools/glb_cleanup.py -- raw.glb out.glb --tris 3000 --size 0.6 [--concept concept.png]
 # Game-ready pass for a gen3d.py mesh: one object, decimated to ~tris, origin at the bottom centre, longest side
+# [--rotate x,y,z degrees] [--flip = turn 180 deg about Y] [--center = origin at bbox centre, for guns] [--no-colour]
 # scaled to --size metres, flat-shaded material in the concept image's dominant colour (no texture yet).
-import bpy, sys, argparse
+import bpy, sys, argparse, math
+import numpy as np
 from mathutils import Vector
 ap = argparse.ArgumentParser()
 ap.add_argument("src"); ap.add_argument("out")
 ap.add_argument("--tris", type=int, default=3000)
 ap.add_argument("--size", type=float, default=1.0)
 ap.add_argument("--concept")
+ap.add_argument("--rotate", default="0,0,0", help="euler degrees in Blender axes (Z up, glTF -Z forward = +Y) applied to the raw mesh")
+ap.add_argument("--flip", action="store_true", help="turn 180 degrees about Y (muzzle pointing the wrong way)")
+ap.add_argument("--auto-orient", action="store_true", help="long axis -> +Y, pick the direction whose height profile matches the concept (needs --concept)")
+ap.add_argument("--origin", default="bottom", choices=["bottom", "center", "top", "back"], help="back = rear end centre (muzzle devices)")
+ap.add_argument("--center", action="store_true", help="same as --origin center")
 a = ap.parse_args(sys.argv[sys.argv.index("--") + 1:])
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -20,6 +27,49 @@ if len(meshes) > 1:
     bpy.ops.object.join()
 ob = bpy.context.view_layer.objects.active
 bpy.ops.object.parent_clear(type="CLEAR_KEEP_TRANSFORM")
+bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+def profile_mesh(co, axis, n=48):  # height extent per bin along `axis` (silhouette column heights)
+    t = (co[:, axis] - co[:, axis].min()) / max(1e-9, np.ptp(co[:, axis]))
+    b = np.minimum((t * n).astype(int), n - 1)
+    out = np.zeros(n)
+    for i in range(n):
+        z = co[b == i, 2]
+        out[i] = np.ptp(z) if len(z) else 0
+    return out / max(1e-9, np.ptp(co[:, 2]))
+
+
+def profile_concept(path, n=48):
+    img = bpy.data.images.load(path)
+    w, h = img.size
+    px = np.array(img.pixels[:], dtype=np.float32).reshape(h, w, 4)
+    solid = px[..., :3].min(2) < 0.75
+    ys, xs = np.where(solid)
+    solid = solid[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    out = np.zeros(n)
+    cols = np.array_split(np.arange(solid.shape[1]), n)
+    for i, c in enumerate(cols):
+        r = np.where(solid[:, c].any(1))[0]
+        out[i] = (r.max() - r.min()) if len(r) else 0
+    return out / solid.shape[0]
+
+
+rx, ry, rz = (math.radians(float(v)) for v in a.rotate.split(","))
+if a.auto_orient and a.concept:
+    co = np.array([v.co[:] for v in ob.data.vertices])
+    long_axis = 0 if np.ptp(co[:, 0]) > np.ptp(co[:, 1]) else 1
+    want = profile_concept(a.concept)
+    cands = (90, -90) if long_axis == 0 else (0, 180)
+    best = None
+    for deg in cands:
+        c, sn = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+        rot = np.stack([co[:, 0] * c - co[:, 1] * sn, co[:, 0] * sn + co[:, 1] * c, co[:, 2]], 1)
+        err = np.abs(profile_mesh(rot, 1) - want).mean()
+        if best is None or err < best[0]:
+            best = (err, deg)
+    rx, ry, rz = 0.0, 0.0, math.radians(best[1])
+    print("AUTO-ORIENT rz=%d err=%.3f" % (best[1], best[0]))
+ob.rotation_mode = "XYZ"
+ob.rotation_euler = (rx, ry + (math.pi if a.flip else 0), rz)
 bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 bpy.ops.object.mode_set(mode="EDIT")
 bpy.ops.mesh.select_all(action="SELECT")
@@ -41,8 +91,11 @@ pts = [ob.matrix_world @ Vector(c) for c in ob.bound_box]
 lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
 hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
 s = a.size / max(hi - lo)
+org = "center" if a.center else a.origin
+oz = {"bottom": lo.z, "top": hi.z}.get(org, (lo.z + hi.z) / 2)
+oy = lo.y if org == "back" else (lo.y + hi.y) / 2
 for v in ob.data.vertices:
-    v.co = (v.co - Vector(((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, lo.z))) * s
+    v.co = (v.co - Vector(((lo.x + hi.x) / 2, oy, oz))) * s
 for p in ob.data.polygons:
     p.use_smooth = False
 
