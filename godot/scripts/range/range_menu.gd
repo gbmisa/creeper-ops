@@ -4,6 +4,7 @@ extends CanvasLayer
 
 signal resumed
 signal reset_requested
+signal deploy_requested
 
 
 func _init() -> void:
@@ -25,7 +26,7 @@ func _init() -> void:
 	if RangeMaps.selected == "skirmish":
 		col.add_child(UiKit.button("Back to Firing Range", func(): RangeMaps.go("range")))
 	else:
-		col.add_child(UiKit.button("Deploy to Skirmish", func(): RangeMaps.go("skirmish")))
+		col.add_child(UiKit.button("Deploy to Skirmish", func(): deploy_requested.emit()))
 	col.add_child(UiKit.button("Quit", func(): get_tree().quit()))
 
 
