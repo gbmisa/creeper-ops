@@ -27,7 +27,10 @@ func _init() -> void:
 		holder.rotation_degrees.y = 90.0
 		add_child(holder)
 		var glb := load("res://assets/models/guns/%s.glb" % WeaponDefs.of(id)["model"]) as PackedScene
-		holder.add_child(glb.instantiate())
+		var gun := glb.instantiate() as Node3D
+		if WeaponDefs.of(id).get("flip", false):
+			gun.rotation.y = PI
+		holder.add_child(gun)
 		var l := Label3D.new()
 		l.text = "%d %s" % [i + 1, WeaponDefs.of(id)["name"]]
 		l.pixel_size = 0.0035

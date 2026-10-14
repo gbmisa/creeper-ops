@@ -12,11 +12,12 @@ var half_len := 0.3
 var _def := {}
 var _kick := 0.0
 var _kick_v := 0.0
-var _sway := Vector2.ZERO
 var _bob_t := 0.0
 var _check := 0.0
 var _cycle_clip := ""
-const HIP_BUTT := 0.2
+const HIP_BUTT := 0.1  # how far the butt sits behind the eye at the hip
+const HIP_MIN_Z := 0.3  # pistols: held out at least this far
+const ADS_BUTT := 0.1  # butt this far ahead of the eye when aiming
 const HIP_YAW := 2.5
 
 
@@ -36,6 +37,8 @@ func _on_switched(g: Gun) -> void:
 	add_child(model)
 	var glb := (load("res://assets/models/guns/%s.glb" % _def["model"]) as PackedScene).instantiate()
 	model.add_child(glb)
+	if _def.get("flip", false):
+		glb.rotation.y = PI  # model exported muzzle toward +Z
 	anim = glb.find_children("*", "AnimationPlayer", true, false)[0]
 	for n in anim.get_animation_list():
 		anim.get_animation(n).loop_mode = Animation.LOOP_NONE
@@ -88,12 +91,11 @@ func _process(delta: float) -> void:
 	flash.update(delta)
 	var a := smoothstep(0.0, 1.0, weapons.ads_amt)
 	var hip: Vector3 = _def["hip_pos"]
-	hip.z = -(half_len + HIP_BUTT)  # butt stays out of the lens, gun parallel to the view
-	var pos: Vector3 = hip.lerp(_def["ads_pos"], a)
+	hip.z = -maxf(half_len - HIP_BUTT, HIP_MIN_Z)  # butt tucked behind the eye, gun parallel to the view
+	var ads: Vector3 = _def["ads_pos"]
+	ads.z = -(half_len + ADS_BUTT)
+	var pos: Vector3 = hip.lerp(ads, a)
 	var rot := Vector3(0, deg_to_rad(HIP_YAW) * (1.0 - a), 0)
-	var md := player.input.mouse_delta
-	_sway = (_sway - md * 0.00035 * (1.0 - a * 0.6)).limit_length(0.05).lerp(Vector2.ZERO, minf(1.0, delta * 8.0))
-	pos += Vector3(_sway.x, -_sway.y, 0)
 	var speed := player.horizontal_speed() if player.is_on_floor() else 0.0
 	_bob_t += delta * speed * 2.0
 	var bob := speed * 0.0035 * (1.0 - a * 0.85)
