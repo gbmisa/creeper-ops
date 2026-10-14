@@ -8,6 +8,7 @@ static func run(t: RangeTest) -> void:
 	_body(t)
 	_malfunction(t)
 	_recoil(t)
+	RangeTestInv.run(t)
 
 
 static func _penetration(t: RangeTest) -> void:
