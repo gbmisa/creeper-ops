@@ -93,7 +93,7 @@ func drop_current() -> void:
 	var it := gun_item
 	reloader.cancel(it)
 	inv.remove(it)
-	RangeAudio.inventory("gun", "drop")
+	RangeAudio.event({"kind": "inventory", "item": "gun", "ev": "drop", "local": true})
 	sync()
 	item_dropped.emit(it)
 
@@ -139,7 +139,7 @@ func _pickup_and_slots() -> void:
 		prompt = "%s: take %s" % [Keybinds.short("t_use"), WeaponDefs.of(id)["name"]]
 		if player.enabled and input.act("t_use"):
 			give(id)
-			RangeAudio.inventory("gun", "pick")
+			RangeAudio.event({"kind": "inventory", "item": "gun", "ev": "pick", "local": true})
 	for n in HAND_SLOTS.size():
 		if player.enabled and input.act("t_slot_%d" % (n + 1)):
 			select_slot(HAND_SLOTS[n])
@@ -192,14 +192,14 @@ func _shoot(res: Dictionary) -> void:
 		bal.spawn(origin, d, res["ammo"])
 	recoil.shoot(gun.def, rng)
 	BotNoise.emit(player.global_position, BotNoise.SHOT_R, "shot", player)
-	RangeAudio.shot(gun.id, null, false, gun.def["cal"], gun.def["class"])
+	RangeAudio.event({"kind": "shot", "item": gun.id, "local": true, "cal": gun.def["cal"], "cls": gun.def["class"]})
 	if res["ping"]:
-		RangeAudio.play("garand_ping", null, -4.0)
+		RangeAudio.event({"kind": "sample", "item": "garand_ping", "local": true, "db": -4.0})
 	shot.emit(res, gun)
 
 
 func _gun_snd(ev: String) -> void:
-	RangeAudio.gun(gun.id, ev, null, gun.def["cal"], gun.def["class"])
+	RangeAudio.event({"kind": "gun", "item": gun.id, "ev": ev, "local": true, "cal": gun.def["cal"], "cls": gun.def["class"]})
 
 
 func _commands() -> void:

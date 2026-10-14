@@ -148,7 +148,7 @@ func quick_move(it: Dictionary) -> void:
 
 
 func _snd(it: Dictionary, ev: String) -> void:
-	RangeAudio.inventory(ItemDefs.def_of(it)["kind"], ev)
+	RangeAudio.event({"kind": "inventory", "item": ItemDefs.def_of(it)["kind"], "ev": ev, "local": true})
 
 
 ## Items put on the ground grid become physical; then everything is re-synced.
