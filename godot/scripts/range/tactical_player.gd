@@ -167,7 +167,9 @@ func _physics_process(delta: float) -> void:
 	speed *= lerpf(1.0, 0.6, ads_amt) * move_mult
 	var wish := (global_transform.basis * Vector3(dir.x, 0, dir.y)).normalized() * speed if dir != Vector2.ZERO else Vector3.ZERO
 	var accel := ACCEL / (1.0 + carried_kg * 0.12)
-	var hv := Vector2(velocity.x, velocity.z).move_toward(Vector2(wish.x, wish.z), accel * delta)
+	var hv := Vector2(wish.x, wish.z)  # no inertia on the ground: velocity snaps to the input
+	if not is_on_floor():
+		hv = Vector2(velocity.x, velocity.z).move_toward(hv, accel * delta)
 	velocity.x = hv.x
 	velocity.z = hv.y
 	velocity.y -= TacticalConfig.GRAVITY * delta
