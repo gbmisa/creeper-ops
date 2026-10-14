@@ -42,5 +42,5 @@ static func refill_mags(w: PlayerWeapons) -> void:
 	w.gun.spares.clear()
 	for it in w.inv.all_items():
 		if it["id"] in ItemDefs.ROWS and ItemDefs.ROWS[it["id"]]["kind"] == "mag" and ItemDefs.of(it["id"])["cal"] == w.gun.def["cal"]:
-			it["rounds"] = ItemDefs.of(it["id"])["cap"]
+			it["rounds"] = maxi(ItemDefs.of(it["id"])["cap"], int(w.gun.stat("mag")))
 			it["ammo"] = w.gun.ammo_pick
