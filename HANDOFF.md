@@ -1,4 +1,8 @@
-# Handoff: 2026-10-14 (Range 2.0: inventory, body/arms, Skirmish map + enemy roster, deploy loop; Opus)
+# Handoff: 2026-10-14 late (RANGE5 paused by Gregory; work split Muse vs Opus)
+**Start here: `docs/tasks/MUSE_QUEUE.md`** (what Muse does in waves, what Opus keeps). Merged on integ: 17 guns, 12
+attachments/sights, 28 Hunyuan models, sounds, Tarkov recoil toggle (CHANGES P3), LOOK-1/2 graphics, Kestrel theme.
+Range test 513 OK, smoke 0 FAIL. Judge round 1 scores in `docs/tasks/RANGE5_judge.md`. Multiplayer: `docs/MULTIPLAYER.md`
++ `MULTIPLAYER_AUDIT.md`. Local GPU tools: `art/tools/README.md` (ComfyUI Hunyuan), Vulkan screenshots work on DISPLAY :0.
 
 ## NEW 2026-10-14: Firing Range 2.0 + Skirmish (all merged into integ, pushed to GitHub)
 Play: main game -> level select -> **Firing Range** or **Skirmish** (or `godot --path godot res://scenes/firing_range.tscn [-- --map=skirmish]`).
