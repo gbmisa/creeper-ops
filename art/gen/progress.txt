@@ -1,0 +1,11 @@
+done sandbags
+done jersey
+done drum
+done pallets
+done fueltank
+done generator
+done lightmast
+done camonet
+done wreck
+done radar
+ALL
