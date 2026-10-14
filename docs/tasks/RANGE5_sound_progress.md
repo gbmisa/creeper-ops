@@ -18,3 +18,7 @@ Dry = lockclick; mode switch = Kenney metalClick. Attachments: sight = click (x1
 Inventory: gun metal/plate drop; mag plastic/metal; ammo coins; armor+rig cloth/soft; backpack leather; med plastic/cloth; attachment metal; utility metal/wood.
 Utility: grapple fire noise burst, reel = 28 Hz tremolo square, impact = Kenney metal heavy; grenades pin = latch x1.3, throw = whoosh, bounce = metal/plate impact,
 frag blast = Kenney low-frequency explosion; smoke hiss = 3.5 s pink noise; flash bang = crunch + metal layered, tinnitus = 4.5 s 7.2 kHz sine fade; stim = cloth belt; binoculars = cloth + click.
+
+MP compliance: all range sound goes through `RangeAudio.event(dict)` (kind, item id, ev, pos, local, suppressed, cal, cls); a client plays a received event
+identically. local=true is the player's own non-positional variant, bots/others pass pos (3D). Statics hold only the sample cache, pool and indoor zones (per process).
+Emission still happens at the player/bot/inventory call sites (they sit beside the rule code), not yet via signals: MP-1 should route those dicts through the server event stream.

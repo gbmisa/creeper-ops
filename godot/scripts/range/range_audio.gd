@@ -130,6 +130,27 @@ static func util(item: String, ev: String, pos: Variant = null) -> bool:
 	return play(SoundDefs.UTILITY.get(item, {}).get(ev, ""), pos, -2.0)
 
 
+## The single entry point: an event dictionary {kind: shot|gun|attach|inventory|util|sample, item, ev, pos?, local?,
+## suppressed?, cal?, cls?}. Gameplay emits these (the server would send the same dictionary to clients); local == true
+## is the player's own sound (non-positional), otherwise it plays 3D at pos. No state is kept per player.
+static func event(e: Dictionary) -> void:
+	var pos: Variant = null if e.get("local", false) else e.get("pos")
+	var item: String = e.get("item", "")
+	match e.get("kind", ""):
+		"shot":
+			shot(item, pos, e.get("suppressed", false), e.get("cal", ""), e.get("cls", ""))
+		"gun":
+			gun(item, e["ev"], pos, e.get("cal", ""), e.get("cls", ""))
+		"attach":
+			attach(item, e["ev"])
+		"inventory":
+			inventory(item, e["ev"])
+		"util":
+			util(item, e["ev"], pos)
+		"sample":
+			play(item, pos, e.get("db", 0.0))
+
+
 static func _listener() -> Vector3:
 	var tree := Engine.get_main_loop() as SceneTree
 	var cam := tree.root.get_viewport().get_camera_3d() if tree != null and tree.root != null else null
