@@ -11,8 +11,8 @@ func _init(i: Inventory) -> void:
 	inv = i
 
 
-static func mag_from_item(it: Dictionary) -> Magazine:
-	var m := Magazine.new(ItemDefs.def_of(it)["cap"])
+static func mag_from_item(it: Dictionary, min_cap: int = 0) -> Magazine:
+	var m := Magazine.new(maxi(maxi(ItemDefs.def_of(it)["cap"], min_cap), int(it["rounds"])))
 	for i in int(it["rounds"]):
 		m.push(it["ammo"])
 	return m
@@ -40,7 +40,7 @@ func begin(gi: Dictionary, fast: bool) -> String:
 	var from := {"loc": m["loc"], "x": m["x"], "y": m["y"], "rot": m["rot"]}
 	inv.remove(m)
 	g.spares.clear()
-	g.spares.append(mag_from_item(m))
+	g.spares.append(mag_from_item(m, int(g.stat("mag"))))
 	if not g.reload(fast):
 		g.spares.clear()
 		inv.place(m, from["loc"], from["x"], from["y"], from["rot"])

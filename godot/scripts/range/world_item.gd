@@ -5,7 +5,7 @@ extends RigidBody3D
 
 const CELL_M := 0.05
 const KIND_COLOUR := {"mag": Color(0.2, 0.2, 0.22), "ammo": Color(0.7, 0.55, 0.15), "armor": Color(0.25, 0.3, 0.22),
-	"rig": Color(0.35, 0.3, 0.2), "backpack": Color(0.3, 0.35, 0.25), "med": Color(0.7, 0.15, 0.15)}
+	"rig": Color(0.35, 0.3, 0.2), "backpack": Color(0.3, 0.35, 0.25), "med": Color(0.7, 0.15, 0.15), "attach": Color(0.15, 0.35, 0.45)}
 
 var item: Dictionary
 

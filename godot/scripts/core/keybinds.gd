@@ -84,6 +84,7 @@ const DEFAULTS := {
 	"t_lean_left": ["Tactical", "Lean left", [KEY_Q]],
 	"t_lean_right": ["Tactical", "Lean right", [KEY_E]],
 	"t_reload": ["Tactical", "Reload (double-tap: fast, drops mag)", [KEY_R]],
+	"t_zoom": ["Tactical", "Variable sight zoom", [KEY_N]],
 	"t_fire_mode": ["Tactical", "Fire mode", [KEY_B]],
 	"t_mag_check": ["Tactical", "Check magazine", [KEY_T]],
 	"t_inspect": ["Tactical", "Inspect / fix malfunction", [KEY_L]],

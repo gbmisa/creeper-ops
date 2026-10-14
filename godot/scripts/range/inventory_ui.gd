@@ -19,6 +19,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer, wi: WorldItems) -> void:
 	view.inv = w.inv
 	view.drop_requested.connect(_on_drop)
 	view.quick_requested.connect(quick_move)
+	view.unfit_requested.connect(_on_unfit)
 	add_child(view)
 
 
@@ -73,12 +74,54 @@ func _put_ground(inv: Inventory, it: Dictionary, rot: int) -> bool:
 
 func _on_drop(it: Dictionary, target: Dictionary, origin: Dictionary) -> void:
 	var inv := weapons.inv
+	if ItemDefs.def_of(it)["kind"] == "attach":
+		var host := view.item_at(view.get_local_mouse_position())
+		if not host.is_empty() and host.has("gun"):
+			_fit(it, host)
+			_settle()
+			return
 	if target.is_empty():
 		_to_world(it)
 	elif inv.is_slot(target["loc"]):
 		_into_slot(it, target, origin)
 	else:
 		_into_grid(it, target)
+	if it["loc"] == "" and not it.has("world") and ItemDefs.def_of(it)["kind"] == "attach":  # a part pulled off a gun that found no place
+		if not inv.add(it):
+			world.drop_front(it)
+	_settle()
+
+
+## Part dropped on a gun: fit it (a replaced part goes back to the inventory).
+func _fit(att: Dictionary, host: Dictionary) -> void:
+	var inv := weapons.inv
+	var r := inv.request_fit(host, att)
+	if not r["ok"]:
+		weapons.message.emit(r["why"])
+		if att["loc"] == "":
+			inv.add(att)
+		return
+	if att.has("world"):
+		world.release(att)
+	if not r["old"].is_empty() and not inv.add(r["old"]):
+		world.drop_front(r["old"])
+	weapons.message.emit("Fitted %s" % ItemDefs.def_of(att)["name"])
+
+
+func _on_unfit(gun_item: Dictionary, slot: String, drag: bool) -> void:
+	var r := weapons.inv.request_unfit(gun_item, slot)
+	if r.is_empty():
+		return
+	for it in r["spill"]:
+		if not weapons.inv.add(it):
+			world.drop_front(it)
+	if drag:
+		view.drag = r["item"]
+		view.drag_rot = 0
+		view.origin = {}
+		view.grab = Vector2(InventoryView.C, InventoryView.C) * 0.5
+	elif not weapons.inv.add(r["item"]):
+		world.drop_front(r["item"])
 	_settle()
 
 

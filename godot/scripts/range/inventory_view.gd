@@ -5,13 +5,15 @@ extends Control
 
 signal drop_requested(item: Dictionary, target: Dictionary, origin: Dictionary)  # target {} = outside every region
 signal quick_requested(item: Dictionary)
+signal unfit_requested(gun_item: Dictionary, slot: String, drag: bool)  # right-click a fitted-part chip = remove, left-press = drag it off
 
 const C := 36  # cell px
 const SLOT_CELLS := {"primary": Vector2i(5, 2), "secondary": Vector2i(5, 2), "holster": Vector2i(5, 1),
 	"armor": Vector2i(3, 3), "rig": Vector2i(3, 2), "backpack": Vector2i(4, 4)}
 const SLOT_TITLE := {"primary": "PRIMARY", "secondary": "SECONDARY", "holster": "HOLSTER", "armor": "ARMOR", "rig": "RIG", "backpack": "BACKPACK"}
 const KIND_COL := {"gun": Color(0.32, 0.36, 0.42), "mag": Color(0.3, 0.3, 0.3), "ammo": Color(0.55, 0.42, 0.12), "armor": Color(0.25, 0.4, 0.28),
-	"rig": Color(0.45, 0.38, 0.22), "backpack": Color(0.35, 0.45, 0.3), "med": Color(0.6, 0.18, 0.18)}
+	"rig": Color(0.45, 0.38, 0.22), "backpack": Color(0.35, 0.45, 0.3), "med": Color(0.6, 0.18, 0.18), "attach": Color(0.2, 0.42, 0.5)}
+const CHIP := 14.0
 
 var inv: Inventory
 var drag := {}
@@ -83,10 +85,41 @@ func rotate_drag() -> void:
 		queue_redraw()
 
 
+## Chip rects of a gun's fitted parts, bottom-right of its cell: {slot: Rect2}.
+func chips(it: Dictionary, rect: Rect2) -> Dictionary:
+	var out := {}
+	var i := 0
+	for slot in AttachmentDefs.SLOTS:
+		if (it["gun"] as Gun).fit.has(slot):
+			out[slot] = Rect2(rect.end - Vector2(CHIP * (i + 1) + 3, CHIP + 3), Vector2(CHIP, CHIP))
+			i += 1
+	return out
+
+
+## {item, slot} for a fitted-part chip under p, or {}.
+func chip_at(p: Vector2) -> Dictionary:
+	var it := item_at(p)
+	if it.is_empty() or not it.has("gun"):
+		return {}
+	var ch := chips(it, _rect_of(it))
+	for slot in ch:
+		if (ch[slot] as Rect2).has_point(p):
+			return {"item": it, "slot": slot}
+	return {}
+
+
 func _gui_input(e: InputEvent) -> void:
 	if e is InputEventMouseMotion:
 		queue_redraw()
+	elif e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_RIGHT and e.pressed:
+		var c := chip_at(e.position)
+		if not c.is_empty():
+			unfit_requested.emit(c["item"], c["slot"], false)
 	elif e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
+		var chip := chip_at(e.position) if e.pressed else {}
+		if not chip.is_empty():
+			unfit_requested.emit(chip["item"], chip["slot"], true)
+			return
 		var it := item_at(e.position)
 		if e.pressed and not it.is_empty():
 			if e.ctrl_pressed:
@@ -159,6 +192,13 @@ func _draw_item(font: Font, it: Dictionary, rect: Rect2, alpha: float) -> void:
 	var chars := maxi(3, int(rect.size.x / 6.5))
 	var nm: String = ItemDefs.def_of(it)["name"]
 	draw_string(font, rect.position + Vector2(4, 14), nm.substr(0, chars), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, alpha))
+	if it.has("gun"):
+		var ch := chips(it, rect)
+		for slot in ch:
+			var r: Rect2 = ch[slot]
+			draw_rect(r, Color(0.2, 0.42, 0.5, alpha))
+			draw_rect(r, Color(1, 1, 1, 0.7), false, 1.0)
+			draw_string(font, r.position + Vector2(3, 11), String(slot).substr(0, 1).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, alpha))
 	var extra := ""
 	if it.has("count"):
 		extra = str(it["count"])
@@ -174,6 +214,15 @@ func _tooltip(font: Font, it: Dictionary, p: Vector2) -> void:
 	var lines: Array[String] = [ItemDefs.label(it), "%.2f kg" % ItemDefs.item_kg(it)]
 	if it.has("gun"):
 		lines.append("%d rounds loaded" % (it["gun"] as Gun).rounds_total())
+		var gd: Dictionary = (it["gun"] as Gun).def
+		lines.append("Slots: %s" % ", ".join(gd["slots"]))
+		for slot in (it["gun"] as Gun).fit:
+			lines.append("  %s: %s" % [slot, AttachmentDefs.ROWS[(it["gun"] as Gun).fit[slot]]["name"]])
+		if not (it["gun"] as Gun).fit.is_empty():
+			lines.append("(right-click or drag a chip to remove)")
+	elif ItemDefs.def_of(it)["kind"] == "attach":
+		lines.append(AttachmentDefs.describe(it["id"]))
+		lines.append("Drag onto a gun to fit")
 	var w := 0.0
 	for l in lines:
 		w = maxf(w, font.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x)
