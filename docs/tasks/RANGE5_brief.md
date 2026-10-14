@@ -126,3 +126,20 @@ pump, slide, belt, dry fire, fire-mode switch, attachment fit), inventory (pick 
 Prefer CC0 recorded samples (OpenGameArt/Freesound CC0, Sonniss GDC bundle is royalty-free) over the procedural synth
 for guns; credit every file. A table `sound_defs.gd` maps item ids/events to sounds; a test asserts every gun, ammo
 calibre, attachment and utility id has its events mapped.
+
+## Track EXPAND (Sonnet): bigger Skirmish. Branch `feat/r5-expand`
+Gregory (2026-10-14): "Improve the graphics on and expand the skirmish area." Grow the map from 120 m to ~220 x 220 m
+around the existing compound (which stays as is, at the centre; only its outer perimeter wall/fence opens up). Four
+new Outpost Kestrel districts, each with its own landmark and fight style, built in new files (`skirmish_district_*.gd`):
+- **North: radar hill** (the dome moves up here or a second, bigger array): elevation, switchback road, bunker
+  entrances, marksman positions; long sightlines.
+- **East: motor pool + fuel depot**: hangars you can enter, fuel tanks, rail siding with wagons; mid-range cover.
+- **South: checkpoint town**: the gate becomes the town entrance; a short street of 2-storey houses, a shop, a
+  church/water tower; CQB.
+- **West: birch forest + river**: trees, rocks, a river with a road bridge and a footbridge, a ruined pump house;
+  flanking routes.
+Spawns: 3 player spawn points around the edge (random); extracts: 3 (one per non-spawn side, each with a condition
+icon: always open / open after the boss dies / costs time to call). Enemies ~24: roster rows unchanged, new patrol
+routes and posts per district; the Warlord moves between 2 districts. Navmesh over everything, stairs/ramps like the
+hotel. Graphics: same Kestrel look (LookEnv/LookMaterials, Hunyuan props, MultiMesh foliage), fps ≥ 90 at 1600x900.
+Tests: every district reachable from every spawn (navmesh path), each extract works, bot count, fps report.
