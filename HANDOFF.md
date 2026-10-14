@@ -1,4 +1,14 @@
-# Handoff: 2026-10-10 (playtest 4: fixes and perf merged, perf + nine playtest fixes merged, Opus)
+# Handoff: 2026-10-13 (Firing Range + Tarkov-style combat module merged into integ, Opus)
+
+## NEW 2026-10-13: Firing Range (separate scene; the main game is unchanged)
+Play: `godot --path godot res://scenes/firing_range.tscn` (or `godot/tools/range.sh`). Brief + log: `docs/tasks/RANGE_brief.md`, `RANGE_progress.md`. Screens: `docs/art/range/`.
+- `scripts/tactical/` = reusable Tarkov-style combat module (ballistics with drop/drag/zeroing, armor pen formula, world-material penetration + ricochet, 7-zone health with spill/bleeds/fractures, magazines + chamber, malfunctions, recoil/sway/ergo). `scripts/range/` = level, player, viewmodel, HUD, targets, kill house + 2 Scav bots (perception, warm-up aim, cover, heal, flank, suppress, search).
+- Guns (CC0/CC-BY, `assets/models/guns/CREDITS.md`, sources in `art/guns_src/`): M1911, P90, AK-47, M870, M1 Garand, AXMC .338. No free MG / grenade launcher model, so those classes are out.
+- Only change outside the new folders: `keybinds.gd` gained 24 `t_*` ids and a "Tactical" group (shows in the Controls screen).
+- Verified: `--range-test` OK 80, main smoke 0 FAIL, 60 s bot soak clean, Xvfb screenshots. **Not verified:** real mouse/keyboard play, audio by ear, bot difficulty, GPU (Vulkan) look.
+- Next: Gregory playtests the range; then decide how operatives + Tarkov bots enter the RTS (his new direction: fewer, smarter enemies, objectives and pressure instead of doom-stacking, several operatives).
+
+## Earlier (2026-10-10)
 
 ## State
 Godot 4.7 game in `godot/`. **Gregory plays this worktree** (`creeper fps td-worktrees/integ`, branch `integ/2026-10-09`, see RUN.md), not `main`. Do all gameplay work on branches cut from it.
