@@ -3,8 +3,10 @@ class_name ItemDefs
 ## Guns, ammo grades and armor reuse their own def tables; mags, bags and meds are rows here.
 ## Bags (rig, backpack) carry a "grid": [w, h]. Mags/clips: "gun" = weapon id, "cap" = rounds.
 
-const ROUND_KG := {"45acp": 0.02, "57x28": 0.012, "762x39": 0.017, "12ga": 0.04, "3006": 0.03, "338": 0.05}
-const STACK_MAX := {"45acp": 70, "57x28": 100, "762x39": 90, "12ga": 40, "3006": 60, "338": 30}
+const ROUND_KG := {"45acp": 0.02, "57x28": 0.012, "762x39": 0.017, "12ga": 0.04, "3006": 0.03, "338": 0.05,
+	"9x19": 0.012, "44mag": 0.03, "556x45": 0.012, "762x51": 0.025, "762x54r": 0.022}
+const STACK_MAX := {"45acp": 70, "57x28": 100, "762x39": 90, "12ga": 40, "3006": 60, "338": 30,
+	"9x19": 90, "44mag": 40, "556x45": 90, "762x51": 60, "762x54r": 60}
 const POCKETS := Vector2i(4, 1)
 
 const ROWS := {
@@ -12,6 +14,17 @@ const ROWS := {
 	"mag_p90": {"name": "P90 magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.25, "gun": "p90"},
 	"mag_ak47": {"name": "AK-47 magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.25, "gun": "ak47"},
 	"mag_sniper": {"name": "AXMC magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.2, "gun": "sniper"},
+	"mag_glock18": {"name": "Glock 17-rd magazine", "kind": "mag", "w": 1, "h": 1, "kg": 0.12, "gun": "glock18"},
+	"mag_revolver": {"name": ".44 speedloader", "kind": "mag", "w": 1, "h": 1, "kg": 0.1, "gun": "revolver"},
+	"mag_mp5": {"name": "MP5 magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.2, "gun": "mp5"},
+	"mag_vector": {"name": "Vector magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.2, "gun": "vector"},
+	"mag_m4a1": {"name": "STANAG magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.2, "gun": "m4a1"},
+	"mag_scarh": {"name": "SCAR-H magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.3, "gun": "scarh"},
+	"mag_saiga12": {"name": "Saiga 8-rd magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.35, "gun": "saiga12"},
+	"mag_sks": {"name": "SKS 10-rd magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.2, "gun": "sks"},
+	"mag_sr25": {"name": "SR-25 magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.3, "gun": "sr25"},
+	"mag_mosin": {"name": "Mosin 5-rd clip", "kind": "mag", "w": 1, "h": 1, "kg": 0.1, "gun": "mosin"},
+	"mag_pkm": {"name": "PKM 100-rd belt box", "kind": "mag", "w": 2, "h": 2, "kg": 2.5, "gun": "pkm"},
 	"clip_garand": {"name": "M1 en-bloc clip", "kind": "mag", "w": 1, "h": 1, "kg": 0.1, "gun": "garand"},
 	"rig_chest": {"name": "Chest rig", "kind": "rig", "w": 3, "h": 2, "kg": 0.8, "grid": [4, 2]},
 	"pack_small": {"name": "Small backpack", "kind": "backpack", "w": 3, "h": 3, "kg": 0.9, "grid": [4, 4]},

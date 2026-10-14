@@ -4,9 +4,12 @@ class_name RangeCrate
 const POS := Vector3(-1.6, 0, 9.9)
 const LOOT := [["mag_ak47", {}], ["mag_ak47", {}], ["mag_ak47", {}], ["mag_p90", {}], ["mag_p90", {}], ["mag_sniper", {}],
 	["mag_m1911", {}], ["mag_m1911", {}], ["clip_garand", {}], ["clip_garand", {}],
+	["mag_glock18", {}], ["mag_revolver", {}], ["mag_mp5", {}], ["mag_vector", {}], ["mag_m4a1", {}], ["mag_scarh", {}],
+	["mag_saiga12", {}], ["mag_sks", {}], ["mag_sr25", {}], ["mag_mosin", {}], ["mag_pkm", {}],
+	["9_fmj", {"count": 60}], ["44_jhp", {"count": 24}], ["556_m855", {"count": 60}], ["762n_m80", {"count": 40}], ["54r_lps", {"count": 40}],
 	["762_ps", {"count": 60}], ["762_bp", {"count": 30}], ["12_buck7", {"count": 24}], ["45_fmj", {"count": 35}], ["3006_fmj", {"count": 24}],
 	["pack_small", {}], ["pack_big", {}], ["rig_chest", {}], ["vest2", {}], ["plate4", {}], ["helmet3", {}], ["med_ifak", {}], ["med_bandage", {}]]
-const COLUMNS := 8
+const COLUMNS := 12
 
 
 static func build(parent: Node3D, world_items: WorldItems) -> void:
