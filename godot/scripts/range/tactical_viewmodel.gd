@@ -8,6 +8,7 @@ var player: TacticalPlayer
 var model: Node3D
 var anim: AnimationPlayer
 var flash: MuzzleFlash
+var arms: FpArms
 var half_len := 0.3
 var _def := {}
 var _kick := 0.0
@@ -17,8 +18,8 @@ var _check := 0.0
 var _cycle_clip := ""
 const HIP_BUTT := 0.1  # how far the butt sits behind the eye at the hip
 const HIP_MIN_Z := 0.3  # pistols: held out at least this far
-const ADS_BUTT := 0.1  # butt this far ahead of the eye when aiming
 const HIP_YAW := 2.5
+const ADS_NEAR := 0.25  # aiming: camera near plane (m) clips the stock (see WeaponDefs butt)
 
 
 func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
@@ -27,6 +28,8 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	w.switched.connect(_on_switched)
 	w.shot.connect(_on_shot)
 	w.action.connect(_on_action)
+	arms = FpArms.new()
+	add_child(arms)
 
 
 func _on_switched(g: Gun) -> void:
@@ -51,6 +54,7 @@ func _on_switched(g: Gun) -> void:
 	half_len = mi.get_aabb().size.z * 0.5
 	flash = MuzzleFlash.new(model, Vector3(0, 0.01, -half_len - 0.03))
 	_cycle_clip = "FireWBullet" if anim.has_animation("FireWBullet") else ""
+	arms.set_gun(_def)
 
 
 func _on_shot(res: Dictionary, g: Gun) -> void:
@@ -69,6 +73,7 @@ func _on_action(kind: String, secs: float) -> void:
 	match kind:
 		"reload":
 			_play("Reload", secs)
+			arms.reload(secs)
 		"fix":
 			_play("Slide" if anim.has_animation("Slide") else "Reload", secs)
 		"cycle":
@@ -93,11 +98,8 @@ func _process(delta: float) -> void:
 	model.visible = not weapons.scoped()
 	flash.update(delta)
 	var a := smoothstep(0.0, 1.0, weapons.ads_amt)
-	var hip: Vector3 = _def["hip_pos"]
-	hip.z = -maxf(half_len - HIP_BUTT, HIP_MIN_Z)  # butt tucked behind the eye, gun parallel to the view
-	var ads: Vector3 = _def["ads_pos"]
-	ads.z = -(half_len + ADS_BUTT)
-	var pos: Vector3 = hip.lerp(ads, a)
+	var pos := base_pos(_def, half_len, a)
+	player.cam.near = lerpf(0.03, ADS_NEAR, a)
 	var rot := Vector3(0, deg_to_rad(HIP_YAW) * (1.0 - a), 0)
 	var speed := player.horizontal_speed() if player.is_on_floor() else 0.0
 	_bob_t += delta * speed * 2.0
@@ -119,6 +121,17 @@ func _process(delta: float) -> void:
 		rot += Vector3(0.15, 0.3, 1.1)
 	model.position = model.position.lerp(pos, minf(1.0, delta * 20.0))
 	model.rotation = model.rotation.lerp(rot, minf(1.0, delta * 20.0))
+	arms.update(model, delta)
+
+
+## Gun model position under the camera, hip (a = 0) to ADS (a = 1). The butt is shouldered at the hip and sits
+## `butt` (per-gun data) behind the eye when aiming, so the stock is never in view.
+static func base_pos(def: Dictionary, half: float, a: float) -> Vector3:
+	var hip: Vector3 = def["hip_pos"]
+	hip.z = -maxf(half - HIP_BUTT, HIP_MIN_Z)  # butt tucked behind the eye, gun parallel to the view
+	var ads: Vector3 = def["ads_pos"]
+	ads.z = -(half - float(def["butt"]))
+	return hip.lerp(ads, a)
 
 
 static var tune := false

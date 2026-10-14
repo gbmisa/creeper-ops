@@ -3,3 +3,4 @@ godot/.godot/
 *.tmp
 # Local Claude settings
 .claude/settings.local.json
+art/operative/src/
