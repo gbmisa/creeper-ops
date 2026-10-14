@@ -51,6 +51,9 @@ func _build() -> void:
 	player.global_position = RangeLayout.SPAWN
 	player.yaw = 0.0
 	player.pitch = 0.0
+	var fp_body := FpBody.new()
+	player.add_child(fp_body)
+	fp_body.setup(player)
 	weapons = PlayerWeapons.new()
 	add_child(weapons)
 	weapons.setup(player, input, bal, rack)
