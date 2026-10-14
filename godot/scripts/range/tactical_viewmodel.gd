@@ -16,6 +16,8 @@ var _sway := Vector2.ZERO
 var _bob_t := 0.0
 var _check := 0.0
 var _cycle_clip := ""
+const HIP_BUTT := 0.2
+const HIP_YAW := 2.5
 
 
 func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
@@ -38,7 +40,8 @@ func _on_switched(g: Gun) -> void:
 	for n in anim.get_animation_list():
 		anim.get_animation(n).loop_mode = Animation.LOOP_NONE
 	var mi := glb.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
-	mi.material_override = _metal()
+	if tune:
+		mi.material_override = _metal()
 	half_len = mi.get_aabb().size.z * 0.5
 	flash = MuzzleFlash.new(model, Vector3(0, 0.01, -half_len - 0.03))
 	_cycle_clip = "FireWBullet" if anim.has_animation("FireWBullet") else ""
@@ -84,8 +87,10 @@ func _process(delta: float) -> void:
 	model.visible = not weapons.scoped()
 	flash.update(delta)
 	var a := smoothstep(0.0, 1.0, weapons.ads_amt)
-	var pos: Vector3 = (_def["hip_pos"] as Vector3).lerp(_def["ads_pos"], a)
-	var rot := Vector3.ZERO
+	var hip: Vector3 = _def["hip_pos"]
+	hip.z = -(half_len + HIP_BUTT)  # butt stays out of the lens, gun parallel to the view
+	var pos: Vector3 = hip.lerp(_def["ads_pos"], a)
+	var rot := Vector3(0, deg_to_rad(HIP_YAW) * (1.0 - a), 0)
 	var md := player.input.mouse_delta
 	_sway = (_sway - md * 0.00035 * (1.0 - a * 0.6)).limit_length(0.05).lerp(Vector2.ZERO, minf(1.0, delta * 8.0))
 	pos += Vector3(_sway.x, -_sway.y, 0)

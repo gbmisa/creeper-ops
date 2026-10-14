@@ -52,9 +52,9 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	_msg_lbl = UiKit.label("", 22)
 	_msg_lbl.position = Vector2(660, 620)
 	add_child(_msg_lbl)
-	_help = UiKit.panel(Color(0.04, 0.05, 0.07, 0.7))
-	_help.position = Vector2(20, 20)
-	var h := UiKit.label(_help_text(), 14)
+	_help = UiKit.panel(Color(0.04, 0.05, 0.07, 0.35))
+	_help.position = Vector2(8, 8)
+	var h := UiKit.label(_help_text(), 11, Color(1, 1, 1, 0.75))
 	_help.add_child(h)
 	add_child(_help)
 	_dot = ColorRect.new()
@@ -72,13 +72,19 @@ func say(text: String) -> void:
 
 
 func _help_text() -> String:
-	var rows := [["t_forward", "Move"], ["t_sprint", "Sprint / hold breath (ADS)"], ["t_crouch", "Crouch"], ["t_lean_left", "Lean"],
-		["t_jump", "Jump"], ["t_use", "Take gun at rack"], ["t_slot_1", "Weapon slots 1-6"], ["t_reload", "Reload (double-tap: fast)"],
-		["t_fire_mode", "Fire mode"], ["t_mag_check", "Check magazine"], ["t_inspect", "Inspect / fix malfunction"],
-		["t_zero_up", "Zero up (down: PageDown)"], ["t_crosshair", "Hip-fire dot"], ["t_help", "This help"]]
-	var out := "FIRING RANGE\nLMB fire   RMB aim   Esc menu\n"
+	var k := func(ids: Array) -> String:
+		var out := []
+		for i in ids:
+			out.append(Keybinds.short(i))
+		return "".join(out) if ids.size() == 4 else "/".join(out)
+	var rows := [[k.call(["t_forward", "t_left", "t_back", "t_right"]), "Move"], [k.call(["t_sprint"]), "Sprint / hold breath"],
+		[k.call(["t_crouch"]), "Crouch"], [k.call(["t_lean_left", "t_lean_right"]), "Lean"], [k.call(["t_jump"]), "Jump"],
+		[k.call(["t_use"]), "Use (rack, benches)"], ["1-6", "Weapon slots"], [k.call(["t_reload"]), "Reload (x2 fast)"],
+		[k.call(["t_fire_mode"]), "Fire mode"], [k.call(["t_mag_check"]), "Check mag"], [k.call(["t_inspect"]), "Inspect / fix"],
+		[k.call(["t_zero_up", "t_zero_down"]), "Zero up/down"], [k.call(["t_crosshair"]), "Hip dot"], [k.call(["t_help"]), "Help"]]
+	var out := "LMB Fire   RMB Aim   Esc Menu\n"
 	for r in rows:
-		out += "%s  %s\n" % [Keybinds.short(r[0]), r[1]]
+		out += "%s  %s\n" % [r[0], r[1]]
 	return out.strip_edges()
 
 
