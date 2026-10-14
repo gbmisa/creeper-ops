@@ -19,6 +19,9 @@ var busy_t := 0.0
 var fire_cd := 0.0
 var ammo_pick := ""  # grade loaded by refill()
 var _fast := false
+var fit := {}  # slot -> attachment id (AttachmentDefs); changes only through set_fit / clear_fit
+var fit_ver := 0  # bumps on every change so the viewmodel rebuilds its parts
+var zoom_hi := true  # variable sight (LPVO): at its top zoom
 
 
 func _init(weapon_id: String) -> void:
@@ -31,7 +34,7 @@ func _init(weapon_id: String) -> void:
 
 
 func refill() -> void:
-	mag = Magazine.new(def["mag"])
+	mag = Magazine.new(int(stat("mag")))
 	mag.fill(ammo_pick)
 	chamber = ""
 	spares.clear()
@@ -42,7 +45,7 @@ func refill() -> void:
 		chamber = ammo_pick
 	else:
 		for i in def["spares"]:
-			var m := Magazine.new(def["mag"])
+			var m := Magazine.new(int(stat("mag")))
 			m.fill(ammo_pick)
 			spares.append(m)
 		if def["action"] == "detachable":
@@ -54,6 +57,69 @@ func refill() -> void:
 	busy_t = 0.0
 	fire_cd = 0.0
 	durability = 1.0
+
+
+## A stat with the fitted attachments applied (player side; bots fit nothing, so they read the base). Names
+## missing from the def (ads_mult, hip, noise, flash, vel) start at 1.0. "scope" is the sight's current zoom.
+func stat(n: String) -> float:
+	if n == "scope":
+		return scope_now()
+	var v: float = float(def[n]) if def.has(n) else 1.0
+	for id in fit.values():
+		v *= float(AttachmentDefs.ROWS[id]["mods"].get(n, 1.0))
+	return roundf(v) if n == "mag" else v
+
+
+func scope_now() -> float:
+	var sid: String = fit.get("sight", "")
+	if sid == "":
+		return float(def.get("scope", 1.0))
+	var r: Dictionary = AttachmentDefs.ROWS[sid]
+	return float(r["zoom_max"]) if zoom_hi and r.has("zoom_max") else float(r["zoom"])
+
+
+func reticle() -> String:
+	var sid: String = fit.get("sight", "")
+	return "mildot" if sid == "" else String(AttachmentDefs.ROWS[sid]["ret"])
+
+
+func toggle_zoom() -> void:
+	var sid: String = fit.get("sight", "")
+	if sid != "" and AttachmentDefs.ROWS[sid].has("zoom_max"):
+		zoom_hi = not zoom_hi
+
+
+## The def with every fitted stat applied, plus ads_pos on the fitted sight's line. For recoil, ADS and the viewmodel.
+func eff_def() -> Dictionary:
+	var d := def.duplicate()
+	for k in ["up", "side", "moa", "reload", "reload_fast", "mag", "scope", "ads_mult", "hip", "noise", "flash", "vel"]:
+		d[k] = stat(k)
+	d["ads_pos"] = AttachmentMounts.ads_pos(def, fit.get("sight", ""))
+	return d
+
+
+## Fits `id` into its slot (replacing any). The mag cap follows an extended magazine.
+func set_fit(slot: String, id: String) -> void:
+	fit[slot] = id
+	_after_fit()
+
+
+## Takes a part off. Returns rounds that no longer fit the magazine (ammo ids), normally [].
+func clear_fit(slot: String) -> Array[String]:
+	fit.erase(slot)
+	return _after_fit()
+
+
+func _after_fit() -> Array[String]:
+	fit_ver += 1
+	var spill: Array[String] = []
+	if def["action"] == "tube":
+		return spill
+	var cap := int(stat("mag"))
+	while mag.rounds.size() > cap:
+		spill.append(mag.pop())
+	mag.cap = cap
+	return spill
 
 
 func busy() -> bool:
@@ -175,7 +241,7 @@ func reload(fast: bool = false) -> bool:
 			pass
 	_fast = fast
 	busy_kind = "reload"
-	busy_t = def["reload_fast"] if fast else def["reload"]
+	busy_t = stat("reload_fast") if fast else stat("reload")
 	if def["action"] == "detachable" and chamber == "":
 		busy_t += TacticalConfig.CHAMBER_TIME
 	return true
@@ -221,7 +287,7 @@ func shot_dirs(aim: Basis, ammo_id: String, ads: bool, rng: RandomNumberGenerato
 	var out: Array[Vector3] = []
 	var base_dev := deg_to_rad(def["moa"] / 60.0 * a["acc"])
 	if not ads:
-		base_dev += deg_to_rad(TacticalConfig.HIP_CONE_DEG)
+		base_dev += deg_to_rad(TacticalConfig.HIP_CONE_DEG * stat("hip"))
 	var elev := Ballistics.zero_angle(ammo_id, zero_dist())
 	var centre := aim * Vector3(0, 0, -1).rotated(Vector3.RIGHT, elev)
 	var shot_off := _disc(rng, base_dev)

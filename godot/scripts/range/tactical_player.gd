@@ -26,6 +26,7 @@ var leg_stamina := 1.0
 var carried_kg := 0.0
 var move_mult := 1.0  # body health slows (fractured legs)
 var ads_amt := 0.0  # set by PlayerWeapons
+var spot_mult := 1.0  # bots notice this player from range x this (laser lit); set by PlayerWeapons
 var recoil_off := Vector2.ZERO  # deg, x = pitch up, y = yaw
 var sway_off := Vector2.ZERO
 var body := BodyHealth.new()  # zones the bots shoot at

@@ -168,7 +168,7 @@ func _sense(dt: float) -> void:
 	var head := player.eye_pos()
 	var chest := player.global_position + Vector3(0, 0.85 if player.crouching else 1.3, 0)
 	var still := player.horizontal_speed() < 0.3 or player.crouching
-	percept.update(dt, eye(), -global_basis.z, get_world_3d().direct_space_state, [head, chest], still, rng)
+	percept.update(dt, eye(), -global_basis.z, get_world_3d().direct_space_state, [head, chest], still, rng, player.spot_mult)
 
 
 func _facts() -> Dictionary:

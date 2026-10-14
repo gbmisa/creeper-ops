@@ -44,7 +44,7 @@ static func note_uid(u: int) -> void:
 
 
 static func has(id: String) -> bool:
-	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id)
+	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id) or AttachmentDefs.has(id)
 
 
 static func of(id: String) -> Dictionary:
@@ -63,6 +63,9 @@ static func of(id: String) -> Dictionary:
 		var a := TacAmmoDefs.of(id)
 		return {"id": id, "name": a["name"], "kind": "ammo", "w": 1, "h": 1, "kg": ROUND_KG[a["cal"]], "cal": a["cal"],
 			"stack": STACK_MAX[a["cal"]]}
+	if AttachmentDefs.has(id):
+		var a: Dictionary = AttachmentDefs.ROWS[id]
+		return {"id": id, "name": a["name"], "kind": "attach", "w": a["w"], "h": a["h"], "kg": a["kg"], "slot": a["slot"]}
 	var r := ArmorDefs.of(id)
 	var s: Array = ARMOR_SIZE[id]
 	return {"id": id, "name": r["name"], "kind": "armor", "w": s[0], "h": s[1], "kg": s[2]}
@@ -103,6 +106,9 @@ static func item_kg(item: Dictionary) -> float:
 		"rig", "backpack":
 			for sub in item["items"]:
 				kg += item_kg(sub)
+		"gun":
+			for id in (item["gun"] as Gun).fit.values():
+				kg += float(AttachmentDefs.ROWS[id]["kg"])
 	return kg
 
 
@@ -112,5 +118,5 @@ static func label(item: Dictionary) -> String:
 		"ammo":
 			return "%s x%d" % [d["name"], int(item["count"])]
 		"mag":
-			return "%s (%d/%d %s)" % [d["name"], int(item["rounds"]), int(d["cap"]), TacAmmoDefs.of(item["ammo"])["name"]]
+			return "%s (%d/%d %s)" % [d["name"], int(item["rounds"]), maxi(int(d["cap"]), int(item["rounds"])), TacAmmoDefs.of(item["ammo"])["name"]]
 	return d["name"]

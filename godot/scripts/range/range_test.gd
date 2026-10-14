@@ -37,6 +37,7 @@ func run() -> void:
 	await RangeTestDeploy.run(self)
 	RangeTestGuns.run(self)
 	RangeTestSound.run(self)
+	await RangeTestAttach.run(self)
 	if failed == 0:
 		print("[range] OK ", passed)
 	else:

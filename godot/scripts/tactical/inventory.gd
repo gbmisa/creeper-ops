@@ -170,6 +170,16 @@ func move(item: Dictionary, to: Dictionary) -> bool:
 	return place(item, to["loc"], to["x"], to["y"], rot)
 
 
+## The one entry for fitting a part on a gun item (a future RPC). {ok, why, old}; see Attachments.fit.
+func request_fit(gun_item: Dictionary, att: Dictionary) -> Dictionary:
+	return Attachments.fit(self, gun_item, att)
+
+
+## The one entry for taking a part off. {item, spill} or {}; see Attachments.unfit.
+func request_unfit(gun_item: Dictionary, slot: String) -> Dictionary:
+	return Attachments.unfit(gun_item, slot)
+
+
 ## Everything carried (slots and bag contents, not the ground).
 func all_items() -> Array:
 	var out := []
