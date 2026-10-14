@@ -44,7 +44,7 @@ static func fire(b: ScavBot, point: Vector3) -> void:
 		b.shots_since += 1
 		if b.shots_since >= int(df["relocate"]):
 			BotEngage.relocate(b)
-	RangeAudio.shot(b.gun.id, b.mesh.muzzle.global_position, false, b.gun.def["cal"], b.gun.def["class"])
+	RangeAudio.event({"kind": "shot", "item": b.gun.id, "pos": b.mesh.muzzle.global_position, "cal": b.gun.def["cal"], "cls": b.gun.def["class"]})
 	b.flash.flash(Color(1.0, 0.8, 0.45), 0.1, 0.05, 2.0)
 
 
