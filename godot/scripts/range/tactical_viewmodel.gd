@@ -61,6 +61,8 @@ func _on_shot(res: Dictionary, g: Gun) -> void:
 	if not res["fired"]:
 		return
 	_kick_v += 0.4 + g.def["up"] * 0.2
+	if RecoilModel.tarkov:
+		_kick_v += TacticalConfig.RECOIL_T_VM_KICK * (1.0 + g.def["up"])
 	flash.flash(Color(1.0, 0.8, 0.45), 0.07 + 0.02 * float(g.def["kg"]), 0.05, 2.0)
 	if _cycle_clip != "":
 		var clip := "FireWOBullet" if res["last"] else "FireWBullet"
@@ -109,6 +111,10 @@ func _process(delta: float) -> void:
 	_kick += _kick_v * delta
 	pos.z += _kick * (1.0 - a * 0.5)
 	rot.x += _kick * 6.0 * (1.0 - a * 0.5)
+	if RecoilModel.tarkov:   # the gun follows the bore, which the camera only partly follows
+		var rest := weapons.recoil.barrel - weapons.recoil.offset
+		rot += Vector3(deg_to_rad(rest.x * TacticalConfig.RECOIL_T_VM_PITCH), deg_to_rad(rest.y * TacticalConfig.RECOIL_T_VM_YAW),
+			deg_to_rad(-rest.y * TacticalConfig.RECOIL_T_VM_ROLL))
 	var d := weapons.draw_t / PlayerWeapons.DRAW_TIME
 	pos.y -= d * 0.3
 	rot.x -= d * 0.6
