@@ -1,6 +1,6 @@
 class_name ScavBot
 extends CharacterBody3D
-## A Scav: AK-47 (PS), class 2 vest, hitbox rig + BodyHealth, magazine reloads, real ballistics. Perception in
+## An enemy bot. Row `kind` of BotDefs (default `rifleman` = the Scav: AK-47 (PS), class 2 vest), hitbox rig + BodyHealth, magazine reloads, real ballistics. Perception in
 ## BotPerception, decisions in BotBrain, movement with a NavigationAgent3D on the kill house navmesh.
 ## `think(dt, over)` is the whole AI tick (tests call it directly with fact overrides).
 
@@ -14,6 +14,8 @@ const EYE := 1.6
 const TURN := 8.0
 
 var label_name := "Scav"
+var kind := "rifleman"
+var def := {}
 var body := BodyHealth.new()
 var gun: Gun
 var brain := BotBrain.new()
@@ -24,6 +26,11 @@ var bal: Ballistics
 var covers: Array[Vector3] = []
 var patrol: Array[Vector3] = []
 var ally: ScavBot
+var leader: ScavBot
+var reloc_t := 0.0
+var shots_since := 0
+var winding := false
+var wind := 0.0
 var rng := RandomNumberGenerator.new()
 var nav: NavigationAgent3D
 var mesh: BotMesh
@@ -53,22 +60,29 @@ func _init() -> void:
 	add_child(cs)
 
 
-func setup(p: TacticalPlayer, b: Ballistics, house: KillHouse, label: String, start_idx: int) -> void:
+## `house` is anything with `covers` and `patrol` (KillHouse, SkirmishLayout); `route` overrides its patrol.
+func setup(p: TacticalPlayer, b: Ballistics, house: Node3D, label: String, start_idx: int, bot_kind := "rifleman", route: Array[Vector3] = []) -> void:
 	player = p
 	bal = b
+	kind = bot_kind
+	def = BotDefs.of(kind)
 	covers = house.covers
-	patrol = house.patrol
+	patrol = route if not route.is_empty() else house.patrol
+	if def["overwatch"]:
+		covers = []
+	percept.range_m = def["sight"]
 	label_name = label
 	patrol_i = start_idx % patrol.size()
 	rng.randomize()
-	gun = Gun.new("ak47")
-	body.equip("vest2")
+	gun = Gun.new(def["gun"])
+	for a in def["armor"]:
+		body.equip(a)
 	BotNoise.listen(_on_noise)
 
 
 func _ready() -> void:
 	rig = HitboxRig.build(self, body, self)
-	mesh = BotMesh.new()
+	mesh = BotMesh.new(def)
 	add_child(mesh)
 	flash = MuzzleFlash.new(mesh.muzzle, Vector3(0, 0, -0.1))
 	nav = NavigationAgent3D.new()
@@ -105,6 +119,8 @@ func _on_noise(pos: Vector3, radius: float, _kind: String, src: Object) -> void:
 ## Called by RangeFeedback with the Ballistics.body_hit dictionary.
 func on_hit(res: Dictionary) -> void:
 	hurt_t = 1.5
+	if not _dying and not body.dead and def["overwatch"]:
+		BotEngage.relocate(self)
 	if not _dying:
 		percept.alert(player.global_position if player != null else res.get("origin", global_position))
 	if body.dead:
@@ -123,6 +139,11 @@ func think(dt: float, over := {}) -> void:
 	cd -= dt
 	_go_age += dt
 	cover_t -= dt
+	reloc_t = maxf(0.0, reloc_t - dt) if reloc_t > 0.0 else 0.0
+	wind -= dt
+	if winding and not is_engaged():
+		winding = false
+		mesh.glint(false)
 	_sense(dt)
 	var f := _facts()
 	f.merge(over, true)
@@ -185,22 +206,15 @@ func _act() -> void:
 			gun.refill()
 	elif s not in [BotBrain.ENGAGE, BotBrain.SUPPRESS] and gun.mag.count() < 10 and not gun.busy():
 		gun.reload(false)
+	if gun.needs_cycle and not gun.busy():
+		gun.release()
 	if gun.malf != "" and not gun.busy():
 		gun.inspect()
 	match s:
 		BotBrain.PATROL:
-			if _arrived():
-				patrol_i = (patrol_i + 1) % patrol.size()
-				_go(patrol[patrol_i])
+			BotEngage.patrol(self)
 		BotBrain.ENGAGE:
-			if percept.seeing:
-				if percept.last_known.distance_to(global_position) < 30.0:
-					_has_target = false
-				else:
-					_go(percept.last_known)
-				_shoot_at(percept.last_known)
-			else:
-				_go(percept.last_known)
+			BotEngage.engage(self)
 		BotBrain.SUPPRESS:
 			if percept.has_last:
 				_shoot_at(percept.last_known + Vector3(rng.randf_range(-1.2, 1.2), 0.2, rng.randf_range(-1.2, 1.2)))

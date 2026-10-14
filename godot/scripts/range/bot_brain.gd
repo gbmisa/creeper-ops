@@ -65,6 +65,8 @@ static func next(s: String, f: Dictionary) -> String:
 					and f.get("cover", false):
 				return COVER
 			if not f.get("seeing", false) and f.get("since_seen", 0.0) > LOST_SIGHT:
+				if f.get("flank_eager", false) and f.get("has_last", false) and not f.get("ally_flank", false):
+					return FLANK
 				return SUPPRESS if f.get("ally_flank", false) else SEARCH
 		COVER:
 			if f.get("arrived", false):
