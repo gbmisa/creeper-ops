@@ -22,6 +22,7 @@ static func run(t: RangeTest, player: TacticalPlayer) -> void:
 	var log := RangeHitLog.new()
 	t.add_child(log)
 	game.player = player
+	game.weapons = PlayerWeapons.new()
 	game.bal = t.bal
 	game.log = log
 	game.spawn_enemies()

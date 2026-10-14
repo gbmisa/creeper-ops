@@ -167,6 +167,10 @@ func finish(win: bool) -> void:
 		return
 	over = true
 	won = win
+	if win:
+		RangeLoadout.save(weapons.inv)   # extract keeps what you carried out, loot included
+	else:
+		RangeLoadout.clear()   # KIA loses the kit
 	player.enabled = false
 	for b in bots:
 		if is_instance_valid(b):

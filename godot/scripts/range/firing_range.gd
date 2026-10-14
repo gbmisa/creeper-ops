@@ -88,6 +88,9 @@ func _build() -> void:
 	world_items.setup(player, weapons)
 	if not is_skirmish:
 		RangeCrate.build(self, world_items)
+		var truck := RangeTruck.new()
+		add_child(truck)
+		truck.setup(weapons, player)
 	inv_ui = InventoryUI.new()
 	add_child(inv_ui)
 	inv_ui.setup(weapons, player, world_items)
@@ -101,7 +104,8 @@ func _build() -> void:
 	if is_skirmish:
 		skirmish.start(player, weapons, bal, hit_log, hud)
 		bots.bots = skirmish.bots
-		weapons.give("m1911")
+		if RangeLoadout.saved.is_empty():
+			weapons.give("m1911")   # fallback only when no kit was deployed
 	else:
 		add_child(bots)
 		bots.setup(player, weapons, bal, hit_log)
@@ -111,6 +115,7 @@ func _build() -> void:
 	menu = RangeMenu.new()
 	add_child(menu)
 	menu.resumed.connect(func(): player.enabled = true)
+	menu.deploy_requested.connect(func(): RangeLoadout.deploy(weapons.inv))
 	menu.reset_requested.connect(func(): get_tree().reload_current_scene())
 	if not args.has("shot"):
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
