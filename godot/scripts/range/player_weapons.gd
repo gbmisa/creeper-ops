@@ -7,6 +7,7 @@ signal shot(res: Dictionary, gun: Gun)
 signal action(kind: String, secs: float)  # "reload", "fix", "cycle"
 signal switched(gun: Gun)
 signal message(text: String)
+signal item_dropped(item: Dictionary)  # left the inventory with nowhere to go; the world spawns it
 
 const DOUBLE_TAP := 0.35
 const DRAW_TIME := 0.45
@@ -16,9 +17,12 @@ var player: TacticalPlayer
 var input: InputState
 var bal: Ballistics
 var rack: RangeRack
-var guns := {}  # id -> Gun
-var slots: Array[String] = []
+const HAND_SLOTS := ["primary", "secondary", "holster"]  # keys 1 / 2 / 3
+
+var inv := Inventory.new()
+var reloader := InvReload.new(inv)
 var gun: Gun
+var gun_item := {}
 var ads_amt := 0.0
 var arm_stamina := 1.0
 var holding_breath := false
@@ -30,6 +34,7 @@ var mag_text_t := 0.0
 var prompt := ""
 var trigger_ads := false  # debug overrides (--ads, --fire)
 var trigger_down := false
+var ui_open := false  # inventory screen up: no firing, no aiming
 var _check_t := 0.0
 var _reload_t := 99.0
 var _reload_fast := false
@@ -44,32 +49,58 @@ func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack) -> voi
 	bal = b
 	rack = r
 	rng.randomize()
+	if RangeLoadout.saved.is_empty():
+		StarterLoadout.fill(inv)
+	else:
+		inv.load_dict(RangeLoadout.saved)
+	player.carried_kg = inv.total_kg()
+	select_slot("primary")
 
 
 func give(id: String) -> void:
-	if guns.has(id):
-		select(id)
-		return
-	guns[id] = Gun.new(id)
-	slots.append(id)
-	rack.take(id)
-	player.carried_kg += guns[id].def["kg"]
-	select(id)
+	HandGear.give(self, id)
 
 
-func select(id: String) -> void:
-	if not guns.has(id) or (gun != null and gun.def["id"] == id):
+func sync() -> void:
+	HandGear.sync(self)
+
+
+func refill_mags() -> void:
+	HandGear.refill_mags(self)
+
+
+func select_slot(slot: String) -> void:
+	var it = inv.equipped(slot)
+	if it == null or (not gun_item.is_empty() and gun_item["uid"] == it["uid"]):
 		return
-	gun = guns[id]
+	gun_item = it
+	gun = it["gun"]
 	draw_t = DRAW_TIME
 	_check_t = 0.0
 	mag_text = ""
 	switched.emit(gun)
 
 
+func reload_cancel() -> void:
+	if not gun_item.is_empty():
+		reloader.cancel(gun_item)
+
+
+## Drops the gun in hand out of the inventory; item_dropped hands it to the world.
+func drop_current() -> void:
+	if gun_item.is_empty():
+		return
+	var it := gun_item
+	reloader.cancel(it)
+	inv.remove(it)
+	sync()
+	item_dropped.emit(it)
+
+
 func _process(delta: float) -> void:
 	_t += delta
 	_pickup_and_slots()
+	sync()
 	if gun == null or not player.enabled:
 		_idle(delta)
 		return
@@ -82,6 +113,9 @@ func _process(delta: float) -> void:
 	_commands()
 	if before != "" and gun.busy_kind == "" and before == "reload":
 		Sfx.play("crossbow_clack")
+		var left := reloader.finish(gun_item)
+		if not left.is_empty():
+			item_dropped.emit(left)
 	recoil.update(delta, gun.def["ergo"])
 	_apply_view(delta)
 	mag_text_t = maxf(0.0, mag_text_t - delta)
@@ -104,14 +138,14 @@ func _pickup_and_slots() -> void:
 		prompt = "%s: take %s" % [Keybinds.short("t_use"), WeaponDefs.of(id)["name"]]
 		if player.enabled and input.act("t_use"):
 			give(id)
-	for n in 6:
-		if player.enabled and input.act("t_slot_%d" % (n + 1)) and n < slots.size():
-			select(slots[n])
+	for n in HAND_SLOTS.size():
+		if player.enabled and input.act("t_slot_%d" % (n + 1)):
+			select_slot(HAND_SLOTS[n])
 
 
 func _ads(delta: float) -> void:
 	var want: bool = trigger_ads or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
-	want = want and not player.sprinting and draw_t < DRAW_TIME * 0.5 and gun.busy_kind != "reload"
+	want = want and not ui_open and not player.sprinting and draw_t < DRAW_TIME * 0.5 and gun.busy_kind != "reload"
 	var rate := 1.0 / RecoilModel.ads_time(gun.def["ergo"])
 	ads_amt = move_toward(ads_amt, 1.0 if want else 0.0, rate * delta)
 	player.ads_amt = ads_amt
@@ -128,7 +162,7 @@ func _ads(delta: float) -> void:
 
 
 func _trigger() -> void:
-	var down: bool = (input.left or trigger_down) and not player.sprinting and draw_t <= 0.0
+	var down: bool = (input.left or trigger_down) and not ui_open and not player.sprinting and draw_t <= 0.0
 	var pressed := down and not _was_left
 	_was_left = down
 	if not down:
@@ -163,6 +197,9 @@ func _shoot(res: Dictionary) -> void:
 
 
 func _commands() -> void:
+	if input.act("drop"):
+		drop_current()
+		return
 	if input.act("t_reload"):
 		if _reload_t < DOUBLE_TAP and gun.busy_kind == "reload" and not _reload_fast:
 			gun.busy_t = 0.0
@@ -196,7 +233,10 @@ func _commands() -> void:
 
 
 func start_reload(fast: bool) -> void:
-	if gun.reload(fast):
+	var r := reloader.begin(gun_item, fast)
+	if r == "none":
+		message.emit("No magazine" if gun.def["action"] != "tube" else "No %s rounds" % gun.def["cal"])
+	if r == "ok":
 		_reload_t = 0.0
 		_reload_fast = fast
 		_check_t = 0.0

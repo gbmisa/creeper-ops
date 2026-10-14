@@ -12,6 +12,8 @@ var menu: RangeMenu
 var targets: RangeTargets
 var hit_log: RangeHitLog
 var bots: RangeBots
+var world_items: WorldItems
+var inv_ui: InventoryUI
 
 
 func _ready() -> void:
@@ -65,6 +67,13 @@ func _build() -> void:
 	var bench := RangeBench.new()
 	add_child(bench)
 	bench.setup(weapons, player, targets, hit_log)
+	world_items = WorldItems.new()
+	add_child(world_items)
+	world_items.setup(player, weapons)
+	RangeCrate.build(self, world_items)
+	inv_ui = InventoryUI.new()
+	add_child(inv_ui)
+	inv_ui.setup(weapons, player, world_items)
 	var hud := RangeHud.new()
 	add_child(hud)
 	hud.setup(weapons, player)
@@ -89,7 +98,9 @@ func _process(_dt: float) -> void:
 	if input == null:
 		return
 	if input.was_pressed(KEY_ESCAPE):
-		if menu.visible:
+		if inv_ui != null and inv_ui.is_open:
+			inv_ui.close()
+		elif menu.visible:
 			menu.close()
 		else:
 			player.enabled = false
