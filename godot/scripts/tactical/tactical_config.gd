@@ -1,0 +1,65 @@
+class_name TacticalConfig
+## All tuning numbers for the tactical combat module (reusable, no dependency on range/).
+
+# Physics layers (bit values): 1 world, 2 hitboxes (bullet-only), 3 character bodies
+const LAYER_WORLD := 1
+const LAYER_HITBOX := 2
+const LAYER_BODY := 4
+const BULLET_MASK := 3
+
+# Ballistics
+const GRAVITY := 9.81
+const SIM_STEP := 1.0 / 240.0
+const MAX_FLIGHT_TIME := 5.0
+const MIN_SPEED := 40.0
+const MAX_BOUNCES := 2
+const RICOCHET_SPEED_MULT := 0.6
+const WALL_REF_THICK := 0.02
+const WALL_THICK_CAP := 5.0
+const PASS_PEN_LOSS := 0.6
+const PASS_DMG_MULT := 0.75
+const PASS_SPEED_MULT := 0.8
+const PASS_DEVIATE_DEG := 1.5
+
+# Damage / armor
+const FRAG_MIN_PEN := 20.0
+const FRAG_DMG_MULT := 1.5
+const LIGHT_BLEED_DPS := 0.8
+const HEAVY_BLEED_DPS := 2.4
+const FRACTURE_MIN_DMG := 25.0
+const FRACTURE_CHANCE := 0.35
+const LEG_FRACTURE_SPEED := 0.6
+const ARM_FRACTURE_SWAY := 1.0
+const ARMOR_RICOCHET_GLANCE_DEG := 25.0
+
+# Gun handling
+const HIP_CONE_DEG := 4.0
+const MALF_BASE := 0.05
+const WEAR_PER_SHOT := 0.0004
+const FIX_TIME := {"misfire": 1.0, "feed": 1.8, "jam": 2.5}
+const CHAMBER_TIME := 0.4
+const ADS_TIME_SLOW := 0.45
+const ADS_TIME_FAST := 0.15
+const MAG_CHECK_TIME := 1.0
+const EXACT_COUNT_MAX_CAP := 8
+## [min fraction (inclusive), text], checked top to bottom
+const MAG_WORDS := [[1.0, "Full"], [0.75, "Almost full"], [0.4, "About half"], [0.16, "Less than half"], [0.001, "Almost empty"]]
+
+# Recoil / sway
+const RECOIL_CAP_SHOTS := 10.0
+const RECOIL_RATE_LOW := 2.0
+const RECOIL_RATE_HIGH := 6.0
+const SWAY_BASE_DEG := 0.12
+const SWAY_HOLD_MULT := 0.05
+const SWAY_TIRED_MULT := 2.5
+const ARM_STAMINA_DRAIN_ADS := 0.04
+const ARM_STAMINA_DRAIN_HOLD := 0.18
+const ARM_STAMINA_REGEN := 0.12
+
+# Movement (used by the range player)
+const WALK := 3.2
+const SPRINT := 5.6
+const LEG_STAMINA_DRAIN := 0.12
+const LEG_STAMINA_REGEN := 0.08
+const LEAN_ROLL_DEG := 12.0
+const LEAN_OFFSET := 0.35

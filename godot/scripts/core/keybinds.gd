@@ -11,7 +11,7 @@ const PATH := "user://keybinds.cfg"
 const CTRL_WHEEL_UP := 0x7A000001
 const CTRL_WHEEL_DOWN := 0x7A000002
 const SLOTS := 2  # keys per action: primary, alternate
-const GROUPS := ["Global", "Command", "Operative"]
+const GROUPS := ["Global", "Command", "Operative", "Tactical"]
 
 ## id -> [group, label, default physical keycodes]
 const DEFAULTS := {
@@ -74,6 +74,30 @@ const DEFAULTS := {
 	"use": ["Operative", "Use / capture", [KEY_E]],
 	"recall": ["Operative", "Recall (hold)", [KEY_R]],
 	"op_build": ["Operative", "Build mode (first person)", [KEY_B]],
+	"t_forward": ["Tactical", "Move forward", [KEY_W]],
+	"t_back": ["Tactical", "Move back", [KEY_S]],
+	"t_left": ["Tactical", "Strafe left", [KEY_A]],
+	"t_right": ["Tactical", "Strafe right", [KEY_D]],
+	"t_sprint": ["Tactical", "Sprint / hold breath in ADS", [KEY_SHIFT]],
+	"t_jump": ["Tactical", "Jump", [KEY_SPACE]],
+	"t_crouch": ["Tactical", "Crouch", [KEY_C]],
+	"t_lean_left": ["Tactical", "Lean left", [KEY_Q]],
+	"t_lean_right": ["Tactical", "Lean right", [KEY_E]],
+	"t_reload": ["Tactical", "Reload (double-tap: fast, drops mag)", [KEY_R]],
+	"t_fire_mode": ["Tactical", "Fire mode", [KEY_B]],
+	"t_mag_check": ["Tactical", "Check magazine", [KEY_T]],
+	"t_inspect": ["Tactical", "Inspect / fix malfunction", [KEY_L]],
+	"t_zero_up": ["Tactical", "Zero distance up", [KEY_PAGEUP]],
+	"t_zero_down": ["Tactical", "Zero distance down", [KEY_PAGEDOWN]],
+	"t_use": ["Tactical", "Use / take / cycle at bench", [KEY_F]],
+	"t_crosshair": ["Tactical", "Toggle hip-fire cone dot", [KEY_X]],
+	"t_help": ["Tactical", "Toggle help", [KEY_H]],
+	"t_slot_1": ["Tactical", "Weapon slot 1", [KEY_1]],
+	"t_slot_2": ["Tactical", "Weapon slot 2", [KEY_2]],
+	"t_slot_3": ["Tactical", "Weapon slot 3", [KEY_3]],
+	"t_slot_4": ["Tactical", "Weapon slot 4", [KEY_4]],
+	"t_slot_5": ["Tactical", "Weapon slot 5", [KEY_5]],
+	"t_slot_6": ["Tactical", "Weapon slot 6", [KEY_6]],
 }
 
 static var _map := {}  # id -> Array[int] (current keys)
