@@ -19,6 +19,8 @@ static func build(p: Node3D) -> void:
 	_flags(n)
 	_work_lights(n)
 	LookProps.build(n, LookPropDefs.RANGE)
+	LookHub2.build(n)
+	LookBerm.build(n)
 	LookScatter.range_hub(n)
 
 

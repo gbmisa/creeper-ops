@@ -7,7 +7,7 @@ const DIR := "res://assets/textures/polyhaven/"
 
 const STYLE := {
 	"range": {   # clean, well-kept base
-		"concrete": ["concrete_floor_worn_001", 3.0, Color(1.6, 1.55, 1.45), 0.15, 0.8],
+		"concrete": ["concrete_floor_worn_001", 3.0, Color(1.3, 1.25, 1.18), 0.15, 1.2],
 		"dirt_berm": ["grass_ground", 4.0, Color(1.0, 1.0, 0.8), 0.1, 1.0],
 		"berm": ["grass_ground", 3.0, Color(0.95, 1.05, 0.72), 0.1, 1.2],
 		"wood_plank": ["wood_planks", 1.5, Color(0.85, 0.8, 0.72), 0.2, 1.0],
@@ -68,12 +68,42 @@ static func get_mat(mat: String, col: Color, nm := "") -> StandardMaterial3D:
 	m.uv1_triplanar = true
 	m.uv1_world_triplanar = true
 	m.uv1_scale = Vector3.ONE / float(s[1])
+	_detail(m, map, mat)
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	# layout colour only tints: keep its hue, normalise brightness, blend by tint_mix
 	var hue := Color.WHITE.lerp(col * (1.0 / maxf(col.get_luminance() * 2.0, 0.2)), float(s[3]))
 	m.albedo_color = (s[2] as Color) * hue
 	_cache[key] = m
 	return m
+
+
+## Large-scale tonal variation multiplied over the tiled texture (a second world-triplanar layer at ~13 m, scaled and offset
+## differently from the main one) so repeats of gravel, brick and concrete do not read as a grid. Stronger on ground and brick.
+static func _detail(m: StandardMaterial3D, map: String, mat: String) -> void:
+	var strong := mat in ["dirt_berm", "berm", "brick", "concrete"]
+	var key := "detail|%s" % strong
+	if not _tex.has(key):
+		var nt := NoiseTexture2D.new()
+		var fn := FastNoiseLite.new()
+		fn.frequency = 0.012
+		fn.fractal_octaves = 4
+		nt.noise = fn
+		nt.width = 512
+		nt.height = 512
+		nt.seamless = true
+		var g := Gradient.new()
+		g.offsets = PackedFloat32Array([0.0, 1.0])
+		g.colors = PackedColorArray([Color(0.52, 0.5, 0.48) if strong else Color(0.75, 0.74, 0.72), Color(1.25, 1.2, 1.1)])
+		nt.color_ramp = g
+		_tex[key] = nt
+	m.detail_enabled = true
+	m.detail_blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+	m.detail_albedo = _tex[key]
+	m.detail_uv_layer = BaseMaterial3D.DETAIL_UV_2
+	m.uv2_triplanar = true
+	m.uv2_world_triplanar = true
+	m.uv2_scale = Vector3.ONE / (13.0 if map == "skirmish" else 9.0)
+	m.uv2_offset = Vector3(0.37, 0.11, 0.53)
 
 
 static func _load(id: String, kind: String) -> Texture2D:

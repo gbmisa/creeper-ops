@@ -10,8 +10,8 @@ const MAPS := {
 		"fill": 0.9, "proc": {"top": Color(0.3, 0.5, 0.82), "horizon": Color(0.98, 0.72, 0.5), "ground": Color(0.5, 0.42, 0.34), "curve": 0.16},
 	},
 	"skirmish": {
-		"hdri": "res://assets/hdri/rogland_sunset_2k.hdr", "sun_rot": Vector3(-9, 150, 0), "sun_col": Color(1.0, 0.62, 0.36), "sun_e": 2.0,
-		"amb_e": 1.15, "amb_tint": Color(0.66, 0.76, 1.0), "fog_col": Color(0.55, 0.6, 0.68), "fog_d": 0.011, "fog_aniso": 0.35, "exp": 0.95,
+		"hdri": "res://assets/hdri/rogland_sunset_2k.hdr", "sun_rot": Vector3(-9, 150, 0), "sun_col": Color(1.0, 0.56, 0.28), "sun_e": 2.5,
+		"amb_e": 0.95, "amb_tint": Color(0.5, 0.64, 1.0), "fog_col": Color(0.5, 0.58, 0.74), "fog_d": 0.009, "fog_aniso": 0.35, "exp": 0.95,
 		"sun_max": 140.0,
 	},
 }
@@ -57,14 +57,18 @@ static func build(p: Node3D, map: String) -> void:
 	env.ssil_intensity = 0.8
 	env.glow_enabled = true
 	env.glow_intensity = 0.6
-	env.glow_bloom = 0.05
+	env.glow_bloom = 0.12
 	env.glow_hdr_threshold = 1.2
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 1.08
+	env.adjustment_saturation = 1.18
 	env.adjustment_contrast = 1.05
 	env.fog_enabled = true
 	env.fog_light_color = c["fog_col"]
-	env.fog_density = 0.0006
+	env.fog_density = 0.0006 if map == "range" else 0.0035
+	env.fog_sun_scatter = 0.5
+	env.fog_height = 6.0
+	env.fog_height_density = 0.0 if map == "range" else 0.02
+	env.fog_aerial_perspective = 0.35
 	env.fog_sky_affect = 0.25
 	env.volumetric_fog_enabled = true
 	env.volumetric_fog_density = c["fog_d"]
@@ -80,7 +84,7 @@ static func build(p: Node3D, map: String) -> void:
 	sun.rotation_degrees = c["sun_rot"]   # low sun; range keeps its original heading
 	sun.light_color = c["sun_col"]
 	sun.light_energy = c["sun_e"]
-	sun.light_volumetric_fog_energy = 1.5
+	sun.light_volumetric_fog_energy = 1.5 if map == "range" else 0.8
 	sun.shadow_enabled = true
 	sun.shadow_blur = 1.4
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS

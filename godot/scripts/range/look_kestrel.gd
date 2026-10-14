@@ -20,6 +20,7 @@ static func build(parent: Node3D) -> void:
 	_wall_signs(n)
 	_covers(parent, n)
 	LookProps.build(n, LookPropDefs.SKIRMISH, true)
+	LookWear.build(parent, n)
 	LookScatter.skirmish(n)
 
 
