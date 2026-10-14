@@ -4,3 +4,4 @@ godot/.godot/
 # Local Claude settings
 .claude/settings.local.json
 art/operative/src/
+art/gen/*_raw.glb
