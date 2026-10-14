@@ -174,8 +174,8 @@ func level_buttons() -> Array:
 		out.append({ "label": "Level %d: %s" % [i + 1, Levels.NAMES[i]], "on_click": func():
 			Levels.selected = i + 1
 			g.get_tree().reload_current_scene() })
-	out.append({ "label": "Firing Range", "on_click": func():
-		g.get_tree().change_scene_to_file("res://scenes/firing_range.tscn") })
+	out.append({ "label": "Firing Range", "on_click": func(): RangeMaps.go("range") })
+	out.append({ "label": "Skirmish", "on_click": func(): RangeMaps.go("skirmish") })
 	return out
 
 

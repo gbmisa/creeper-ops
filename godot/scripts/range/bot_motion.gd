@@ -3,6 +3,10 @@ class_name BotMotion
 
 
 static func speed(b: ScavBot) -> float:
+	return base_speed(b) * b.def["speed"]
+
+
+static func base_speed(b: ScavBot) -> float:
 	match b.brain.state:
 		BotBrain.PATROL:
 			return ScavBot.WALK

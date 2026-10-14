@@ -9,6 +9,7 @@ const REACT_MIN := 0.35
 const REACT_MAX := 1.0
 const STILL_MULT := 1.4
 
+var range_m := RANGE   # per bot (BotDefs sight)
 var seeing := false       # raw cone + LOS this frame
 var aware := false        # seeing for longer than the reaction delay
 var react_left := -1.0
@@ -20,10 +21,10 @@ var noise_pos := Vector3.ZERO
 var noise_new := false
 
 
-static func in_view(eye: Vector3, fwd: Vector3, point: Vector3) -> bool:
+static func in_view(eye: Vector3, fwd: Vector3, point: Vector3, max_range := RANGE) -> bool:
 	var to := point - eye
 	var d := to.length()
-	if d > RANGE or d < 0.01:
+	if d > max_range or d < 0.01:
 		return d < 0.01
 	return rad_to_deg(fwd.angle_to(to)) <= FOV_DEG * 0.5
 
@@ -46,7 +47,7 @@ static func reaction_delay(dist: float, still: bool, roll: float) -> float:
 func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceState3D, pts: Array, still: bool, rng: RandomNumberGenerator) -> void:
 	seeing = false
 	for p in pts:
-		if in_view(eye, fwd, p):
+		if in_view(eye, fwd, p, range_m):
 			seeing = true
 			break
 	seeing = seeing and los(space, eye, pts)

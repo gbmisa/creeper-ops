@@ -22,6 +22,10 @@ func _init() -> void:
 	col.add_child(UiKit.label("PAUSED", 22))
 	col.add_child(UiKit.button("Resume", close))
 	col.add_child(UiKit.button("Reset range", func(): reset_requested.emit()))
+	if RangeMaps.selected == "skirmish":
+		col.add_child(UiKit.button("Back to Firing Range", func(): RangeMaps.go("range")))
+	else:
+		col.add_child(UiKit.button("Deploy to Skirmish", func(): RangeMaps.go("skirmish")))
 	col.add_child(UiKit.button("Quit", func(): get_tree().quit()))
 
 
