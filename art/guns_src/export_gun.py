@@ -56,5 +56,19 @@ if special == "ak":
         key(mag, f, v)
     for f, t in ((0, 0), (30, 0), (34, 1.2), (38, 0)): key(bolt, f, -fwd * stroke * t)
     arm.animation_data.action = None
+def to_principled(m):
+    if not m.use_nodes or not m.node_tree: return
+    nt = m.node_tree
+    src = next((n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED'), None) or next((n for n in nt.nodes if n.type == 'BSDF_DIFFUSE'), None)
+    col = list(src.inputs[0].default_value) if src else list(m.diffuse_color)
+    if col[0] > 0.95 and col[1] > 0.95 and col[2] > 0.95: col = [0.12, 0.12, 0.13, 1]  # untextured white -> gunmetal
+    nt.nodes.clear()
+    o = nt.nodes.new('ShaderNodeOutputMaterial'); b = nt.nodes.new('ShaderNodeBsdfPrincipled')
+    nt.links.new(b.outputs[0], o.inputs[0])
+    b.inputs['Base Color'].default_value = col
+    n = m.name.lower(); metal = any(k in n for k in ('metal', 'barrel', 'black', 'magazine', 'scope')) or (not 'wood' in n and max(col[:3]) < 0.3)
+    b.inputs['Metallic'].default_value = 0.75 if metal else 0.0
+    b.inputs['Roughness'].default_value = 0.42 if metal else 0.72
+for m in bpy.data.materials: to_principled(m)
 bpy.ops.export_scene.gltf(filepath=out, export_format='GLB', export_animations=True, export_animation_mode='ACTIONS', export_apply=False, export_yup=True)
 print("@@ wrote", out, "L", round(L, 2), "along_x", along_x, "acts", [x.name for x in bpy.data.actions])
