@@ -99,6 +99,8 @@ func _process(delta: float) -> void:
 		_show_dot = not _show_dot
 	_dot.visible = _show_dot and weapons.ads_amt < 0.5
 	scope.visible = weapons.scoped()
+	if weapons.gun != null:
+		scope.style = weapons.gun.reticle()
 	var g := weapons.gun
 	if g == null:
 		_gun_lbl.text = "No weapon"

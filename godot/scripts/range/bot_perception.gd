@@ -44,10 +44,10 @@ static func reaction_delay(dist: float, still: bool, roll: float) -> float:
 	return d * (STILL_MULT if still else 1.0)
 
 
-func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceState3D, pts: Array, still: bool, rng: RandomNumberGenerator) -> void:
+func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceState3D, pts: Array, still: bool, rng: RandomNumberGenerator, spot_mult := 1.0) -> void:
 	seeing = false
 	for p in pts:
-		if in_view(eye, fwd, p, range_m):
+		if in_view(eye, fwd, p, range_m * spot_mult):
 			seeing = true
 			break
 	seeing = seeing and los(space, eye, pts)

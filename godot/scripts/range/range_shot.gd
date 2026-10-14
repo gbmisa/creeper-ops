@@ -1,6 +1,6 @@
 class_name RangeShot
 extends Node
-## Screenshot / debug hook: --shot=path [--weapon=id] [--ads] [--look=x,y,z] [--fire=N] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] [--fps-report] (reload mid-way shot).
+## Screenshot / debug hook: --shot=path [--weapon=id] [--fit=a,b] [--zoom=lo] [--ads] [--look=x,y,z] [--fire=N] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] [--fps-report] (reload mid-way shot).
 ## Gives the weapon, optionally fires N shots, waits, saves the viewport, quits.
 
 
@@ -9,6 +9,12 @@ func run(app: FiringRange) -> void:
 	var w: PlayerWeapons = app.weapons
 	if a.has("weapon"):
 		w.give(str(a["weapon"]))
+	if a.has("fit") and w.gun != null:  # --fit=reddot,laser: fit those parts on the gun in hand (--zoom=lo = variable sight at 1x)
+		for id in str(a["fit"]).split(","):
+			var r := w.inv.request_fit(w.gun_item, ItemDefs.make(id))
+			if not r["ok"]:
+				print("[range] fit ", id, " refused: ", r["why"])
+		w.gun.zoom_hi = str(a.get("zoom", "hi")) != "lo"
 	if a.has("pos"):
 		app.player.global_position = RangeArgs.vec3(str(a["pos"]), app.player.global_position)
 	if a.has("look"):

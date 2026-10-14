@@ -9,6 +9,8 @@ var model: Node3D
 var anim: AnimationPlayer
 var flash: MuzzleFlash
 var arms: FpArms
+var rig: AttachmentRig
+var _gun: Gun
 var half_len := 0.3
 var _def := {}
 var _kick := 0.0
@@ -38,7 +40,8 @@ func _on_switched(g: Gun) -> void:
 		model = null
 	if g == null:  # hands empty (gun dropped or put away)
 		return
-	_def = g.def
+	_gun = g
+	_def = g.eff_def()
 	model = Node3D.new()
 	add_child(model)
 	var glb := (load("res://assets/models/guns/%s.glb" % _def["model"]) as PackedScene).instantiate()
@@ -54,14 +57,18 @@ func _on_switched(g: Gun) -> void:
 	half_len = mi.get_aabb().size.z * 0.5
 	flash = MuzzleFlash.new(model, Vector3(0, 0.01, -half_len - 0.03))
 	_cycle_clip = "FireWBullet" if anim.has_animation("FireWBullet") else ""
+	rig = AttachmentRig.new()
+	model.add_child(rig)
+	rig.build(g, half_len)
 	arms.set_gun(_def)
 
 
 func _on_shot(res: Dictionary, g: Gun) -> void:
 	if not res["fired"]:
 		return
-	_kick_v += 0.4 + g.def["up"] * 0.2
-	flash.flash(Color(1.0, 0.8, 0.45), 0.07 + 0.02 * float(g.def["kg"]), 0.05, 2.0)
+	_kick_v += 0.4 + g.stat("up") * 0.2
+	if g.stat("flash") > 0.5:
+		flash.flash(Color(1.0, 0.8, 0.45), 0.07 + 0.02 * float(g.def["kg"]), 0.05, 2.0)
 	if _cycle_clip != "":
 		var clip := "FireWOBullet" if res["last"] else "FireWBullet"
 		_play(clip, 0.2 + g.def["cycle"] if g.def["cycle"] > 0.0 else maxf(0.18, 60.0 / g.def["rpm"]))
@@ -97,9 +104,13 @@ func _process(delta: float) -> void:
 		return
 	model.visible = not weapons.scoped()
 	flash.update(delta)
+	if rig.stale():
+		_def = _gun.eff_def()
+		rig.build(_gun, half_len)
+	rig.update_beam()
 	var a := smoothstep(0.0, 1.0, weapons.ads_amt)
 	var pos := base_pos(_def, half_len, a)
-	player.cam.near = lerpf(0.03, ADS_NEAR, a)
+	player.cam.near = lerpf(0.03, ads_near(), a)
 	var rot := Vector3(0, deg_to_rad(HIP_YAW) * (1.0 - a), 0)
 	var speed := player.horizontal_speed() if player.is_on_floor() else 0.0
 	_bob_t += delta * speed * 2.0
@@ -122,6 +133,14 @@ func _process(delta: float) -> void:
 	model.position = model.position.lerp(pos, minf(1.0, delta * 20.0))
 	model.rotation = model.rotation.lerp(rot, minf(1.0, delta * 20.0))
 	arms.update(model, delta)
+
+
+## Camera near plane while aiming: clips the stock, but never the sight (a pistol red dot sits close to the eye).
+func ads_near() -> float:
+	if _gun == null or not _gun.fit.has("sight"):
+		return ADS_NEAR
+	var sight_z := half_len - float(_def["butt"]) - AttachmentMounts.mount(_def, "sight", half_len).z  # eye to sight centre
+	return clampf(sight_z - float(AttachmentDefs.ROWS[_gun.fit["sight"]]["depth"]) * 0.5 - 0.04, 0.03, ADS_NEAR)
 
 
 ## Gun model position under the camera, hip (a = 0) to ADS (a = 1). The butt is shouldered at the hip and sits

@@ -8,7 +8,9 @@ const LOOT := [["mag_ak47", {}], ["mag_ak47", {}], ["mag_ak47", {}], ["mag_p90",
 	["mag_saiga12", {}], ["mag_sks", {}], ["mag_sr25", {}], ["mag_mosin", {}], ["mag_pkm", {}],
 	["9_fmj", {"count": 60}], ["44_jhp", {"count": 24}], ["556_m855", {"count": 60}], ["762n_m80", {"count": 40}], ["54r_lps", {"count": 40}],
 	["762_ps", {"count": 60}], ["762_bp", {"count": 30}], ["12_buck7", {"count": 24}], ["45_fmj", {"count": 35}], ["3006_fmj", {"count": 24}],
-	["pack_small", {}], ["pack_big", {}], ["rig_chest", {}], ["vest2", {}], ["plate4", {}], ["helmet3", {}], ["med_ifak", {}], ["med_bandage", {}]]
+	["pack_small", {}], ["pack_big", {}], ["rig_chest", {}], ["vest2", {}], ["plate4", {}], ["helmet3", {}], ["med_ifak", {}], ["med_bandage", {}],
+	["reddot", {}], ["holo", {}], ["acog3x", {}], ["lpvo", {}], ["scope8x", {}], ["suppressor", {}], ["compensator", {}],
+	["flashhider", {}], ["vgrip", {}], ["agrip", {}], ["laser", {}], ["extmag", {}], ["extmag", {}]]
 const COLUMNS := 12
 
 

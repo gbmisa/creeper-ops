@@ -12,6 +12,7 @@ signal item_dropped(item: Dictionary)  # left the inventory with nowhere to go; 
 const DOUBLE_TAP := 0.35
 const DRAW_TIME := 0.45
 const SCOPE_AT := 0.8
+const LASER_SPOT := 1.5  # bots notice a lasered player from 1.5x their sight range
 
 var player: TacticalPlayer
 var input: InputState
@@ -99,6 +100,7 @@ func drop_current() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	player.spot_mult = LASER_SPOT if gun != null and gun.fit.get("under", "") == "laser" else 1.0
 	_pickup_and_slots()
 	sync()
 	if gun == null or not player.enabled:
@@ -146,7 +148,7 @@ func _pickup_and_slots() -> void:
 func _ads(delta: float) -> void:
 	var want: bool = trigger_ads or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
 	want = want and not ui_open and not player.sprinting and draw_t < DRAW_TIME * 0.5 and gun.busy_kind != "reload"
-	var rate := 1.0 / RecoilModel.ads_time(gun.def["ergo"])
+	var rate := 1.0 / (RecoilModel.ads_time(gun.def["ergo"]) * gun.stat("ads_mult"))
 	ads_amt = move_toward(ads_amt, 1.0 if want else 0.0, rate * delta)
 	player.ads_amt = ads_amt
 	holding_breath = ads_amt > 0.9 and input.held("t_sprint") and arm_stamina > 0.0
@@ -187,9 +189,9 @@ func _shoot(res: Dictionary) -> void:
 	var basis := player.cam.global_basis
 	var origin := player.eye_pos() + basis.z * -0.3
 	for d in gun.shot_dirs(basis, res["ammo"], ads_amt > 0.8, rng):
-		bal.spawn(origin, d, res["ammo"])
-	recoil.shoot(gun.def, rng)
-	BotNoise.emit(player.global_position, BotNoise.SHOT_R, "shot", player)
+		bal.spawn(origin, d, res["ammo"], [], gun.stat("vel"))
+	recoil.shoot(gun.eff_def(), rng)
+	BotNoise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
 	RangeSfx.shot(gun.def["class"])
 	if res["ping"]:
 		Sfx.play("tick")
@@ -207,6 +209,9 @@ func _commands() -> void:
 			start_reload(true)
 		else:
 			start_reload(false)
+	if input.act("t_zoom"):
+		gun.toggle_zoom()
+		Sfx.play("click")
 	if input.act("t_fire_mode"):
 		gun.cycle_mode()
 		Sfx.play("click")
@@ -249,7 +254,7 @@ func _apply_view(_delta: float) -> void:
 	var tired := arm_stamina < 0.12
 	var sw := RecoilModel.sway(_t, gun.def, holding_breath, tired)
 	player.sway_off = sw * ads_amt
-	player.cam.fov = fov_for(ads_amt, gun.def["scope"])
+	player.cam.fov = fov_for(ads_amt, gun.stat("scope"))
 
 
 static func fov_for(ads: float, scope: float) -> float:
@@ -261,4 +266,4 @@ static func fov_for(ads: float, scope: float) -> float:
 
 
 func scoped() -> bool:
-	return gun != null and gun.def["scope"] > 1.0 and ads_amt > SCOPE_AT
+	return gun != null and gun.stat("scope") > 1.0 and ads_amt > SCOPE_AT

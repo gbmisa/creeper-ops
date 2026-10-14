@@ -32,3 +32,11 @@ Unlock levels: m1911 1, mp5 1, ak47 1, shotgun 2, sks 3, mosin 6, p90 6, glock 8
 ## Notes for GUNS-2
 - `slots` are string lists (sight/muzzle/under/mag); m4a1, scarh, sr25, vector have all four.
 - Real glb arrival: `fb_flip` is dropped automatically; view data for new guns is still the fallback's.
+
+## GUNS-2 (done): attachments
+- Data `tactical/attachment_defs.gd` (12 parts, multiplicative `mods`), mounts `tactical/attachment_mounts.gd` (defaults from ads_pos; `_override` is the one reader of art/gen/mounts.json {gun:{rail,muzzle,under,ads_y}}), fit logic `tactical/attachments.gd` behind `Inventory.request_fit / request_unfit` (the single entry points).
+- `Gun.stat(name)`, `eff_def()` (recoil/ADS/viewmodel read it; `recoil.shoot(gun.eff_def())`, bots read the base), `fit` dict serialised in `inventory_io`. Extmag: cap x1.5, reload x1.2; bench refills mags to the gun's cap.
+- Viewmodel `range/attachment_rig.gd`: placeholder boxes (glb used if present), 1x glass quad reticle, laser beam; magnified sights use `ScopeOverlay.style`. New action `t_zoom` (N). Bots: `TacticalPlayer.spot_mult` (laser 1.5x) passed to `BotPerception.update`.
+- UI: drag a part onto a gun; chips on the gun cell, right-click or drag a chip off. Crate holds all parts. `--fit=a,b [--zoom=lo]` screenshot flag.
+- Tests `range_test_attach.gd`; `--range-test` OK 491, smoke 0 FAIL.
+- Not merged with integ (AGENTS rule 2); recoil hook = def passed to RecoilModel.shoot, so `kick_stats(def)` needs no change.

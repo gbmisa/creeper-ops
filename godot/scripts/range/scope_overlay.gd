@@ -1,6 +1,13 @@
 class_name ScopeOverlay
 extends Control
-## 6x scope view: black outside a circle plus a mil-dot reticle. Shown while PlayerWeapons.scoped().
+## Magnified sight view: black outside a circle plus a reticle (`style`: mildot, chevron, cross; Gun.reticle()).
+## Shown while PlayerWeapons.scoped().
+
+var style := "mildot":
+	set(v):
+		if v != style:
+			style = v
+			queue_redraw()
 
 
 func _init() -> void:
@@ -30,6 +37,12 @@ func _draw() -> void:
 		draw_colored_polygon(pts, black)
 	draw_arc(c, r, 0, TAU, 96, black, 4.0)
 	var ink := Color(0.02, 0.02, 0.02)
+	if style == "chevron":
+		_chevron(c, r, ink)
+		return
+	if style == "cross":
+		_cross(c, r, ink)
+		return
 	draw_line(c + Vector2(-r, 0), c + Vector2(-14, 0), ink, 2.0)
 	draw_line(c + Vector2(14, 0), c + Vector2(r, 0), ink, 2.0)
 	draw_line(c + Vector2(0, -r), c + Vector2(0, -14), ink, 2.0)
@@ -39,3 +52,27 @@ func _draw() -> void:
 			draw_circle(c + Vector2(sgn * i * 40.0, 0), 3.0, ink)
 			draw_circle(c + Vector2(0, sgn * i * 40.0), 3.0, ink)
 	draw_circle(c, 1.5, Color(0.9, 0.1, 0.1))
+
+
+## ACOG: chevron with a post and ranging ticks below it.
+func _chevron(c: Vector2, r: float, ink: Color) -> void:
+	var red := Color(0.95, 0.1, 0.08)
+	draw_line(c + Vector2(0, -r), c + Vector2(0, -8), ink, 2.0)
+	draw_line(c + Vector2(-r, 0), c + Vector2(-r * 0.35, 0), ink, 2.0)
+	draw_line(c + Vector2(r * 0.35, 0), c + Vector2(r, 0), ink, 2.0)
+	draw_line(c + Vector2(-26, 26), c, red, 3.0)
+	draw_line(c + Vector2(26, 26), c, red, 3.0)
+	for i in range(1, 5):
+		draw_line(c + Vector2(-8 - i * 2, i * 44), c + Vector2(8 + i * 2, i * 44), red, 2.0)
+	draw_circle(c, 1.8, red)
+
+
+## LPVO: fine crosshair with a thick outer post and an illuminated centre dot.
+func _cross(c: Vector2, r: float, ink: Color) -> void:
+	draw_line(c + Vector2(-r, 0), c + Vector2(-40, 0), ink, 4.0)
+	draw_line(c + Vector2(40, 0), c + Vector2(r, 0), ink, 4.0)
+	draw_line(c + Vector2(0, 40), c + Vector2(0, r), ink, 4.0)
+	draw_line(c + Vector2(-40, 0), c + Vector2(-6, 0), ink, 1.5)
+	draw_line(c + Vector2(6, 0), c + Vector2(40, 0), ink, 1.5)
+	draw_line(c + Vector2(0, 6), c + Vector2(0, 40), ink, 1.5)
+	draw_circle(c, 2.0, Color(0.95, 0.1, 0.08))
