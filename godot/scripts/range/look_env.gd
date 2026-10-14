@@ -5,12 +5,13 @@ class_name LookEnv
 const MAPS := {
 	"range": {
 		"hdri": "res://assets/hdri/qwantani_dusk_2_2k.hdr", "sun_rot": Vector3(-14, 25, 0), "sun_col": Color(1.0, 0.7, 0.46), "sun_e": 2.2,
-		"amb_e": 1.1, "amb_tint": Color(1.0, 0.93, 0.85), "fog_col": Color(0.75, 0.55, 0.42), "fog_d": 0.0025, "fog_aniso": 0.5, "exp": 1.0,
+		"amb_e": 3.2, "amb_tint": Color(1.0, 0.96, 0.9), "fog_col": Color(0.75, 0.55, 0.42), "fog_d": 0.0025, "fog_aniso": 0.5, "exp": 1.2,
 		"sun_max": 110.0,
+		"fill": 0.9, "proc": {"top": Color(0.3, 0.5, 0.82), "horizon": Color(0.98, 0.72, 0.5), "ground": Color(0.5, 0.42, 0.34), "curve": 0.16},
 	},
 	"skirmish": {
 		"hdri": "res://assets/hdri/rogland_sunset_2k.hdr", "sun_rot": Vector3(-9, 150, 0), "sun_col": Color(1.0, 0.62, 0.36), "sun_e": 2.0,
-		"amb_e": 0.8, "amb_tint": Color(0.62, 0.74, 1.0), "fog_col": Color(0.55, 0.6, 0.68), "fog_d": 0.011, "fog_aniso": 0.35, "exp": 0.95,
+		"amb_e": 1.15, "amb_tint": Color(0.66, 0.76, 1.0), "fog_col": Color(0.55, 0.6, 0.68), "fog_d": 0.011, "fog_aniso": 0.35, "exp": 0.95,
 		"sun_max": 140.0,
 	},
 }
@@ -18,10 +19,21 @@ const MAPS := {
 
 static func build(p: Node3D, map: String) -> void:
 	var c: Dictionary = MAPS[map]
-	var pano := PanoramaSkyMaterial.new()
-	pano.panorama = load(c["hdri"])
 	var sky := Sky.new()
-	sky.sky_material = pano
+	if c.has("proc"):   # range: graded evening sky with a visible sun instead of the flat HDRI
+		var pr := ProceduralSkyMaterial.new()
+		pr.sky_top_color = c["proc"]["top"]
+		pr.sky_horizon_color = c["proc"]["horizon"]
+		pr.ground_horizon_color = c["proc"]["horizon"].darkened(0.2)
+		pr.ground_bottom_color = c["proc"]["ground"]
+		pr.sky_curve = c["proc"]["curve"]
+		pr.sun_angle_max = 30.0
+		pr.sun_curve = 0.15
+		sky.sky_material = pr
+	else:
+		var pano := PanoramaSkyMaterial.new()
+		pano.panorama = load(c["hdri"])
+		sky.sky_material = pano
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
@@ -80,3 +92,12 @@ static func build(p: Node3D, map: String) -> void:
 	sun.shadow_bias = 0.03
 	sun.shadow_normal_bias = 1.5
 	p.add_child(sun)
+	if c.has("fill"):   # range: shadowless warm fill from the opposite side so the booth, counter and berm faces are not black
+		var fill := DirectionalLight3D.new()
+		fill.rotation_degrees = Vector3(-28, c["sun_rot"].y + 180.0, 0)
+		fill.light_color = Color(0.95, 0.85, 0.78)
+		fill.light_energy = c["fill"]
+		fill.shadow_enabled = false
+		fill.light_specular = 0.0
+		fill.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY
+		p.add_child(fill)

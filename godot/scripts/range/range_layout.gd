@@ -28,6 +28,7 @@ static func build(parent: Node3D) -> void:
 	_booth(parent)
 	for d in DISTANCES:
 		_board(parent, d)
+	LookHub.build(parent)
 
 
 static func box(parent: Node3D, nm: String, pos: Vector3, size: Vector3, mat: String, thick: float, col: Color, lift := Vector3.ZERO) -> StaticBody3D:
