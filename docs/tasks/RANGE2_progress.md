@@ -15,3 +15,9 @@
 - `range_test_body.gd`: 9 PASS checks. `--pitch=deg` and `--walk=W+shift` flags in `range_shot.gd`.
 - Verified: range-test OK 89, smoke 0 FAIL, looking-down screenshot (legs/boots visible, no near-plane clip).
 - Open: walk clip is very slow (0.9 m/s), so player WALK 3.2 plays jog; crouch_walk plays ~3.5x fast.
+
+## BODY-1b (Sonnet) done: viewmodel arms + stock out of view
+- `fp_arms.gd`: second body.glb (only Arms, no shadow) under TacticalViewmodel; manual two-bone IK per arm (pole down/out), hand frame from finger dir + palm normal, fingers curled; left hand lerps to `mag_l` during Reload; shoulders lean up to 0.3 m when a grip is out of reach. `WeaponDefs` rows gained `grip_r`, `grip_l`, `mag_l` (wrist-bone targets, gun space, from side silhouettes) and `butt`.
+- Stock: ADS gun z now `-(half_len - butt)` (`TacticalViewmodel.base_pos`), and while aiming the camera near plane rises 0.03 -> 0.25 (`ADS_NEAR`) so the stock is clipped. Hip placement unchanged. ADS x/y unchanged; ADS z changed for AK (7 cm closer), shotgun (5), garand (8), P90 (5 farther); pistol identical.
+- `--side=right|top|front` and `--pitch`/`--walk` shot flags. 12 + 1 new `[range] PASS` checks (arms present, data, hands within 2 cm at hip/ADS for all 6 guns). range-test OK 108, smoke 0 FAIL.
+- Open: hands are blobby (open-pose glove curled by bone rotation only), right hand sits close to the sights in ADS; near-plane cut shows hollow insides if a gun's cut falls in the receiver (tuned per gun via `butt`); no check/sprint arm poses beyond following the gun.
