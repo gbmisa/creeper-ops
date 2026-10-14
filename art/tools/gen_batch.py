@@ -13,7 +13,9 @@ G = {
 S = {"reddot": "compact red dot sight", "holo": "EOTech holographic weapon sight", "acog3x": "Trijicon ACOG 3x scope",
      "lpvo": "1-6x LPVO rifle scope with mount", "scope8x": "long 8x tactical sniper scope with mount rings"}
 A = {"suppressor": "rifle suppressor silencer", "compensator": "muzzle compensator brake", "flashhider": "birdcage flash hider",
-     "vgrip": "vertical foregrip for rail", "agrip": "angled foregrip for rail", "laser": "tactical laser sight module"}
+     "vgrip": "tactical vertical foregrip handle only, short rubberized cylinder grip with a picatinny rail clamp on top, isolated gun accessory, no barrel",
+     "agrip": "angled foregrip, a single short sloped rubber hand stop block with a rail clamp on top, tiny isolated gun accessory, not a pistol, no barrel, no trigger",
+     "laser": "tactical laser aiming module, small rectangular black box with one round lens at the front and a rail clamp underneath, isolated gun accessory"}
 U = {"grapple": "grappling hook launcher gun with a separate hook head, sci-fi military", "frag": "M67 fragmentation hand grenade",
      "smoke": "smoke grenade canister", "flash": "flashbang stun grenade", "stim": "autoinjector stim pen", "binoculars": "military binoculars"}
 jobs = {}
