@@ -1,0 +1,98 @@
+class_name ItemDefs
+## Inventory items: size in grid cells (w x h), kg, kind (gun, mag, ammo, armor, rig, backpack, med).
+## Guns, ammo grades and armor reuse their own def tables; mags, bags and meds are rows here.
+## Bags (rig, backpack) carry a "grid": [w, h]. Mags/clips: "gun" = weapon id, "cap" = rounds.
+
+const ROUND_KG := {"45acp": 0.02, "57x28": 0.012, "762x39": 0.017, "12ga": 0.04, "3006": 0.03, "338": 0.05}
+const STACK_MAX := {"45acp": 70, "57x28": 100, "762x39": 90, "12ga": 40, "3006": 60, "338": 30}
+const POCKETS := Vector2i(4, 1)
+
+const ROWS := {
+	"mag_m1911": {"name": "M1911 magazine", "kind": "mag", "w": 1, "h": 1, "kg": 0.1, "gun": "m1911"},
+	"mag_p90": {"name": "P90 magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.25, "gun": "p90"},
+	"mag_ak47": {"name": "AK-47 magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.25, "gun": "ak47"},
+	"mag_sniper": {"name": "AXMC magazine", "kind": "mag", "w": 1, "h": 2, "kg": 0.2, "gun": "sniper"},
+	"clip_garand": {"name": "M1 en-bloc clip", "kind": "mag", "w": 1, "h": 1, "kg": 0.1, "gun": "garand"},
+	"rig_chest": {"name": "Chest rig", "kind": "rig", "w": 3, "h": 2, "kg": 0.8, "grid": [4, 2]},
+	"pack_small": {"name": "Small backpack", "kind": "backpack", "w": 3, "h": 3, "kg": 0.9, "grid": [4, 4]},
+	"pack_big": {"name": "Large backpack", "kind": "backpack", "w": 4, "h": 4, "kg": 1.6, "grid": [5, 6]},
+	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4},
+	"med_bandage": {"name": "Bandage", "kind": "med", "w": 1, "h": 1, "kg": 0.05},
+}
+
+const ARMOR_SIZE := {"vest2": [3, 3, 1.5], "plate4": [3, 3, 6.0], "steel6": [2, 2, 3.5], "helmet3": [2, 2, 1.2]}
+
+static var _uid := 0
+
+
+static func has(id: String) -> bool:
+	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id)
+
+
+static func of(id: String) -> Dictionary:
+	if ROWS.has(id):
+		var d: Dictionary = ROWS[id].duplicate()
+		d["id"] = id
+		if d["kind"] == "mag":
+			d["cal"] = WeaponDefs.of(d["gun"])["cal"]
+			d["cap"] = WeaponDefs.of(d["gun"])["mag"]
+		return d
+	if WeaponDefs.ROWS.has(id):
+		var w := WeaponDefs.of(id)
+		return {"id": id, "name": w["name"], "kind": "gun", "w": w["inv_w"], "h": w["inv_h"], "kg": w["kg"],
+			"pistol": w["class"] == "pistol", "cal": w["cal"]}
+	if TacAmmoDefs.ROWS.has(id):
+		var a := TacAmmoDefs.of(id)
+		return {"id": id, "name": a["name"], "kind": "ammo", "w": 1, "h": 1, "kg": ROUND_KG[a["cal"]], "cal": a["cal"],
+			"stack": STACK_MAX[a["cal"]]}
+	var r := ArmorDefs.of(id)
+	var s: Array = ARMOR_SIZE[id]
+	return {"id": id, "name": r["name"], "kind": "armor", "w": s[0], "h": s[1], "kg": s[2]}
+
+
+## A fresh item instance. opts: count (ammo), rounds + ammo (mags), rot, gun (a Gun).
+static func make(id: String, opts: Dictionary = {}) -> Dictionary:
+	_uid += 1
+	var d := of(id)
+	var it := {"id": id, "uid": _uid, "rot": int(opts.get("rot", 0)), "loc": "", "x": 0, "y": 0}
+	match d["kind"]:
+		"ammo":
+			it["count"] = int(opts.get("count", d["stack"]))
+		"mag":
+			var cal_grade: String = TacAmmoDefs.grades(d["cal"])[0]
+			it["ammo"] = str(opts.get("ammo", cal_grade))
+			it["rounds"] = int(opts.get("rounds", d["cap"]))
+		"gun":
+			it["gun"] = opts.get("gun", Gun.new(id))
+		"rig", "backpack":
+			it["items"] = []
+	return it
+
+
+static func def_of(item: Dictionary) -> Dictionary:
+	return of(item["id"])
+
+
+## Item weight including mag rounds, stack count and bag contents.
+static func item_kg(item: Dictionary) -> float:
+	var d := of(item["id"])
+	var kg: float = d["kg"]
+	match d["kind"]:
+		"ammo":
+			kg *= int(item["count"])
+		"mag":
+			kg += int(item["rounds"]) * ROUND_KG[d["cal"]]
+		"rig", "backpack":
+			for sub in item["items"]:
+				kg += item_kg(sub)
+	return kg
+
+
+static func label(item: Dictionary) -> String:
+	var d := of(item["id"])
+	match d["kind"]:
+		"ammo":
+			return "%s x%d" % [d["name"], int(item["count"])]
+		"mag":
+			return "%s (%d/%d %s)" % [d["name"], int(item["rounds"]), int(d["cap"]), TacAmmoDefs.of(item["ammo"])["name"]]
+	return d["name"]
