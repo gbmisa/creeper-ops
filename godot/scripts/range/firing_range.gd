@@ -14,11 +14,14 @@ var hit_log: RangeHitLog
 var bots: RangeBots
 var world_items: WorldItems
 var inv_ui: InventoryUI
+var skirmish: SkirmishGame   # set when the Skirmish map is selected (RangeMaps)
 
 
 func _ready() -> void:
 	Keybinds.persist = false
 	args = RangeArgs.parse()
+	if args.has("map"):
+		RangeMaps.selected = str(args["map"])
 	process_priority = 100  # runs after the player / weapons, so end_frame() clears input last
 	if args.has("range-test"):
 		var t := RangeTest.new()
@@ -37,9 +40,17 @@ func _ready() -> void:
 func _build() -> void:
 	input = InputState.new()
 	add_child(input)
-	RangeLayout.build(self)
+	var is_skirmish := RangeMaps.selected == "skirmish"
+	if is_skirmish:
+		skirmish = SkirmishGame.new()
+		add_child(skirmish)
+		skirmish.build_world()
+	else:
+		RangeLayout.build(self)
 	rack = RangeRack.new()
 	add_child(rack)
+	if is_skirmish:
+		rack.position = SkirmishData.RACK_POS
 	bal = Ballistics.new()
 	add_child(bal)
 	var impacts := RangeImpacts.new()
@@ -48,7 +59,7 @@ func _build() -> void:
 	player = TacticalPlayer.new()
 	player.input = input
 	add_child(player)
-	player.global_position = RangeLayout.SPAWN
+	player.global_position = SkirmishData.SPAWN if is_skirmish else RangeLayout.SPAWN
 	player.yaw = 0.0
 	player.pitch = 0.0
 	var fp_body := FpBody.new()
@@ -61,19 +72,22 @@ func _build() -> void:
 	player.cam.add_child(vm)
 	vm.setup(weapons, player)
 	targets = RangeTargets.new()
-	add_child(targets)
+	if not is_skirmish:
+		add_child(targets)
 	hit_log = RangeHitLog.new()
 	add_child(hit_log)
 	var fb := RangeFeedback.new()
 	add_child(fb)
 	fb.setup(bal, targets, hit_log)
-	var bench := RangeBench.new()
-	add_child(bench)
-	bench.setup(weapons, player, targets, hit_log)
+	if not is_skirmish:
+		var bench := RangeBench.new()
+		add_child(bench)
+		bench.setup(weapons, player, targets, hit_log)
 	world_items = WorldItems.new()
 	add_child(world_items)
 	world_items.setup(player, weapons)
-	RangeCrate.build(self, world_items)
+	if not is_skirmish:
+		RangeCrate.build(self, world_items)
 	inv_ui = InventoryUI.new()
 	add_child(inv_ui)
 	inv_ui.setup(weapons, player, world_items)
@@ -84,10 +98,15 @@ func _build() -> void:
 	hud.add_child(body_hud)
 	body_hud.setup(player)
 	bots = RangeBots.new()
-	add_child(bots)
-	bots.setup(player, weapons, bal, hit_log)
+	if is_skirmish:
+		skirmish.start(player, weapons, bal, hit_log, hud)
+		bots.bots = skirmish.bots
+		weapons.give("m1911")
+	else:
+		add_child(bots)
+		bots.setup(player, weapons, bal, hit_log)
 	player.god = args.has("god")
-	if args.has("bots"):
+	if args.has("bots") and not is_skirmish:
 		bots.spawn_scavs()
 	menu = RangeMenu.new()
 	add_child(menu)
@@ -100,7 +119,7 @@ func _build() -> void:
 func _process(_dt: float) -> void:
 	if input == null:
 		return
-	if input.was_pressed(KEY_ESCAPE):
+	if input.was_pressed(KEY_ESCAPE) and not (skirmish != null and skirmish.over):
 		if inv_ui != null and inv_ui.is_open:
 			inv_ui.close()
 		elif menu.visible:
