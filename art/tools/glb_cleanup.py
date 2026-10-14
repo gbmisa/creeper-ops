@@ -15,6 +15,10 @@ ap.add_argument("--flip", action="store_true", help="turn 180 degrees about Y (m
 ap.add_argument("--auto-orient", action="store_true", help="long axis -> +Y, pick the direction whose height profile matches the concept (needs --concept)")
 ap.add_argument("--origin", default="bottom", choices=["bottom", "center", "top", "back"], help="back = rear end centre (muzzle devices)")
 ap.add_argument("--center", action="store_true", help="same as --origin center")
+ap.add_argument("--voxel-div", type=float, default=160.0, help="remesh voxel = longest side / this (higher keeps thin parts)")
+ap.add_argument("--relax", type=int, default=0, help="Laplacian-smooth passes on the voxel mesh before decimating (removes voxel lumps)")
+ap.add_argument("--angle", type=float, default=0.0, help="smooth shading: edges sharper than this many degrees stay hard (0 = flat faces)")
+ap.add_argument("--match", help="existing game glb: refit the result to its exact bounding box (keeps scale/origin/mounts)")
 a = ap.parse_args(sys.argv[sys.argv.index("--") + 1:])
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -77,8 +81,12 @@ bpy.ops.mesh.remove_doubles(threshold=0.0001)
 bpy.ops.object.mode_set(mode="OBJECT")
 rm = ob.modifiers.new("rm", "REMESH")  # clean manifold first; raw surface-net meshes block the collapse
 rm.mode = "VOXEL"
-rm.voxel_size = max(ob.dimensions) / 160.0
+rm.voxel_size = max(ob.dimensions) / a.voxel_div
 bpy.ops.object.modifier_apply(modifier="rm")
+if a.relax:
+    sm = ob.modifiers.new("sm", "SMOOTH")
+    sm.factor, sm.iterations = 0.6, a.relax
+    bpy.ops.object.modifier_apply(modifier="sm")
 for _ in range(4):  # collapse stalls on surface-net seams, so repeat until near the target
     tris = sum(len(p.vertices) - 2 for p in ob.data.polygons)
     if tris <= a.tris * 1.15:
@@ -96,8 +104,31 @@ oz = {"bottom": lo.z, "top": hi.z}.get(org, (lo.z + hi.z) / 2)
 oy = lo.y if org == "back" else (lo.y + hi.y) / 2
 for v in ob.data.vertices:
     v.co = (v.co - Vector(((lo.x + hi.x) / 2, oy, oz))) * s
-for p in ob.data.polygons:
-    p.use_smooth = False
+if a.match:  # per-axis affine refit onto the old model's bounds (identical bbox, so mounts and view data still fit)
+    keep = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=a.match)
+    old = [o for o in bpy.data.objects if o not in keep and o.type == "MESH"]
+    pts = [o.matrix_world @ Vector(c) for o in old for c in o.bound_box]
+    olo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+    ohi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+    nco = [v.co.copy() for v in ob.data.vertices]
+    nlo = Vector((min(c.x for c in nco), min(c.y for c in nco), min(c.z for c in nco)))
+    nhi = Vector((max(c.x for c in nco), max(c.y for c in nco), max(c.z for c in nco)))
+    for v in ob.data.vertices:
+        v.co = olo + Vector(((v.co[i] - nlo[i]) / max(1e-9, nhi[i] - nlo[i]) * (ohi[i] - olo[i]) for i in range(3)))
+    for o in old:
+        bpy.data.objects.remove(o)
+    for o in bpy.data.objects:
+        o.select_set(o == ob)
+    bpy.context.view_layer.objects.active = ob
+if a.angle > 0:
+    bpy.ops.object.shade_smooth_by_angle(angle=math.radians(a.angle), keep_sharp_edges=False)
+    wn = ob.modifiers.new("wn", "WEIGHTED_NORMAL")
+    wn.keep_sharp = True
+    wn.weight = 50
+else:
+    for p in ob.data.polygons:
+        p.use_smooth = False
 
 col = (0.5, 0.5, 0.5)
 if a.concept:  # dominant non-background colour: median of pixels that aren't near-white
@@ -119,4 +150,4 @@ b.inputs["Roughness"].default_value = 0.8
 ob.data.materials.clear()
 ob.data.materials.append(mat)
 print("CLEAN tris=%d size=%.3f colour=%.2f,%.2f,%.2f" % (sum(len(p.vertices) - 2 for p in ob.data.polygons), a.size, *col))
-bpy.ops.export_scene.gltf(filepath=a.out, export_format="GLB", use_selection=False)
+bpy.ops.export_scene.gltf(filepath=a.out, export_format="GLB", use_selection=False, export_apply=True)

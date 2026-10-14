@@ -6,6 +6,8 @@
 # in the corner of the texture instead of smeared pixels. Blender axes: Z up, glTF -Z (muzzle) = +Y; the projected
 # "right" of the image is the long axis (+Y for guns, muzzle right in the concept) and image up is +Z.
 import bpy, sys, argparse, numpy as np
+sys.path.insert(0, __import__("os").path.dirname(__import__("os").path.abspath(__file__)))
+from tex_clean import clean_picture
 from mathutils import Vector
 ap = argparse.ArgumentParser()
 ap.add_argument("src"); ap.add_argument("out")
@@ -15,6 +17,7 @@ ap.add_argument("--grazing", type=float, default=0.3)
 ap.add_argument("--thin", default="x", choices="xyz")
 ap.add_argument("--right", default="y", choices="xyz", help="mesh axis that is the image's right (long axis)")
 ap.add_argument("--up", default="z", choices="xyz")
+ap.add_argument("--clean", action="store_true", help="denoise the projected picture, recolour per material region, write a metal/rough map")
 a = ap.parse_args(sys.argv[sys.argv.index("--") + 1:])
 AX = {"x": 0, "y": 1, "z": 2}
 T, R, U = AX[a.thin], AX[a.right], AX[a.up]
@@ -46,11 +49,21 @@ tmp.scale(M, M)
 pic = np.array(tmp.pixels[:], dtype=np.float32).reshape(M, M, 4)
 tex = np.ones((N, N, 4), dtype=np.float32)
 tex[..., :3] = med
+mr = np.ones((N, N, 4), dtype=np.float32)
+mr[..., 1], mr[..., 2] = 0.75, 0.0  # glTF metallicRoughness: G rough, B metal
+if a.clean:
+    pic, rough, metal = clean_picture(pic)
+    mr[:M, :M, 1], mr[:M, :M, 2] = rough, metal
 tex[:M, :M] = pic
 timg = bpy.data.images.new(ob.name + "_tex", N, N, alpha=False)
 timg.pixels = tex.ravel().tolist()
 timg.file_format = "PNG"
 timg.pack()
+mimg = bpy.data.images.new(ob.name + "_mr", N, N, alpha=False)
+mimg.colorspace_settings.name = "Non-Color"
+mimg.pixels = mr.ravel().tolist()
+mimg.file_format = "PNG"
+mimg.pack()
 
 uv = me.uv_layers.new(name="UV")
 patch = ((N - 12) / N, (N - 12) / N)
@@ -72,6 +85,13 @@ b.inputs["Roughness"].default_value = 0.75
 t = mat.node_tree.nodes.new("ShaderNodeTexImage")
 t.image = timg
 mat.node_tree.links.new(t.outputs["Color"], b.inputs["Base Color"])
+if a.clean:
+    m = mat.node_tree.nodes.new("ShaderNodeTexImage")
+    m.image = mimg
+    sep = mat.node_tree.nodes.new("ShaderNodeSeparateColor")
+    mat.node_tree.links.new(m.outputs["Color"], sep.inputs["Color"])
+    mat.node_tree.links.new(sep.outputs["Green"], b.inputs["Roughness"])
+    mat.node_tree.links.new(sep.outputs["Blue"], b.inputs["Metallic"])
 me.materials.clear()
 me.materials.append(mat)
 print("TEXTURED polys=%d flat=%d medcolour=%s" % (len(me.polygons), flat, np.round(med, 2)))
