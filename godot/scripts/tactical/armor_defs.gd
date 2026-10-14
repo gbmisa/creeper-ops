@@ -5,6 +5,7 @@ const DESTRUCT := {"aramid": 0.25, "uhmwpe": 0.45, "titanium": 0.55, "steel": 0.
 
 const ROWS := {
 	"vest2": {"name": "Class 2 soft vest", "cls": 2, "mat": "aramid", "max_dur": 50.0, "zones": ["thorax", "stomach"], "blunt": 0.3, "ricochet": 0.0},
+	"vest3": {"name": "Class 3 soft vest", "cls": 3, "mat": "uhmwpe", "max_dur": 55.0, "zones": ["thorax", "stomach"], "blunt": 0.28, "ricochet": 0.0},
 	"plate4": {"name": "Class 4 plate carrier", "cls": 4, "mat": "ceramic", "max_dur": 50.0, "zones": ["thorax", "stomach"], "blunt": 0.25, "ricochet": 0.0},
 	"steel6": {"name": "Class 6 steel plate", "cls": 6, "mat": "steel", "max_dur": 80.0, "zones": ["thorax"], "blunt": 0.2, "ricochet": 0.0},
 	"helmet3": {"name": "Class 3 helmet", "cls": 3, "mat": "aramid", "max_dur": 30.0, "zones": ["head"], "blunt": 0.2, "ricochet": 0.4},

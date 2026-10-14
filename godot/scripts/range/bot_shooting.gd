@@ -8,7 +8,19 @@ static func fire(b: ScavBot, point: Vector3) -> void:
 	var dist := b.eye().distance_to(point)
 	if b.gun.busy() or b.cd > 0.0:
 		return
-	var auto := dist < BotBrain.BURST_RANGE
+	var df := b.def
+	var wu: float = df["windup"]
+	if wu > 0.0:  # marksman: scope glint first, shot after the wind-up
+		if not b.winding:
+			b.winding = true
+			b.wind = wu
+			b.mesh.glint(true)
+			return
+		if b.wind > 0.0:
+			return
+		b.winding = false
+		b.mesh.glint(false)
+	var auto: bool = dist < BotBrain.BURST_RANGE and "auto" in b.gun.def["modes"]
 	if auto and b.burst <= 0:
 		b.burst = b.rng.randi_range(3, 5)
 	if not auto:
@@ -17,10 +29,10 @@ static func fire(b: ScavBot, point: Vector3) -> void:
 	if not res["fired"]:
 		return
 	b.burst -= 1
-	b.cd = b.rng.randf_range(0.45, 0.9) if b.burst <= 0 else 0.0
+	b.cd = b.rng.randf_range(df["cd"][0], df["cd"][1]) if b.burst <= 0 else 0.0
 	var dir := (point - b.eye()).normalized()
 	var basis := Basis.looking_at(dir)
-	var err := deg_to_rad(BotBrain.aim_error(b.percept.sight_t))
+	var err := deg_to_rad(BotBrain.aim_error(b.percept.sight_t) * float(df["aim_mult"]) * (1.0 + float(df["aim_far"]) * clampf(dist / 50.0, 0.0, 1.0)))
 	var ang := b.rng.randf() * TAU
 	var r := err * sqrt(b.rng.randf())
 	dir = dir.rotated(basis.x, sin(ang) * r).rotated(basis.y, cos(ang) * r)
@@ -28,6 +40,10 @@ static func fire(b: ScavBot, point: Vector3) -> void:
 	for d in b.gun.shot_dirs(Basis.looking_at(dir), res["ammo"], true, b.rng):
 		b.bal.spawn(origin, d, res["ammo"], HitboxRig.rids(b.rig))
 	b.mesh.fire()
+	if df["overwatch"]:
+		b.shots_since += 1
+		if b.shots_since >= int(df["relocate"]):
+			BotEngage.relocate(b)
 	RangeSfx.shot(b.gun.def["class"], b.mesh.muzzle.global_position)
 	b.flash.flash(Color(1.0, 0.8, 0.45), 0.1, 0.05, 2.0)
 
@@ -45,7 +61,7 @@ static func facts(b: ScavBot) -> Dictionary:
 	var outgunned := p.aware and ((alone and b.body.total_frac() < 0.7) or b.gun.rounds_total() < 3)
 	return {"aware": p.aware, "seeing": p.seeing, "noise": p.noise_new, "since_seen": p.since_seen,
 		"hp": b.body.total_frac(), "hurt": b.hurt_t > 0.0, "reloading": b.gun.busy_kind == "reload", "arrived": b._arrived(),
-		"cover": b.has_cover, "outgunned": outgunned, "ally_engaged": ally_eng,
+		"cover": b.has_cover and not b.def["rush"], "outgunned": outgunned, "flank_eager": b.def["flank_eager"], "ally_engaged": ally_eng,
 		"ally_flank": ally != null and not ally.body.dead and ally.brain.state == BotBrain.FLANK, "has_last": p.has_last}
 
 
