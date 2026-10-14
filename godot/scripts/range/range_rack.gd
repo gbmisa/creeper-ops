@@ -1,10 +1,14 @@
 class_name RangeRack
 extends Node3D
-## Wall rack with the six guns. pick() chooses the gun nearest the player's view ray; take() hides it.
+## Wall rack with every gun, rows = lines, columns = tiers. pick() chooses the gun nearest the player's view ray; take() hides it.
 
-const TIER_Y := 0.75
-const TIER_STEP := 0.3
+const ROW_Y := 0.5
+const ROW_STEP := 0.42
+const COL_STEP := 1.8
 const REACH := 3.2
+## Rows are weapon lines, columns are tiers 1..3 (empty cell = no gun at that tier).
+const GRID := [["m1911", "glock18", "revolver"], ["mp5", "p90", "vector"], ["ak47", "m4a1", "scarh"],
+	["shotgun", "saiga12", "pkm"], ["sks", "garand", "sr25"], ["mosin", "", "sniper"]]
 
 var taken := {}
 var _slots := {}  # id -> Node3D
@@ -15,31 +19,49 @@ func _init() -> void:
 	position = RangeLayout.RACK_POS
 	var board := MeshInstance3D.new()
 	var bm := BoxMesh.new()
-	bm.size = Vector3(3.2, 1.9, 0.06)
+	bm.size = Vector3(COL_STEP * 3.0 + 0.2, ROW_STEP * GRID.size() + 0.1, 0.06)
 	board.mesh = bm
 	board.material_override = RangeLayout.colour(Color(0.25, 0.2, 0.15))
-	board.position = Vector3(0.5, TIER_Y + 0.72, 0.1)
+	board.position = Vector3(0, ROW_Y + ROW_STEP * (GRID.size() - 1) * 0.5, 0.1)
 	add_child(board)
-	var i := 0
-	for id in WeaponDefs.ORDER:
-		var holder := Node3D.new()
-		holder.position = Vector3(0, TIER_Y + TIER_STEP * i, 0)
-		holder.rotation_degrees.y = 90.0
-		add_child(holder)
-		var glb := load("res://assets/models/guns/%s.glb" % WeaponDefs.of(id)["model"]) as PackedScene
-		var gun := glb.instantiate() as Node3D
-		if WeaponDefs.of(id).get("flip", false):
-			gun.rotation.y = PI
-		holder.add_child(gun)
-		var l := Label3D.new()
-		l.text = "%d %s" % [i + 1, WeaponDefs.of(id)["name"]]
-		l.pixel_size = 0.0035
-		l.font_size = 48
-		l.rotation_degrees.y = 180.0  # the player looks toward +Z
-		add_child(l)
-		l.position = Vector3(1.15, TIER_Y + TIER_STEP * i, -0.05)
-		_slots[id] = holder
-		i += 1
+	for r in GRID.size():
+		for c in 3:
+			var id: String = GRID[r][c]
+			if id != "":
+				_add_gun(id, Vector3((c - 1) * COL_STEP, ROW_Y + ROW_STEP * r, 0.0))
+
+
+func _add_gun(id: String, at: Vector3) -> void:
+	var def := WeaponDefs.of(id)
+	var holder := Node3D.new()
+	holder.position = at
+	holder.rotation_degrees.y = 90.0
+	add_child(holder)
+	var glb := load("res://assets/models/guns/%s.glb" % def["model"]) as PackedScene
+	var gun := glb.instantiate() as Node3D
+	if def.get("flip", false):
+		gun.rotation.y = PI
+	holder.add_child(gun)
+	add_child(label_for(def, at + Vector3(0, -0.1, -0.05)))
+	_slots[id] = holder
+
+
+## Name + tier on the first line, role below (wrapped).
+static func label_text(def: Dictionary) -> String:
+	return "%s  [T%d]\n%s" % [def["name"], def["tier"], def["role"]]
+
+
+static func label_for(def: Dictionary, at: Vector3) -> Label3D:
+	var l := Label3D.new()
+	l.text = label_text(def)
+	l.pixel_size = 0.0035
+	l.font_size = 20
+	l.width = 480.0
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	l.rotation_degrees.y = 180.0  # the player looks toward +Z
+	l.position = at
+	return l
 
 
 func slot_point(id: String) -> Vector3:
