@@ -116,7 +116,7 @@ func _process(delta: float) -> void:
 		var left := reloader.finish(gun_item)
 		if not left.is_empty():
 			item_dropped.emit(left)
-	recoil.update(delta, gun.def["ergo"])
+	recoil.update(delta, gun.def["ergo"], gun.def)
 	_apply_view(delta)
 	mag_text_t = maxf(0.0, mag_text_t - delta)
 	if _check_t > 0.0:
@@ -186,7 +186,7 @@ func _trigger() -> void:
 func _shoot(res: Dictionary) -> void:
 	var basis := player.cam.global_basis
 	var origin := player.eye_pos() + basis.z * -0.3
-	for d in gun.shot_dirs(basis, res["ammo"], ads_amt > 0.8, rng):
+	for d in gun.shot_dirs(recoil.aim_basis(basis), res["ammo"], ads_amt > 0.8, rng):
 		bal.spawn(origin, d, res["ammo"])
 	recoil.shoot(gun.def, rng)
 	BotNoise.emit(player.global_position, BotNoise.SHOT_R, "shot", player)
