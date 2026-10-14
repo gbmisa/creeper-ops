@@ -93,6 +93,7 @@ func drop_current() -> void:
 	var it := gun_item
 	reloader.cancel(it)
 	inv.remove(it)
+	RangeAudio.inventory("gun", "drop")
 	sync()
 	item_dropped.emit(it)
 
@@ -112,7 +113,7 @@ func _process(delta: float) -> void:
 	_trigger()
 	_commands()
 	if before != "" and gun.busy_kind == "" and before == "reload":
-		Sfx.play("crossbow_clack")
+		_gun_snd("mag_in")
 		var left := reloader.finish(gun_item)
 		if not left.is_empty():
 			item_dropped.emit(left)
@@ -138,6 +139,7 @@ func _pickup_and_slots() -> void:
 		prompt = "%s: take %s" % [Keybinds.short("t_use"), WeaponDefs.of(id)["name"]]
 		if player.enabled and input.act("t_use"):
 			give(id)
+			RangeAudio.inventory("gun", "pick")
 	for n in HAND_SLOTS.size():
 		if player.enabled and input.act("t_slot_%d" % (n + 1)):
 			select_slot(HAND_SLOTS[n])
@@ -171,7 +173,7 @@ func _trigger() -> void:
 		gun.release()
 		if was == "" and gun.busy_kind == "cycle":
 			action.emit("cycle", gun.busy_t)
-			Sfx.play("crossbow_clack")
+			_gun_snd("action")
 		return
 	if not pressed and gun.mode != "auto":
 		return
@@ -179,7 +181,7 @@ func _trigger() -> void:
 	if res["fired"]:
 		_shoot(res)
 	elif res["reason"] in ["click", "empty"] and pressed:
-		Sfx.play("tick")
+		_gun_snd("dry")
 		shot.emit(res, gun)
 
 
@@ -190,10 +192,14 @@ func _shoot(res: Dictionary) -> void:
 		bal.spawn(origin, d, res["ammo"])
 	recoil.shoot(gun.def, rng)
 	BotNoise.emit(player.global_position, BotNoise.SHOT_R, "shot", player)
-	RangeSfx.shot(gun.def["class"])
+	RangeAudio.shot(gun.id, null, false, gun.def["cal"], gun.def["class"])
 	if res["ping"]:
-		Sfx.play("tick")
+		RangeAudio.play("garand_ping", null, -4.0)
 	shot.emit(res, gun)
+
+
+func _gun_snd(ev: String) -> void:
+	RangeAudio.gun(gun.id, ev, null, gun.def["cal"], gun.def["class"])
 
 
 func _commands() -> void:
@@ -209,7 +215,7 @@ func _commands() -> void:
 			start_reload(false)
 	if input.act("t_fire_mode"):
 		gun.cycle_mode()
-		Sfx.play("click")
+		_gun_snd("mode")
 	if input.act("t_zero_up"):
 		gun.zero_step(1)
 	if input.act("t_zero_down"):
@@ -241,7 +247,7 @@ func start_reload(fast: bool) -> void:
 		_reload_fast = fast
 		_check_t = 0.0
 		action.emit("reload", gun.busy_t)
-		Sfx.play("crossbow_clack")
+		_gun_snd("mag_out")
 
 
 func _apply_view(_delta: float) -> void:
