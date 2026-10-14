@@ -4,7 +4,7 @@ Per id: glb_cleanup (remesh, decimate, orient, scale, origin) -> glb_texture (pl
 Table: id -> (dir, length m, tris, origin, extra cleanup args, extra texture args)"""
 import os, subprocess, sys
 G, A, U = "guns", "attachments", "utility"
-UP = ("--thin", "y", "--right", "x")  # upright round items: project along Y
+UP = ("--thin", "y", "--right", "x", "--grazing", "0")  # upright round items: project along Y, no flat patch
 T = {
  "mp5": (G, .68, 5000, "center"), "glock18": (G, .22, 3500, "center"), "revolver": (G, .30, 4000, "center"),
  "vector": (G, .60, 5000, "center"), "m4a1": (G, .84, 5500, "center"), "scarh": (G, .96, 5500, "center"),
