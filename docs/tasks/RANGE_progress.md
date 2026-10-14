@@ -15,3 +15,16 @@
   - Wall thickness factor uses `WALL_REF_THICK` 0.02 m (cap 5x); panels' box depth should equal meta `thick`.
   - Zones are named head/thorax/stomach/larm/rarm/lleg/rleg. `HitboxRig` boxes assume a 1.8 m tall figure, feet at y=0.
   - Keybinds: `t_use` F, `t_help` H, `t_crosshair` X (brief gave no key), slots 1-6, `t_sprint` doubles as hold-breath.
+
+## Phase 2: Playable scene (done)
+- Added `scripts/range/{range_layout,range_rack,tactical_player,player_weapons,tactical_viewmodel,range_hud,range_menu,
+  range_impacts,range_sfx,range_shot,scope_overlay}.gd`; `firing_range.gd` now wires it all. `weapon_defs.gd` gained
+  `ads_pos` / `hip_pos` per weapon (tuned by Xvfb screenshots: front sight tip within ~2 px of screen centre).
+- Hooks: `-- --weapon=id --ads --look=x,y,z --pos=x,y,z --fire=N --wait=s --reload[=s] [--fast] --crouch --tune --shot=/abs.png`
+  (`--tune` paints the gun flat magenta so tip offset can be measured). Prints `[range] fired N impacts M`.
+- Verified: parse clean; `--range-test` OK 42; main smoke 0 FAIL; shots in `docs/art/range/<gun>_{ads,hip}.png`.
+- Not verified: real mouse/keyboard play (only screenshots + scripted fire/reload), audio, double-tap R timing, hold breath,
+  malfunction/inspect UI, lean collision (none), the Esc menu clicking.
+- Notes: sniper ADS = 6x scope overlay (model hidden above ads 0.8). Impacts are puffs + hole quads only (targets: phase 3).
+  Sfx reuses existing voices via `RangeSfx` (pop/blaster/rifle/boom + crack/tail, tick for clicks).
+  Bench station (F) is just a table; the ammo/armor stations come in phase 3. Files outside tactical/range: none.
