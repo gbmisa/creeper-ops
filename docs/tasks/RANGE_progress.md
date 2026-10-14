@@ -28,3 +28,18 @@
 - Notes: sniper ADS = 6x scope overlay (model hidden above ads 0.8). Impacts are puffs + hole quads only (targets: phase 3).
   Sfx reuses existing voices via `RangeSfx` (pop/blaster/rifle/boom + crack/tail, tick for clicks).
   Bench station (F) is just a table; the ammo/armor stations come in phase 3. Files outside tactical/range: none.
+
+## Phase 2 review fixes + Phase 3: Targets + feedback (done)
+- Fixes: glb colours kept (flat metal override only with `--tune`); hip pose parallel to the view, butt kept out of the lens
+  (`HIP_BUTT`, `HIP_YAW` in tactical_viewmodel.gd, hip z derived from model length); booth roof shortened so the sky shows;
+  berms 3.5 m; dusk sky (fog no longer flattens it); help panel small, top-left, semi-transparent, full binds.
+- Added `scripts/range/{range_dummy,steel_plate,paper_target,range_targets,range_hit_log,range_feedback,range_bench,
+  range_test_targets}.gd`. Class is `RangeDummy` (`Dummy` clashes with an existing class). `MaterialDefs` gained `paper`.
+- Layout: plates alternate x=+-1.5 at 10..300 m; paper 25/50 m at x=15/17; dummies 15/30/60 m at x=5/9/13; penetration wall
+  at 20 m, x=-16..-4 (plywood, plank, sheet metal, brick, concrete) with a dummy 0.9 m behind each; moving dummy rail at
+  z=-48 (brief said 50 m; moved so it does not overlap the 50 m plate), x -9..9 at 2.5 m/s.
+- Ammo bench (F at the bench, x=5): next ammo grade + refill. Armor station (F at x=1.5, back wall): cycles loadouts, resets all targets, clears the log.
+- Hooks: `--armor=0..3`. Shots: docs/art/range/dummy_hitlog.png, penwall_front.png.
+- Verified: parse clean; `--range-test` OK 56 (14 new); main smoke 0 FAIL (see commit). `RangeTest.run` now awaits `_wall_checks`
+  (before, OK printed before they ran).
+- Not verified: real mouse play, audio, moving target hit timing, bench/station prompts by hand, damage-number readability at 300 m.

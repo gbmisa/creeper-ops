@@ -9,6 +9,8 @@ var weapons: PlayerWeapons
 var bal: Ballistics
 var rack: RangeRack
 var menu: RangeMenu
+var targets: RangeTargets
+var hit_log: RangeHitLog
 
 
 func _ready() -> void:
@@ -52,6 +54,16 @@ func _build() -> void:
 	var vm := TacticalViewmodel.new()
 	player.cam.add_child(vm)
 	vm.setup(weapons, player)
+	targets = RangeTargets.new()
+	add_child(targets)
+	hit_log = RangeHitLog.new()
+	add_child(hit_log)
+	var fb := RangeFeedback.new()
+	add_child(fb)
+	fb.setup(bal, targets, hit_log)
+	var bench := RangeBench.new()
+	add_child(bench)
+	bench.setup(weapons, player, targets, hit_log)
 	var hud := RangeHud.new()
 	add_child(hud)
 	hud.setup(weapons, player)

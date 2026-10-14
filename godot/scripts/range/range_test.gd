@@ -29,7 +29,8 @@ func run() -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	_zero_checks()
-	_wall_checks()
+	await _wall_checks()
+	await RangeTestTargets.run(self)
 	if failed == 0:
 		print("[range] OK ", passed)
 	else:
