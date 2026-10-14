@@ -29,7 +29,7 @@ No human playtest of the new HUD or the colours. GPU (Vulkan) rendering not chec
 P (9 smoke failures, fix-up out), A3, C, S (gallery fix-up), Q, T, A4, K: see MUSE_NOTES.
 
 ## Design flow (new, 2026-10-14)
-`tools/gdflow` (README there): run `python3 tools/gdflow status`. Six dreamed ideas wait for Gregory on [docs/design/IDEAS.md](docs/design/IDEAS.md); `/greenlight` walks through them.
+`tools/gdflow` (README there): run `python3 tools/gdflow status`. All six ideas approved by Gregory and briefed (`docs/tasks/I00*.md`); Muse long-run prompt in [muse2.md](muse2.md), Opus review checklist at its end. D-001 (crown nests drown, nest raiders stay immune) needs Gregory to confirm.
 
 ## Next (Opus)
 1. Gregory reviews `ui/overhaul` and `art/3-models`. On approval, merge `ui/overhaul` to main (strip `godot/.godot/`), then re-run smoke.

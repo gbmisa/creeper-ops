@@ -12,7 +12,7 @@
         "readability",
         "failure"
       ],
-      "status": "scored",
+      "status": "briefed",
       "scores": {
         "fun": 3,
         "fit": 5,
@@ -21,7 +21,7 @@
         "risk": 1
       },
       "priority": 6.33,
-      "brief": null,
+      "brief": "docs/tasks/I001_Why_you_lost_a_metrics_debrief.md",
       "created": "2026-10-14",
       "history": [
         {
@@ -30,6 +30,20 @@
           "to": "scored",
           "by": "agent",
           "why": "scored"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "scored",
+          "to": "approved",
+          "by": "human",
+          "why": "Gregory 2026-10-14: enact all six via one Muse long run, Opus reviews"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "approved",
+          "to": "briefed",
+          "by": "gdflow",
+          "why": "docs/tasks/I001_Why_you_lost_a_metrics_debrief.md"
         }
       ]
     },
@@ -44,7 +58,7 @@
         "spectacle",
         "combine"
       ],
-      "status": "scored",
+      "status": "briefed",
       "scores": {
         "fun": 5,
         "fit": 5,
@@ -53,7 +67,7 @@
         "risk": 2
       },
       "priority": 4.8,
-      "brief": null,
+      "brief": "docs/tasks/I002_Paint_targets_for_the_network.md",
       "created": "2026-10-14",
       "history": [
         {
@@ -62,6 +76,20 @@
           "to": "scored",
           "by": "agent",
           "why": "scored"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "scored",
+          "to": "approved",
+          "by": "human",
+          "why": "Gregory 2026-10-14: enact all six via one Muse long run, Opus reviews"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "approved",
+          "to": "briefed",
+          "by": "gdflow",
+          "why": "docs/tasks/I002_Paint_targets_for_the_network.md"
         }
       ]
     },
@@ -76,7 +104,7 @@
         "repurpose",
         "emergence"
       ],
-      "status": "scored",
+      "status": "briefed",
       "scores": {
         "fun": 5,
         "fit": 4,
@@ -85,7 +113,7 @@
         "risk": 4
       },
       "priority": 3.29,
-      "brief": null,
+      "brief": "docs/tasks/I003_Flood_the_courtyard.md",
       "created": "2026-10-14",
       "history": [
         {
@@ -94,6 +122,20 @@
           "to": "scored",
           "by": "agent",
           "why": "scored"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "scored",
+          "to": "approved",
+          "by": "human",
+          "why": "Gregory 2026-10-14: enact all six via one Muse long run, Opus reviews"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "approved",
+          "to": "briefed",
+          "by": "gdflow",
+          "why": "docs/tasks/I003_Flood_the_courtyard.md"
         }
       ]
     },
@@ -109,7 +151,7 @@
         "pressure",
         "time"
       ],
-      "status": "scored",
+      "status": "briefed",
       "scores": {
         "fun": 4,
         "fit": 5,
@@ -118,7 +160,7 @@
         "risk": 3
       },
       "priority": 3.5,
-      "brief": null,
+      "brief": "docs/tasks/I004_Pressure_bounties.md",
       "created": "2026-10-14",
       "history": [
         {
@@ -127,6 +169,20 @@
           "to": "scored",
           "by": "agent",
           "why": "scored"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "scored",
+          "to": "approved",
+          "by": "human",
+          "why": "Gregory 2026-10-14: enact all six via one Muse long run, Opus reviews"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "approved",
+          "to": "briefed",
+          "by": "gdflow",
+          "why": "docs/tasks/I004_Pressure_bounties.md"
         }
       ]
     },
@@ -141,7 +197,7 @@
         "explorer",
         "discovery"
       ],
-      "status": "scored",
+      "status": "briefed",
       "scores": {
         "fun": 3,
         "fit": 4,
@@ -150,7 +206,7 @@
         "risk": 2
       },
       "priority": 3.4,
-      "brief": null,
+      "brief": "docs/tasks/I005_Survey_charges_for_hidden_ore.md",
       "created": "2026-10-14",
       "history": [
         {
@@ -159,6 +215,20 @@
           "to": "scored",
           "by": "agent",
           "why": "scored"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "scored",
+          "to": "approved",
+          "by": "human",
+          "why": "Gregory 2026-10-14: enact all six via one Muse long run, Opus reviews"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "approved",
+          "to": "briefed",
+          "by": "gdflow",
+          "why": "docs/tasks/I005_Survey_charges_for_hidden_ore.md"
         }
       ]
     },
@@ -173,7 +243,7 @@
         "comeback",
         "tradeoff"
       ],
-      "status": "scored",
+      "status": "briefed",
       "scores": {
         "fun": 4,
         "fit": 4,
@@ -182,7 +252,7 @@
         "risk": 3
       },
       "priority": 3.6,
-      "brief": null,
+      "brief": "docs/tasks/I006_Last_stand_overdrive.md",
       "created": "2026-10-14",
       "history": [
         {
@@ -191,6 +261,20 @@
           "to": "scored",
           "by": "agent",
           "why": "scored"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "scored",
+          "to": "approved",
+          "by": "human",
+          "why": "Gregory 2026-10-14: enact all six via one Muse long run, Opus reviews"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "approved",
+          "to": "briefed",
+          "by": "gdflow",
+          "why": "docs/tasks/I006_Last_stand_overdrive.md"
         }
       ]
     }

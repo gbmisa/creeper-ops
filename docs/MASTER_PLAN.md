@@ -138,6 +138,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ⚠ engines on L1/L2/cave in the 9b branch (ramp chokes skipped) |
 | 13 | Tuning | Haiku 4.5 (`balance-tester`) | ⚠ done in the 9b branch: sim fields, Sniper rule changes, better L1 demo |
 | 14 | Review and screenshots | **Opus 5.5** | ☐ |
+| 26 | **gdflow ideas I-001..I-006:** loss debrief, last-stand overdrive, Operative designator, pressure bounties, hidden ore surveys, drowning crown nests (briefs `docs/tasks/I00*.md`) | Muse long run, Opus review | ☐ |
 
 ### Stage details
 
