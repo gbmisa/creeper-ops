@@ -74,8 +74,8 @@ func fits(loc: String, item: Dictionary, x: int, y: int, rot: int = -1) -> bool:
 	if is_slot(loc):
 		return slots[loc] == null and accepts_slot(loc, item)
 	var kind: String = ItemDefs.def_of(item)["kind"]
-	if kind == "rig" or kind == "backpack":
-		return loc == "ground"
+	if (kind == "rig" or kind == "backpack") and loc != "ground":
+		return false
 	var gs := grid_size(loc)
 	var sz := size_of(item, rot)
 	if gs == Vector2i.ZERO or x < 0 or y < 0 or x + sz.x > gs.x or y + sz.y > gs.y:
@@ -116,12 +116,12 @@ func remove(item: Dictionary) -> void:
 
 
 ## Where the item would go: slot first, then rig, pockets, backpack. {} if nothing fits.
-func first_fit(item: Dictionary) -> Dictionary:
+func first_fit(item: Dictionary, skip: String = "") -> Dictionary:
 	for s in SLOTS:
-		if fits(s, item, 0, 0):
+		if s != skip and fits(s, item, 0, 0):
 			return {"loc": s, "x": 0, "y": 0, "rot": item["rot"]}
 	for g in GRIDS:
-		var gs := grid_size(g)
+		var gs := grid_size(g) if g != skip else Vector2i.ZERO
 		for rot in [item["rot"], 1 - int(item["rot"])]:
 			for y in gs.y:
 				for x in gs.x:
@@ -218,3 +218,18 @@ func take_round(cal: String) -> String:
 					remove(it)
 				return id
 	return ""
+
+
+## Full state as plain data (slots, grids, positions, rotation, mag rounds, stacks, gun state). Ground is not saved.
+func to_dict() -> Dictionary:
+	return InventoryIO.to_dict(self)
+
+
+func load_dict(d: Dictionary) -> void:
+	InventoryIO.load_dict(self, d)
+
+
+static func from_dict(d: Dictionary) -> Inventory:
+	var inv := Inventory.new()
+	inv.load_dict(d)
+	return inv

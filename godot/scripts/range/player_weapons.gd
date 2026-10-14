@@ -34,6 +34,7 @@ var mag_text_t := 0.0
 var prompt := ""
 var trigger_ads := false  # debug overrides (--ads, --fire)
 var trigger_down := false
+var ui_open := false  # inventory screen up: no firing, no aiming
 var _check_t := 0.0
 var _reload_t := 99.0
 var _reload_fast := false
@@ -48,7 +49,10 @@ func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack) -> voi
 	bal = b
 	rack = r
 	rng.randomize()
-	StarterLoadout.fill(inv)
+	if RangeLoadout.saved.is_empty():
+		StarterLoadout.fill(inv)
+	else:
+		inv.load_dict(RangeLoadout.saved)
 	player.carried_kg = inv.total_kg()
 	select_slot("primary")
 
@@ -141,7 +145,7 @@ func _pickup_and_slots() -> void:
 
 func _ads(delta: float) -> void:
 	var want: bool = trigger_ads or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
-	want = want and not player.sprinting and draw_t < DRAW_TIME * 0.5 and gun.busy_kind != "reload"
+	want = want and not ui_open and not player.sprinting and draw_t < DRAW_TIME * 0.5 and gun.busy_kind != "reload"
 	var rate := 1.0 / RecoilModel.ads_time(gun.def["ergo"])
 	ads_amt = move_toward(ads_amt, 1.0 if want else 0.0, rate * delta)
 	player.ads_amt = ads_amt
@@ -158,7 +162,7 @@ func _ads(delta: float) -> void:
 
 
 func _trigger() -> void:
-	var down: bool = (input.left or trigger_down) and not player.sprinting and draw_t <= 0.0
+	var down: bool = (input.left or trigger_down) and not ui_open and not player.sprinting and draw_t <= 0.0
 	var pressed := down and not _was_left
 	_was_left = down
 	if not down:
@@ -193,6 +197,9 @@ func _shoot(res: Dictionary) -> void:
 
 
 func _commands() -> void:
+	if input.act("drop"):
+		drop_current()
+		return
 	if input.act("t_reload"):
 		if _reload_t < DOUBLE_TAP and gun.busy_kind == "reload" and not _reload_fast:
 			gun.busy_t = 0.0

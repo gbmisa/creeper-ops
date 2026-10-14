@@ -25,6 +25,11 @@ const ARMOR_SIZE := {"vest2": [3, 3, 1.5], "plate4": [3, 3, 6.0], "steel6": [2, 
 static var _uid := 0
 
 
+## Keeps new uids above any loaded one.
+static func note_uid(u: int) -> void:
+	_uid = maxi(_uid, u)
+
+
 static func has(id: String) -> bool:
 	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id)
 

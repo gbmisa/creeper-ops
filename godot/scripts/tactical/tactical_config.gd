@@ -5,6 +5,7 @@ class_name TacticalConfig
 const LAYER_WORLD := 1
 const LAYER_HITBOX := 2
 const LAYER_BODY := 4
+const LAYER_ITEM := 8  # dropped inventory items: collide with the world only, bullets pass
 const BULLET_MASK := 3
 
 # Ballistics
