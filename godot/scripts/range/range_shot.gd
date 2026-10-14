@@ -1,6 +1,6 @@
 class_name RangeShot
 extends Node
-## Screenshot / debug hook: --shot=path [--weapon=id] [--ads] [--look=x,y,z] [--fire=N] [--wait=s] [--pos=x,y,z] [--crouch] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] (reload mid-way shot).
+## Screenshot / debug hook: --shot=path [--weapon=id] [--ads] [--look=x,y,z] [--fire=N] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] (reload mid-way shot).
 ## Gives the weapon, optionally fires N shots, waits, saves the viewport, quits.
 
 
@@ -13,6 +13,14 @@ func run(app: FiringRange) -> void:
 		app.player.global_position = RangeArgs.vec3(str(a["pos"]), app.player.global_position)
 	if a.has("look"):
 		app.player.look_at_point(RangeArgs.vec3(str(a["look"])))
+	if a.has("pitch"):
+		app.player.pitch = deg_to_rad(float(a["pitch"]))
+	if a.has("walk"):  # --walk[=W|A|S|D|shift]: hold keys (e.g. --walk=W) for the whole shot
+		for c in (str(a["walk"]) if str(a["walk"]) != "true" else "W").split("+"):
+			var ev := InputEventKey.new()
+			ev.physical_keycode = OS.find_keycode_from_string(c)
+			ev.pressed = true
+			Input.parse_input_event(ev)
 	if a.has("armor"):
 		app.targets.set_loadout(int(a["armor"]))
 	if a.has("crouch"):
