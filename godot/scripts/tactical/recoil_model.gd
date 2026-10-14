@@ -25,7 +25,7 @@ static func sway(t: float, def: Dictionary, hold: bool, tired: bool, arm_fractur
 		amp *= TacticalConfig.SWAY_HOLD_MULT
 	if tired:
 		amp *= TacticalConfig.SWAY_TIRED_MULT
-	return Vector2(sin(t * 1.7) * 0.6, sin(t * 1.1 + 1.3)) * amp
+	return Vector2(sin(t * 1.7) * 0.6, sin(t * 1.1 + 1.3)) * amp * def.get("sway_mult", 1.0)
 
 
 static func ads_time(ergo: float) -> float:
