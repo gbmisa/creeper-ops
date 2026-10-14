@@ -22,12 +22,22 @@ func _init() -> void:
 	p.add_child(col)
 	col.add_child(UiKit.label("PAUSED", 22))
 	col.add_child(UiKit.button("Resume", close))
+	var rec := UiKit.button("", func(): pass)
+	rec.pressed.connect(func():
+		RecoilModel.tarkov = not RecoilModel.tarkov
+		rec.text = _recoil_text())
+	rec.text = _recoil_text()
+	col.add_child(rec)
 	col.add_child(UiKit.button("Reset range", func(): reset_requested.emit()))
 	if RangeMaps.selected == "skirmish":
 		col.add_child(UiKit.button("Back to Firing Range", func(): RangeMaps.go("range")))
 	else:
 		col.add_child(UiKit.button("Deploy to Skirmish", func(): deploy_requested.emit()))
 	col.add_child(UiKit.button("Quit", func(): get_tree().quit()))
+
+
+static func _recoil_text() -> String:
+	return "Recoil: %s" % ("Tarkov" if RecoilModel.tarkov else "Classic")
 
 
 func open() -> void:

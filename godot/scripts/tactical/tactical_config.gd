@@ -50,6 +50,16 @@ const MAG_WORDS := [[1.0, "Full"], [0.75, "Almost full"], [0.4, "About half"], [
 const RECOIL_CAP_SHOTS := 10.0
 const RECOIL_RATE_LOW := 2.0
 const RECOIL_RATE_HIGH := 6.0
+# Tarkov-style recoil (RecoilModel.tarkov): per-shot impulse = up x UP_MULT along the gun's `angle`, side drift is
+# low-passed noise; OMEGA = critically damped rise (~60 ms); VM_* = viewmodel follows the bore (visual only).
+const RECOIL_T_UP_MULT := 0.7
+const RECOIL_T_SIDE_MULT := 0.7
+const RECOIL_T_DRIFT := 0.35
+const RECOIL_T_OMEGA := 55.0
+const RECOIL_T_VM_PITCH := 3.5
+const RECOIL_T_VM_YAW := 2.0
+const RECOIL_T_VM_ROLL := 0.8
+const RECOIL_T_VM_KICK := 0.3
 const SWAY_BASE_DEG := 0.12
 const SWAY_HOLD_MULT := 0.05
 const SWAY_TIRED_MULT := 2.5
