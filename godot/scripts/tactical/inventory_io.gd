@@ -1,0 +1,68 @@
+class_name InventoryIO
+## Plain-data (de)serialisation of items, guns and whole inventories, for carrying a loadout between maps.
+
+
+static func gun_to_dict(g: Gun) -> Dictionary:
+	return {"id": g.def["id"], "mag": g.mag.rounds.duplicate(), "chamber": g.chamber, "mode": g.mode, "durability": g.durability,
+		"malf": g.malf, "malf_known": g.malf_known, "zero_idx": g.zero_idx, "ammo_pick": g.ammo_pick, "needs_cycle": g.needs_cycle}
+
+
+static func gun_from_dict(d: Dictionary) -> Gun:
+	var g := Gun.new(d["id"])
+	g.spares.clear()
+	g.mag.rounds.clear()
+	for r in d["mag"]:
+		g.mag.rounds.append(str(r))
+	g.chamber = d["chamber"]
+	g.mode = d["mode"]
+	g.durability = d["durability"]
+	g.malf = d["malf"]
+	g.malf_known = d["malf_known"]
+	g.zero_idx = d["zero_idx"]
+	g.ammo_pick = d["ammo_pick"]
+	g.needs_cycle = d["needs_cycle"]
+	return g
+
+
+static func item_to_dict(it: Dictionary) -> Dictionary:
+	var out := {}
+	for k in it:
+		match k:
+			"world", "staged":
+				pass
+			"gun":
+				out[k] = gun_to_dict(it[k])
+			"items":
+				out[k] = (it[k] as Array).map(item_to_dict)
+			_:
+				out[k] = it[k]
+	return out
+
+
+static func item_from_dict(d: Dictionary) -> Dictionary:
+	var it := {}
+	for k in d:
+		match k:
+			"gun":
+				it[k] = gun_from_dict(d[k])
+			"items":
+				it[k] = (d[k] as Array).map(item_from_dict)
+			_:
+				it[k] = d[k]
+	ItemDefs.note_uid(int(it["uid"]))
+	return it
+
+
+static func to_dict(inv: Inventory) -> Dictionary:
+	var slots := {}
+	for s in Inventory.SLOTS:
+		slots[s] = item_to_dict(inv.slots[s]) if inv.slots[s] != null else {}
+	return {"slots": slots, "pockets": inv.pockets.map(item_to_dict)}
+
+
+static func load_dict(inv: Inventory, d: Dictionary) -> void:
+	for s in Inventory.SLOTS:
+		var sd: Dictionary = d["slots"].get(s, {})
+		inv.slots[s] = item_from_dict(sd) if not sd.is_empty() else null
+	inv.pockets = (d["pockets"] as Array).map(item_from_dict)
+	inv.ground.clear()

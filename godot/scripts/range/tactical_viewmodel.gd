@@ -32,6 +32,9 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 func _on_switched(g: Gun) -> void:
 	if model != null:
 		model.queue_free()
+		model = null
+	if g == null:  # hands empty (gun dropped or put away)
+		return
 	_def = g.def
 	model = Node3D.new()
 	add_child(model)

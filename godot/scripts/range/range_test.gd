@@ -28,6 +28,7 @@ func run() -> void:
 	bal.body_hit.connect(func(h): _hits.append(h))
 	await get_tree().physics_frame
 	await get_tree().physics_frame
+	await RangeTestInv.world(self)
 	_zero_checks()
 	await _wall_checks()
 	await RangeTestTargets.run(self)

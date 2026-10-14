@@ -79,7 +79,8 @@ func _help_text() -> String:
 		return "".join(out) if ids.size() == 4 else "/".join(out)
 	var rows := [[k.call(["t_forward", "t_left", "t_back", "t_right"]), "Move"], [k.call(["t_sprint"]), "Sprint / hold breath"],
 		[k.call(["t_crouch"]), "Crouch"], [k.call(["t_lean_left", "t_lean_right"]), "Lean"], [k.call(["t_jump"]), "Jump"],
-		[k.call(["t_use"]), "Use (rack, benches)"], ["1-6", "Weapon slots"], [k.call(["t_reload"]), "Reload (x2 fast)"],
+		[k.call(["t_use"]), "Use (rack, benches, items)"], ["1-3", "Primary / secondary / holster"],
+		[k.call(["inventory"]), "Inventory"], [k.call(["drop"]), "Drop gun"], [k.call(["t_reload"]), "Reload (x2 fast)"],
 		[k.call(["t_fire_mode"]), "Fire mode"], [k.call(["t_mag_check"]), "Check mag"], [k.call(["t_inspect"]), "Inspect / fix"],
 		[k.call(["t_zero_up", "t_zero_down"]), "Zero up/down"], [k.call(["t_crosshair"]), "Hip dot"], [k.call(["t_help"]), "Help"]]
 	var out := "LMB Fire   RMB Aim   Esc Menu\n"
