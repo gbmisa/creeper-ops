@@ -48,7 +48,7 @@ func _on_switched(g: Gun) -> void:
 	model.add_child(glb)
 	if _def.get("flip", false):
 		glb.rotation.y = PI  # model exported muzzle toward +Z
-	anim = glb.find_children("*", "AnimationPlayer", true, false)[0]
+	anim = WeaponDefs.anim_of(glb)
 	for n in anim.get_animation_list():
 		anim.get_animation(n).loop_mode = Animation.LOOP_NONE
 	var mi := glb.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D

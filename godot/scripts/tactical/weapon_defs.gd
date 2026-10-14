@@ -91,3 +91,13 @@ static func of(id: String) -> Dictionary:
 		d["model"] = d["model_fallback"]
 		d["flip"] = d.get("fb_flip", false)
 	return d
+
+
+## The gun model's AnimationPlayer; generated models have none, so an empty one is added (all clip lookups no-op).
+static func anim_of(glb: Node) -> AnimationPlayer:
+	var found := glb.find_children("*", "AnimationPlayer", true, false)
+	if not found.is_empty():
+		return found[0]
+	var ap := AnimationPlayer.new()
+	glb.add_child(ap)
+	return ap

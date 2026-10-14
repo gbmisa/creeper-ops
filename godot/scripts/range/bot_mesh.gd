@@ -25,7 +25,7 @@ func _init(def := {}) -> void:
 	if gun_def.get("flip", false):
 		glb.rotation.y = PI  # model exported muzzle toward +Z
 	gun.add_child(glb)
-	anim = glb.find_children("*", "AnimationPlayer", true, false)[0]
+	anim = WeaponDefs.anim_of(glb)
 	for n in anim.get_animation_list():
 		if n.begins_with("Fire") and fire_clip == "":
 			fire_clip = n
