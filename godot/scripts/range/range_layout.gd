@@ -47,7 +47,7 @@ static func box(parent: Node3D, nm: String, pos: Vector3, size: Vector3, mat: St
 	var bm := BoxMesh.new()
 	bm.size = size
 	mi.mesh = bm
-	mi.material_override = colour(col)
+	mi.material_override = LookMaterials.get_mat(mat, col, nm)
 	sb.add_child(mi)
 	parent.add_child(sb)
 	return sb
@@ -97,36 +97,7 @@ static func _board(p: Node3D, d: int) -> void:
 
 
 static func _environment(p: Node3D) -> void:
-	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.08, 0.14, 0.32)
-	sky_mat.sky_curve = 0.25
-	sky_mat.sky_horizon_color = Color(1.0, 0.58, 0.32)
-	sky_mat.ground_horizon_color = Color(0.55, 0.38, 0.3)
-	sky_mat.ground_bottom_color = Color(0.1, 0.1, 0.12)
-	sky_mat.sun_angle_max = 20.0
-	var sky := Sky.new()
-	sky.sky_material = sky_mat
-	var env := Environment.new()
-	env.background_mode = Environment.BG_SKY
-	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.62, 0.55, 0.52)
-	env.ambient_light_energy = 0.8
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.fog_enabled = true
-	env.fog_light_color = Color(0.75, 0.5, 0.4)
-	env.fog_density = 0.0009
-	env.fog_sky_affect = 0.0
-	var we := WorldEnvironment.new()
-	we.environment = env
-	p.add_child(we)
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-14, 25, 0)  # low sun from behind the targets, toward the shooter
-	sun.light_color = Color(1.0, 0.68, 0.45)
-	sun.light_energy = 1.3
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 80.0
-	p.add_child(sun)
+	LookEnv.build(p, "skirmish" if RangeMaps.selected == "skirmish" else "range")
 	for x in [-4.0, 4.0]:  # booth lamps
 		var lamp := OmniLight3D.new()
 		lamp.position = Vector3(x, 3.0, 5.5)

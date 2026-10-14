@@ -1,6 +1,6 @@
 class_name RangeShot
 extends Node
-## Screenshot / debug hook: --shot=path [--weapon=id] [--ads] [--look=x,y,z] [--fire=N] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] (reload mid-way shot).
+## Screenshot / debug hook: --shot=path [--weapon=id] [--ads] [--look=x,y,z] [--fire=N] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] [--fps-report] (reload mid-way shot).
 ## Gives the weapon, optionally fires N shots, waits, saves the viewport, quits.
 
 
@@ -61,6 +61,8 @@ func run(app: FiringRange) -> void:
 	for b in app.bots.bots:
 		if is_instance_valid(b):
 			print("[range] ", b.label_name, " ", b.global_position.snapped(Vector3(0.1, 0.1, 0.1)), " ", b.brain.state, " hp ", snappedf(b.body.total_frac(), 0.01))
+	if a.has("fps-report"):
+		print("[range] fps ", Engine.get_frames_per_second())
 	print("[range] fired ", shots, " impacts ", impacts.size(), " mags ", w.gun.mag.count() if w.gun else -1)
 	if a.has("shot"):
 		await RenderingServer.frame_post_draw
