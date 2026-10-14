@@ -49,3 +49,13 @@ Screenshots (Xvfb, see `range_shot.gd`; add `--map=skirmish`): view them yoursel
 ## Phases (one agent does both, then stops)
 1. Roster (`bot_defs.gd`, ScavBot reads it, behaviours) + tests. Commit.
 2. Skirmish map, spawns, extract, end screens, level-select button + tests + screenshots. Commit.
+
+## RANGE4 (after INV + RANGE3 merge): Firing Range -> Skirmish with your loadout
+Gregory: "Connect skirmish to the firing range, let players test guns and pick their loadout."
+- Hooks being built now: `Inventory.to_dict/from_dict`, static `RangeLoadout.saved` (INV); `RangeMaps.go(map)`,
+  "Deploy to Skirmish" in the range Esc menu, "Back to Firing Range" on Skirmish end screens and menu (RANGE3).
+- Then: a **Deploy** truck at the range entrance (`F`: "Deploy to Skirmish with this kit") saves the inventory to
+  `RangeLoadout.saved` and calls `RangeMaps.go("skirmish")`; the Esc-menu button does the same. In the range, the rack
+  and crates are free and unlimited, so it is the loadout screen.
+- Tarkov rule (default, Gregory may change): **extract** returns you to the range with what you carried out, loot
+  included; **KIA** loses the kit and you restart from the default kit.
