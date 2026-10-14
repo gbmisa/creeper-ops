@@ -3,6 +3,7 @@ extends RefCounted
 ## Runtime weapon state: magazines + chamber, fire modes, bolt/pump cycle, reloads, zero, wear
 ## and malfunctions. Pure logic; call update(dt) every frame. The caller plays animations.
 
+var id := ""
 var def: Dictionary
 var mag: Magazine
 var spares: Array[Magazine] = []  # detachable / en-bloc: spare mags. tube: one pouch of loose shells
@@ -21,6 +22,7 @@ var _fast := false
 
 
 func _init(weapon_id: String) -> void:
+	id = weapon_id
 	def = WeaponDefs.of(weapon_id)
 	mode = def["modes"][0]
 	ammo_pick = TacAmmoDefs.grades(def["cal"])[0]

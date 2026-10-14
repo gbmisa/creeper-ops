@@ -92,8 +92,11 @@ func _into_grid(it: Dictionary, t: Dictionary) -> void:
 				if it["count"] <= 0 and was_world:
 					world.release(it)
 				return
-	if inv.move(it, t) and t["loc"] != "ground" and it.has("world"):
-		world.release(it)
+	var from_ground: bool = it["loc"] == "ground"
+	if inv.move(it, t):
+		_snd(it, "pick" if from_ground and t["loc"] != "ground" else "move")
+		if t["loc"] != "ground" and it.has("world"):
+			world.release(it)
 
 
 func _into_slot(it: Dictionary, t: Dictionary, origin: Dictionary) -> void:
@@ -101,6 +104,7 @@ func _into_slot(it: Dictionary, t: Dictionary, origin: Dictionary) -> void:
 	var slot: String = t["loc"]
 	if not inv.accepts_slot(slot, it):
 		return
+	_snd(it, "move")
 	var occ = inv.equipped(slot)
 	if occ == null:
 		if inv.move(it, t) and it.has("world"):
@@ -120,6 +124,7 @@ func _into_slot(it: Dictionary, t: Dictionary, origin: Dictionary) -> void:
 func _to_world(it: Dictionary) -> void:
 	if it["loc"] == "ground":
 		return
+	_snd(it, "drop")
 	weapons.inv.remove(it)
 	world.drop_front(it)
 
@@ -128,14 +133,22 @@ func _to_world(it: Dictionary) -> void:
 func quick_move(it: Dictionary) -> void:
 	var inv := weapons.inv
 	if it["loc"] == "ground":
-		if not world.take(it, inv):
+		if world.take(it, inv):
+			_snd(it, "pick")
+		else:
 			weapons.message.emit("No room for %s" % ItemDefs.label(it))
 	else:
 		var from: String = it["loc"]
 		var to := inv.first_fit(it, from)
 		if to.is_empty() or not inv.move(it, to):
 			_to_world(it)
+		else:
+			_snd(it, "move")
 	_settle()
+
+
+func _snd(it: Dictionary, ev: String) -> void:
+	RangeAudio.inventory(ItemDefs.def_of(it)["kind"], ev)
 
 
 ## Items put on the ground grid become physical; then everything is re-synced.
