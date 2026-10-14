@@ -1,5 +1,5 @@
 {
-  "next": 7,
+  "next": 11,
   "ideas": [
     {
       "id": "I-001",
@@ -104,7 +104,7 @@
         "repurpose",
         "emergence"
       ],
-      "status": "briefed",
+      "status": "parked",
       "scores": {
         "fun": 5,
         "fit": 4,
@@ -136,6 +136,20 @@
           "to": "briefed",
           "by": "gdflow",
           "why": "docs/tasks/I003_Flood_the_courtyard.md"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "briefed",
+          "to": "approved",
+          "by": "human",
+          "why": "un-brief: D-002 changes its premise"
+        },
+        {
+          "at": "2026-10-14",
+          "from": "approved",
+          "to": "parked",
+          "by": "human",
+          "why": "On hold for the humanoid enemy design (D-002): flooding a castle may feed creeper-using enemies instead of drowning them"
         }
       ]
     },
@@ -275,6 +289,134 @@
           "to": "briefed",
           "by": "gdflow",
           "why": "docs/tasks/I006_Last_stand_overdrive.md"
+        }
+      ]
+    },
+    {
+      "id": "I-007",
+      "title": "Every shot starves them",
+      "pitch": "Humanoid harvesters pump creeper into their stockpile; reinforcement rate and ammo scale with what they've banked. Killing creeper near their pumps is economic warfare, and leaving it alone feeds them. First slice: one harvester rig per nest site whose bank, read from creeper depth in its radius, speeds that site's spawns.",
+      "hook": "Watching a raid thin out because you shelled their harvest field dry",
+      "pillar": "Race the pressure",
+      "source": "dream",
+      "lenses": [
+        "economy",
+        "reverse"
+      ],
+      "status": "scored",
+      "scores": {
+        "fun": 4,
+        "fit": 5,
+        "novelty": 4,
+        "cost": 3,
+        "risk": 3
+      },
+      "priority": 3.67,
+      "brief": null,
+      "created": "2026-10-14",
+      "history": [
+        {
+          "at": "2026-10-14",
+          "from": "raw",
+          "to": "scored",
+          "by": "agent",
+          "why": "scored"
+        }
+      ]
+    },
+    {
+      "id": "I-008",
+      "title": "Cut their creeper pipeline",
+      "pitch": "Enemies lay pipelines and canals from emitters to their bases. The Operative blows a pipe with a demo charge, or Terp cuts a canal, and the flow diverts: their base starves, but the spill lands somewhere, maybe on you. First slice: a pipeline as a chain of enemy structures that moves creeper from an emitter cell to a base cell; breaking one link spills at the break.",
+      "hook": "Blowing a pipe and seeing a creeper river swing away from their keep",
+      "pillar": "CW3 core, FPS edge",
+      "source": "dream",
+      "lenses": [
+        "space",
+        "emergence"
+      ],
+      "status": "scored",
+      "scores": {
+        "fun": 5,
+        "fit": 5,
+        "novelty": 4,
+        "cost": 4,
+        "risk": 3
+      },
+      "priority": 3.43,
+      "brief": null,
+      "created": "2026-10-14",
+      "history": [
+        {
+          "at": "2026-10-14",
+          "from": "raw",
+          "to": "scored",
+          "by": "agent",
+          "why": "scored"
+        }
+      ]
+    },
+    {
+      "id": "I-009",
+      "title": "Creeper-dosed shock troops",
+      "pitch": "Before a big push, humanoids dose on creeper: they glow, move faster, hit harder, and spill creeper where they die. Where you fight them becomes a decision, because killing them inside your base floods it. First slice: a dosed flag on a raid group (speed/dps multipliers) plus a death spill via CreeperSim.add.",
+      "hook": "Holding fire until the glowing squad crosses the ridge so they spill on their side",
+      "pillar": "Race the pressure",
+      "source": "dream",
+      "lenses": [
+        "adapt",
+        "tradeoff"
+      ],
+      "status": "scored",
+      "scores": {
+        "fun": 4,
+        "fit": 4,
+        "novelty": 4,
+        "cost": 2,
+        "risk": 2
+      },
+      "priority": 5.0,
+      "brief": null,
+      "created": "2026-10-14",
+      "history": [
+        {
+          "at": "2026-10-14",
+          "from": "raw",
+          "to": "scored",
+          "by": "agent",
+          "why": "scored"
+        }
+      ]
+    },
+    {
+      "id": "I-010",
+      "title": "Sabotage the deep harvest",
+      "pitch": "Enemies also mine creeper at the cave's Deep Core, and that harvest feeds the pressure curve. A cave incursion that wrecks their deep rigs knocks pressure back, so going underground buys time for the surface. First slice: deep rigs as cave targets; each one destroyed applies a Pressure relief (shares I-004's offset).",
+      "hook": "Coming back up from the cave to a quieter surface because you broke their supply",
+      "pillar": "CW3 core, FPS edge",
+      "source": "dream",
+      "lenses": [
+        "time",
+        "combine"
+      ],
+      "status": "scored",
+      "scores": {
+        "fun": 4,
+        "fit": 5,
+        "novelty": 3,
+        "cost": 2,
+        "risk": 2
+      },
+      "priority": 5.25,
+      "brief": null,
+      "created": "2026-10-14",
+      "history": [
+        {
+          "at": "2026-10-14",
+          "from": "raw",
+          "to": "scored",
+          "by": "agent",
+          "why": "scored"
         }
       ]
     }

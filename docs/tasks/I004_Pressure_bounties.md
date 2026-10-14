@@ -10,12 +10,14 @@ Mid-level, timed side objectives appear (kill nest X in 3 min, hold a ridge for 
 
 **Player moment we want:** Gambling your Operative on a 90-second dash to buy the base another minute
 
+**Enemy swap (DECISIONS D-002):** raiders will be replaced by humanoid enemies who use creeper as a resource. Don't add code keyed to raider type names or the creeper-born rule; read enemies through the existing lists/data so the swap only changes data.
+
 ## Scope
 Do:
 1. `godot/scripts/level/pressure.gd`: add `static var offset := 0.0` (reset at level start) and use `t + offset` in `value()`; clamp so the effective time never goes below 0.
-2. `godot/scripts/level/bounties.gd` (new, `class_name Bounties`): reads a new `BOUNTIES` array in `level01.gd` (2 rows; none in other levels yet). Row: `{ id, kind: "kill_nest" or "hold", target (nest id, or x, z, radius), at, limit, reward_aether, relief, penalty }` (times in s).
+2. `godot/scripts/level/bounties.gd` (new, `class_name Bounties`): reads a new `BOUNTIES` array in `level01.gd` (2 rows; none in other levels yet). Row: `{ id, kind: "kill_site" or "hold", target (an enemy site id resolved through one small lookup function, or x, z, radius), at, limit, reward_aether, relief, penalty }` (times in s).
 3. At `at` the bounty appears in the objectives panel with a countdown (through `ui/objectives.gd`'s existing API). Success: pay Aether, `Pressure.offset -= relief`. Failure: `Pressure.offset += penalty`. `Bus.say` + `Bus.metric.emit("bounty", {id, result})` either way.
-4. Only `kill_nest` must fully work; skip `hold` if blocked (log why).
+4. Only `kill_site` must fully work (today sites are nests); skip `hold` if blocked (log why).
 
 Must not change:
 - Existing action ids, structure ids, `user://keybinds.cfg`, the creeper flow rule, other levels' data.
@@ -23,7 +25,7 @@ Must not change:
 
 ## Acceptance
 - On L1 a bounty appears on time with a visible countdown; finishing it pays Aether and lowers pressure, missing it raises pressure.
-- Smoke: offset math and clamp, kill_nest resolving both ways, no rows means no effect.
+- Smoke: offset math and clamp, kill_site resolving both ways, no rows means no effect.
 - The `--autostart` undefended L1 sim ends within 10% of its old time.
 - New tunables live in the project's config/data tables, not in logic.
 

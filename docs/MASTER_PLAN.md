@@ -138,7 +138,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | 12 | Level placement | Sonnet 5.5 (`level-builder` with `model: sonnet`) | ⚠ engines on L1/L2/cave in the 9b branch (ramp chokes skipped) |
 | 13 | Tuning | Haiku 4.5 (`balance-tester`) | ⚠ done in the 9b branch: sim fields, Sniper rule changes, better L1 demo |
 | 14 | Review and screenshots | **Opus 5.5** | ☐ |
-| 26 | **gdflow ideas I-001..I-006:** loss debrief, last-stand overdrive, Operative designator, pressure bounties, hidden ore surveys, drowning crown nests (briefs `docs/tasks/I00*.md`) | Muse long run, Opus review | ☐ |
+| 26 | **gdflow ideas I-001..I-006:** loss debrief, last-stand overdrive, Operative designator, pressure bounties, hidden ore surveys (I-003 parked by D-002; briefs `docs/tasks/I00*.md`) | Muse long run, Opus review | ☐ |
 
 ### Stage details
 
@@ -220,6 +220,7 @@ Each stage lists the model, the files involved, and the acceptance check. Every 
 | Flying enemies (Beam targets) | Sonnet |
 
 ## 4. Open questions
+- **Humanoid enemies (Gregory, 2026-10-14, D-002):** the current raiders will be replaced by humanoid enemies who use creeper as a resource. Open: does creeper hurt them, heal them, or neither? What do nests/hives become (harvest camps)? Which roster roles (melee, Spitter/Lancer ranged, Burrower, Sentinel) carry over? Candidate mechanics on the idea board: I-007..I-010.
 - None blocking. The Stage 3 doc will raise the detailed numbers for approval.
 - Set aside: the CW3 behaviour spec (`CREEPER_SPEC.md`, prose only). Ask before doing it.
 

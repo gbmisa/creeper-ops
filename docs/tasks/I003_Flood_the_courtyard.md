@@ -1,6 +1,7 @@
 # Brief I-003: Flood the courtyard
 
 <!-- gdflow:I-003 -->
+> **ON HOLD (parked 2026-10-14, DECISIONS D-002).** Enemies will harvest creeper, so flooding a castle may feed them. Not part of the Muse run; don't build it.
 **Idea:** I-003 on the [idea board](../design/IDEAS.md). **Pillar:** CW3 core, FPS edge. **Priority:** 3.29
 **Branch:** `muse/ideas-i001-i006` (from `claude/game-design-automation-gy0p8q`). **Model:** Muse (long run, phase 6)
 **Read only:** AGENTS.md, CLAUDE.md (Key contracts + Conventions), docs/tasks/LONG_RUN_RULES.md, this brief, `docs/tasks/IDEAS_progress.md`, and in `godot/scripts/`: level/hives.gd + hive_spawning.gd (crown nest), the CastleGuards file, command/terp.gd. Don't read whole design docs.
