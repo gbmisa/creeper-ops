@@ -18,10 +18,10 @@ static func build(parent: Node3D) -> void:
 	box(parent, "grass", Vector3(0, -0.5, -LENGTH * 0.5 + BACK_Z * 0.5), Vector3(HALF_W * 2, 1.0, LENGTH + BACK_Z), "dirt_berm", 1.0, Color(0.22, 0.28, 0.14))
 	box(parent, "slab", Vector3(0, -0.15, 3.5), Vector3(16, 0.3, 14), "concrete", 0.3, Color(0.5, 0.5, 0.48), Vector3(0, 0.001, 0))
 	# berms: far end, both sides, behind the booth
-	box(parent, "berm_far", Vector3(0, 3, -LENGTH - 3), Vector3(HALF_W * 2 + 12, 6, 6), "dirt_berm", 3.0, Color(0.3, 0.22, 0.14))
+	box(parent, "berm_far", Vector3(0, 1.75, -LENGTH - 3), Vector3(HALF_W * 2 + 12, 3.5, 6), "dirt_berm", 3.0, Color(0.3, 0.22, 0.14))
 	for sx in [-1.0, 1.0]:
-		box(parent, "berm_side", Vector3(sx * (HALF_W + 3), 2, -LENGTH * 0.5 + BACK_Z * 0.5), Vector3(6, 4, LENGTH + BACK_Z), "dirt_berm", 3.0, Color(0.3, 0.22, 0.14))
-	box(parent, "berm_back", Vector3(0, 2, BACK_Z + 3), Vector3(HALF_W * 2 + 12, 4, 6), "dirt_berm", 3.0, Color(0.3, 0.22, 0.14))
+		box(parent, "berm_side", Vector3(sx * (HALF_W + 3), 1.75, -LENGTH * 0.5 + BACK_Z * 0.5), Vector3(6, 3.5, LENGTH + BACK_Z), "dirt_berm", 3.0, Color(0.3, 0.22, 0.14))
+	box(parent, "berm_back", Vector3(0, 1.75, BACK_Z + 3), Vector3(HALF_W * 2 + 12, 3.5, 6), "dirt_berm", 3.0, Color(0.3, 0.22, 0.14))
 	_booth(parent)
 	for d in DISTANCES:
 		_board(parent, d)
@@ -62,7 +62,7 @@ static func colour(c: Color) -> StandardMaterial3D:
 
 static func _booth(p: Node3D) -> void:
 	var wall := Color(0.42, 0.4, 0.38)
-	box(p, "roof", Vector3(0, 3.35, 3.5), Vector3(16.6, 0.3, 14.6), "concrete", 0.3, Color(0.3, 0.3, 0.32))
+	box(p, "roof", Vector3(0, 3.35, 8.5), Vector3(16.6, 0.3, 4.0), "concrete", 0.3, Color(0.3, 0.3, 0.32))
 	box(p, "back_wall", Vector3(0, 1.6, 10.15), Vector3(16.6, 3.2, 0.3), "concrete", 0.3, wall)
 	for sx in [-1.0, 1.0]:
 		box(p, "side_wall", Vector3(sx * 8.15, 1.6, 4.0), Vector3(0.3, 3.2, 12.0), "concrete", 0.3, wall)
@@ -95,8 +95,9 @@ static func _board(p: Node3D, d: int) -> void:
 
 static func _environment(p: Node3D) -> void:
 	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.2, 0.3, 0.52)
-	sky_mat.sky_horizon_color = Color(0.9, 0.5, 0.3)
+	sky_mat.sky_top_color = Color(0.08, 0.14, 0.32)
+	sky_mat.sky_curve = 0.25
+	sky_mat.sky_horizon_color = Color(1.0, 0.58, 0.32)
 	sky_mat.ground_horizon_color = Color(0.55, 0.38, 0.3)
 	sky_mat.ground_bottom_color = Color(0.1, 0.1, 0.12)
 	sky_mat.sun_angle_max = 20.0
@@ -112,6 +113,7 @@ static func _environment(p: Node3D) -> void:
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.75, 0.5, 0.4)
 	env.fog_density = 0.0009
+	env.fog_sky_affect = 0.0
 	var we := WorldEnvironment.new()
 	we.environment = env
 	p.add_child(we)
