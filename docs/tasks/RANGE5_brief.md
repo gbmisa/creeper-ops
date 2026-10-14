@@ -107,3 +107,18 @@ The range is the hub players return to; Skirmish is the field. Make both look go
 - Performance: keep draw calls sane (MultiMesh, shared materials). Report fps from the Vulkan run (`--fps-report` flag
   if you add one). Screenshots: 4 per map from the player's eye.
 LOOK-1: environment + materials (both maps). LOOK-2: props, foliage, hub dressing, facades.
+
+## Track RECOIL (Sonnet): Tarkov-style recoil as an A/B toggle. Branch `feat/r5-recoil`
+Spec: `docs/research/RECOIL_TARKOV.md` "Proposal". CHANGES.md P3: Classic stays the default until Gregory rules.
+Esc-menu toggle "Recoil: Classic / Tarkov" (static, persists across map switches). Per-gun columns `conv`, `cam_share`,
+`angle` for all 17 guns; numbers in `tactical_config.gd`. Bullets leave along the barrel. Tests: impulse rise time,
+plateau after ~5 auto shots, camera moves less than the barrel, semi-auto returns to the aim point, classic unchanged.
+
+## Track SOUND (Sonnet): sounds match every item. Branch `feat/r5-sound`
+Gregory: "Make sure sounds match all items." Every gun its own report by calibre/class (pistol crack vs .44 boom vs
+5.56 vs 7.62 vs .338 vs 12 ga vs PKM), suppressed variant, distance/indoor tail, mechanical layers (mag out/in, bolt,
+pump, slide, belt, dry fire, fire-mode switch, attachment fit), inventory (pick up/drop/move per item kind), utility
+(grapple fire/reel/impact, grenade pin/throw/bounce/blast, smoke hiss, flash bang + player tinnitus, stim, binoculars).
+Prefer CC0 recorded samples (OpenGameArt/Freesound CC0, Sonniss GDC bundle is royalty-free) over the procedural synth
+for guns; credit every file. A table `sound_defs.gd` maps item ids/events to sounds; a test asserts every gun, ammo
+calibre, attachment and utility id has its events mapped.
