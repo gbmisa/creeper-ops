@@ -11,6 +11,7 @@ var rack: RangeRack
 var menu: RangeMenu
 var targets: RangeTargets
 var hit_log: RangeHitLog
+var bots: RangeBots
 
 
 func _ready() -> void:
@@ -67,6 +68,15 @@ func _build() -> void:
 	var hud := RangeHud.new()
 	add_child(hud)
 	hud.setup(weapons, player)
+	var body_hud := RangeBodyHud.new()
+	hud.add_child(body_hud)
+	body_hud.setup(player)
+	bots = RangeBots.new()
+	add_child(bots)
+	bots.setup(player, weapons, bal, hit_log)
+	player.god = args.has("god")
+	if args.has("bots"):
+		bots.spawn_scavs()
 	menu = RangeMenu.new()
 	add_child(menu)
 	menu.resumed.connect(func(): player.enabled = true)

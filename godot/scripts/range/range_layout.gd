@@ -19,8 +19,11 @@ static func build(parent: Node3D) -> void:
 	box(parent, "slab", Vector3(0, -0.15, 3.5), Vector3(16, 0.3, 14), "concrete", 0.3, Color(0.5, 0.5, 0.48), Vector3(0, 0.001, 0))
 	# berms: far end, both sides, behind the booth
 	box(parent, "berm_far", Vector3(0, 1.75, -LENGTH - 3), Vector3(HALF_W * 2 + 12, 3.5, 6), "dirt_berm", 3.0, Color(0.3, 0.22, 0.14))
-	for sx in [-1.0, 1.0]:
-		box(parent, "berm_side", Vector3(sx * (HALF_W + 3), 1.75, -LENGTH * 0.5 + BACK_Z * 0.5), Vector3(6, 3.5, LENGTH + BACK_Z), "dirt_berm", 3.0, Color(0.3, 0.22, 0.14))
+	var berm_col := Color(0.3, 0.22, 0.14)
+	box(parent, "berm_side", Vector3(-(HALF_W + 3), 1.75, -LENGTH * 0.5 + BACK_Z * 0.5), Vector3(6, 3.5, LENGTH + BACK_Z), "dirt_berm", 3.0, berm_col)
+	# east berm has a gap (z -12..-2) leading to the kill house yard
+	box(parent, "berm_east_far", Vector3(HALF_W + 3, 1.75, (-LENGTH - 12.0) * 0.5), Vector3(6, 3.5, LENGTH - 12.0), "dirt_berm", 3.0, berm_col)
+	box(parent, "berm_east_near", Vector3(HALF_W + 3, 1.75, (-2.0 + BACK_Z) * 0.5), Vector3(6, 3.5, BACK_Z + 2.0), "dirt_berm", 3.0, berm_col)
 	box(parent, "berm_back", Vector3(0, 1.75, BACK_Z + 3), Vector3(HALF_W * 2 + 12, 3.5, 6), "dirt_berm", 3.0, Color(0.3, 0.22, 0.14))
 	_booth(parent)
 	for d in DISTANCES:

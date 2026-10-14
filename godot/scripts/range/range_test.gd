@@ -31,6 +31,7 @@ func run() -> void:
 	_zero_checks()
 	await _wall_checks()
 	await RangeTestTargets.run(self)
+	await RangeTestBots.run(self)
 	if failed == 0:
 		print("[range] OK ", passed)
 	else:

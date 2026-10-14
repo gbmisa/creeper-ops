@@ -1,6 +1,6 @@
 class_name RangeArgs
 ## Command-line flags after `--`: --range-test, --shot=path, --weapon=id, --ads, --look=x,y,z,
-## --fire=N, --wait=s, --bots. Returns key -> value (true for bare flags).
+## --fire=N, --wait=s, --bots, --god, --engage=x,y,z (shot hook: Scav 1 stands there, alerted). Returns key -> value (true for bare flags).
 
 static func parse() -> Dictionary:
 	var out := {}

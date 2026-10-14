@@ -155,6 +155,7 @@ func _shoot(res: Dictionary) -> void:
 	for d in gun.shot_dirs(basis, res["ammo"], ads_amt > 0.8, rng):
 		bal.spawn(origin, d, res["ammo"])
 	recoil.shoot(gun.def, rng)
+	BotNoise.emit(player.global_position, BotNoise.SHOT_R, "shot", player)
 	RangeSfx.shot(gun.def["class"])
 	if res["ping"]:
 		Sfx.play("tick")

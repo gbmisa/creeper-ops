@@ -116,6 +116,7 @@ func _on_hit(s: Dictionary, hit: Dictionary) -> bool:
 		res["dist"] = (s["origin"] as Vector3).distance_to(hit["position"])
 		res["ammo"] = s["ammo"]["id"]
 		res["pos"] = hit["position"]
+		res["origin"] = s["origin"]
 		body_hit.emit(res)
 		return false
 	var col: Object = hit["collider"]

@@ -19,7 +19,12 @@ func on_body_hit(res: Dictionary) -> void:
 	if d != null:
 		d.on_hit(res)
 		log.set_target(d.zones_text(), d.body.dead)
+	var o: Object = res.get("owner")
+	if o is ScavBot or o is TacticalPlayer:
+		o.on_hit(res)
 	log.add(RangeHitLog.format(res))
+	if o is TacticalPlayer:
+		return
 	number(res["pos"], str(int(round(res["dmg"]))), COL.get(res["result"], Color.WHITE), res["dist"])
 
 
