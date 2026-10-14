@@ -70,13 +70,25 @@ func step(delta: float, vel: Vector3, crouching: bool, grounded: bool) -> void:
 		if crouching:
 			want = "crouch_walk"
 		else:
-			want = "walk" if speed < WALK_MAX else ("jog" if speed < JOG_MAX else "sprint")
-		rate = clampf(speed / float(CLIP_SPEED[want]), 0.3, 4.0)
+			want = locomotion(speed)
+		rate = rate_for(want, speed)
 	elif crouching:
 		want = "crouch_idle"
 	_leg_yaw = lerp_angle(_leg_yaw, -yaw_t, minf(1.0, delta * 10.0))
 	_yaw_node.rotation.y = _leg_yaw
 	_play(want, -rate if reverse else rate)
+
+
+## Standing locomotion clip for a ground speed (m/s); shared with the enemy bots.
+static func locomotion(speed: float) -> String:
+	if speed < 0.3:
+		return "idle"
+	return "walk" if speed < WALK_MAX else ("jog" if speed < JOG_MAX else "sprint")
+
+
+## Playback rate that keeps the clip's feet planted at this ground speed.
+static func rate_for(clip_name: String, speed: float) -> float:
+	return clampf(speed / float(CLIP_SPEED[clip_name]), 0.3, 4.0)
 
 
 func _play(want: String, rate: float) -> void:
