@@ -18,6 +18,8 @@ func run(app: FiringRange) -> void:
 	if a.has("crouch"):
 		app.player.crouching = true
 	w.trigger_ads = a.has("ads")
+	if a.has("inventory"):  # --inventory: shot with the inventory screen open
+		app.inv_ui.open()
 	if a.has("engage") and not app.bots.bots.is_empty():  # --engage: Scav 1 stands 6 m ahead of the player and is alerted
 		var bot: ScavBot = app.bots.bots[0]
 		bot.global_position = app.player.global_position + Vector3(0, 0, 6) if not a.has("look") else RangeArgs.vec3(str(a["engage"]))

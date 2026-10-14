@@ -24,7 +24,8 @@ static func sync(w: PlayerWeapons) -> void:
 	w.player.carried_kg = w.inv.total_kg()
 	if not w.gun_item.is_empty() and w.gun_item["loc"] in PlayerWeapons.HAND_SLOTS:
 		return
-	if not w.gun_item.is_empty():
+	var had_gun := not w.gun_item.is_empty()
+	if had_gun:
 		w.reloader.cancel(w.gun_item)
 	w.gun_item = {}
 	w.gun = null
@@ -32,7 +33,8 @@ static func sync(w: PlayerWeapons) -> void:
 		if w.inv.equipped(s) != null:
 			w.select_slot(s)
 			return
-	w.switched.emit(null)
+	if had_gun:
+		w.switched.emit(null)
 
 
 ## Ammo bench: after the gun's grade changed, every carried mag of its caliber is refilled with it.

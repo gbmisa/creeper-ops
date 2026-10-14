@@ -7,6 +7,7 @@ static func run(t: RangeTest) -> void:
 	_slots_and_order(t)
 	_weight_and_stacks(t)
 	_reload(t)
+	_round_trip(t)
 
 
 static func _kit() -> Inventory:
@@ -29,6 +30,10 @@ static func _grids(t: RangeTest) -> void:
 	t.check("inv: an item ignores itself when moved within a grid", inv.fits("pack_g", med, 1, 2, 0))
 	var ak := ItemDefs.make("ak47")
 	t.check("inv: pockets are 1x1 only", not inv.fits("pockets", ak, 0, 0, 0) and inv.fits("pockets", ItemDefs.make("med_bandage"), 3, 0, 0))
+	var b1 := ItemDefs.make("pack_small")
+	inv.place(b1, "ground", 0, 0)
+	t.check("inv: ground items obey bounds and overlap, bags included", not inv.fits("ground", ItemDefs.make("pack_small"), 1, 1, 0) \
+		and not inv.fits("ground", ItemDefs.make("pack_small"), 9, 0, 0) and inv.fits("ground", ItemDefs.make("pack_small"), 3, 0, 0))
 	t.check("inv: bags cannot go inside grids", not inv.fits("pack_g", ItemDefs.make("rig_chest"), 0, 0, 0))
 
 
@@ -141,3 +146,108 @@ static func _reload(t: RangeTest) -> void:
 	rl.begin(cancel_gi, false)
 	rl.cancel(cancel_gi)
 	t.check("reload: cancel gives the mag back", inv.find_mags("ak47").size() == n and not (cancel_gi["gun"] as Gun).busy())
+
+
+## Needs the scene tree: PlayerWeapons on a real player, drop -> world item -> pickup round trip.
+static func world(t: RangeTest) -> void:
+	var input := InputState.new()
+	t.add_child(input)
+	var player := TacticalPlayer.new()
+	player.input = input
+	t.add_child(player)
+	var rack := RangeRack.new()
+	t.add_child(rack)
+	var weapons := PlayerWeapons.new()
+	t.add_child(weapons)
+	var bal := Ballistics.new()
+	t.add_child(bal)
+	weapons.setup(player, input, bal, rack)
+	var wi := WorldItems.new()
+	t.add_child(wi)
+	wi.setup(player, weapons)
+	await t.get_tree().physics_frame
+	var inv := weapons.inv
+	t.check("inv: player starts with the AK in hand", weapons.gun != null and weapons.gun.def["id"] == "ak47" and weapons.gun_item["loc"] == "primary")
+	var start_kg := player.carried_kg
+	t.check("inv: carried_kg is the inventory weight", absf(start_kg - inv.total_kg()) < 0.001 and start_kg > 3.6)
+	weapons.gun.mag.rounds.resize(7)
+	weapons.drop_current()
+	t.check("inv: dropping the gun empties the hand and its slot", weapons.gun.def["id"] == "m1911" if weapons.gun != null else false)
+	var dropped := wi.items
+	t.check("inv: the dropped gun is a world item", dropped.size() == 1 and dropped[0]["id"] == "ak47")
+	t.check("inv: carried weight fell by the gun", absf(player.carried_kg - (start_kg - 3.6)) < 0.001)
+	var it: Dictionary = dropped[0]
+	t.check("inv: the world item is found nearby and under the view", wi.nearby(it["world"].global_position, 0.1).size() == 1)
+	t.check("inv: pickup puts the gun back in its slot with its rounds", wi.take(it, inv) and it["loc"] == "primary" \
+		and (it["gun"] as Gun).mag.count() == 7 and wi.items.is_empty())
+	weapons.sync()
+	t.check("inv: weight is back after the pickup", absf(player.carried_kg - start_kg) < 0.001)
+	_ui_checks(t, weapons, wi, player)
+	_fill_bags(inv)
+	var big := ItemDefs.make("sniper")
+	for slot in ["primary", "secondary"]:
+		if inv.equipped(slot) != null:
+			inv.remove(inv.equipped(slot))
+		inv.place(ItemDefs.make("sniper"), slot)
+	wi.drop(big, Vector3(0, 0.5, 4.0))
+	t.check("inv: a pickup with no room is refused and the item stays in the world", not wi.take(big, inv) and wi.items.has(big))
+	t.check("inv: world items can be located by the view ray", wi.pick(Vector3(0, 0.6, 3.0), Vector3(0, 0, 1)) == big)
+
+
+## Pockets, rig and backpack all full of bandages.
+static func _fill_bags(inv: Inventory) -> void:
+	inv.place(ItemDefs.make("pack_small"), "backpack")
+	for g in Inventory.GRIDS:
+		var gs := inv.grid_size(g)
+		for it in inv.grid_items(g).duplicate():
+			inv.remove(it)
+		for y in gs.y:
+			for x in gs.x:
+				inv.place(ItemDefs.make("med_bandage"), g, x, y)
+
+
+static func _ui_checks(t: RangeTest, weapons: PlayerWeapons, wi: WorldItems, player: TacticalPlayer) -> void:
+	var inv := weapons.inv
+	var ui := InventoryUI.new()
+	t.add_child(ui)
+	ui.setup(weapons, player, wi)
+	var sn := ItemDefs.make("sniper")
+	wi.drop(sn, player.eye_pos() + Vector3(0, -0.5, -1.0))
+	ui.open()
+	t.check("inv ui: ground grid lists items within 2 m", sn["loc"] == "ground" and inv.ground.size() == 1 and weapons.ui_open)
+	ui._on_drop(sn, {"loc": "secondary", "x": 0, "y": 0, "rot": 0}, {"loc": "ground", "x": 0, "y": 0, "rot": 0})
+	t.check("inv ui: dragging a ground gun onto a slot equips it and clears the world item", inv.equipped("secondary") == sn and wi.items.is_empty() and inv.ground.is_empty())
+	ui._on_drop(sn, {"loc": "holster", "x": 0, "y": 0, "rot": 0}, {"loc": "secondary", "x": 0, "y": 0, "rot": 0})
+	t.check("inv ui: a long gun cannot go in the holster", inv.equipped("secondary") == sn)
+	var primary = inv.equipped("primary")
+	ui._on_drop(sn, {"loc": "primary", "x": 0, "y": 0, "rot": 0}, {"loc": "secondary", "x": 0, "y": 0, "rot": 0})
+	t.check("inv ui: dropping on an occupied slot swaps", inv.equipped("primary") == sn and inv.equipped("secondary") == primary)
+	ui._on_drop(sn, {}, {"loc": "primary", "x": 0, "y": 0, "rot": 0})
+	t.check("inv ui: dropping outside the window puts it on the ground", inv.equipped("primary") == null and wi.items.has(sn) and inv.ground.has(sn) and weapons.gun != null)
+	ui.quick_move(sn)
+	t.check("inv ui: ctrl+click on a ground gun takes it to a free slot", sn["loc"] == "primary" and wi.items.is_empty())
+	ui.quick_move(sn)
+	t.check("inv ui: ctrl+click on a carried item moves it elsewhere", sn["loc"] != "primary")
+	ui.close()
+	t.check("inv ui: closing frees the player to shoot", not weapons.ui_open)
+
+
+static func _round_trip(t: RangeTest) -> void:
+	var inv := _kit()
+	inv.place(ItemDefs.make("pack_small"), "backpack")
+	var ammo := ItemDefs.make("762_ps", {"count": 45})
+	inv.place(ammo, "pack_g", 2, 1, 1)
+	var mag: Dictionary = inv.find_mags("ak47")[0]
+	mag["rounds"] = 11
+	var g: Gun = inv.equipped("primary")["gun"]
+	g.mag.rounds.resize(9)
+	g.zero_idx = 2
+	g.mode = "auto"
+	var d := inv.to_dict()
+	var back := Inventory.from_dict(d)
+	var bg: Gun = back.equipped("primary")["gun"]
+	var m2: Array = back.grid_items("rig_g").filter(func(i): return i["uid"] == mag["uid"])
+	var a2: Array = back.grid_items("pack_g")
+	t.check("inventory round-trips through to_dict/from_dict", bg.mag.count() == 9 and bg.chamber == g.chamber and bg.zero_idx == 2 and bg.mode == "auto" \
+		and m2.size() == 1 and m2[0]["rounds"] == 11 and m2[0]["x"] == mag["x"] and a2.size() == 1 and a2[0]["count"] == 45 and a2[0]["rot"] == 1 \
+		and a2[0]["x"] == 2 and a2[0]["y"] == 1 and absf(back.total_kg() - inv.total_kg()) < 0.001 and back.to_dict() == d, str(back.to_dict() == d))
