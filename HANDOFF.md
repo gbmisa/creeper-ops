@@ -8,6 +8,11 @@ Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHu
 - **CW3 deactivate** (Z, action id still `supply`): `Structure.active` (was `supply_on`) works on any structure but the Node. Off means it requests no packets (`PacketRequests.need`) and the manager tick skips firing, mining, collector field, income and behaviours. Smoke checks are in `smoke_group_select.gd`.
 - **Pause menu**: Muse's `feat/pause-menu` applied locally, then moved into `ui/pause_menu.gd` (`PauseMenu`). **Esc** opens it in both modes; in command mode Esc first cancels a tool or selection. Space is still a quick pause. Smoke: all pass.
 
+## 2026-10-14 (Opus, short)
+- Pushed the 10-09 edits as `feat/deactivate-pause-menu` (5a7f2f7 + Muse note 0ef7fb8). Muse should base its work on this branch.
+- Smoke there: parse clean, 763 pass, 3 fail in `ship` (Fallen Titan hook). The test holds E but loads the player's binds (Use = F). It's a test-only fix, noted for Muse.
+- `.claude/settings.json` and `CLAUDE.md` are still uncommitted; I left them alone.
+
 ## Done this session (Gregory: "military models + UI overhaul, work continuously")
 **`art/3-models`** (pushed, worktree `art3-models`; log in `docs/tasks/ART3M_progress.md`; sheets in `docs/art/military/`):
 - Restyled as military, with bone names and pivots kept: cannon, mortar, sniper, beam, collector, relay, command_node, totem, drop_pod, soldier (rifleman, new `flash` bone) and crawler (4x4 armoured car).
