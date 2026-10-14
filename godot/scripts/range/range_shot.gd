@@ -1,6 +1,6 @@
 class_name RangeShot
 extends Node
-## Screenshot / debug hook: --shot=path [--weapon=id] [--ads] [--look=x,y,z] [--fire=N] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] (reload mid-way shot).
+## Screenshot / debug hook: --shot=path [--weapon=id] [--ads] [--look=x,y,z] [--fire=N] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] (reload mid-way shot).
 ## Gives the weapon, optionally fires N shots, waits, saves the viewport, quits.
 
 
@@ -21,6 +21,18 @@ func run(app: FiringRange) -> void:
 			ev.physical_keycode = OS.find_keycode_from_string(c)
 			ev.pressed = true
 			Input.parse_input_event(ev)
+	if a.has("side"):  # --side[=right|top|front]: debug camera beside the viewmodel (body hidden)
+		var sc := Camera3D.new()
+		sc.near = 0.02
+		var view := str(a["side"])
+		app.player.head.add_child(sc)
+		var focus := Vector3(0.1, -0.1, -0.45)
+		var off: Vector3 = {"right": Vector3(0.7, 0.05, 0.0), "top": Vector3(0.0, 0.7, 0.01), "front": Vector3(0.0, 0.1, -1.0)}.get(view, Vector3(0.7, 0.05, 0.0))
+		sc.position = focus + off
+		sc.look_at(app.player.head.to_global(focus))
+		sc.cull_mask = 0xFFFFF & ~FpBody.HIDDEN_LAYER
+		sc.current = true
+		app.player.get_node("FpBody").visible = false
 	if a.has("armor"):
 		app.targets.set_loadout(int(a["armor"]))
 	if a.has("crouch"):
