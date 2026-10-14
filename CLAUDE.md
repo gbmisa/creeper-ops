@@ -87,3 +87,12 @@ godot -e --path godot                    # editor
 
 ## Saved design direction (NOT implemented yet; don't build until asked)
 From level 3 onward, levels should be **hard and evolving**: time-gated objectives, enemy **reinforcements** so turtling fails, and **dynamic** creeper spawn rate and reinforcement speed that force strategy changes mid-level. Not meant to be beaten first try. A 40-minute loss is acceptable. Details: DEV_PLAN.md, Phase 3.
+
+## Design flow (gdflow)
+Lightweight governance for design work. CLI: `python3 tools/gdflow` (stdlib Python). Config: `gdflow.json`.
+- **Start of session:** `python3 tools/gdflow status` (the SessionStart hook prints a short version).
+- **Loop:** `/dream` (ideas from lenses + project context) → `/greenlight` (score, the human approves) →
+  `python3 tools/gdflow brief I-00N` (task brief for a delegated agent) → review the branch → `python3 tools/gdflow idea move I-00N built` →
+  the human plays it → `python3 tools/gdflow idea move I-00N verified --by human`.
+- **Rules:** only the human approves or verifies ideas. Settled design goes in `python3 tools/gdflow decide`. Run
+  `python3 tools/gdflow check` before ending a session (add `--run` for the project's test commands).

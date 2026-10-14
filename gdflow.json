@@ -1,0 +1,68 @@
+{
+  "project": "Creeper Ops",
+  "cli": "python3 tools/gdflow",
+  "design_dir": "docs/design",
+  "pillars": {
+    "file": "docs/MASTER_PLAN.md",
+    "section": "Pillars"
+  },
+  "plan": {
+    "file": "docs/MASTER_PLAN.md",
+    "changelog_section": "Changelog"
+  },
+  "handoff": {
+    "file": "HANDOFF.md",
+    "max_lines": 60,
+    "max_age_days": 7
+  },
+  "tasks_dir": "docs/tasks",
+  "agent_rules": "AGENTS.md",
+  "playtest_dir": "docs/playtests",
+  "systems": [
+    "creeper fluid flow",
+    "packet network and relays",
+    "Collectors and energy",
+    "network weapons (cannon, mortar, sniper, beam)",
+    "the Operative on foot (FPS)",
+    "Totem deployment and drop pods",
+    "Terp terraforming",
+    "raiders and nests",
+    "castles, capture and sieges",
+    "flyers and Roosts",
+    "Ore, Miners and Outposts",
+    "Salvage and extractors",
+    "Forge/Aether upgrades",
+    "units and barracks",
+    "the pressure curve",
+    "Armoury and advanced weapons",
+    "cave incursions"
+  ],
+  "line_limit": {
+    "globs": [
+      "godot/scripts/**/*.gd",
+      "tools/gdflow/gdflow/*.py"
+    ],
+    "max": 250,
+    "allow": []
+  },
+  "checks": [
+    {
+      "name": "parse",
+      "cmd": "cd godot && ! godot --headless --path . --import 2>&1 | grep -A1 'SCRIPT ERROR'",
+      "timeout": 300
+    },
+    {
+      "name": "smoke",
+      "cmd": "cd godot && godot --headless --path . -- --smoke --quit=0.1 2>&1 | grep smoke",
+      "fail_if": "FAIL",
+      "timeout": 600
+    }
+  ],
+  "approvers": [
+    "human"
+  ],
+  "playtest_globs": [
+    "docs/playtests/*.md",
+    "docs/tasks/PLAYTEST*.md"
+  ]
+}

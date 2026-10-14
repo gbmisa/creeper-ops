@@ -1,0 +1,14 @@
+[project]
+name = "gdflow"
+version = "0.1.0"
+description = "Lightweight, governed game-design flow: pillars, ideas, briefs, gates."
+requires-python = ">=3.9"
+
+[project.scripts]
+gdflow = "gdflow.cli:main"
+
+[tool.setuptools]
+packages = ["gdflow"]
+
+[tool.setuptools.package-data]
+gdflow = ["templates/*", "templates/**/*"]

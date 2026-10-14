@@ -38,5 +38,17 @@
     "additionalDirectories": [
       "/home/gregory-milligan/AI projects/creeper fps td-worktrees/art3-models/art/blender"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && python3 tools/gdflow status --hook || true"
+          }
+        ]
+      }
+    ]
   }
 }

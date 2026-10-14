@@ -28,6 +28,9 @@ No human playtest of the new HUD or the colours. GPU (Vulkan) rendering not chec
 ## Branches waiting (unchanged from 15e)
 P (9 smoke failures, fix-up out), A3, C, S (gallery fix-up), Q, T, A4, K: see MUSE_NOTES.
 
+## Design flow (new, 2026-10-14)
+`tools/gdflow` (README there): run `python3 tools/gdflow status`. Six dreamed ideas wait for Gregory on [docs/design/IDEAS.md](docs/design/IDEAS.md); `/greenlight` walks through them.
+
 ## Next (Opus)
 1. Gregory reviews `ui/overhaul` and `art/3-models`. On approval, merge `ui/overhaul` to main (strip `godot/.godot/`), then re-run smoke.
 2. Merge A4, then `art/3-models`, keeping the `art/3-models` glbs. Then start A5, which now also loads miner/reactor/storage/barracks/forge.

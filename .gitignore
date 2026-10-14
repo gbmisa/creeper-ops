@@ -3,3 +3,6 @@ godot/.godot/
 *.tmp
 # Local Claude settings
 .claude/settings.local.json
+
+# Python caches
+tools/gdflow/**/__pycache__/
