@@ -41,6 +41,7 @@ func _init() -> void:
 
 
 func build() -> void:
+	RangeAudio.add_zone(AABB(HOME + Vector3(-15, 0, -15), Vector3(30, H, 30)))  # walled: shots echo
 	RangeLayout.box(self, "yard", Vector3(-1.0, -0.5, -5.0), Vector3(50, 1.0, 42), "dirt_berm", 1.0, Color(0.22, 0.28, 0.14))
 	RangeLayout.box(self, "floor", Vector3(0, -0.085, 0), Vector3(34, 0.2, 34), "concrete", 0.2, Color(0.42, 0.41, 0.39))
 	for w in WALLS:
