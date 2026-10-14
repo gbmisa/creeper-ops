@@ -15,12 +15,17 @@ STYLE = (", single object, centered, full object in frame, three-quarter view fr
          "plain flat white background, no shadow on the ground, game asset concept, clean readable shapes")
 
 
-def concept_nodes(prompt: str, seed: int) -> dict:
+STYLE_SIDE = (", single object, centered, flat orthographic side profile view, entire object in frame, "
+              "plain flat white background, no shadow, detailed photorealistic render with soft studio lighting and visible surface detail, "
+              "two-tone materials")
+
+
+def concept_nodes(prompt: str, seed: int, style: str = STYLE) -> dict:
     return {
         "u": {"class_type": "UNETLoader", "inputs": {"unet_name": "krea2_turbo_fp8_scaled.safetensors", "weight_dtype": "default"}},
         "c": {"class_type": "CLIPLoader", "inputs": {"clip_name": "qwen3vl_4b_fp8_scaled.safetensors", "type": "krea2", "device": "default"}},
         "v": {"class_type": "VAELoader", "inputs": {"vae_name": "qwen_image_vae.safetensors"}},
-        "p": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["c", 0], "text": prompt + STYLE}},
+        "p": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["c", 0], "text": prompt + style}},
         "n": {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["p", 0]}},
         "l": {"class_type": "EmptyLatentImage", "inputs": {"width": 1024, "height": 1024, "batch_size": 1}},
         "k": {"class_type": "KSampler", "inputs": {"model": ["u", 0], "positive": ["p", 0], "negative": ["n", 0], "latent_image": ["l", 0],
@@ -81,6 +86,7 @@ def main() -> None:
     ap.add_argument("--image")
     ap.add_argument("--out", required=True)
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--side", action="store_true", help="strict side profile (guns, sights, attachments)")
     ap.add_argument("--octree", type=int, default=256, help="mesh detail: 256 normal, 384 fine")
     a = ap.parse_args()
     if not a.prompt and not a.image:
@@ -93,7 +99,7 @@ def main() -> None:
         g["li"] = {"class_type": "LoadImage", "inputs": {"image": name}}
         img = ["li", 0]
     else:
-        g.update(concept_nodes(a.prompt, a.seed))
+        g.update(concept_nodes(a.prompt, a.seed, STYLE_SIDE if a.side else STYLE))
         img = ["d", 0]
     g.update(mesh_nodes(img, a.seed, a.octree))
     t0 = time.time()

@@ -1,7 +1,9 @@
-# blender -b --python art/tools/glb_preview.py -- in.glb out.png : grey-clay 3/4 render + mesh stats (tris, size).
+# blender -b --python art/tools/glb_preview.py -- in.glb out.png [3q|side|side2|top] : grey-clay 3/4 render + mesh stats (tris, size).
 import bpy, sys, math
 from mathutils import Vector
-src, out = sys.argv[sys.argv.index("--") + 1:][:2]
+args = sys.argv[sys.argv.index("--") + 1:]
+src, out = args[:2]
+view = args[2] if len(args) > 2 else "3q"
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=src)
 meshes = [o for o in bpy.data.objects if o.type == "MESH"]
@@ -15,8 +17,11 @@ sc = bpy.context.scene
 cam = bpy.data.objects.new("cam", bpy.data.cameras.new("cam"))
 sc.collection.objects.link(cam)
 sc.camera = cam
-d = Vector((1.0, -1.3, 0.8)).normalized() * r * 3.2
+d = Vector({"3q": (1.0, -1.3, 0.8), "side": (1, 0, 0.001), "side2": (-1, 0, 0.001), "top": (0.001, 0.001, 1)}[view]).normalized() * r * 3.2
 cam.location = c + d
+if view != "3q":
+    cam.data.type = "ORTHO"
+    cam.data.ortho_scale = r * 2.1
 cam.rotation_euler = (c - cam.location).to_track_quat("-Z", "Y").to_euler()
 sun = bpy.data.objects.new("sun", bpy.data.lights.new("sun", "SUN"))
 sun.data.energy = 3.5
