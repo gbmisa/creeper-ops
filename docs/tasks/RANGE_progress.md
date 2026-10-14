@@ -62,3 +62,5 @@
   main smoke 1264 PASS 0 FAIL; 60 s headless `--bots` soak no errors. Shots: docs/art/range/killhouse.png, bot_engage.png.
 - Not verified: real mouse play, bot sounds (none: bots shoot silently), flank/suppress feel in play, bots in the open outside the house,
   difficulty tuning, crouched-player hitbox accuracy.
+- Bot audio/visual fix: bot shots now play the AK voices positionally at the muzzle (`RangeSfx.shot(class, pos)`), player plays "hurt" when a bot round hits them; bots hold ak47.glb (level when engaged, lowered 0.35 rad otherwise) and play its Fire clip per shot.
+- Verified: parse clean, `--range-test` OK 80, shot docs/art/range/bot_engage.png. Not verified: audible attenuation by ear.

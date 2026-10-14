@@ -5,10 +5,13 @@ extends Node3D
 
 const UNIFORM := Color(0.2, 0.32, 0.2)
 const VEST := Color(0.1, 0.11, 0.12)
+const LOW_PITCH := 0.35
 const SKIN := Color(0.7, 0.5, 0.4)
 
 var legs: Array[Node3D] = []
 var muzzle: Node3D
+var gun: Node3D
+var anim: AnimationPlayer
 var _t := 0.0
 
 
@@ -40,14 +43,27 @@ func _init() -> void:
 		m.position.y = -0.43
 		leg.add_child(m)
 		legs.append(leg)
-	var rifle := Node3D.new()
-	rifle.position = Vector3(0.2, 1.3, -0.35)
-	add_child(rifle)
-	_part_in(rifle, Vector3(0, 0, 0), Vector3(0.07, 0.1, 0.85), Color(0.12, 0.12, 0.13))
-	_part_in(rifle, Vector3(0, -0.02, 0.25), Vector3(0.06, 0.12, 0.3), Color(0.4, 0.28, 0.16))
+	gun = Node3D.new()
+	gun.position = Vector3(0.1, 1.3, -0.25)
+	add_child(gun)
+	var glb := (load("res://assets/models/guns/ak47.glb") as PackedScene).instantiate()
+	gun.add_child(glb)
+	anim = glb.find_children("*", "AnimationPlayer", true, false)[0]
+	anim.get_animation("Fire").loop_mode = Animation.LOOP_NONE
+	var mi := glb.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
 	muzzle = Node3D.new()
-	muzzle.position = Vector3(0, 0.02, -0.45)
-	rifle.add_child(muzzle)
+	muzzle.position = Vector3(0, 0.01, -mi.get_aabb().size.z * 0.5)
+	gun.add_child(muzzle)
+
+
+## Rifle pitch: level while engaging, lowered otherwise.
+func aim(delta: float, engaged: bool) -> void:
+	gun.rotation.x = move_toward(gun.rotation.x, 0.0 if engaged else -LOW_PITCH, delta * 3.0)
+
+
+func fire() -> void:
+	anim.play("Fire")
+	anim.seek(0.0, true)
 
 
 func _part(pos: Vector3, size: Vector3, col: Color) -> void:

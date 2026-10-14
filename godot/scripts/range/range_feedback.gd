@@ -24,6 +24,7 @@ func on_body_hit(res: Dictionary) -> void:
 		o.on_hit(res)
 	log.add(RangeHitLog.format(res))
 	if o is TacticalPlayer:
+		Sfx.play("hurt")
 		return
 	number(res["pos"], str(int(round(res["dmg"]))), COL.get(res["result"], Color.WHITE), res["dist"])
 

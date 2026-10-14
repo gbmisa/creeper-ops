@@ -84,6 +84,7 @@ func _physics_process(dt: float) -> void:
 	think(dt)
 	_move(dt)
 	flash.update(dt)
+	mesh.aim(dt, is_engaged())
 
 
 func is_engaged() -> bool:
