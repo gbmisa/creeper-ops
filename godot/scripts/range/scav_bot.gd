@@ -258,7 +258,7 @@ func _die() -> void:
 		(rig[z] as CollisionObject3D).collision_layer = 0
 	collision_layer = 0
 	var tw := create_tween()
-	tw.tween_property(mesh, "rotation:x", PI * 0.5, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tw.tween_interval(8.0)
+	mesh.die()
+	tw.tween_interval(8.5)
 	tw.tween_callback(queue_free)
 	died.emit(self)

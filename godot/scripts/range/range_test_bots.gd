@@ -28,6 +28,7 @@ static func run(test: RangeTest) -> void:
 	_cover_heal()
 	await _combat()
 	await RangeTestRoster.run(t, house, player)
+	await RangeTestBotMesh.run(t, house, player)
 
 
 static func _bot(local: Vector3, yaw_deg := 0.0, name := "Test") -> ScavBot:

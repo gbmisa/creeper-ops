@@ -19,3 +19,8 @@
 - Skirmish: M1911 `give` only when `RangeLoadout.saved` is empty. `SkirmishGame.finish`: win saves inventory, KIA clears.
 - Restart (end screen) reloads the scene and so reuses whatever is saved (extract: carried kit; KIA: default kit).
 - Tests `range_test_deploy.gd` (4 checks); existing skirmish test now gives the game a `weapons` object. `--range-test` OK 191, smoke 0 FAIL.
+
+## BOT-MODEL (Sonnet) done
+- Enemy visuals now use `operative/body.glb` (`bot_body.gd` `BotBody`, driven by `bot_mesh.gd`). Per-kind dye by material override (def `uniform`, lightened), dark boots, red armband cylinder on `upperarm_l`. Locomotion clip via `FpBody.locomotion/rate_for` (new shared statics; player behaviour unchanged). Clips are a shared stripped copy (arm/spine tracks removed, `death` kept whole); AnimationPlayer in manual mode, advanced from `BotMesh.walk`.
+- Both hands on the gun via `FpArms.new(skel)` (+ `rebase()`); spine takes 0.6 of the aim pitch, gun pivots on the right shoulder. m1911 glb now flipped like the viewmodel. `ScavBot._die` calls `mesh.die()` (death clip) in place of the 0.5 s tip-over tween; total 8.5 s timing kept.
+- Test `range_test_botmesh.gd` (5 kinds x 4 checks). range-test OK 211, smoke 0 FAIL. Hitboxes untouched.
