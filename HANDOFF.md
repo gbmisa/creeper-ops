@@ -1,6 +1,20 @@
-# Handoff: 2026-10-13 (Firing Range + Tarkov-style combat module merged into integ, Opus)
+# Handoff: 2026-10-14 (Range 2.0: inventory, body/arms, Skirmish map + enemy roster, deploy loop; Opus)
 
-## NEW 2026-10-13: Firing Range (separate scene; the main game is unchanged)
+## NEW 2026-10-14: Firing Range 2.0 + Skirmish (all merged into integ, pushed to GitHub)
+Play: main game -> level select -> **Firing Range** or **Skirmish** (or `godot --path godot res://scenes/firing_range.tscn [-- --map=skirmish]`).
+Briefs/logs: `docs/tasks/RANGE2_brief.md` + `RANGE2_progress.md`, `RANGE3_skirmish.md` (+ RANGE4 section) + `RANGE3_progress.md`.
+- Viewmodel fixes (Gregory): pistol faced backwards, guns too far out, P90 ADS black, ground inertia removed, sniper ADS sway x0.5 (`sway_mult`).
+- **Inventory** (Tarkov-like): Tab, grids/slots, 1/2/3 = primary/secondary/holster, G drop, F pick up, mags are items, rack hands copies, supply crate.
+- **Body**: `assets/models/operative/body.glb` (CC0 Quaternius base + Ranger outfit dyed olive; build `art/blender/operative_build.py`, sources not in git, see `art/operative/README.md`). Legs visible looking down (`fp_body.gd`), IK arms on every gun (`fp_arms.gd`), stock hidden (near plane 0.25 at ADS).
+- **Skirmish**: 120 m compound, 12 bots from `bot_defs.gd` (rifleman, pistol runner, shotgun breacher, marksman with glint, Warlord boss + 2 guards), extract 8 s, KIA/EXTRACTED screens. Enemies use the same character, khaki dye + red armband (`bot_body.gd`).
+- **Deploy loop**: Deploy truck in the range (F) or Esc menu -> Skirmish with your kit; extract keeps loot, KIA resets to default kit.
+- Verified: `--range-test` OK 211, main smoke 0 FAIL, Xvfb screenshots judged by Opus. **Not verified:** Gregory's real play, feel, bot difficulty.
+- Known: arms look ~7/10 (blobby gloves); player walk speed plays jog clip; crouch-walk clip too fast; hit log shows bot state lines (debug, gives info away); hitboxes not overlaid on the new bot body; inventory backpack box cut off at screen bottom; `fires again after the fix` test flaky (random malfunction roll); `player_weapons.gd` 261 / `scav_bot.gd` 264 lines.
+- Open decision: CHANGES.md **P2** (weight-scaled inertia).
+- Tools: ComfyUI on :8188 (Flux present); Gregory wants TRELLIS/image-to-3D for new models, not installed yet.
+- Next: Gregory playtests Range + Skirmish tonight; log feedback in `docs/tasks/RANGE_PLAYTEST1.md`.
+
+## 2026-10-13: Firing Range (separate scene; the main game is unchanged)
 Play: `godot --path godot res://scenes/firing_range.tscn` (or `godot/tools/range.sh`). Brief + log: `docs/tasks/RANGE_brief.md`, `RANGE_progress.md`. Screens: `docs/art/range/`.
 - `scripts/tactical/` = reusable Tarkov-style combat module (ballistics with drop/drag/zeroing, armor pen formula, world-material penetration + ricochet, 7-zone health with spill/bleeds/fractures, magazines + chamber, malfunctions, recoil/sway/ergo). `scripts/range/` = level, player, viewmodel, HUD, targets, kill house + 2 Scav bots (perception, warm-up aim, cover, heal, flank, suppress, search).
 - Guns (CC0/CC-BY, `assets/models/guns/CREDITS.md`, sources in `art/guns_src/`): M1911, P90, AK-47, M870, M1 Garand, AXMC .338. No free MG / grenade launcher model, so those classes are out.
@@ -13,7 +27,7 @@ Play: `godot --path godot res://scenes/firing_range.tscn` (or `godot/tools/range
 ## State
 Godot 4.7 game in `godot/`. **Gregory plays this worktree** (`creeper fps td-worktrees/integ`, branch `integ/2026-10-09`, see RUN.md), not `main`. Do all gameplay work on branches cut from it.
 Plan and log: [docs/tasks/PLAYTEST4_plan.md](docs/tasks/PLAYTEST4_plan.md) (feedback, decisions, perf findings). Briefs: `PLAYTEST4_briefs.md`. Logic audit: `PLAYTEST4_audit.md`.
-Nothing is pushed to GitHub. `main` is 170+ commits behind integ.
+integ is pushed to GitHub. `main` is far behind integ.
 
 ## Merged into integ today (smoke only, not yet played by Gregory)
 `pt4/port` (Z deactivate, Esc pause menu), `pt4/units` (attack order, move beats combat, retaliation, auto-patrol, mortars untargetable, free mortar sabotage), `pt4/alerts` (base alerts in first person, castle grace until the reprisal launches, trebuchets revive only on retake), `pt4/deploy` (choose Node or any Totem, recall measured to the nearest site), `pt4/trebrange` (click a trebuchet for range rings), `pt4/l2space` (L1/L2 trebuchet `engine_range` 12, one engine moved), plus Opus inline: Shield Dome needs no charge, crown nest takes a charge, Burrower banned on L1/L2 (`raider_ban`), prompts follow rebinds (`Keybinds.fill`), marker label caching.
