@@ -27,6 +27,8 @@ static func fire(b: ScavBot, point: Vector3) -> void:
 	var origin := b.eye() + dir * 0.4
 	for d in b.gun.shot_dirs(Basis.looking_at(dir), res["ammo"], true, b.rng):
 		b.bal.spawn(origin, d, res["ammo"], HitboxRig.rids(b.rig))
+	b.mesh.fire()
+	RangeSfx.shot(b.gun.def["class"], b.mesh.muzzle.global_position)
 	b.flash.flash(Color(1.0, 0.8, 0.45), 0.1, 0.05, 2.0)
 
 

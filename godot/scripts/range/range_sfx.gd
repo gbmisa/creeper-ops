@@ -11,6 +11,6 @@ const SHOT := {
 }
 
 
-static func shot(gun_class: String) -> void:
+static func shot(gun_class: String, pos: Variant = null) -> void:
 	for v in SHOT.get(gun_class, ["rifle"]):
-		Sfx.play(v)
+		Sfx.play(v, pos)
