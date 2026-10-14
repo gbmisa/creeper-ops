@@ -7,21 +7,21 @@ const DIR := "res://assets/textures/polyhaven/"
 
 const STYLE := {
 	"range": {   # clean, well-kept base
-		"concrete": ["concrete_floor_worn_001", 3.0, Color(1.0, 0.96, 0.88), 0.15, 0.8],
-		"dirt_berm": ["grass_ground", 4.0, Color(0.9, 0.88, 0.7), 0.1, 1.0],
-		"berm": ["gravel_concrete_02", 3.0, Color(0.5, 0.44, 0.36), 0.1, 1.2],
+		"concrete": ["concrete_floor_worn_001", 3.0, Color(1.6, 1.55, 1.45), 0.15, 0.8],
+		"dirt_berm": ["grass_ground", 4.0, Color(1.0, 1.0, 0.8), 0.1, 1.0],
+		"berm": ["grass_ground", 3.0, Color(0.95, 1.05, 0.72), 0.1, 1.2],
 		"wood_plank": ["wood_planks", 1.5, Color(0.85, 0.8, 0.72), 0.2, 1.0],
 		"plywood": ["plywood", 2.0, Color(0.95, 0.92, 0.85), 0.15, 0.8],
 		"brick": ["brick_wall_005", 2.0, Color(1, 1, 1), 0.2, 1.0],
 		"sheet_metal": ["corrugated_iron", 2.0, Color(1, 1, 1), 0.7, 1.0],
 	},
 	"skirmish": {   # derelict border station, late autumn
-		"concrete": ["dirty_concrete", 3.0, Color(0.9, 0.9, 0.86), 0.1, 1.0],
-		"dirt_berm": ["brown_mud_leaves_01", 3.5, Color(0.9, 0.85, 0.75), 0.05, 1.2],
+		"concrete": ["dirty_concrete", 3.0, Color(1.25, 1.25, 1.2), 0.1, 1.0],
+		"dirt_berm": ["brown_mud_leaves_01", 3.5, Color(0.8, 0.82, 0.68), 0.05, 1.2],
 		"berm": ["gravel_concrete_02", 3.0, Color(0.85, 0.85, 0.9), 0.1, 1.2],
 		"wood_plank": ["weathered_planks", 1.5, Color(0.8, 0.75, 0.68), 0.15, 1.0],
-		"plywood": ["peeling_painted_wall", 2.5, Color(0.85, 0.9, 0.82), 0.3, 1.0],
-		"brick": ["brick_moss_001", 2.0, Color(0.9, 0.85, 0.82), 0.2, 1.0],
+		"plywood": ["peeling_painted_wall", 2.5, Color(1.2, 1.3, 1.15), 0.3, 1.0],
+		"brick": ["brick_moss_001", 2.0, Color(1.4, 1.3, 1.2), 0.2, 1.0],
 		"sheet_metal": ["rusty_corrugated_iron", 2.0, Color(1, 1, 1), 0.45, 1.0],
 	},
 }
