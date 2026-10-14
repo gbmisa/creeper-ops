@@ -5,6 +5,8 @@ extends CanvasLayer
 const MAX_LINES := 8
 var lines: Array[String] = []
 var _lbl: Label
+var _tgt: Label
+var _tgt_panel: PanelContainer
 
 
 func _init() -> void:
@@ -15,7 +17,21 @@ func _init() -> void:
 	add_child(p)
 	_lbl = UiKit.label("HIT LOG", 13, Color(0.92, 0.92, 0.85))
 	p.add_child(_lbl)
+	_tgt_panel = UiKit.panel(Color(0.04, 0.05, 0.07, 0.7))
+	_tgt_panel.position = Vector2(1330, 20)
+	_tgt_panel.custom_minimum_size = Vector2(250, 0)
+	_tgt_panel.visible = false
+	add_child(_tgt_panel)
+	_tgt = UiKit.label("", 18)
+	_tgt_panel.add_child(_tgt)
 	_refresh()
+
+
+## Last-hit dummy per-zone panel (top-right, readable at any range).
+func set_target(text: String, dead: bool) -> void:
+	_tgt.text = text
+	_tgt.modulate = Color(1, 0.55, 0.5) if dead else Color(1, 1, 0.85)
+	_tgt_panel.visible = true
 
 
 func add(text: String) -> void:
@@ -27,6 +43,7 @@ func add(text: String) -> void:
 
 func clear() -> void:
 	lines.clear()
+	_tgt_panel.visible = false
 	_refresh()
 
 

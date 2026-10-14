@@ -18,6 +18,7 @@ func on_body_hit(res: Dictionary) -> void:
 	var d := res.get("owner") as RangeDummy
 	if d != null:
 		d.on_hit(res)
+		log.set_target(d.zones_text(), d.body.dead)
 	log.add(RangeHitLog.format(res))
 	number(res["pos"], str(int(round(res["dmg"]))), COL.get(res["result"], Color.WHITE), res["dist"])
 

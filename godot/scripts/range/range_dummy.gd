@@ -17,8 +17,6 @@ var _dir := 1.0
 var _parts := {}   # zone -> MeshInstance3D
 var _overlay := {}  # zone -> MeshInstance3D
 var _marks: Array[Node3D] = []
-var _panel: Label3D
-var _panel_t := 0.0
 var _dead_t := 0.0
 var _fall: Tween
 
@@ -30,15 +28,6 @@ func _ready() -> void:
 		_parts[zone] = _mesh(row, rig[zone], SKIN, 1.0)
 		_overlay[zone] = _mesh(row, rig[zone], Color.WHITE, 1.18)
 		(_overlay[zone] as MeshInstance3D).visible = false
-	_panel = Label3D.new()
-	_panel.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_panel.no_depth_test = true
-	_panel.font_size = 40
-	_panel.outline_size = 10
-	_panel.pixel_size = 0.0025 * (1.0 + absf(position.z) / 25.0)
-	_panel.position = Vector3(0, 2.3 + absf(position.z) * 0.012, 0)
-	_panel.visible = false
-	add_child(_panel)
 	set_loadout(loadout)
 
 
@@ -84,7 +73,6 @@ func respawn() -> void:
 	set_loadout(loadout)
 	rotation = Vector3.ZERO
 	_dead_t = 0.0
-	_panel.visible = false
 	for m in _marks:
 		m.queue_free()
 	_marks.clear()
@@ -96,18 +84,19 @@ func respawn() -> void:
 func on_hit(res: Dictionary) -> void:
 	_mark(res)
 	_flash(res["zone"])
-	var lines := []
+	if res.get("killed", false):
+		_die()
+
+
+## Per-zone HP text for the HUD target panel.
+func zones_text() -> String:
+	var lines := [label_name.to_upper() + (" - DEAD" if body.dead else "")]
 	for z in BodyHealth.ZONES:
 		var a := ""
 		if body.armor.has(z):
-			a = "  [%d]" % int(body.armor[z]["dur"])
+			a = "  [armor %d]" % int(body.armor[z]["dur"])
 		lines.append("%s %d/%d%s" % [ZONE_NAMES[z], ceili(body.hp[z]), int(BodyHealth.MAX[z]), a])
-	_panel.text = "\n".join(lines)
-	_panel.modulate = Color(1, 0.5, 0.45) if body.dead else Color(1, 1, 0.85)
-	_panel.visible = true
-	_panel_t = 3.0
-	if res.get("killed", false):
-		_die()
+	return "\n".join(lines)
 
 
 func _die() -> void:
@@ -144,11 +133,6 @@ func _flash(zone: String) -> void:
 
 func _process(delta: float) -> void:
 	body.tick(delta)
-	if _panel_t > 0.0:
-		_panel_t -= delta
-		_panel.visible = _panel_t > 0.0
-		if body.dead:
-			_panel.visible = true
 	if body.dead:
 		if _dead_t > 0.0:
 			_dead_t -= delta
