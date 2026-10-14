@@ -14,6 +14,7 @@ var hit_log: RangeHitLog
 var bots: RangeBots
 var world_items: WorldItems
 var inv_ui: InventoryUI
+var tempest_fx: TempestFx
 var skirmish: SkirmishGame   # set when the Skirmish map is selected (RangeMaps)
 
 
@@ -112,6 +113,9 @@ func _build() -> void:
 	player.god = args.has("god")
 	if args.has("bots") and not is_skirmish:
 		bots.spawn_scavs()
+	tempest_fx = TempestFx.new()
+	add_child(tempest_fx)
+	tempest_fx.setup(weapons, bal, func(): return bots.bots)
 	menu = RangeMenu.new()
 	add_child(menu)
 	menu.resumed.connect(func(): player.enabled = true)
@@ -124,6 +128,8 @@ func _build() -> void:
 func _process(_dt: float) -> void:
 	if input == null:
 		return
+	if input.act_hidden("secret_tempest") and player.enabled and not weapons.ui_open:
+		Tempest.toggle(weapons, world_items)
 	if input.was_pressed(KEY_ESCAPE) and not (skirmish != null and skirmish.over):
 		if inv_ui != null and inv_ui.is_open:
 			inv_ui.close()

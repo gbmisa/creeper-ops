@@ -22,6 +22,9 @@ var on_key: Callable = Callable()
 func _input(e: InputEvent) -> void:
 	if e is InputEventKey and e.pressed and not e.echo:
 		_pressed[e.physical_keycode] = true
+		var mods := (KEY_MASK_CTRL if e.ctrl_pressed else 0) | (KEY_MASK_ALT if e.alt_pressed else 0)
+		if mods != 0:
+			_pressed[e.physical_keycode | mods] = true  # chord code, read by act_hidden()
 		if on_key.is_valid():
 			on_key.call(e.physical_keycode)
 	elif e is InputEventMouseMotion:
@@ -67,6 +70,11 @@ func down(key: Key) -> bool:
 ## Rebindable action pressed this frame (see Keybinds).
 func act(id: String) -> bool:
 	return Keybinds.keys(id).any(func(k): return _pressed.has(k))
+
+
+## Hidden chord (Keybinds.HIDDEN) pressed this frame.
+func act_hidden(id: String) -> bool:
+	return (Keybinds.HIDDEN[id] as Array).any(func(k): return _pressed.has(k))
 
 
 ## Rebindable action held down.

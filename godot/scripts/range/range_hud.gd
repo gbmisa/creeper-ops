@@ -107,8 +107,8 @@ func _process(delta: float) -> void:
 		_ammo_lbl.text = "Take one from the rack"
 		_mag_lbl.text = ""
 	else:
-		_gun_lbl.text = "%s  [%s]" % [g.def["name"], g.mode.to_upper()]
-		_ammo_lbl.text = "%s   Zero %d m" % [TacAmmoDefs.of(g.loaded_ammo() if g.loaded_ammo() != "" else g.ammo_pick)["name"], int(g.zero_dist())]
+		_gun_lbl.text = "%s  [%s]" % [g.def["name"], g.mode.to_upper()] if g.id != SecretArms.TEMPEST else "TEMPEST"
+		_ammo_lbl.text = "" if g.id == SecretArms.TEMPEST else "%s   Zero %d m" % [TacAmmoDefs.of(g.loaded_ammo() if g.loaded_ammo() != "" else g.ammo_pick)["name"], int(g.zero_dist())]
 		var s := ""
 		if g.malf != "" and g.malf_known:
 			s = "MALFUNCTION"
@@ -118,7 +118,7 @@ func _process(delta: float) -> void:
 			s = "Mag: " + weapons.mag_text
 		elif g.needs_cycle:
 			s = "Release trigger to cycle"
-		_mag_lbl.text = s
+		_mag_lbl.text = "" if g.id == SecretArms.TEMPEST else s
 	_prompt_lbl.text = weapons.prompt
 	_msg_t = maxf(0.0, _msg_t - delta)
 	_msg_lbl.visible = _msg_t > 0.0

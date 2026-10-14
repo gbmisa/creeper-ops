@@ -24,6 +24,7 @@ var inv := Inventory.new()
 var reloader := InvReload.new(inv)
 var gun: Gun
 var gun_item := {}
+var tempest_prev := {}  # the sidearm the Tempest displaced (Tempest.toggle puts it back)
 var ads_amt := 0.0
 var arm_stamina := 1.0
 var holding_breath := false
@@ -192,7 +193,8 @@ func _shoot(res: Dictionary) -> void:
 	var origin := player.eye_pos() + basis.z * -0.3
 	for d in gun.shot_dirs(recoil.aim_basis(basis), res["ammo"], ads_amt > 0.8, rng):
 		bal.spawn(origin, d, res["ammo"], [], gun.stat("vel"))
-	recoil.shoot(gun.eff_def(), rng)
+	if not no_recoil():
+		recoil.shoot(gun.eff_def(), rng)
 	BotNoise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
 	RangeAudio.event({"kind": "shot", "item": gun.id, "local": true, "cal": gun.def["cal"], "cls": gun.def["class"],
 		"suppressed": gun.stat("noise") < 0.9})
@@ -257,10 +259,10 @@ func start_reload(fast: bool) -> void:
 
 
 func _apply_view(_delta: float) -> void:
-	player.recoil_off = recoil.offset
 	var tired := arm_stamina < 0.12
 	var sw := RecoilModel.sway(_t, gun.def, holding_breath, tired)
-	player.sway_off = sw * ads_amt
+	player.recoil_off = Vector2.ZERO if no_recoil() else recoil.offset
+	player.sway_off = Vector2.ZERO if no_recoil() else sw * ads_amt
 	player.cam.fov = fov_for(ads_amt, gun.stat("scope"))
 
 
@@ -270,6 +272,11 @@ static func fov_for(ads: float, scope: float) -> float:
 		return irons
 	var narrow := rad_to_deg(2.0 * atan(tan(deg_to_rad(TacticalPlayer.BASE_FOV) * 0.5) / scope))
 	return lerpf(irons, narrow, (ads - SCOPE_AT) / (1.0 - SCOPE_AT))
+
+
+## The gun in hand has no recoil or sway (the Tempest; later also the cheat toggle).
+func no_recoil() -> bool:
+	return gun != null and gun.def.get("no_recoil", false)
 
 
 func scoped() -> bool:

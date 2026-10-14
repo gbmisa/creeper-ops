@@ -23,12 +23,13 @@ const PROFILES := {
 	"axmc": {"shot": "shot_338", "sup": "sup_sniper", "tail": "tail_tikka", "db": 3.0},
 	"pkm": {"shot": "shot_pkm", "sup": "sup_heavy", "tail": "tail_mosin", "db": 2.0},
 	"pump12": {"shot": "shot_model12", "sup": "sup_shotgun", "tail": "tail_model12", "db": 2.0},
+	"tempest": {"shot": "shot_338", "sup": "sup_sniper", "tail": "tail_tikka", "db": 0.0, "pitch": 1.7},  # secret railgun: pitched-up .338 crack (+ zap, TempestFx)
 	"semi12": {"shot": "shot_saiga", "sup": "sup_shotgun", "tail": "tail_nova", "db": 1.0},
 }
 const GUN_PROFILE := {
 	"m1911": "pistol45", "glock18": "pistol9", "revolver": "mag44", "mp5": "smg9", "p90": "smg57", "vector": "smg45",
 	"ak47": "ak", "m4a1": "m4", "scarh": "nato762", "sks": "sks", "garand": "garand", "sr25": "dmr", "mosin": "mosin",
-	"sniper": "axmc", "pkm": "pkm", "shotgun": "pump12", "saiga12": "semi12",
+	"sniper": "axmc", "tempest": "tempest", "pkm": "pkm", "shotgun": "pump12", "saiga12": "semi12",
 }
 const CAL_PROFILE := {
 	"45acp": "pistol45", "9x19": "pistol9", "44mag": "mag44", "57x28": "smg57", "762x39": "ak", "556x45": "m4",

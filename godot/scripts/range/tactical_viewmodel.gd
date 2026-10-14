@@ -66,11 +66,12 @@ func _on_switched(g: Gun) -> void:
 func _on_shot(res: Dictionary, g: Gun) -> void:
 	if not res["fired"]:
 		return
-	_kick_v += 0.4 + g.stat("up") * 0.2
-	if RecoilModel.tarkov:
-		_kick_v += TacticalConfig.RECOIL_T_VM_KICK * (1.0 + g.stat("up"))
+	if not weapons.no_recoil():
+		_kick_v += 0.4 + g.stat("up") * 0.2
+		if RecoilModel.tarkov:
+			_kick_v += TacticalConfig.RECOIL_T_VM_KICK * (1.0 + g.stat("up"))
 	if g.stat("flash") > 0.5:
-		flash.flash(Color(1.0, 0.8, 0.45), 0.07 + 0.02 * float(g.def["kg"]), 0.05, 2.0)
+		flash.flash(Color(0.4, 0.7, 1.0) if g.id == SecretArms.TEMPEST else Color(1.0, 0.8, 0.45), 0.07 + 0.02 * float(g.def["kg"]), 0.05, 2.0)
 	if _cycle_clip != "":
 		var clip := "FireWOBullet" if res["last"] else "FireWBullet"
 		_play(clip, 0.2 + g.def["cycle"] if g.def["cycle"] > 0.0 else maxf(0.18, 60.0 / g.def["rpm"]))

@@ -85,7 +85,7 @@ const ROWS := {
 
 
 static func of(id: String) -> Dictionary:
-	var d: Dictionary = ROWS[id].duplicate()
+	var d: Dictionary = (ROWS[id] if ROWS.has(id) else SecretArms.ROWS[id]).duplicate()
 	d["id"] = id
 	if d.has("model_fallback") and not ResourceLoader.exists("res://assets/models/guns/%s.glb" % d["model"]):
 		d["model"] = d["model_fallback"]

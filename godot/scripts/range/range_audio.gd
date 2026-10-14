@@ -103,7 +103,7 @@ static func shot(gun_id: String, pos: Variant = null, suppressed := false, cal :
 	var room := indoor(at)
 	var bus := ROOM_BUS if room else "Master"
 	var db: float = prof["db"] - (6.0 if suppressed else 0.0)
-	play(prof["sup"] if suppressed else prof["shot"], pos, db, bus)
+	play(prof["sup"] if suppressed else prof["shot"], pos, db, bus, prof.get("pitch", 1.0))
 	var dist := at.distance_to(_listener())
 	var delay := clampf(0.05 + dist / SOUND_SPEED, 0.05, 0.7)
 	var tail_db: float = prof["db"] - (14.0 if suppressed else 4.0) + (3.0 if room else 0.0) - minf(dist * 0.05, 8.0)
