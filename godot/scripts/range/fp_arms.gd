@@ -19,8 +19,14 @@ var _reload_len := 1.0
 var target := {}  # side -> world position of the wrist the last solve aimed at (tests)
 
 
-func _init() -> void:
+## own_skel: rig an existing skeleton (the enemy bots' bodies) instead of building the viewmodel arms.
+func _init(own_skel: Skeleton3D = null) -> void:
 	name = "FpArms"
+	if own_skel != null:
+		skel = own_skel
+		for side in ["r", "l"]:
+			_sides[side] = _rig(side)
+		return
 	position = ROOT_POS
 	rotation.y = PI
 	scale = Vector3.ONE * FpBody.SCALE
@@ -57,6 +63,18 @@ func _rig(side: String) -> Dictionary:
 		a["fingers"].append({"bone": i, "k": CURL[j], "axis": skel.get_bone_global_rest(i).basis.inverse() * axis_g,
 			"rest": skel.get_bone_rest(i).basis.get_rotation_quaternion()})
 	return a
+
+
+## Re-reads the arm chains' rest data from the skeleton's current pose (arm bones reset), for bodies whose spine moves.
+func rebase() -> void:
+	for side in _sides:
+		var a: Dictionary = _sides[side]
+		for k in ["up", "lo", "hand"]:
+			skel.reset_bone_pose(a[k])
+		a["rest_up"] = skel.get_bone_global_pose(a["up"])
+		a["rest_lo"] = skel.get_bone_global_pose(a["lo"])
+		a["rest_hand"] = skel.get_bone_global_pose(a["hand"])
+		a["parent_b"] = skel.get_bone_global_pose(skel.get_bone_parent(a["up"])).basis
 
 
 func set_gun(def: Dictionary) -> void:
