@@ -1,0 +1,117 @@
+class_name RangeHud
+extends CanvasLayer
+## Range HUD: no crosshair (optional hip-fire dot), weapon / mode / ammo / zero / mag-check on the right,
+## stamina bars, prompt, messages, help panel (t_help). Hit log comes in phase 3.
+
+var weapons: PlayerWeapons
+var player: TacticalPlayer
+var scope := ScopeOverlay.new()
+var _gun_lbl: Label
+var _ammo_lbl: Label
+var _mag_lbl: Label
+var _msg_lbl: Label
+var _prompt_lbl: Label
+var _help: PanelContainer
+var _leg: ProgressBar
+var _arm: ProgressBar
+var _dot: ColorRect
+var _msg_t := 0.0
+var _show_dot := false
+
+
+func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
+	weapons = w
+	player = p
+	layer = 5
+	add_child(scope)
+	var right := UiKit.panel(Color(0.04, 0.05, 0.07, 0.6))
+	right.position = Vector2(1330, 700)
+	right.custom_minimum_size = Vector2(250, 0)
+	add_child(right)
+	var col := VBoxContainer.new()
+	right.add_child(col)
+	_gun_lbl = UiKit.label("", 20)
+	_ammo_lbl = UiKit.label("", 15)
+	_mag_lbl = UiKit.label("", 15, Color(1.0, 0.85, 0.45))
+	for l in [_gun_lbl, _ammo_lbl, _mag_lbl]:
+		col.add_child(l)
+	var left := UiKit.panel(Color(0.04, 0.05, 0.07, 0.6))
+	left.position = Vector2(20, 790)
+	add_child(left)
+	var bars := VBoxContainer.new()
+	left.add_child(bars)
+	bars.add_child(UiKit.caption("LEG STAMINA"))
+	_leg = UiKit.bar(180, 10, Color(0.4, 0.8, 0.5))
+	bars.add_child(_leg)
+	bars.add_child(UiKit.caption("ARM STAMINA"))
+	_arm = UiKit.bar(180, 10, Color(0.9, 0.75, 0.3))
+	bars.add_child(_arm)
+	_prompt_lbl = UiKit.label("", 20, Color(1, 0.95, 0.7))
+	_prompt_lbl.position = Vector2(680, 560)
+	add_child(_prompt_lbl)
+	_msg_lbl = UiKit.label("", 22)
+	_msg_lbl.position = Vector2(660, 620)
+	add_child(_msg_lbl)
+	_help = UiKit.panel(Color(0.04, 0.05, 0.07, 0.7))
+	_help.position = Vector2(20, 20)
+	var h := UiKit.label(_help_text(), 14)
+	_help.add_child(h)
+	add_child(_help)
+	_dot = ColorRect.new()
+	_dot.size = Vector2(4, 4)
+	_dot.color = Color(1, 1, 1, 0.8)
+	_dot.position = Vector2(798, 448)
+	_dot.visible = false
+	add_child(_dot)
+	w.message.connect(say)
+
+
+func say(text: String) -> void:
+	_msg_lbl.text = text
+	_msg_t = 2.5
+
+
+func _help_text() -> String:
+	var rows := [["t_forward", "Move"], ["t_sprint", "Sprint / hold breath (ADS)"], ["t_crouch", "Crouch"], ["t_lean_left", "Lean"],
+		["t_jump", "Jump"], ["t_use", "Take gun at rack"], ["t_slot_1", "Weapon slots 1-6"], ["t_reload", "Reload (double-tap: fast)"],
+		["t_fire_mode", "Fire mode"], ["t_mag_check", "Check magazine"], ["t_inspect", "Inspect / fix malfunction"],
+		["t_zero_up", "Zero up (down: PageDown)"], ["t_crosshair", "Hip-fire dot"], ["t_help", "This help"]]
+	var out := "FIRING RANGE\nLMB fire   RMB aim   Esc menu\n"
+	for r in rows:
+		out += "%s  %s\n" % [Keybinds.short(r[0]), r[1]]
+	return out.strip_edges()
+
+
+func _process(delta: float) -> void:
+	if weapons == null:
+		return
+	var inp := player.input
+	if inp.act("t_help"):
+		_help.visible = not _help.visible
+	if inp.act("t_crosshair"):
+		_show_dot = not _show_dot
+	_dot.visible = _show_dot and weapons.ads_amt < 0.5
+	scope.visible = weapons.scoped()
+	var g := weapons.gun
+	if g == null:
+		_gun_lbl.text = "No weapon"
+		_ammo_lbl.text = "Take one from the rack"
+		_mag_lbl.text = ""
+	else:
+		_gun_lbl.text = "%s  [%s]" % [g.def["name"], g.mode.to_upper()]
+		_ammo_lbl.text = "%s   Zero %d m" % [TacAmmoDefs.of(g.loaded_ammo() if g.loaded_ammo() != "" else g.ammo_pick)["name"], int(g.zero_dist())]
+		var s := ""
+		if g.malf != "" and g.malf_known:
+			s = "MALFUNCTION"
+		elif g.busy():
+			s = g.busy_kind.capitalize() + "..."
+		elif weapons.mag_text != "":
+			s = "Mag: " + weapons.mag_text
+		elif g.needs_cycle:
+			s = "Release trigger to cycle"
+		_mag_lbl.text = s
+	_prompt_lbl.text = weapons.prompt
+	_msg_t = maxf(0.0, _msg_t - delta)
+	_msg_lbl.visible = _msg_t > 0.0
+	_leg.value = player.leg_stamina * 100.0
+	_arm.value = weapons.arm_stamina * 100.0
