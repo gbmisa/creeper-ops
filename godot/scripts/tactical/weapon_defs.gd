@@ -28,7 +28,7 @@ const ROWS := {
 	"sniper": {"name": "AXMC .338", "class": "bolt-action", "cal": "338", "mag": 5, "rpm": 60.0, "modes": ["semi"], "ergo": 35.0,
 		"kg": 6.5, "up": 3.5, "side": 0.8, "moa": 0.6, "action": "detachable", "cycle": 1.1, "reload": 3.2, "reload_fast": 2.3,
 		"spares": 4, "zeros": [100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0000, -0.0970, -0.860), "hip_pos": Vector3(0.16, -0.18, -0.72),
-		"model": "sniper", "scope": 6.0},
+		"model": "sniper", "scope": 6.0, "sway_mult": 0.5},
 }
 
 
