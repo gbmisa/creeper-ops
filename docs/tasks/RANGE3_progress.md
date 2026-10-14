@@ -13,3 +13,9 @@
 - Player starts with the M1911 and the weapon rack stands behind the spawn. Loot items `{ammo, meds}` per crate (hook for the inventory branch).
 - `--range-test` OK 106; smoke 1264 PASS / 0 FAIL. Screenshots in /tmp/claude-1000/shots (s1, t1, t2, t3).
 - Navmesh needs ~30 physics frames to sync on this map (tests wait).
+
+## RANGE4 (deploy): done
+- `range_truck.gd` (Deploy truck inside the booth at (-6.4,0,3), F "Deploy to Skirmish with this kit"); `RangeLoadout.deploy(inv)` = save + `RangeMaps.go("skirmish")`, used by truck and Esc button (`RangeMenu.deploy_requested`). `RangeLoadout.clear()`.
+- Skirmish: M1911 `give` only when `RangeLoadout.saved` is empty. `SkirmishGame.finish`: win saves inventory, KIA clears.
+- Restart (end screen) reloads the scene and so reuses whatever is saved (extract: carried kit; KIA: default kit).
+- Tests `range_test_deploy.gd` (4 checks); existing skirmish test now gives the game a `weapons` object. `--range-test` OK 191, smoke 0 FAIL.
