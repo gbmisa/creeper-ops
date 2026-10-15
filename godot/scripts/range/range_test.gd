@@ -37,6 +37,7 @@ func run() -> void:
 	await RangeTestDeploy.run(self)
 	RangeTestMp1.run(self)
 	RangeTestGuns.run(self)
+	RangeTestBolt.run(self)
 	RangeTestSound.run(self)
 	await RangeTestAttach.run(self)
 	if failed == 0:

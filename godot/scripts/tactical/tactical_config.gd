@@ -78,3 +78,10 @@ const LEG_STAMINA_DRAIN := 0.12
 const LEG_STAMINA_REGEN := 0.08
 const LEAN_ROLL_DEG := 12.0
 const LEAN_OFFSET := 0.35
+
+# Bolt-action cycle (BoltCycle): handle up, bolt back, bolt forward, handle down. Rest of the gun is untouched.
+const BOLT_ANGLE_DEG := 85.0  # handle lift about the bore axis (rests pointing right, rises to the top)
+const BOLT_TRAVEL := 0.09  # m the bolt and handle slide back (+Z gun space)
+const BOLT_SPLIT := [0.2, 0.3, 0.3, 0.2]  # share of the cycle time: handle up, back, forward, handle down
+const BOLT_ROLL_DEG := 10.0  # gun rolls toward the working hand at the peak of the stroke
+const BOLT_HAND_BLEND := 0.12  # share of the cycle the right hand takes to leave / return to the grip

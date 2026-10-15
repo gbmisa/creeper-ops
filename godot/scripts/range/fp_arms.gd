@@ -16,6 +16,7 @@ var _sides := {}
 var _def := {}
 var _reload := 0.0
 var _reload_len := 1.0
+var bolt: BoltCycle  # set while the held gun is a bolt-action: the right hand works the handle
 var target := {}  # side -> world position of the wrist the last solve aimed at (tests)
 
 
@@ -101,7 +102,10 @@ func update(gun: Node3D, delta: float) -> void:
 		mag_w = smoothstep(0.0, 0.2, t) * (1.0 - smoothstep(0.8, 1.0, t))
 	var left_t: Vector3 = (_def["grip_l"] as Vector3).lerp(_def["mag_l"], mag_w)
 	var left_n := Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)
-	var pos_r := gt * (_def["grip_r"] as Vector3)
+	var grip_r: Vector3 = _def["grip_r"]
+	if bolt != null:
+		grip_r = bolt.hand_r(grip_r)
+	var pos_r := gt * grip_r
 	var pos_l := gt * left_t
 	_lean_in(pos_r, pos_l)
 	solve("r", pos_r, gt.basis * fwd, gt.basis * Vector3(-1, 0, 0), 1.0)

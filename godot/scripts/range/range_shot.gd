@@ -1,6 +1,6 @@
 class_name RangeShot
 extends Node
-## Screenshot / debug hook: --shot=path [--weapon=id] [--fit=a,b] [--zoom=lo] [--ads] [--look=x,y,z] [--fire=N] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] [--fps-report] (reload mid-way shot).
+## Screenshot / debug hook: --shot=path [--weapon=id] [--fit=a,b] [--zoom=lo] [--ads] [--look=x,y,z] [--fire=N] [--bolt=0..1 (with --fire=1: shoot after that share of the bolt cycle)] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] [--fps-report] (reload mid-way shot).
 ## Gives the weapon, optionally fires N shots, waits, saves the viewport, quits.
 
 
@@ -59,11 +59,12 @@ func run(app: FiringRange) -> void:
 		w.trigger_down = true
 		await app.get_tree().create_timer(0.08).timeout
 		w.trigger_down = false
-		await app.get_tree().create_timer(60.0 / w.gun.def["rpm"] + 0.1 + w.gun.def["cycle"]).timeout
+		var gap: float = float(a["bolt"]) * w.gun.def["cycle"] if a.has("bolt") else 60.0 / w.gun.def["rpm"] + 0.1 + w.gun.def["cycle"]
+		await app.get_tree().create_timer(gap).timeout
 	if a.has("reload"):
 		w.start_reload(a.has("fast"))
 		await app.get_tree().create_timer(float(a.get("reload", 0.5)) if str(a["reload"]) != "true" else 0.4).timeout
-	await app.get_tree().create_timer(float(a.get("wait", 1.0))).timeout
+	await app.get_tree().create_timer(0.0 if a.has("bolt") else float(a.get("wait", 1.0))).timeout
 	for b in app.bots.bots:
 		if is_instance_valid(b):
 			print("[range] ", b.label_name, " ", b.global_position.snapped(Vector3(0.1, 0.1, 0.1)), " ", b.brain.state, " hp ", snappedf(b.body.total_frac(), 0.01))
