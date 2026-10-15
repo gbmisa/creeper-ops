@@ -40,6 +40,7 @@ func run() -> void:
 	RangeTestBolt.run(self)
 	RangeTestSound.run(self)
 	await RangeTestAttach.run(self)
+	RangeTestStart.run(self)
 	if failed == 0:
 		print("[range] OK ", passed)
 	else:
