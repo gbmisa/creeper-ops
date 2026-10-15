@@ -1,4 +1,9 @@
 # Handoff: 2026-10-14 late (RANGE5 paused by Gregory; work split Muse vs Opus)
+
+## 2026-10-14 late (Opus): free-pack guns
+- 989401f: Glock, revolver, MP5*, Vector*, M4A1 now Quaternius Ultimate (CC0), Mosin is TabascoFriday. *MP5/Vector are stand-ins (closest free SMGs). Mounts re-measured (`art/guns_src/measure_gun.py`). Tests: parse 0, smoke 0 FAIL, range OK 513. Opus checked hip/ADS: sights centred on M4/Mosin/pistols; Vector's rear block fills the ADS view.
+- Still generated (no free match): SCAR-H, Saiga-12, SKS, SR-25, PKM. Next: Sketchfab CC-BY once Gregory sends an API token (Blender MCP add-on updated; restart it in Blender).
+- New feedback F20-F26 in `docs/playtests/feedback_2026-10-14.md` (main checkout). Rule: Haiku never judges images; re-judge everything Haiku judged.
 **Start here: `docs/tasks/MUSE_QUEUE.md`** (what Muse does in waves, what Opus keeps). Merged on integ: 17 guns, 12
 attachments/sights, 28 Hunyuan models, sounds, Tarkov recoil toggle (CHANGES P3), LOOK-1/2 graphics, Kestrel theme.
 Range test 513 OK, smoke 0 FAIL. Judge round 1 scores in `docs/tasks/RANGE5_judge.md`. Multiplayer: `docs/MULTIPLAYER.md`
