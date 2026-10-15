@@ -21,8 +21,32 @@ arm = next(o for o in sc.objects if o.type == "ARMATURE")
 mesh = next(o for o in sc.objects if o.type == "MESH")
 print("[preview] tris", sum(len(p.vertices) - 2 for p in mesh.data.polygons), "materials", [m.name for m in mesh.data.materials])
 
-bpy.ops.mesh.primitive_plane_add(size=6, location=(0, 0, min(0.0, min((mesh.matrix_world @ __import__("mathutils").Vector(c)).z for c in mesh.bound_box))))
-ground = sc.objects[-1] if sc.objects[-1].type == "MESH" else bpy.context.active_object
+ad = arm.animation_data or arm.animation_data_create()
+for tr in list(ad.nla_tracks):
+    ad.nla_tracks.remove(tr)
+
+
+def use(act):
+    ad.action = act
+    if hasattr(ad, "action_slot") and act.slots:
+        ad.action_slot = act.slots[0]
+
+
+# Measure the posed idle mesh, not the rest pose: hidden parts (flames, projectiles) sit at full size at rest.
+idle = bpy.data.actions.get("idle") or next(iter(bpy.data.actions))
+use(idle)
+sc.frame_set(int(idle.frame_range[0]))
+dg = bpy.context.evaluated_depsgraph_get()
+ev = mesh.evaluated_get(dg)
+pts = [ev.matrix_world @ v.co for v in ev.to_mesh().vertices]
+ev.to_mesh_clear()
+lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+size = max(hi - lo) or 1.0
+centre = (lo + hi) * 0.5
+
+bpy.ops.mesh.primitive_plane_add(size=max(6.0, size * 2.5), location=(centre.x, centre.y, min(0.0, lo.z)))
+ground = bpy.context.active_object
 gm = bpy.data.materials.new("ground")
 gm.diffuse_color = (0.18, 0.2, 0.16, 1)
 ground.data.materials.append(gm)
@@ -31,9 +55,8 @@ cam_data = bpy.data.cameras.new("cam")
 cam = bpy.data.objects.new("cam", cam_data)
 sc.collection.objects.link(cam)
 sc.camera = cam
-size = max(mesh.dimensions) or 1.0
-cam.location = Vector((1.1, -1.5, 0.9)) * size * 1.1
-cam.rotation_euler = (Vector((0, 0, size * 0.25)) - cam.location).to_track_quat("-Z", "Y").to_euler()
+cam.location = centre + Vector((1.1, -1.5, 0.9)) * size * 1.3  # margin: attacks swing past the idle bounds
+cam.rotation_euler = (centre - cam.location).to_track_quat("-Z", "Y").to_euler()
 cam_data.lens = 40
 
 sun_data = bpy.data.lights.new("sun", "SUN")
@@ -52,13 +75,8 @@ except TypeError:
 sc.render.resolution_x, sc.render.resolution_y = 480, 360
 sc.render.film_transparent = False
 
-ad = arm.animation_data or arm.animation_data_create()
-for tr in list(ad.nla_tracks):
-    ad.nla_tracks.remove(tr)
 for act in bpy.data.actions:
-    ad.action = act
-    if hasattr(ad, "action_slot") and act.slots:
-        ad.action_slot = act.slots[0]
+    use(act)
     a, b = (int(x) for x in act.frame_range)
     print("[preview] clip", act.name, "frames", b - a)
     for n in range(per):

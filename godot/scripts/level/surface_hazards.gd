@@ -28,6 +28,7 @@ func _init(w: World, level: Dictionary, sm: StructureManager) -> void:
 		var src := world.creeper.add_source({ "x": v.x, "z": v.z, "amount": v.amount, "interval": v.interval, "start": v.get("start", 0.0) })
 		vents.append({ "node": node, "source": src })
 	spire = _make_spire(level.spire)
+	RaiderDefs.banned = level.get("raider_ban", [])
 	nests = SporeNests.new(w, level.get("hives", level.nests), level.get("raid_schedule", {}), level)
 	nests.structures = sm
 	w.updaters.append(update)
@@ -61,22 +62,22 @@ func _make_spire(sp: Dictionary) -> Dictionary:
 	var s := { "x": sp.x, "z": sp.z, "node": node, "pos": pos, "alive": true, "timer": 0.0,
 		"interval": Config.SPIRE_INTERVAL, "fuse": -1.0 }
 	world.interactables.append({ "pos": pos, "radius": 3.6,
-		"prompt": func(): return "" if not s.alive else ("Charge armed. Get clear!" if s.fuse >= 0.0 else "[E] Plant demolition charge"),
+		"prompt": func(): return "" if not s.alive else ("Charge armed. Get clear!" if s.fuse >= 0.0 else "[%s] Plant demolition charge" % Keybinds.short("use")),
 		"use": func():
 			if s.alive and s.fuse < 0.0:
 				s.fuse = Config.CHARGE_FUSE
 				Sfx.play("alarm")
 				Bus.say("Charge planted on the Spore Spire. 3 seconds!", "warn") })
-	_marker(pos + Vector3(0, 10, 0), "Spore Spire: Operative plants charge [E]", Color("ffc857"), func(): return s.alive)
+	_marker(pos + Vector3(0, 10, 0), func(): return "Spore Spire: Operative plants charge [%s]" % Keybinds.short("use"), Color("ffc857"), func(): return s.alive)
 	return s
 
 
 func _make_rift(r: Dictionary) -> Dictionary:
 	var node := HazardMeshes.rift()
 	var pos := world.place_at(node, r.x, r.z)
-	world.interactables.append({ "pos": pos, "radius": 2.8, "prompt": func(): return "[E] Descend into the Rift",
+	world.interactables.append({ "pos": pos, "radius": 2.8, "prompt": func(): return "[%s] Descend into the Rift" % Keybinds.short("use"),
 		"use": func(): Bus.enter_cave.emit() })
-	_marker(pos + Vector3(0, 4, 0), func(): return "Rift: Operative descends [E]" if core_alive else "Rift (Core destroyed)",
+	_marker(pos + Vector3(0, 4, 0), func(): return ("Rift: Operative descends [%s]" % Keybinds.short("use")) if core_alive else "Rift (Core destroyed)",
 		Color("b48cff"), func(): return true)
 	return { "x": r.x, "z": r.z, "node": node, "pos": pos }
 
@@ -167,7 +168,7 @@ func _fire_spore() -> void:
 			world.effects.burst(to, Color("88ff55"), 3.0 * Config.CELL, 0.6)
 			Sfx.play("boom", to)
 			if not target.dead:
-				structures.damage(target, 15.0) })
+				structures.damage(target, 15.0, "spore_volley") })
 	it["spore"] = true
 	it["spore_hp"] = Config.SPORE_HP
 

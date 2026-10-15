@@ -161,12 +161,17 @@ static func _caps(host, hive: Dictionary) -> void:
 
 static func tick(host, hive: Dictionary, dt: float) -> void:
 	if str(hive.state) == "active":
-		sync(host, hive)
-		FlyerLaunch.sync(host, hive)
+		# Bookkeeping (stage unlocks, HP caps, mortar count) only changes with pressure or damage,
+		# so it runs every HIVE_SYNC_INTERVAL; growth and combat run every frame.
+		hive["sync_t"] = float(hive.get("sync_t", 0.0)) - dt
+		if float(hive.sync_t) <= 0.0:
+			hive.sync_t = Config.HIVE_SYNC_INTERVAL
+			sync(host, hive)
+			FlyerLaunch.sync(host, hive)
+			_boost(hive)
+			_caps(host, hive)
 		age(hive, dt)
 		HiveParts.combat(host, hive, dt)
-		_boost(hive)
-		_caps(host, hive)
 	else:
 		HiveSite.tick(host, hive, dt)
 

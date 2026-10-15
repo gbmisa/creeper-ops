@@ -1,16 +1,10 @@
 class_name EngineHook
 extends RefCounted
 ## First-person side of a Salvage Engine socket: the hold-E interactable, the gauntlet cable
-## while holding, the permanent cable and its pulse, and the raiders' view of a hooked socket.
+## while holding, the permanent cable and its pulse, (a hook is not prey: only losing its anchor relay ends it).
 
 
 static func register(host: SalvageEngines, e: Dictionary, s: Dictionary) -> void:
-	s["prey"] = { "kind": "socket", "type": "socket", "weapon": false, "node": s.node, "radius": 0.9,
-		"alive": func(): return bool(s.hooked),
-		"hit": func(d: float):
-			s.hp = float(s.hp) - d
-			if float(s.hp) <= 0.0:
-				host.unhook(s, "cut by raiders") }
 	var it := { "pos": s.pos, "radius": EngineDefs.HOOK_RANGE, "hold": EngineDefs.HOOK_TIME,
 		"near": func(feet: Vector3) -> bool: return absf(feet.y + 1.2 - float(s.pos.y)) <= EngineDefs.HOOK_REACH_Y,
 		"prompt": func() -> String: return prompt(host, e, s),
@@ -91,7 +85,7 @@ static func animate(host: SalvageEngines, e: Dictionary, s: Dictionary, t: float
 	var bead := s.get("bead") as MeshInstance3D
 	if bead == null or not s.has("pts") or float(e.reserve) <= 0.0:
 		return
-	var live: bool = bool(s.hooked) and float(e.reserve) > 0.0 and host.guard_note(e) == "" and not host.is_wet(s)
+	var live: bool = bool(s.hooked) and float(e.reserve) > 0.0 and not host.is_wet(s)
 	bead.visible = live
 	if live:
 		bead.position = EngineMeshes.along(s.pts, fmod(t * 0.3 + float(s.pos.x) * 0.1, 1.0))

@@ -31,7 +31,9 @@ class Kit:
         def pose(t):
             w = 2 * math.pi * t
             p = self.still()
-            p["body"] = body_pose(self.arm, pitch=0.05 * math.sin(w), loc=(0, 0, 0.03 * math.sin(w)))
+            q, loc = body_pose(self.arm, pitch=0.05 * math.sin(w), loc=(0, 0, 0.03 * math.sin(w)))
+            br = 1 + 0.035 * math.sin(w)  # breath: girth swells (bone-local x/z; y runs along the body)
+            p["body"] = (q, loc, (br, 1, br))
             if self.head:
                 p[self.head] = bone_rot(self.arm, self.head, (0, 0, 1), 0.5 * math.sin(w) * lib.pulse(t, 0.15, 0.75))
             if extra:

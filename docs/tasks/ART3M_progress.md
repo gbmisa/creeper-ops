@@ -14,7 +14,12 @@ Contract: u = 1, feet z = 0, faces +X, clips idle/walk/attack/hit/die, material 
 | spitter lancer warden spotter burrower | done (`bug_kit.py` shares idle/walk/hit/die) | 1140/580/728/786/698 |
 | spore_bat gasbag wyvern | done (`flyer_kit.py`; origin = body centre; walk = flap) | 502/1756/658 |
 | soldier crawler hive_core | done | 804/622/558 |
-| trebuchet | built (castle engine, throws +X; not graded yet) | 640 |
+| trebuchet | done (castle engine, throws +X; fire pot payload, anticipation, frame rock) | |
+| totem drop_pod | done (`totem` = structure `beacon`: attack = Operative deploys; `drop_pod`: walk = falling, attack = touchdown + doors open, idle = landed, die = recall sink) | |
+| hive_pit hive_spitter hive_launcher hive_mortar hive_roost | done (`struct_kit.py`: static, walk = idle, shared hit/die; game `HiveMeshes.part(kind)` → `hive_<kind>`; real metres, scale 1; spitter/mortar face +X) | |
+
+**Bone scale gotcha:** pose scale is bone-local, and bone **y = along the bone**. For a vertical bone, "taller" is the 2nd component, not the 3rd.
+Hidden parts (spit blob, shell, flash, flyer, wave ring) sit at scale 0.01 outside their attack clip.
 
 ## Grading (Sonnet grader on contact sheets, 3 iterations, target 8)
 Round 1 avg 6.1, round 2 avg 6.8, round 3 avg 7.4. At 8: brute, crawler, sentinel, soldier, spore_bat, warden. At 7: the rest.
@@ -29,3 +34,18 @@ Open notes for the in-game pass: wyvern head/neck merge into a round body (lengt
 Bertha 7, Thor 7, Terp 8, Nullifier 7, Outpost 8 (Sonnet grader, up to 3 rounds each). Branch `art/3-models`.
 - Lessons: concrete or olive on the grey preview floor blends, so use dark concrete with bold hazard bands. Emissive colours need to be saturated (void 9a2bff, arc 00b4ff). Thin parts disappear at RTS distance; titans need about 1.5x part thickness.
 - 2-part models: `weapon_kit.run(..., parts=("base", "core"))`. The Terp `Spin` and the Nullifier `Core` stay code-driven.
+Hive structures (same grader, 3 rounds): avg 6.7 → 7.3 → 7.75. hive_core 8.5, hive_spitter 8, hive_launcher 8, hive_pit 7.5, hive_mortar 7.5, hive_roost 7, plus a polish pass after round 3 (bigger shell, darker pit lip, thicker cradle, tighter roost collapse). Open: spitter snout/brow, mortar star flash, roost flyer launches up toward the camera.
+Player side + trebuchet (same grader, 3 rounds): totem 6 → 7 → 7.5, drop_pod 4 → 7 → 7.5, trebuchet 7 → 7 → 7.5 (+ flame polish). Open: totem value contrast (teal plinth rim), stronger hit flashes (needs emission animation in game, not bone scale), visible projectile arcs (the game's own projectile covers that).
+Wyvern: neck and tail lengthened, bone ridges (open note). `lathe(cap=False)` for rings: capped lathes made solid discs.
+
+## 2026-10-08 late (Opus)
+- **preview.py fix:** framing and the ground plane now come from the posed idle mesh, not the rest pose. At rest, hidden parts (flames, projectiles, jets) are full size, which shrank every sheet and dropped the ground below the Node and the pod. Older grades were partly limited by this.
+- Wyvern rebuilt: 4 → 5.5 on the old framing, then 5 → 5.8 → 6 on the fixed framing. What's left: flat, thin wings, a small head at distance, and the fire core reads as solid. Judge it in game.
+- Command Node (new, `command_node`): 6 → 6.5 → 7, then 7.5 on the fixed framing. The jets sit under the plane in the preview; in game the Node is lifted.
+
+## 2026-10-08 (late): Art 6, the military restyle of the old player models
+- Restyled to military (bone names and pivots kept): cannon (autocannon on a sandbagged pillbox), mortar, sniper (lattice watchtower and anti-materiel rifle), beam (air-defence laser mast), collector (solar energy mast), relay (lattice radio mast), command_node (armoured HQ tower), totem (teleport beacon), drop_pod, soldier (rifleman, plus a new `flash` bone) and crawler (4x4 armoured car).
+- New glbs using the static-structure contract (struct_kit): miner (drill rig), reactor (field generator), storage (energy tank), barracks (Quonset hut), forge (armoured foundry with the Aether ring). **No game loader yet.**
+- Shared parts are in `mil_kit.py`. `lib.lathe(phase=)` gives square columns. New palette colour: `solar`.
+- Grades (Sonnet, 2 rounds plus a round-3 fix pass): cannon 7.5, mortar 8, sniper 7.5, beam 8.5, collector 7, relay 7, soldier 7, Node 8, totem 7, pod 7.5. Sheets: `docs/art/military/`.
+- Icons: `icons.sh <dir>` renders the build-menu icons (used by branch `ui/overhaul`).

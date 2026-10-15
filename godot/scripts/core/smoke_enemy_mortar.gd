@@ -140,16 +140,24 @@ static func _earth(g, nests: SporeNests) -> void:
 
 static func _sabotage(g, nests: SporeNests, hive: Dictionary) -> void:
 	var m := _plant(nests, hive, 20, 70)
+	var it: Dictionary = m.interact
+	var w: World = nests.world
 	var before: float = g.stockpile.salvage
-	(m.interact as Dictionary).use.call()
-	SmokeTest._check("sabotage use starts the channel", is_equal_approx(float(m.channel), Config.MORTAR_SABOTAGE_TIME))
-	var far: Vector3 = m.pos + Vector3(8, 0, 0)
-	SmokeTest._check("leaving range cancels sabotage", not EnemyMortars.sabotage(nests, m, far, 1.0) and m.alive)
-	(m.interact as Dictionary).use.call()
-	SmokeTest._check("sabotage needs the full 3s", not EnemyMortars.sabotage(nests, m, m.pos, 2.9) and m.alive)
-	var down := EnemyMortars.sabotage(nests, m, m.pos, 0.2)
-	SmokeTest._check("sabotage destroys the mortar and pays salvage", down and not m.alive
-		and is_equal_approx(g.stockpile.salvage, before + Config.MORTAR_SALVAGE))
+	OperativeUpgrades.reset()
+	DemoCharge.clear()
+	var old_op: Callable = nests.operative
+	var feet := { "controller": { "pos": m.pos + Vector3(1, 0, 0) } }
+	nests.operative = func(): return feet
+	SmokeTest._check("mortar offers sabotage with zero charges",
+		"Sabotage" in String(it.prompt.call()) and not DemoCharge.chargeable(m.target))
+	it.use.call()
+	EnemyMortarSabotage.tick(nests, Config.MORTAR_SABOTAGE_TIME - 0.5)
+	SmokeTest._check("mortar survives until the channel completes", m.alive and DemoCharge.list.is_empty())
+	EnemyMortarSabotage.tick(nests, 0.6)
+	SmokeTest._check("completed sabotage destroys the mortar and pays no Salvage",
+		not m.alive and is_equal_approx(g.stockpile.salvage, before))
+	nests.operative = old_op
+	OperativeUpgrades.reset()
 	EnemyMortars.clear(nests, hive)
 
 

@@ -31,13 +31,39 @@ static func refresh(v: Dictionary, c: Dictionary) -> void:
 			continue
 		var def: Dictionary = CastleTurrets.DEFS[s.turret]
 		var k: float = 1.3 + 0.25 * s.level  # reads from command height; grows per level
-		_model(n, def.color, k)
+		_model(n, s.turret, def, k)
 
 
-## Stone pedestal, bronze yoke and a ballista head (looks along -Z, aimed via "Head").
-static func _model(n: Node3D, col: Color, k: float) -> void:
+## Lamp pulse (Ward Lamp): cheap glow scale + light-energy flicker.
+static func animate(v: Dictionary, c: Dictionary, t: float) -> void:
+	if not v.has("turrets"):
+		return
+	for i in c.sockets.size():
+		var s: Dictionary = c.sockets[i]
+		if s.turret != "ward_lamp" or not CastleTurrets.alive(s):
+			continue
+		var n := v.turrets[i] as Node3D
+		var wob := sin(t * 3.0 + float(i) * 1.7)
+		var glow := n.get_node_or_null("Glow")
+		if glow:
+			glow.scale = Vector3.ONE * (1.0 + 0.18 * wob)
+		var l := n.get_node_or_null("GlowLight") as OmniLight3D
+		if l:
+			l.light_energy = 1.1 + 0.7 * (0.5 + 0.5 * wob)
+
+
+## Stone pedestal, then a head per turret type (all look along -Z, aimed via "Head").
+static func _model(n: Node3D, type: String, def: Dictionary, k: float) -> void:
 	ShapeKit.lathe(n, PackedVector2Array([Vector2(0.8, 0.0), Vector2(0.65, 0.2), Vector2(0.55, 0.6),
 		Vector2(0.7, 0.75), Vector2(0.0, 0.75)]) , StructureMeshes.mat(StrongholdMeshes.DECOR_STONE, 0.0, 0.9), Vector3.ZERO, 8).scale = Vector3.ONE * k
+	match type:
+		"ballista": _ballista_head(n, def.color, k)
+		"ward_lamp": _lamp(n, def.color, k)
+		_: _repeater_head(n, def.color, k)
+
+
+## The small anti-raider gun: bronze yoke and a light bolt-thrower.
+static func _repeater_head(n: Node3D, col: Color, k: float) -> void:
 	var head := Node3D.new()
 	head.name = "Head"
 	head.position.y = 0.95 * k
@@ -47,6 +73,37 @@ static func _model(n: Node3D, col: Color, k: float) -> void:
 	for sx in [-1.0, 1.0]:
 		ShapeKit.strut(head, Vector3(0, 0.05, -0.85) * k, Vector3(sx * 0.6, 0.05, -0.55) * k, 0.07 * k, StructureMeshes.pal("bronze_dark"))
 	StructureMeshes.ball(head, 0.12 * k, StructureMeshes.glow(col, 1.6), Vector3(0, 0.25, 0) * k, 8)
+
+
+## The Ballista: a big bolt-thrower — longer oak rail, heavy bronze arms, a fat glowing bolt.
+static func _ballista_head(n: Node3D, col: Color, k: float) -> void:
+	var head := Node3D.new()
+	head.name = "Head"
+	head.position.y = 0.95 * k
+	n.add_child(head)
+	StructureMeshes.box(head, Vector3(0.7, 0.5, 0.9) * k, StructureMeshes.pal("bronze_dark"))
+	StructureMeshes.box(head, Vector3(0.22, 0.22, 2.6) * k, StructureMeshes.pal("oak"), Vector3(0, 0.12, -0.7) * k)
+	for sx in [-1.0, 1.0]:  # heavy throwing arms
+		ShapeKit.strut(head, Vector3(0, 0.12, -1.6) * k, Vector3(sx * 1.05, 0.12, -0.9) * k, 0.13 * k, StructureMeshes.pal("bronze"))
+		ShapeKit.strut(head, Vector3(sx * 1.05, 0.12, -0.9) * k, Vector3(sx * 0.85, 0.35, -0.7) * k, 0.06 * k, StructureMeshes.pal("bronze_dark"))
+	StructureMeshes.box(head, Vector3(0.16, 0.16, 1.1) * k, StructureMeshes.glow(col, 1.8), Vector3(0, 0.3, -0.75) * k)
+
+
+## The Ward Lamp: an iron post with a caged crystal that pulses (animated in animate()).
+static func _lamp(n: Node3D, col: Color, k: float) -> void:
+	StructureMeshes.box(n, Vector3(0.18, 2.4, 0.18) * k, StructureMeshes.pal("iron"), Vector3(0, 1.95 * k, 0))
+	for sx in [-1.0, 1.0]:  # the cage
+		ShapeKit.strut(n, Vector3(sx * 0.42 * k, 2.9 * k, 0), Vector3(sx * 0.18 * k, 3.5 * k, 0), 0.05 * k, StructureMeshes.pal("bronze_dark"))
+		ShapeKit.strut(n, Vector3(0, 2.9 * k, sx * 0.42 * k), Vector3(0, 3.5 * k, sx * 0.18 * k), 0.05 * k, StructureMeshes.pal("bronze_dark"))
+	var glow := StructureMeshes.ball(n, 0.32 * k, StructureMeshes.glow(col, 2.2), Vector3(0, 3.2 * k, 0), 12)
+	glow.name = "Glow"
+	var l := OmniLight3D.new()
+	l.name = "GlowLight"
+	l.light_color = col
+	l.light_energy = 1.4
+	l.omni_range = 7.0
+	l.position = Vector3(0, 3.2 * k, 0)
+	n.add_child(l)
 
 
 static func tick(world: World, c: Dictionary, v: Dictionary, raiders: Raiders, dt: float) -> void:
@@ -69,9 +126,10 @@ static func tick(world: World, c: Dictionary, v: Dictionary, raiders: Raiders, d
 		var at: Vector3 = (v.turrets[i] as Node3D).position + Vector3(0, 1.0, 0)
 		var fired := false
 		match def.targets:
-			"raiders": fired = _repeater(world, s, def, at, raiders, v.turrets[i])
+			"raiders": fired = _ballista(world, s, def, at, raiders, v.turrets[i]) if s.turret == "ballista" else _repeater(world, s, def, at, raiders, v.turrets[i])
 			"creeper": fired = _lobber(world, s, def, at)
 			"air": fired = _flak(world, s, def, at)
+			"none": pass  # the Ward Lamp fires nothing
 		if fired:
 			s.cd = def.interval
 	if changed:
@@ -96,14 +154,23 @@ static func _lost(c: Dictionary, s: Dictionary) -> void:
 	s.level = 0
 
 
-static func _repeater(world: World, s: Dictionary, def: Dictionary, at: Vector3, raiders: Raiders, node: Node3D) -> bool:
+## Nearest live raider within `reach` metres of `at`.
+static func _target_raider(raiders: Raiders, at: Vector3, reach: float) -> Dictionary:
 	var best: Dictionary = {}
-	var bd: float = def.range * Config.CELL
+	var bd := reach
 	for m in raiders.list:
+		var med: Dictionary = m.get("enemy", {})
+		if med.has("targetable") and not (med["targetable"] as Callable).call():
+			continue  # unhittable (e.g. a burrowed Burrower): don't waste the volley
 		var d := (m.node.position as Vector3).distance_to(at)
 		if m.alive and d < bd:
 			bd = d
 			best = m
+	return best
+
+
+static func _repeater(world: World, s: Dictionary, def: Dictionary, at: Vector3, raiders: Raiders, node: Node3D) -> bool:
+	var best := _target_raider(raiders, at, def.range * Config.CELL)
 	if best.is_empty():
 		return false
 	var p: Vector3 = best.node.position + Vector3(0, best.tier.size * 0.6, 0)
@@ -111,6 +178,21 @@ static func _repeater(world: World, s: Dictionary, def: Dictionary, at: Vector3,
 	if head:
 		head.look_at(p, Vector3.UP)
 	world.effects.beam(at, p, def.color, 0.06, 0.05)
+	best.enemy.hit.call(def.power[s.level - 1])
+	Sfx.play("rifle", at)
+	return true
+
+
+## A Ballista aims like a Repeater but throws one slow, heavy bolt: thicker beam, big power.
+static func _ballista(world: World, s: Dictionary, def: Dictionary, at: Vector3, raiders: Raiders, node: Node3D) -> bool:
+	var best := _target_raider(raiders, at, def.range * Config.CELL)
+	if best.is_empty():
+		return false
+	var p: Vector3 = best.node.position + Vector3(0, best.tier.size * 0.6, 0)
+	var head := node.get_node_or_null("Head") as Node3D
+	if head:
+		head.look_at(p, Vector3.UP)
+	world.effects.beam(at, p, def.color, 0.16, 0.12)
 	best.enemy.hit.call(def.power[s.level - 1])
 	Sfx.play("rifle", at)
 	return true

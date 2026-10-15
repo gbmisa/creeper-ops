@@ -71,6 +71,8 @@ static func _spray(g) -> void:
 		before += world.creeper.depth_at(c.x, c.y)
 	var kids := world.get_child_count()
 	w._spray(0.1, world, feet)
+	# The sprayer lays anti-creeper; it annihilates on the sim tick (none ran above).
+	world.creeper._annihilate()
 	var after := 0.0
 	for c in wet:
 		after += world.creeper.depth_at(c.x, c.y)
@@ -150,20 +152,20 @@ static func _gunfeel(g) -> void:
 	w.kick("rocket")
 	var cam_rocket := w.motion.cam_scale
 	w.kick("rifle")
-	SmokeTest._check("gunfeel: RecoilDefs.cam wired into camera punch", cam_rocket == 1.4 and w.motion.cam_scale == 1.0,
+	SmokeTest._check("gunfeel: RecoilDefs.cam wired into camera punch", is_equal_approx(cam_rocket, float(RecoilDefs.of("rocket").cam)) and is_equal_approx(w.motion.cam_scale, float(rd.cam)),
 		"(rocket %.1f, rifle %.1f)" % [cam_rocket, w.motion.cam_scale])
-	# Hold-to-fire: 10 held rifle shots build ~5.5 deg bloom and a capped climb; both ease back.
+	# Hold-to-fire (playtest 3): small bloom, a real climb (recoil) that eases back.
 	w.climb = 0.0
 	w.climb_yaw = 0.0
 	for i in 10:
 		w.kick("rifle")
 	var bloom10 := minf(10.0 * float(rd.bloom_add), float(rd.bloom_max))
-	SmokeTest._check("gunfeel: 10 held shots reach ~5.5 deg bloom", absf(bloom10 - 5.5) < 0.01,
+	SmokeTest._check("gunfeel: held-fire bloom stays small (<= 2 deg)", bloom10 > 0.0 and bloom10 <= 2.0,
 		"(bloom %.1f deg)" % bloom10)
-	SmokeTest._check("gunfeel: hold-fire climb accumulates, capped", w.climb > 0.03 and w.climb <= float(rd.climb_max),
+	SmokeTest._check("gunfeel: hold-fire climb accumulates, capped", w.climb > 0.5 * float(rd.climb_max) and w.climb <= float(rd.climb_max),
 		"(climb %.4f rad)" % w.climb)
 	w.update(1.0, g.input, g.surface, ctrl.pos)  # trigger released in headless: climb must ease back
-	SmokeTest._check("gunfeel: climb eases back after release", w.climb < 0.03,
+	SmokeTest._check("gunfeel: climb eases back after release", w.climb < 0.5 * float(rd.climb_max),
 		"(climb %.4f rad after 1 s)" % w.climb)
 	ctrl.kick_pitch = 0.0
 	ctrl.kick_yaw = 0.0
@@ -190,8 +192,8 @@ static func _ttk(g) -> void:
 	w.cooldown = 0.0
 	var shots := 0
 	while log.alive and shots < 12:
-		w.bloom = 0.0  # tap-fire: no spread
-		w._fire(world)
+		w.rifle.bloom = 0.0  # tap-fire: no spread
+		w.rifle.fire(world)
 		shots += 1
 	world.targets.erase(target)
 	node.queue_free()

@@ -8,6 +8,7 @@ var node_alert_cd := 0.0
 var pause: PauseMenu
 var pause_open: bool:
 	get: return pause.open
+var base_alerts := BaseAlerts.new()
 
 
 func _init(game) -> void:
@@ -28,6 +29,7 @@ func _init(game) -> void:
 			node_alert_cd = 8.0
 			Sfx.play("alarm")
 			g.hud.alert("COMMAND NODE UNDER ATTACK", "bad", 2.5))
+	base_alerts.connect_bus(g)
 	Bus.node_destroyed.connect(func(): end_game(false))
 	Bus.victory.connect(func(): end_game(true))
 	g.command.on_land = land
@@ -41,6 +43,7 @@ func _init(game) -> void:
 
 func update(dt: float) -> void:
 	node_alert_cd -= dt
+	base_alerts.update(dt)
 
 
 ## Global keys (fired from InputState._input, before the frame update).
@@ -64,6 +67,8 @@ func on_key(k: int) -> void:
 			g.teleport_cooldown = 0.0
 			to_command("Test recall: back aboard, teleporter ready.")
 		elif k == KEY_ESCAPE:
+			if g.fps.builder != null and g.fps.builder.wheel_open():
+				return  # the build wheel closes itself this frame; don't pause
 			pause.show()
 		return
 	if Keybinds.matches("keybinds", k):
@@ -134,6 +139,7 @@ func set_mode(m: String) -> void:
 	g.cave.set_active(m == "cave")
 	g.command.overlay.set_overlay_visible(cmd)
 	WorldLook.set_command_view(g.surface.env, cmd)
+	CastleReadability.set_command_view(cmd)  # P4: fade the castle roof slabs
 	if cmd:
 		g.command.cam.current = true
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -146,13 +152,14 @@ func set_mode(m: String) -> void:
 
 
 func show_briefing() -> void:
-	g.hud.show_overlay("""[font_size=26][b]%s[/b][/font_size]
+	g.hud.show_overlay("""[color=#e3b21c][font_size=14]MISSION BRIEFING  //  OPERATION ORDER[/font_size][/color]
+[font_size=30][b]%s[/b][/font_size]
 
 Hold the line Creeper World 3 style, and drop an [b]Operative[/b] to finish what turrets can't.
 
 • [b]Land first.[/b] Pick where your Command Node touches down: dry, high ground far from emitters.
 • [b]Energy is packets.[/b] The Node fires a packet whenever a structure asks and the bank has energy. Watch the green (production) and red (demand) numbers.
-• [b]Four build screens[/b] (F1-F4): Structures, Weapons, Titans, Orbital. Weapons and titans can fly to new spots: select, then right-click.
+• [b]Five build screens[/b] (F1-F5): Structures, Weapons, Titans, Orbital, Castle. Weapons and titans can fly to new spots: select, then right-click.
 • [b]Creeper destroys anything it touches,[/b] built or not. Only the Node has armour. Purple [b]Blight[/b] can't be built on.
 • [b]Spore Nests grow.[/b] They raid your base and breed tougher raiders the longer the mission runs. [b]Castles[/b] feed the Forge: the Operative climbs the spire, kills the crown nest and holds the top; raiders come to take them back. Barracks units can enter it, but they run dry and must walk home to restock.
 • Only the [b]Operative[/b] can plant charges or enter the Rift.""" % g.level.name,
@@ -167,6 +174,8 @@ func level_buttons() -> Array:
 		out.append({ "label": "Level %d: %s" % [i + 1, Levels.NAMES[i]], "on_click": func():
 			Levels.selected = i + 1
 			g.get_tree().reload_current_scene() })
+	out.append({ "label": "Firing Range", "on_click": func():
+		g.get_tree().change_scene_to_file("res://scenes/firing_range.tscn") })
 	return out
 
 
@@ -184,7 +193,7 @@ func end_game(won: bool) -> void:
 	Sfx.play("good" if won else "lost")
 	g.metrics.finish("victory" if won else "node_destroyed")
 	var t := "%dm %ds" % [floori(g.time / 60.0), floori(fmod(g.time, 60.0))]
-	var msg := "[font_size=26][b]%s secured[/b][/font_size]\nAll threats neutralised in %s." % [g.level.name, t] if won \
-		else "[font_size=26][b]Command Node lost[/b][/font_size]\nThe creeper overran the Node after %s." % t
+	var msg := "[color=#8ee05a][font_size=14]MISSION COMPLETE[/font_size][/color]\n[font_size=30][b]%s secured[/b][/font_size]\nAll threats neutralised in %s." % [g.level.name, t] if won \
+		else "[color=#ff5a3c][font_size=14]MISSION FAILED[/font_size][/color]\n[font_size=30][b]Command Node lost[/b][/font_size]\nThe creeper overran the Node after %s." % t
 	msg += g.metrics.end_text()
 	g.hud.show_overlay(msg, [{ "label": "Play again", "on_click": func(): g.get_tree().reload_current_scene() }])

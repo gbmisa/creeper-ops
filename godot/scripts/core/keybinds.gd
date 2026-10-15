@@ -11,7 +11,7 @@ const PATH := "user://keybinds.cfg"
 const CTRL_WHEEL_UP := 0x7A000001
 const CTRL_WHEEL_DOWN := 0x7A000002
 const SLOTS := 2  # keys per action: primary, alternate
-const GROUPS := ["Global", "Command", "Operative"]
+const GROUPS := ["Global", "Command", "Operative", "Tactical"]
 
 ## id -> [group, label, default physical keycodes]
 const DEFAULTS := {
@@ -31,7 +31,7 @@ const DEFAULTS := {
 	"pause": ["Command", "Pause", [KEY_SPACE]],
 	"speed_up": ["Command", "Game speed up", [KEY_EQUAL, KEY_KP_ADD]],
 	"speed_down": ["Command", "Game speed down", [KEY_MINUS, KEY_KP_SUBTRACT]],
-	"teleport": ["Command", "Deploy Operative", [KEY_T]],
+	"teleport": ["Command", "Deploy Operative (Totem, else Command Node)", [KEY_T]],
 	"tab_1": ["Command", "Build tab: Structures", [KEY_F1]],
 	"tab_2": ["Command", "Build tab: Weapons", [KEY_F2]],
 	"tab_3": ["Command", "Build tab: Titans", [KEY_F3]],
@@ -54,6 +54,7 @@ const DEFAULTS := {
 	"train_soldier": ["Command", "Train Soldier", [KEY_F]],
 	"train_crawler": ["Command", "Train Crawler", [KEY_G]],
 	"select_units": ["Command", "Select all units", [KEY_U]],
+	"patrol": ["Command", "Patrol: click points, press again or right-click to finish", [KEY_P]],
 	"terp_up": ["Command", "Terp target up", [KEY_PAGEUP]],
 	"terp_down": ["Command", "Terp target down", [KEY_PAGEDOWN]],
 	"terp_erase": ["Command", "Erase terp paint (hold)", [KEY_C]],
@@ -73,6 +74,30 @@ const DEFAULTS := {
 	"use": ["Operative", "Use / capture", [KEY_E]],
 	"recall": ["Operative", "Recall (hold)", [KEY_R]],
 	"op_build": ["Operative", "Build mode (first person)", [KEY_B]],
+	"t_forward": ["Tactical", "Move forward", [KEY_W]],
+	"t_back": ["Tactical", "Move back", [KEY_S]],
+	"t_left": ["Tactical", "Strafe left", [KEY_A]],
+	"t_right": ["Tactical", "Strafe right", [KEY_D]],
+	"t_sprint": ["Tactical", "Sprint / hold breath in ADS", [KEY_SHIFT]],
+	"t_jump": ["Tactical", "Jump", [KEY_SPACE]],
+	"t_crouch": ["Tactical", "Crouch", [KEY_C]],
+	"t_lean_left": ["Tactical", "Lean left", [KEY_Q]],
+	"t_lean_right": ["Tactical", "Lean right", [KEY_E]],
+	"t_reload": ["Tactical", "Reload (double-tap: fast, drops mag)", [KEY_R]],
+	"t_fire_mode": ["Tactical", "Fire mode", [KEY_B]],
+	"t_mag_check": ["Tactical", "Check magazine", [KEY_T]],
+	"t_inspect": ["Tactical", "Inspect / fix malfunction", [KEY_L]],
+	"t_zero_up": ["Tactical", "Zero distance up", [KEY_PAGEUP]],
+	"t_zero_down": ["Tactical", "Zero distance down", [KEY_PAGEDOWN]],
+	"t_use": ["Tactical", "Use / take / cycle at bench", [KEY_F]],
+	"t_crosshair": ["Tactical", "Toggle hip-fire cone dot", [KEY_X]],
+	"t_help": ["Tactical", "Toggle help", [KEY_H]],
+	"t_slot_1": ["Tactical", "Weapon slot 1", [KEY_1]],
+	"t_slot_2": ["Tactical", "Weapon slot 2", [KEY_2]],
+	"t_slot_3": ["Tactical", "Weapon slot 3", [KEY_3]],
+	"t_slot_4": ["Tactical", "Weapon slot 4", [KEY_4]],
+	"t_slot_5": ["Tactical", "Weapon slot 5", [KEY_5]],
+	"t_slot_6": ["Tactical", "Weapon slot 6", [KEY_6]],
 }
 
 static var _map := {}  # id -> Array[int] (current keys)
@@ -105,6 +130,15 @@ static func text(id: String) -> String:
 
 
 ## Primary key only (compact hints).
+## Swap "{action}" tokens in player text for the keys bound right now (const hints can't call short()).
+static func fill(text: String) -> String:
+	if not text.contains("{"):
+		return text
+	for id in DEFAULTS:
+		text = text.replace("{%s}" % id, short(id))
+	return text
+
+
 static func short(id: String) -> String:
 	var k := keys(id)
 	return key_name(k[0]) if not k.is_empty() else "-"

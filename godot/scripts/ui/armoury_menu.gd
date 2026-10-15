@@ -29,13 +29,13 @@ func _init() -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
-	var panel := UiKit.panel(Color(0.05, 0.07, 0.1, 0.96))
+	var panel := UiKit.panel(UiKit.BG_SOLID)
 	panel.custom_minimum_size = Vector2(420, 0)
 	center.add_child(panel)
 	var box := UiKit.vbox(8)
 	panel.add_child(box)
-	var title := UiKit.label("Armoury", 22)
-	box.add_child(title)
+	UiKit.brackets(panel, UiKit.ACCENT, 14.0)
+	box.add_child(UiKit.header("Armoury", 22))
 	_salvage = UiKit.label("", 16, UiKit.WARN)
 	box.add_child(_salvage)
 	_rows = UiKit.vbox(4)
@@ -89,6 +89,13 @@ static func add_rows(parent: Container, pile: Stockpile, done: Callable, fps: Fp
 			done.call())
 		b.tooltip_text = OperativeUpgrades.DEFS[pick].desc
 		parent.add_child(b)
+	var cb := UiKit.button(OperativeUpgrades.charge_text(), func():
+		var why := OperativeUpgrades.buy_charge(pile)
+		Sfx.play("deny" if why != "" else "good")
+		Bus.say(why if why != "" else "Armoury: %s." % OperativeUpgrades.charge_text(), "warn" if why != "" else "good")
+		done.call())
+	cb.tooltip_text = "Plant on a big enemy structure or the crown nest (hold %s) for an instant kill. Fuse %d s. Carry up to %d." % [Keybinds.short("use"), int(Config.DEMO_FUSE), Config.DEMO_CHARGE_MAX]
+	parent.add_child(cb)
 
 
 static func _purchase(id: String, pile: Stockpile, fps: FpsMode) -> void:

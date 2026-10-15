@@ -42,6 +42,8 @@ var teleport_cooldown := 0.0
 var speed := 1
 var time_scale := 1.0       # debug multiplier on top of speed
 var ignore_capture := false # debug: run the Operative without mouse capture
+var ambience := SfxAmbience.new()
+var _anims_frozen := false  # tracks CreatureAnim freeze state vs the sim gate below
 
 
 func _ready() -> void:
@@ -77,13 +79,12 @@ func _ready() -> void:
 	cave_engines = SalvageEngines.new(cave, cave_data.get("engines", []), structures, stockpile)
 	cave_engines.cash_mode = true
 	castles = Strongholds.new(surface, level.castles, hazards.nests)
+	units.castles = castles
 	castle_raids = CastleRaids.new(castles, level.get("castle_rules", {}))
 	guards = CastleGuards.new(surface, castles, level.castles)
 	hazards.guards = guards
 
 	engines = SalvageEngines.new(surface, level.get("engines", []), structures, stockpile)
-	engines.nests = hazards.nests
-	engines.castles = castles
 
 	orbital = Orbital.new(surface, economy)
 	orbital.hazards = hazards
@@ -144,6 +145,8 @@ func _ready() -> void:
 	hud.setup(command, units)
 	hud.info.stockpile = stockpile
 	ArmouryMenu.bind(self)
+	hud.wheel_view.wheel = fps.builder.wheel
+	fps.builder.wheel.host = self
 	hud.build.on_pick = func(item): flow.pick(item)
 	input.on_key = func(k): flow.on_key(k)
 	flow = GameFlow.new(self)
@@ -178,7 +181,6 @@ func surface_prey() -> Array:
 		row["weapon"] = bool(s.def.get("weapon", false))
 		prey.append(row)
 	prey.append_array(castles.prey())
-	prey.append_array(engines.prey())
 	if mode == "surface":
 		prey.append(fps.prey)
 	return prey
@@ -191,7 +193,15 @@ func _process(delta: float) -> void:
 		command.update(dt, input)  # camera + planning work while paused too
 	var frozen := menu or mode != "command" and fps_paused
 	var scale: float = (speed if mode == "command" else 1) * time_scale
-	if not paused and not over and not frozen and not landing:
+	var running := not paused and not over and not frozen and not landing
+	# Freeze creature clips exactly when the sim gate closes, resume when it
+	# opens. Same condition as the update() gate, so NPCs never walk in place
+	# while the game is paused.
+	var want_frozen := not running
+	if want_frozen != _anims_frozen:
+		_anims_frozen = want_frozen
+		CreatureAnim.set_all_paused(get_tree(), _anims_frozen)
+	if running:
 		update(dt * scale)
 	render(dt)
 	input.end_frame()
@@ -224,6 +234,8 @@ func update(dt: float) -> void:
 
 func render(dt: float) -> void:
 	(cave if mode == "cave" else surface).refresh_visuals()
+	ambience.update(self, dt)
+	CreatureLod.tick(get_tree(), get_viewport().get_camera_3d(), dt)
 	hud.refresh(self, dt)
 
 

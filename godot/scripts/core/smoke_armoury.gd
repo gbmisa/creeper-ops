@@ -36,12 +36,12 @@ static func _firepower(g) -> void:
 	var w: OperativeWeapons = g.fps.weapons
 	var hit := _target(g.surface, Vector3(80, 80, 70))
 	_aim(w, Vector3(80, 80, 90), hit.pos)
-	w._fire(g.surface)
+	w.rifle.fire(g.surface)
 	SmokeTest._check("armoury: rifle base damage", is_equal_approx(hit.dmg, Config.RIFLE.damage), str(hit.dmg))
 	g.stockpile.salvage = 20.0
 	OperativeUpgrades.buy("firepower", g.stockpile)
 	hit.dmg = 0.0
-	w._fire(g.surface)
+	w.rifle.fire(g.surface)
 	SmokeTest._check("armoury: firepower 1 is +25% rifle", is_equal_approx(hit.dmg, Config.RIFLE.damage * 1.25), str(hit.dmg))
 	w.launcher.update(0.05, g.surface)
 	SmokeTest._check("armoury: rocket magazine +1", w.launcher.mag_size() == Config.ROCKET.mag + 1 and w.launcher.loaded == Config.ROCKET.mag + 1)

@@ -14,8 +14,83 @@ static func run(g) -> void:
 	_rubble(g, b)
 	_shots(g, b)
 	_planner(g, b)
+	_q(g, b)
+	_mortars(g, b)
 	b.clear()
 	b.hold = true
+
+
+## Q: spitter towers stand on the ground, are capped per kind, and only sit on fair sites.
+static func _q(g, b: EnemyBuilder) -> void:
+	b.clear()
+	_q_height(g, b)
+	_q_cap(g, b)
+	_q_fair(g, b)
+	b.clear()
+
+
+static func _q_height(g, b: EnemyBuilder) -> void:
+	var grid: Grid = g.surface.grid
+	var cell := _cell(g, 12, 12)
+	var s := b.begin(_hub(g), "spitter", cell, false, -1.0)
+	var node := s.node as Node3D
+	var want := grid.stand_y(float(cell.x + 0.5) * Config.CELL, float(cell.y + 0.5) * Config.CELL, Grid.Faction.ENEMY)
+	SmokeTest._check("q: placed structure stands on the ground", absf(node.position.y - want) < 0.2, str(node.position.y - want))
+	TerrainEdit.raise(g.surface, [cell], 2.0)
+	SmokeTest._check("q: terrain edit re-seats the structure", absf(node.position.y - (want + 2.0 * Config.LEVEL_H)) < 0.2, str(node.position.y - want))
+	TerrainEdit.raise(g.surface, [cell], -2.0)
+	SmokeTest._check("q: lowering restores it", absf(node.position.y - want) < 0.2, str(node.position.y - want))
+	b.clear()
+
+
+static func _q_cap(g, b: EnemyBuilder) -> void:
+	var hub := _hub(g)
+	var saved: float = g.hazards.nests.time
+	g.hazards.nests.time = 0.0  # pressure 0 -> cap 2
+	b.begin(hub, "spitter", _cell(g, 10, 0), false, -1.0)
+	b.begin(hub, "spitter", _cell(g, 12, 0), false, -1.0)
+	var kinds := EnemyBuildPlan._kinds(b, hub)
+	SmokeTest._check("q: cap holds at pressure 0 (no third spitter)", not kinds.has("spitter"), str(kinds))
+	SmokeTest._check("q: other kinds still planned", kinds.has("pylon") and kinds.has("lancer"), str(kinds))
+	g.hazards.nests.time = 99999.0  # pressure 1 -> cap 4
+	b.begin(hub, "spitter", _cell(g, 14, 0), false, -1.0)
+	b.begin(hub, "spitter", _cell(g, 16, 0), false, -1.0)
+	kinds = EnemyBuildPlan._kinds(b, hub)
+	SmokeTest._check("q: cap grows with pressure (4 at max, no fifth)", not kinds.has("spitter"), str(kinds))
+	g.hazards.nests.time = saved
+	b.clear()
+
+
+static func _q_fair(g, b: EnemyBuilder) -> void:
+	SmokeTest._check("q: fair range matches the sniper's range",
+		is_equal_approx(Config.ENEMY_SPITTER_FAIR_RANGE, float(StructureDefs.DEFS["sniper"].range)),
+		"%s vs %s" % [str(Config.ENEMY_SPITTER_FAIR_RANGE), str(StructureDefs.DEFS["sniper"].range)])
+	var hubs := 0
+	var sited := 0
+	for raw in g.castles.list:
+		var c: Dictionary = raw
+		if str(c.owner) != "enemy":
+			continue
+		hubs += 1
+		var cell := Vector2i(-1, -1)
+		var worst := 0
+		var passes := 0
+		while passes < 3000:  # the planner is time-sliced: resume until it finishes
+			passes += 1
+			b.plan_more = false
+			b.fair_new = 0
+			b.plan_t0 = Time.get_ticks_usec()
+			cell = EnemyBuildPlan._cell(b, c, "spitter")
+			worst = maxi(worst, Time.get_ticks_usec() - b.plan_t0)
+			if not b.plan_more:
+				break
+		SmokeTest._check("q: %s planner pass stays sliced (worst %d us, %d passes)" % [str(c.id), worst, passes], worst < 25000 and passes < 3000)
+		if cell.x < 0:
+			continue
+		sited += 1
+		SmokeTest._check("q: %s spitter site is fair" % str(c.id), EnemyBuildSites._fair_spitter_site(b, cell), str(cell))
+	SmokeTest._check("q: spitters still placeable (a fair site exists)", sited > 0, "%d of %d hubs" % [sited, hubs])
+	b.clear()
 
 
 static func _rates() -> void:
@@ -86,6 +161,8 @@ static func _shield(g, b: EnemyBuilder) -> void:
 	var open: Dictionary = g.deploy.can_drop(cell + Vector2i(0, 9))
 	SmokeTest._check("dome blocks the drop", not blocked.ok and "Shield" in str(blocked.reason), blocked.reason)
 	SmokeTest._check("a drop outside the dome is not blocked", "Shield" not in str(open.reason), open.reason)
+	SmokeTest._check("dome: sabotage only, never a demolition charge", not DemoCharge.chargeable(dome.target)
+		and "Sabotage" in str((dome.interact.prompt as Callable).call()))
 	g.landing = was_land
 	g.deploy.down = was_down
 	g.economy.energy = energy
@@ -108,7 +185,20 @@ static func _blight(g, b: EnemyBuilder) -> void:
 	var hp := col.hp
 	b.update(1.0)
 	SmokeTest._check("blight damages a structure inside", is_equal_approx(col.hp, hp - Config.ENEMY_BLIGHT_DPS), str(hp - col.hp))
+	SmokeTest._check("a grown pylon shows its aura", pylon.node.get_node_or_null("Aura") != null, str(pylon.node.get_node_or_null("Aura")))
+	var far: Structure = g.structures.place("collector", (cell + Vector2i(9, 0)).x, (cell + Vector2i(9, 0)).y, true)
+	var far_hp := far.hp
+	b.update(1.0)
+	SmokeTest._check("blight ignores a structure outside the radius", is_equal_approx(far.hp, far_hp), str(far.hp - far_hp))
 	g.structures.remove(col)
+	g.structures.remove(far)
+	b.kill(pylon, true)
+	var near2: Structure = g.structures.place("collector", at.x, at.y, true)
+	var hp2 := near2.hp
+	b.update(1.0)
+	SmokeTest._check("a dead pylon deals no blight damage", is_equal_approx(near2.hp, hp2), str(near2.hp - hp2))
+	SmokeTest._check("the aura is gone with the pylon", pylon.get("node") == null, str(pylon.get("node")))
+	g.structures.remove(near2)
 	b.clear()
 
 
@@ -152,6 +242,20 @@ static func _rubble(g, b: EnemyBuilder) -> void:
 	other.channel = Config.MORTAR_SABOTAGE_TIME
 	var done := b.apply_channel(other, other.pos, Config.MORTAR_SABOTAGE_TIME)
 	SmokeTest._check("sabotage pays salvage and leaves no rubble", done and b.queue.size() == 1 and is_equal_approx(g.stockpile.salvage, salvage + Config.MORTAR_SALVAGE))
+	OperativeUpgrades.reset()
+	OperativeUpgrades.charges = 1
+	var pl := b.begin(hub, "lancer", cell + Vector2i(2, 0), false, -1.0)
+	var plant := {}
+	for it in DemoCharge.candidates(b.world):
+		if (it.pos as Vector3).distance_to(pl.pos) < 0.01:
+			plant = it
+	SmokeTest._check("an enemy lancer offers a plant prompt with a charge", not plant.is_empty())
+	if not plant.is_empty():
+		plant.use.call()
+		DemoCharge.tick(b.world, Config.DEMO_FUSE + 0.1)
+	SmokeTest._check("a planted charge destroys an enemy-built lancer", not bool(pl.alive) and OperativeUpgrades.charges == 0)
+	OperativeUpgrades.reset()
+	DemoCharge.clear()
 	b.clear()
 
 
@@ -198,6 +302,116 @@ static func _planner(g, b: EnemyBuilder) -> void:
 	b.hold = true
 	g.hazards.nests.time = saved
 	b.clear()
+
+
+static func _mortars(g, b: EnemyBuilder) -> void:
+	var nests: SporeNests = g.hazards.nests
+	var world: World = nests.world
+	var grid: Grid = world.grid
+	var hub := _hub(g)
+	var saved_time: float = nests.time
+	var saved_seal: float = nests.seal
+	var saved_arm: float = nests.seal_arm
+	nests.time = 0.0
+	nests.seal = 0.0
+	nests.seal_arm = 0.0
+	SmokeTest._check("no castle mortar before the pressure gate", not EnemyBuildPlan._mortar_wanted(b, hub))
+	nests.seal = Config.MORTAR_SEAL
+	nests.seal_arm = Config.MORTAR_SEAL_BUILD
+	SmokeTest._check("a sealed node still unlocks the castle mortar", EnemyBuildPlan._mortar_wanted(b, hub))
+	nests.seal = 0.0
+	nests.seal_arm = 0.0
+	nests.time = 3000.0
+	SmokeTest._check("pressure unlocks the castle mortar", EnemyBuildPlan._mortar_wanted(b, hub))
+	var cap := EnemyBuildPlan._mortar_cap(b)
+	SmokeTest._check("the mortar cap is 1 or 2", cap >= 1 and cap <= 2, str(cap))
+	var built: Array = []
+	for i in range(cap):
+		var cell := _cell(g, 6, 10)
+		var s := b.begin(hub, "mortar", cell, false, 0.0)
+		EnemyBuildFight.grew(b, s)
+		built.append(s)
+	SmokeTest._check("finished castle mortars arm and register telegraphs",
+		b.mortars.size() == cap and nests.hub_mortars.size() == cap, str(b.mortars.size()))
+	SmokeTest._check("the cap stops further mortar builds", not EnemyBuildPlan._mortar_wanted(b, hub))
+	var s0: Dictionary = built[0]
+	var c0: Vector2i = s0.cell
+	SmokeTest._check("the mortar sits on the ground",
+		is_equal_approx(s0.pos.y, grid.cell_ground(c0.x, c0.y).y), str(s0.pos.y))
+	# Shells fly as tracked hostile lobs.
+	var m0: Dictionary = b.mortars[0]
+	var tc := Vector2i(mini(c0.x + 10, grid.w - 7), c0.y)
+	var ti := grid.idx(tc.x, tc.y)
+	var floor_h := grid.base_height[ti]
+	TerrainEdit.apply(world, [{ "x": tc.x, "z": tc.y, "height": floor_h + 2.0 }])
+	var at := grid.cell_ground(tc.x, tc.y)
+	m0.telegraph = { "at": at, "t": 0.0, "whistled": false }
+	EnemyMortarFire.advance(nests, m0, Config.MORTAR_TELEGRAPH)
+	var shell := {}
+	for it in world.effects.lobs():
+		if bool(it.get("mortar_shell", false)):
+			shell = it
+	SmokeTest._check("the shell flies as a tracked hostile lob",
+		not shell.is_empty() and bool(shell.get("foe", false)))
+	_drain_shells(world)
+	SmokeTest._check("the shell detonates on arrival", grid.height[ti] < floor_h + 1.5, str(grid.height[ti]))
+	# A swatted shell (dead = what Beam interception sets) never detonates.
+	var tc2 := Vector2i(c0.x, mini(c0.y + 10, grid.h - 7))
+	var ti2 := grid.idx(tc2.x, tc2.y)
+	var floor2 := grid.base_height[ti2]
+	TerrainEdit.apply(world, [{ "x": tc2.x, "z": tc2.y, "height": floor2 + 2.0 }])
+	var at2 := grid.cell_ground(tc2.x, tc2.y)
+	m0.telegraph = { "at": at2, "t": 0.0, "whistled": false }
+	EnemyMortarFire.advance(nests, m0, Config.MORTAR_TELEGRAPH)
+	var shell2 := {}
+	for it in world.effects.lobs():
+		if bool(it.get("mortar_shell", false)):
+			shell2 = it
+	SmokeTest._check("the second shell launched", not shell2.is_empty())
+	if not shell2.is_empty():
+		shell2.dead = true
+	_drain_shells(world)
+	SmokeTest._check("an intercepted shell never detonates",
+		shell2.is_empty() or is_equal_approx(grid.height[ti2], floor2 + 2.0), str(grid.height[ti2]))
+	# Guns cannot destroy built mortars; a planted charge does, for no Salvage.
+	var gun_s: Dictionary = built[0]
+	(gun_s.target as Dictionary).on_hit.call(99999.0, gun_s.pos)
+	(gun_s.enemy as Dictionary).hit.call(99999.0)
+	SmokeTest._check("gunfire cannot destroy a built mortar", bool(gun_s.alive))
+	OperativeUpgrades.reset()
+	var pay_before: float = g.stockpile.salvage
+	var plant: Dictionary = gun_s.interact
+	SmokeTest._check("built mortar offers sabotage with zero charges", "Sabotage" in str(plant.prompt.call()))
+	plant.use.call()
+	var done := b.apply_channel(gun_s, gun_s.pos, Config.MORTAR_SABOTAGE_TIME)
+	SmokeTest._check("sabotage destroys a built mortar for no Salvage",
+		done and not bool(gun_s.alive) and is_equal_approx(g.stockpile.salvage, pay_before))
+	for raw in b.list.duplicate():
+		var s: Dictionary = raw
+		if str(s.kind) == "mortar" and bool(s.alive):
+			(s.target as Dictionary).charge_kill.call()
+	SmokeTest._check("destroyed castle mortars unregister",
+		b.mortars.is_empty() and nests.hub_mortars.is_empty(),
+		"%d/%d" % [b.mortars.size(), nests.hub_mortars.size()])
+	TerrainEdit.apply(world, [{ "x": tc.x, "z": tc.y, "height": floor_h }])
+	TerrainEdit.apply(world, [{ "x": tc2.x, "z": tc2.y, "height": floor2 }])
+	nests.time = saved_time
+	nests.seal = saved_seal
+	nests.seal_arm = saved_arm
+
+
+static func _drain_shells(world: World) -> void:
+	var guard := 0
+	while guard < 40:
+		var live := false
+		for it in world.effects.lobs():
+			if bool(it.get("mortar_shell", false)):
+				live = true
+				break
+		if not live:
+			return
+		world.effects.update(0.25)
+		guard += 1
 
 
 static func _hub(g) -> Dictionary:

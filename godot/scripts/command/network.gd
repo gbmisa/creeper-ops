@@ -1,10 +1,11 @@
 class_name Network
 extends MeshInstance3D
-## Energy network (CW3 style). Every pair of finished relaying nodes within link range is
-## connected. Packets take the SHORTEST path from the nearest sender: Dijkstra starts at
-## every built sender that is not flying, all at distance 0. Non-relaying structures hang
-## off their nearest finished relaying node. Cut a relay and everything that only routed
-## through it goes dark.
+## Energy network. Every pair of built relaying nodes within link range is connected.
+## Dijkstra starts at every built sender that is not flying (Node, Outpost, castle keep),
+## all at distance 0. Only finished collectors/relays pass packets on: a chain laid out
+## beyond reach waits, and each piece gets packets once something finished reaches it.
+## Leaves (incl. unfinished relays) hang off the connected node with the shortest route,
+## so anything in a sender's own range is fed directly by the closest sender.
 
 var _prev := {}          # Structure -> upstream Structure (null for a sender)
 var _len := {}           # Structure -> route length in metres (packet transit distance)
@@ -31,7 +32,8 @@ static func linked(a: Structure, b: Structure) -> bool:
 
 
 static func _relaying(s: Structure) -> bool:
-	return s.def.get("relays", false) and s.is_built() and not s.is_flying()
+	# Only finished relays pass packets on (Gregory, playtest 3): an unfinished one is a leaf.
+	return s.def.get("relays", false) and s.is_built() and not s.is_flying() and not s.dead
 
 
 static func _sender(s: Structure) -> bool:
@@ -72,7 +74,8 @@ func rebuild(list: Array) -> void:
 		for b in _prev.keys():
 			if _prev[b] != null:
 				edges.append([_prev[b], b])
-		# Leaves (incl. unfinished relays): nearest connected relaying node in range.
+		# Leaves (incl. unfinished relays): the in-range connected node with the shortest
+		# route, so a sender in range (route 0) feeds it directly.
 		for s in list:
 			if s.connected or s.def.link <= 0.0 or s.is_flying():
 				continue
@@ -81,8 +84,8 @@ func rebuild(list: Array) -> void:
 			for n in list:
 				if n.connected and _relaying(n):
 					var d := _dist(n, s)
-					if d <= maxf(n.def.link, s.def.link) and d < bd:
-						bd = d
+					if d <= maxf(n.def.link, s.def.link) and dist.get(n, 0.0) + d < bd:
+						bd = dist.get(n, 0.0) + d
 						best = n
 			if best:
 				s.connected = true
@@ -103,8 +106,8 @@ func rebuild(list: Array) -> void:
 
 ## A flying Command Node keeps its network: everything it reached from the cell it lifted off
 ## stays connected (collectors keep claiming, weapons keep firing from stock) and its links
-## follow it. Nothing routes through it, so it launches no packets until it lands (CW3);
-## an Outpost or castle keep still supplies whatever it reaches.
+## follow it. While connected it is a packet sender (launching from where it hovers) and
+## produces nothing; an Outpost or castle keep still supplies whatever it reaches.
 func _hold_flying_node(list: Array, edges: Array) -> void:
 	var node: Structure = null
 	for s in list:
@@ -114,6 +117,8 @@ func _hold_flying_node(list: Array, edges: Array) -> void:
 		return
 	var from: Vector2i = node.flight.get("from_cell", Vector2i(node.x, node.z))
 	node.connected = true
+	if not _prev.has(node):
+		_prev[node] = null
 	var seen := { node: true }
 	var open: Array = [node]
 	while not open.is_empty():
@@ -127,17 +132,32 @@ func _hold_flying_node(list: Array, edges: Array) -> void:
 				continue
 			seen[b] = true
 			open.append(b)
+			_hold_link(a, b)
 			if a == node or not b.connected:
 				edges.append([a, b])
 			b.connected = true
-	for s in list:  # leaves hang off the nearest relaying node it kept
+	for s in list:  # leaves (incl. unfinished relays) hang off a node it kept, or the Node itself
 		if s.connected or s.def.link <= 0.0 or s.is_flying():
 			continue
 		for n in seen:
-			if n != node and _dist(n, s) <= maxf(n.def.link, s.def.link):
+			var d: float = Vector2(s.x - from.x, s.z - from.y).length() if n == node else _dist(n, s)
+			if d <= maxf(n.def.link, s.def.link):
 				s.connected = true
 				edges.append([n, s])
+				_hold_link(n, s)
 				break
+
+
+## Route `b` through `a` unless a grounded sender already reaches it.
+func _hold_link(a: Structure, b: Structure) -> void:
+	if _prev.has(b):
+		return
+	_prev[b] = a
+	var r := route(b)
+	var m := 0.0
+	for i in range(1, r.size()):
+		m += r[i - 1].distance_to(r[i])
+	_len[b] = m
 
 
 func _draw(edges: Array) -> void:

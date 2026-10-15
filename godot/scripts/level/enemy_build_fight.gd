@@ -35,6 +35,8 @@ static func grew(b, s: Dictionary) -> void:
 	(s.node as Node3D).scale = Vector3.ONE
 	if str(s.kind) == "pylon":
 		paint(b, s)
+		var aura := HazardMeshes.blight_aura(float(EnemyStructures.DEFS["pylon"].radius) * Config.CELL)
+		(s.node as Node3D).add_child(aura)
 	elif str(s.kind) == "mortar":
 		arm_mortar(b, s)
 	var hub: Dictionary = b.castle(str(s.hub))
@@ -65,20 +67,22 @@ static func spit(b, s: Dictionary, dt: float, prey: Array) -> void:
 	var aim: Vector3 = (best.node as Node3D).position
 	var splash := Config.HIVE_SPITTER_SPLASH * Config.CELL
 	var dmg := Config.HIVE_SPITTER_DMG
-	b.world.effects.lob(from + Vector3(0, 1.1, 0), aim, {
+	var from3: Vector3 = from + Vector3(0, 1.1, 0)
+	var end := WeaponLogic.clip_lob(b.world.grid, from3, aim, 2.5)
+	var it: Dictionary = b.world.effects.lob(from3, end, {
 		"color": Color("d6ff3a"), "size": 0.28, "time": maxf(from.distance_to(aim) / Config.RAIDER_SHOT_SPEED, 0.35),
 		"arc": 2.5,
 		"on_arrive": func() -> void:
-			b.world.effects.burst(aim, Color("d6ff3a"), splash, 0.35)
+			b.world.effects.burst(end, Color("d6ff3a"), splash, 0.35)
 			for q in prey:
 				var item: Dictionary = q
 				if not (item.alive as Callable).call():
 					continue
 				var p: Vector3 = (item.node as Node3D).position
-				if Vector2(p.x - aim.x, p.z - aim.z).length() <= splash:
+				if Vector2(p.x - end.x, p.z - end.z).length() <= splash:
 					(item.hit as Callable).call(dmg),
 	})
-
+	it["foe"] = true  # hostile lob: Beams shoot these down (enemy spitter acid)
 
 static func beam(b, s: Dictionary, dt: float) -> void:
 	var def: Dictionary = EnemyStructures.DEFS["lancer"]
@@ -100,12 +104,17 @@ static func beam(b, s: Dictionary, dt: float) -> void:
 	if best == null:
 		s.charge = 0.0
 		return
+	var eye: Vector3 = s.pos + Vector3(0, 3.2, 0)
+	var chest: Vector3 = best.pos + Vector3(0, 1.5, 0)
+	if not WeaponLogic.sees(b.world.grid, eye, chest):
+		s.charge = 0.0  # no line of sight through the wall: hold fire, don't zap through it
+		return
 	s.charge = float(s.charge) + dt
-	b.world.effects.beam(s.pos + Vector3(0, 3.2, 0), best.pos + Vector3(0, 1.5, 0), Color("e6d2ff"), 0.05, 0.08)
+	b.world.effects.beam(eye, chest, Color("e6d2ff"), 0.05, 0.08)
 	if float(s.charge) < float(def.interval):
 		return
 	s.charge = 0.0
-	b.structures.damage(best, float(def.damage))
+	b.structures.damage(best, float(def.damage), "enemy_lancer")
 	Sfx.play("beam", s.pos)
 
 
@@ -162,7 +171,7 @@ static func blight_dps(b, dt: float) -> void:
 			continue
 		for cell in Placement.footprint_cells(st.type, st.x, st.z):
 			if b.blocks(cell.x, cell.y):
-				b.structures.damage(st, Config.ENEMY_BLIGHT_DPS * dt)
+				b.structures.damage(st, Config.ENEMY_BLIGHT_DPS * dt, "blight")
 				break
 
 

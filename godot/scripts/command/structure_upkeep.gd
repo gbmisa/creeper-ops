@@ -4,14 +4,18 @@ class_name StructureUpkeep
 ## Weapons and the Node have a health reserve: wet, they lose max HP / `wet_time` per second
 ## whatever the depth, and an unfinished one loses build progress at the same rate (and asks
 ## for no packets) instead. Everything else dies on contact, built or not. A charging weapon
-## (Nullifier) takes nothing. Dry built structures heal to full over HEAL_TIME.
+## (Nullifier) takes nothing. Dry built structures heal to full over HEAL_TIME — but not while
+## they are taking damage: any hit pauses healing for REGEN_DELAY (so chip damage sticks).
+
+const REGEN_DELAY := 5.0  # seconds after a hit before passive healing resumes (tunable)
 
 
 static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
+	s.regen_delay = maxf(0.0, s.regen_delay - dt)
 	s.wet = 0.0 if (s.is_flying() or s.def.get("flying", false)) else mgr.wet_depth(s)
 	# Wet means any creeper drawn on it (MIN_DEPTH), so a thin film can't hide a "submerged" survivor.
 	if s.wet <= Config.MIN_DEPTH:
-		if s.is_built():
+		if s.is_built() and s.regen_delay <= 0.0:
 			s.hp = minf(s.def.hp, s.hp + s.def.hp / Config.HEAL_TIME * dt)
 		return
 	if not has_reserve(s):
@@ -21,7 +25,7 @@ static func creeper_and_repair(mgr, s: Structure, dt: float) -> void:
 		return
 	var rate := dt / float(s.def.get("wet_time", Config.WET_TIME))
 	if s.is_built():
-		mgr.damage(s, s.def.hp * rate)
+		mgr.damage(s, s.def.hp * rate, "creeper")
 	else:
 		s.lost = minf(float(s.delivered), s.lost + s.def.cost * rate)
 
@@ -35,8 +39,8 @@ static func has_reserve(s: Structure) -> bool:
 static func construction(mgr, s: Structure, dt: float) -> void:
 	if s.is_built():
 		return
-	if s.def.get("drop_pod", false):
-		s.built = minf(1.0, s.built + dt / mgr.DROP_POD_TIME)
+	if s.def.get("self_build", false):
+		s.built = minf(1.0, s.built + dt / mgr.SELF_BUILD_TIME)
 	else:
 		s.built = minf(1.0, (s.delivered - s.lost) / s.def.cost)
 	s.body.scale.y = 0.15 + 0.85 * s.built

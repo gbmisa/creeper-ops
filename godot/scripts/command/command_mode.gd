@@ -23,6 +23,7 @@ var tool := ""
 var hover: Dictionary = {}        # { cell: Vector2i, point: Vector3 }
 var reason := ""
 var selected: Structure = null
+var enemy_sel: Dictionary = {}    # EnemyRangeView: selected enemy artillery piece
 var group: Array[Structure] = []  # every selected structure (box select); selected is group[0]
 var drag_rect := Rect2()          # for the HUD selection box (size 0 = hidden)
 var drag_start := Vector2i(-1, -1)  # press cell while a build tool is armed (DragBuild)
@@ -51,7 +52,9 @@ func set_tool(t: String) -> void:
 		drag_rect = Rect2()
 	tool = t
 	cancel_drag()
-	if t != "" and t != "@move":
+	if t != "@patrol":
+		units.lines.pending.clear()
+	if t != "" and t != "@move" and t != "@patrol":
 		select_structure(null)
 		units.select([])
 	if t == "":
@@ -67,6 +70,7 @@ func cancel_drag() -> void:
 
 func select_structure(s: Structure) -> void:
 	selected = s
+	enemy_sel = {}
 	group.clear()
 	if s:
 		group.append(s)
@@ -78,11 +82,18 @@ func select_structure(s: Structure) -> void:
 func update(dt: float, input: InputState) -> void:
 	if tool == "@move" and (selected == null or selected.is_flying()):
 		set_tool("")
+	if deploy.pick.active:  # choosing a deploy Totem: camera and pointer only
+		cam.update(dt, input, world.grid)
+		CommandHover.refresh(self, input)
+		deploy.pick.handle(self, input)
+		return
 	CommandInput.hotkeys(self, input)
 	cam.update(dt, input, world.grid)
-	Sfx.listener = cam.global_position
+	Sfx.listener = cam.target.lerp(cam.global_position, 0.3)  # hear the ground you look at
 	CommandHover.refresh(self, input)
 	overlay.show_selection(selected, group, tool != "")
+	EnemyRangeView.update(self)
+	CastleSocketLook.highlight(castles, CommandHover._turret_type(tool) != "", hover)
 	if input.right_clicked:
 		CommandInput.right_click(self)
 	CommandInput.left_mouse(self, input)

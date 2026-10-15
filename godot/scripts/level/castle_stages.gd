@@ -60,9 +60,12 @@ static func tick(s: Strongholds, c: Dictionary, lay: Dictionary, p: Variant, dt:
 	set_stage(s, c, int(c.stage) + 1)
 	Sfx.play("good")
 	if stage == "gate":
-		Bus.say("%s: the gatehouse is yours. The outer gate opens for your units." % c.name, "good")
+		var n := CastleEngines.alive_count(c)
+		var treb := "the trebuchet" if n == 1 else "%d trebuchets" % n
+		Bus.say("%s: the gatehouse is yours. To take the bailey: destroy %s on the corner towers, then hold the bailey standard." % [c.name, treb], "good")
+		Bus.say("%s: the gatehouse is yours. The outer gate opens for your units — select troops and right-click to order them in." % c.name, "good")
 	else:
-		Bus.say("%s: the bailey is yours: build in it. The crown nest in the keep is exposed." % c.name, "good")
+		Bus.say("%s: the bailey is yours: build in it and right-click to order troops in. The crown nest in the keep is exposed." % c.name, "good")
 
 
 ## Raiders back on the last ring you took, with nobody to stop them, take it back.
@@ -86,11 +89,20 @@ static func _retake(s: Strongholds, c: Dictionary, lay: Dictionary, p: Variant, 
 
 
 static func _raiders_in(s: Strongholds, lay: Dictionary, zone: String) -> bool:
+	var memo: Dictionary = lay.get("_ri", {})
+	lay["_ri"] = memo
+	var hit: Array = memo.get(zone, [-INF, false])
+	if s.time - float(hit[0]) < Config.CASTLE_SCAN_INTERVAL:
+		return hit[1]
+	var found := false
+	var z: Dictionary = lay.zones[zone]
 	for r in s.nests.raiders.list:
-		var cell := s.world.grid.world_to_cell(r.node.position.x, r.node.position.z)
-		if cell in lay.zones[zone].cells:
-			return true
-	return false
+		var p: Vector3 = r.node.position
+		if StrongholdRules.has_cell(z, Vector2i(floori(p.x / Config.CELL), floori(p.z / Config.CELL))):
+			found = true
+			break
+	memo[zone] = [s.time, found]
+	return found
 
 
 ## Sets the stage, re-hangs gates and the bailey's build rights, and moves the garrison home.

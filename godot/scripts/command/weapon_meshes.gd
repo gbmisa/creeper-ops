@@ -13,6 +13,7 @@ static func build(type: String, root: Node3D) -> bool:
 		"beam": beam(root)
 		"sniper": sniper(root)
 		"nullifier": nullifier(root)
+		"trebuchet": trebuchet_p(root)
 		"bertha": TitanMeshes.bertha(root)
 		"thor": TitanMeshes.thor(root)
 		"terp": TitanMeshes.terp(root)
@@ -123,6 +124,17 @@ static func mortar(root: Node3D) -> void:
 	StructureMeshes.ball(bowl, 0.45, StructureMeshes.glow(Color("b84a0c"), 0.5), Vector3(0, 0.25, 0), 10)
 	ShapeKit.axle(bowl, Vector3.ZERO, 0.12, 2.5, verd)
 	muzzle(bowl, Vector3(0, 0.6, 0))
+
+
+## Player Trebuchet (castle_only): the enemy war engine's model in player blue, plus a
+## Muzzle node so shot effects start at the arm. WeaponLogic throws the arm on each shot.
+static func trebuchet_p(root: Node3D) -> void:
+	var t := CastleEngineMeshes.trebuchet(StrongholdMeshes.PLAYER)
+	root.add_child(t)
+	var m := Node3D.new()
+	m.name = "Muzzle"
+	m.position = Vector3(0, 3.5, 0)
+	t.add_child(m)
 
 
 ## Beam: a large cyan lens ring round a ruby focus, held high on a staff arm.

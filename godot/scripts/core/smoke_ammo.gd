@@ -10,6 +10,7 @@ static func run(g) -> void:
 	_effects(g)
 	_costs(g)
 	_structures(g)
+	_float_snap(g)
 
 
 static func _locked(g) -> void:
@@ -169,3 +170,31 @@ static func _structures(g) -> void:
 	sm.remove(b)
 	AmmoGrades.reset(g.level)
 	Bus.objective_done.emit("e1")
+
+
+## Float residue: a magazine at max - epsilon must snap to exactly max on restock,
+## so the display never reads "7/8" forever and the fire gate never misfires.
+static func _float_snap(g) -> void:
+	var sm: StructureManager = g.structures
+	var node := sm.command_node()
+	var b: Structure = sm.place("beam", node.x + 6, node.z + 6, true)
+	if b == null:
+		SmokeTest._check("ammo: beam placed for float-snap test", false)
+		return
+	# Simulate float residue just under max, then restock.
+	b.ammo = b.ammo_max() - 0.005
+	sm.packets._arrive({ "s": b, "kind": "ammo" })
+	SmokeTest._check("ammo: restock snaps residue to exactly max", b.ammo == b.ammo_max(),
+		"ammo=%.6f max=%.1f" % [b.ammo, b.ammo_max()])
+	# A normal restock well below max must NOT snap.
+	b.ammo = 10.0
+	sm.packets._arrive({ "s": b, "kind": "ammo" })
+	SmokeTest._check("ammo: restock below max adds per_packet exactly",
+		is_equal_approx(b.ammo, 15.0), "ammo=%.6f" % b.ammo)
+	# After the snap the fire gate sees a full magazine.
+	b.ammo = b.ammo_max() - 0.005
+	sm.packets._arrive({ "s": b, "kind": "ammo" })
+	SmokeTest._check("ammo: snapped magazine passes the fire gate", b.ammo >= b.per_shot())
+	# Display rounds instead of truncating: 7.9999 reads 8, not 7.
+	SmokeTest._check("ammo: display rounds residue up", roundi(7.9999996) == 8 and roundi(7.4) == 7)
+	sm.remove(b)

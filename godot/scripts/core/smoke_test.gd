@@ -29,6 +29,8 @@ static func run(g) -> void:
 
 	SmokeDeploy._spawn_cam(g)  # Brief B1: spawn camera clear of world geometry (runs before dynamic checks)
 
+	SmokeNetwork.run(g)  # Planned relays route immediately; cutting one darkens downstream.
+
 	# CW3 packets: no launch cap. 12 unbuilt relays at once should all be served at REQ_BUILD.
 	var relays := []
 	for i in 12:
@@ -118,7 +120,7 @@ static func run(g) -> void:
 	# Barracks population cap.
 	var b: Structure = sm.place("barracks", 37, 72, true)  # on the mesa (Ashmoat's apron took x 31-34)
 	var queued := 0
-	for i in 6:
+	for i in Config.UNITS_PER_BARRACKS + 2:
 		if StructureBehaviors.queue_unit(b, "soldier", g.units.living_for(b)):
 			queued += 1
 	_check("barracks unit cap", queued == Config.UNITS_PER_BARRACKS, "(%d queued)" % queued)
@@ -137,44 +139,80 @@ static func run(g) -> void:
 	_forge_and_operative(g)
 	SmokeRules.run(g)
 	SmokeRaiders.run(g)
+	SmokeRaiderCirc.run(g)
+	SmokeSpitterSiege.run(g)
+	SmokeBurrow.run(g)
 	SmokeTerrain.run(g)
 	SmokeStrongholds.run(g)
 	SmokeCastleRaids.run(g)
+	SmokeBaseAlerts.run(g)
 	SmokeSenders.run(g)
+	SmokePt3.run(g)
 	SmokeDeploy.run(g)
+	SmokeDeployPick.run(g)
+	SmokeDeploySites.run(g)
 	SmokeTraps.run(g)
 	SmokeGroupSelect.run(g)
+	SmokeRally.run(g)
 	SmokeSupplyRules.run(g)
 	SmokeTraversal.run(g)
 	SmokeCw3.run(g)
 	SmokeLevel02.run(g)
+	SmokeL2Space.run(g)
 	SmokeKeeps.run(g)
 	SmokeTerp.run(g)
 	SmokeArmoury.run(g)
+	SmokeCaveSpray.run(g)
 	SmokeHud.run(g)
+	SmokeBuildMenu.run(g)
 	SmokeDragbuild.run(g)
 	SmokeRoster.run(g)
 	SmokeHives.run(g)
 	SmokeEnemyMortar.run(g)
 	SmokeEconomy.run(g)
 	SmokeEnemyBuild.run(g)
+	SmokeEnemyRules.run(g)
+	SmokeEnemyLos.run(g)
+	SmokeCastleGuard.run(g)
 	SmokeLoot.run(g)
 	SmokeFpsFeel.run(g)
 	SmokeFpsArms.run(g)
+	SmokeBuildWheel.run(g)
 	SmokeFlyers.run(g)
 	SmokeFlyers2.run(g)
 	SmokeCreatureAnim.run(g)
+	SmokePlaytestSmall.run(g)
+	SmokeStructureAnim.run(g)
 	SmokeCastles2Shape.run(g)
 	SmokeCastles2Walk.run(g)
 	SmokeCastles2Capture.run(g)
+	SmokeCastles2BaileyUx.run(g)
+	SmokeBaileyAllCastles.run(g)
 	SmokeCastles2Engines.run(g)
+	SmokeEnemyRange.run(g)
 	SmokeCastles2Perks.run(g)
+	SmokeCastles2bStone.run(g)
+	SmokeCastles2bFires.run(g)
+	SmokeCastles2bProps.run(g)
+	SmokeCastles2bReadability.run(g)
+	SmokeCastles2bTurrets.run(g)
+	SmokeCastles2bGuards.run(g)
+	SmokeCastleRate.run(g)
+	SmokeCastles2bSiege.run(g)
+	SmokeCastles2bLeftovers.run(g)
 	SmokeMetrics.run(g)
 	SmokeEngines.run(g)
 	SmokeEnginesShip.run(g)
 	SmokeAmmo.run(g)
+	SmokeAttackMove.run(g)
+	SmokeRaiderCommit.run(g)
+	SmokeRaiderShots.run(g)
+	SmokeUnitPatrol.run(g)
+	SmokeUnitOrders.run(g)
+	SmokePathPerf.run(g)
 	SmokePlacement.run(g)
 	SmokeTuning.run(g)
+	SmokeShotTour.run(g)
 	SmokeSniperLos.run(g)
 	SmokePauseMenu.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])
@@ -188,12 +226,64 @@ static func _run_only(g) -> void:
 				SmokeEnginesShip.run(g)
 			"ammo":
 				SmokeAmmo.run(g)
+			"attackmove":
+				SmokeAttackMove.run(g)
+			"raidercommit":
+				SmokeRaiderCommit.run(g)
+				SmokeRaiderShots.run(g)
 			"placement":
 				SmokePlacement.run(g)
+			"rally":
+				SmokeRally.run(g)
 			"tuning":
 				SmokeTuning.run(g)
+			"tour":
+				SmokeShotTour.run(g)
 			"creature":
 				SmokeCreatureAnim.run(g)
+			"playtest-small":
+				SmokePlaytestSmall.run(g)
+			"enemy_build":
+				SmokeEnemyBuild.run(g)
+			"deploypick":
+				SmokeDeployPick.run(g)
+			"cw3":
+				SmokeCw3.run(g)
+			"feel":
+				SmokeFpsFeel.run(g)
+			"armoury":
+				SmokeArmoury.run(g)
+			"cavespray":
+				SmokeCaveSpray.run(g)
+			"structure":
+				SmokeStructureAnim.run(g)
+			"circ":
+				SmokeRaiderCirc.run(g)
+			"network":
+				SmokeNetwork.run(g)
+			"los":
+				SmokeEnemyLos.run(g)
+			"castlerate":
+				SmokeCastleRate.run(g)
+			"pacing":
+				SmokeSpawnPacing.run(g)
+			"enemybuild":
+				SmokeEnemyBuild.run(g)
+			"wheel":
+				SmokeBuildWheel.run(g)
+			"barracks":
+				SmokeBarracks.run(g)
+			"troops":
+				SmokeTroopsCastle.run(g)
+			"patrol":
+				SmokeUnitPatrol.run(g)
+			"pathperf":
+				SmokePathPerf.run(g)
+			"orders":
+				SmokeUnitOrders.run(g)
+			"burrow":
+				SmokeBurrow.run(g)
+>>>>>>> branchfiles/godot/scripts/core/smoke_test.gd
 			"pausemenu":
 				SmokePauseMenu.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])

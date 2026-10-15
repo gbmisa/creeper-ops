@@ -7,17 +7,17 @@ const W := 160
 const H := 160
 ## Raids start early and the nests toughen fast: turtling loses.
 const RAID_SCHEDULE := {
-	"raid_delay": 180.0,
-	"tier_times": [0.0, 300.0, 600.0, 900.0],
+	"raid_delay": 180.0,   # nothing marches before this (grace: first raid is a few Skitters),
+	"tier_times": [0.0, 420.0, 1020.0, 1620.0],
 }
-## Harder clock: Brute ~5 min, Ravager ~10, Behemoth ~15. Grace matches the raid start.
-const PRESSURE := { "grace": 180.0, "cap": 1800.0 }
+## Harder clock: Brute ~7 min, Ravager ~17, Behemoth ~27. Grace matches the raid start.
+const PRESSURE := { "grace": 180.0, "cap": 3420.0 }
 const PRESSURE_POINTS := [
 	{ "t": 180.0, "p": 0.0 },
-	{ "t": 300.0, "p": 0.20 },
-	{ "t": 600.0, "p": 0.60 },
-	{ "t": 900.0, "p": 0.85 },
-	{ "t": 1800.0, "p": 1.0 },
+	{ "t": 420.0, "p": 0.20 },
+	{ "t": 1020.0, "p": 0.60 },
+	{ "t": 1620.0, "p": 0.85 },
+	{ "t": 3420.0, "p": 1.0 },
 ]
 ## Stage 21: every castle is concentric (outer wall + bailey + inner wall + keep; CastleShape2).
 ## Ground castles keep a moat; raised ones a drawbridge. `guards`: Sentinels on gatehouse towers,
@@ -25,33 +25,33 @@ const PRESSURE_POINTS := [
 ## `yield` scales Aether/Salvage.
 const CASTLES := [
 	{ "id": "ashgate", "name": "Ashgate Hold", "x": 6, "z": 104, "size": 35, "floor": 2, "variant": "ground", "plan": "concentric",
-		"moat": true, "gates": ["e"], "inner_gate": "n", "climbs": ["s"], "spire_h": 20, "guards": 5 },
+		"moat": true, "gates": ["e"], "inner_gate": "n", "climbs": ["s"], "spire_h": 20, "guards": 5, "engine_range": 12.0 },
 	{ "id": "thornwall", "name": "Thornwall", "x": 121, "z": 121, "size": 35, "floor": 3, "variant": "raised", "plan": "concentric",
-		"bridge": true, "gates": ["w"], "inner_gate": "n", "climbs": ["n"], "spire_h": 20, "guards": 5 },
+		"bridge": true, "gates": ["w"], "inner_gate": "n", "climbs": ["n"], "spire_h": 20, "guards": 5, "engine_range": 12.0 },
 	{ "id": "crown", "name": "Crown Keep", "x": 61, "z": 61, "size": 39, "floor": 3, "variant": "ground", "plan": "concentric",
 		"bailey": 7, "moat": true, "gates": ["s", "n"], "inner_gate": "e", "climbs": ["e"], "inner_climbs": ["w"], "spire_h": 24,
-		"guards": 8, "yield": 2.0 },
+		"guards": 8, "yield": 2.0, "engine_range": 12.0 },
 	{ "id": "northreach", "name": "Northreach", "x": 8, "z": 8, "size": 35, "floor": 4, "variant": "raised", "plan": "concentric",
-		"bridge": true, "gates": ["s"], "inner_gate": "e", "climbs": ["e"], "spire_h": 20, "guards": 6 },
+		"bridge": true, "gates": ["s"], "inner_gate": "e", "climbs": ["e"], "spire_h": 20, "guards": 6, "engine_range": 12.0 },
 	{ "id": "stormcrown", "name": "Stormcrown", "x": 117, "z": 8, "size": 35, "floor": 3, "variant": "ground", "plan": "concentric",
-		"moat": true, "gates": ["w"], "inner_gate": "s", "climbs": ["s"], "spire_h": 20, "guards": 5 },
+		"moat": true, "gates": ["w"], "inner_gate": "s", "climbs": ["s"], "spire_h": 20, "guards": 5, "engine_range": 12.0 },
 ]
-## Salvage Engines (EngineDefs). Two safe ones by the landing mesa; the rest sit beside hives and castles
-## (`hive`: ships nothing until that hive is razed; `castle`: ships only while you hold it).
+## Salvage Engines (EngineDefs). Two by the landing mesa; the rest sit beside hives and castles.
+## Hooking one to the network is the only requirement to ship; there are no hive or castle conditions.
 const ENGINES := [
 	{ "id": "e1", "x": 100, "z": 132, "kind": "bore" },
-	{ "id": "e2", "x": 60, "z": 132, "kind": "wreck" },
-	{ "id": "e3", "x": 55, "z": 70, "kind": "forge", "hive": "West Moor" },
-	{ "id": "e4", "x": 50, "z": 142, "kind": "wreck", "hive": "Southern Barrows" },
-	{ "id": "e5", "x": 104, "z": 114, "kind": "forge", "hive": "East Moor" },
-	{ "id": "e6", "x": 92, "z": 50, "kind": "bore", "hive": "North Knoll" },
-	{ "id": "e7", "x": 105, "z": 82, "kind": "wreck", "castle": "crown" },
-	{ "id": "e8", "x": 49, "z": 28, "kind": "forge", "castle": "northreach" },
-	{ "id": "e9", "x": 47, "z": 112, "kind": "wreck", "castle": "ashgate" },
-	{ "id": "e10", "x": 116, "z": 117, "kind": "bore", "castle": "thornwall" },
-	{ "id": "e11", "x": 112, "z": 25, "kind": "wreck", "castle": "stormcrown" },
+	{ "id": "e2", "x": 64, "z": 132, "kind": "wreck" },
+	{ "id": "e3", "x": 55, "z": 70, "kind": "forge" },
+	{ "id": "e4", "x": 50, "z": 142, "kind": "wreck" },
+	{ "id": "e5", "x": 104, "z": 114, "kind": "forge" },
+	{ "id": "e6", "x": 92, "z": 50, "kind": "bore" },
+	{ "id": "e7", "x": 105, "z": 82, "kind": "wreck" },
+	{ "id": "e8", "x": 49, "z": 28, "kind": "forge" },
+	{ "id": "e9", "x": 47, "z": 112, "kind": "wreck" },
+	{ "id": "e10", "x": 116, "z": 117, "kind": "bore" },
+	{ "id": "e11", "x": 112, "z": 25, "kind": "wreck" },
 ]
-const CASTLE_RULES := { "aggression": 1.1, "reprisal_warn": 60.0, "nest_buff": 0.2 }
+const CASTLE_RULES := { "aggression": 1.1, "reprisal_warn": 120.0, "nest_buff": 0.2 }
 const SHIELD_HINT := "Its shield is powered from underground: send the Operative into the Rift and destroy the Deep Core."
 const OBJECTIVES := [
 	{ "id": "spire", "who": "Operative", "text": "Destroy the Spore Spire", "hint": "East Blight plateau: ramp on its south side. Totem (Orbital tab) near the ramp foot, then press E at the Spire." },
@@ -106,6 +106,7 @@ static func build() -> Dictionary:
 			{ "name": "Southern Barrows", "x": 34, "z": 151, "access": "plateau" },
 		],
 		"raid_schedule": RAID_SCHEDULE,
+		"raider_ban": ["Burrower"],  # test levels: it levels a base before anything can answer (playtest 4)
 		"pressure": PRESSURE,
 		"pressure_points": PRESSURE_POINTS,
 		"spire": { "x": 138, "z": 58 },

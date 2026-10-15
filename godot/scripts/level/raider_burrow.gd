@@ -55,7 +55,8 @@ static func step(host: Raiders, r: Dictionary, dt: float, prey: Array) -> void:
 		r["burrow"] = "up"
 		r["surface_t"] = float(tier.get("surface", 1.5))
 		node.visible = true
-		node.position = Vector3(p.x, host.world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY), p.z)
+		node.position = Vector3(p.x, RaiderPerch.y(host.world, p.x, p.z), p.z)
+		Sfx.play("burrower_rumble", node.position)  # surfacing warning: turn toward it
 		return
 	var step_m: float = minf(dist, RaiderGroups.speed(host, r) * dt)
 	var dir := to / dist
@@ -67,7 +68,10 @@ static func step(host: Raiders, r: Dictionary, dt: float, prey: Array) -> void:
 	var dust: float = float(r.get("dust", 0.0)) + dt
 	if dust >= DUST:
 		dust = 0.0
-		host.world.effects.burst(Vector3(nx, gy + 0.15, nz), tier.color, 0.7, 0.3)
+		# Telegraph: grey alpha-blended dust that lingers ~0.9 s, so the
+		# underground trail is trackable at gameplay distance. (The old
+		# additive tan burst was unreadable against terrain.)
+		host.world.effects.smoke(Vector3(nx, gy + 0.4, nz), 1.4, 0.9)
 	r["dust"] = dust
 
 
@@ -97,7 +101,7 @@ static func _surface(host: Raiders, r: Dictionary, dt: float, tier: Dictionary, 
 	var node: Node3D = r.node
 	var p: Vector3 = node.position
 	node.visible = true
-	node.position = Vector3(p.x, host.world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY), p.z)
+	node.position = Vector3(p.x, RaiderPerch.y(host.world, p.x, p.z), p.z)
 	var left: float = float(r.get("surface_t", 0.0)) - dt
 	r["surface_t"] = left
 	if left > 0.0:
@@ -106,7 +110,7 @@ static func _surface(host: Raiders, r: Dictionary, dt: float, tier: Dictionary, 
 	var radius: float = float(tier.get("splash", 1.5)) * Config.CELL
 	var dmg := float(tier.damage)
 	host.world.effects.burst(at + Vector3.UP * 0.3, tier.color, radius, 0.5)
-	Sfx.play("boom", at)
+	Sfx.play("burrower_blast", at)  # unique loud blast: localizable across the base
 	for q in prey:
 		if not (q.alive as Callable).call():
 			continue

@@ -105,13 +105,13 @@ func flash_light(p: Vector3, color: Color, energy := 6.0) -> void:
 	_flash_e = energy
 
 
-## Gravity debris chunks for structure deaths. Count is capped by Config.FX_MAX_DEBRIS.
+## Gravity debris chunks for structure deaths. Count is capped by FxConfig.FX_MAX_DEBRIS.
 func debris(p: Vector3, color: Color, n := 8, spread := 6.0) -> void:
 	var live := 0
 	for it in _items:
 		if it.kind == "debris":
 			live += 1
-	n = mini(n, Config.FX_MAX_DEBRIS - live)
+	n = mini(n, FxConfig.FX_MAX_DEBRIS - live)
 	if n <= 0:
 		return
 	var rng := RandomNumberGenerator.new()
@@ -145,18 +145,20 @@ func lob(a: Vector3, b: Vector3, opts: Dictionary) -> Dictionary:
 	var mi := MeshInstance3D.new()
 	mi.mesh = _sphere
 	mi.material_override = glow_mat(opts.get("color", Color.ORANGE))
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF  # A4: bolt trails cast no shadow
 	mi.scale = Vector3.ONE * opts.get("size", 0.45)
 	mi.position = a
 	add_child(mi)
 	var it := { "node": mi, "t": 0.0, "life": opts.get("time", 1.0), "kind": "lob", "a": a, "b": b,
-		"arc": opts.get("arc", 8.0), "cb": opts.get("on_arrive", Callable()), "dead": false, "pos": a }
+		"arc": opts.get("arc", 8.0), "cb": opts.get("on_arrive", Callable()), "dead": false, "pos": a,
+		"foe": bool(opts.get("foe", false)), "mortar_shell": bool(opts.get("mortar_shell", false)) }
 	_items.append(it)
 	return it
 
 
 func update(dt: float) -> void:
 	# Perf cap (P6): lobs are gameplay-relevant and are never culled, only other fx.
-	var over := _items.size() - Config.FX_MAX_ITEMS
+	var over := _items.size() - FxConfig.FX_MAX_ITEMS
 	while over > 0:
 		var idx := -1
 		for i in range(_items.size()):

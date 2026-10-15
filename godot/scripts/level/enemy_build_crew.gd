@@ -95,7 +95,9 @@ static func arm(b, s: Dictionary, label: String) -> void:
 	var hit := func(dmg: float, _p = null) -> void:
 		b.hurt(s, float(dmg))
 	s["enemy"] = {"node": s.node, "oy": 1.0, "radius": 1.0, "alive": func() -> bool: return bool(s.alive), "hit": hit}
-	s["target"] = {"node": s.node, "oy": 1.0, "radius": 1.1, "alive": func() -> bool: return bool(s.alive), "on_hit": hit}
+	s["target"] = {"node": s.node, "oy": 1.0, "radius": 1.1, "alive": func() -> bool: return bool(s.alive), "on_hit": hit, "max_hp": float(s.max_hp)}
+	if EnemyStructures.DEFS.get(str(s.kind), {}).get("no_charge", false):
+		s.target["no_charge"] = true  # sabotage only: never offers or needs a demolition charge
 	b.world.add_target(s.target)
 	var it := {
 		"pos": s.pos, "radius": Config.MORTAR_SABOTAGE_RANGE,
@@ -104,8 +106,18 @@ static func arm(b, s: Dictionary, label: String) -> void:
 			if bool(s.alive) and float(s.channel) <= 0.0:
 				s.channel = Config.MORTAR_SABOTAGE_TIME
 				Sfx.play("lift")
-				Bus.say("Sabotaging the %s: stay close for %ds." % [label, ceili(Config.MORTAR_SABOTAGE_TIME)], "info"),
+				Bus.say("Sabotaging the %s: stay close for %ds — destroys it%s." % [label, ceili(Config.MORTAR_SABOTAGE_TIME), _pay(s)], "info"),
+		"channel_frac": func() -> float: return 1.0 - float(s.channel) / Config.MORTAR_SABOTAGE_TIME,
+		"channel_what": label,
 	}
+	if str(s.kind) == "mortar":
+		s.target["no_charge"] = true  # sabotage prompt only; a charge blast still kills via charge_kill
+		s.target["charge_kill"] = func() -> void: b.kill(s, true)
+		var flash := func(_d: float, _p = null) -> void: b.world.effects.burst(s.pos + Vector3.UP, Color("ffcc88"), 0.5, 0.15)
+		s.target["on_hit"] = flash  # guns only flash a mortar; sabotage or a charge blast destroys it
+		s.enemy["hit"] = flash
+		s.enemy["targetable"] = func(): return false
+		s.enemy["immune"] = true  # units must not waste ammo on it (UnitSupply.acquire)
 	s["interact"] = it
 	b.world.interactables.append(it)
 	var marker := {
@@ -120,8 +132,15 @@ static func _prompt(s: Dictionary, label: String) -> String:
 	if not bool(s.alive):
 		return ""
 	if float(s.channel) > 0.0:
-		return "Sabotaging the %s... %.1fs" % [label, float(s.channel)]
-	return "[%s] Sabotage the %s" % [Keybinds.short("use"), label]
+		return "Sabotaging the %s — destroys it%s..." % [label, _pay(s)]
+	return "[%s] Sabotage the %s (destroys it%s)" % [Keybinds.short("use"), label, _pay(s)]
+
+
+## The payout note for a prompt, matching EnemyBuilder's payout ("" when it pays nothing).
+static func _pay(s: Dictionary) -> String:
+	var def: Dictionary = EnemyStructures.DEFS.get(s.get("kind", ""), {})
+	var pay := int(def.get("salvage", Config.MORTAR_SALVAGE))
+	return ", +%d Salvage" % pay if pay > 0 else ""
 
 
 static func onsite(b, s: Dictionary) -> bool:

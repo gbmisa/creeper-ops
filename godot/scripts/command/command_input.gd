@@ -17,6 +17,8 @@ static func hotkeys(cm: CommandMode, input: InputState) -> void:
 		if input.act("hold_fire"): cm.toggle_hold()
 		if input.act("ammo_next"): AmmoGrades.cycle_structure(cm.selected, 1)
 		if input.act("ammo_prev"): AmmoGrades.cycle_structure(cm.selected, -1)
+	if input.act("patrol"):
+		CommandPatrol.toggle(cm)
 	if input.act("select_units"):
 		CommandSelect.select_units(cm, null)
 	if input.act("cam_home") and cm.structures.command_node():
@@ -60,11 +62,21 @@ static func left_mouse(cm: CommandMode, input: InputState) -> void:
 
 static func click(cm: CommandMode, shift: bool) -> void:
 	var c: Vector2i = cm.hover.cell
+	if cm.tool == "@patrol":
+		CommandPatrol.add_point(cm, cm.hover.point)
+		return
 	if cm.tool != "":
 		var res := CommandHover.check(cm, c)
 		if not res.ok:
 			Bus.say(res.reason, "warn")
 			Sfx.play("deny")
+			return
+		var tt := CommandHover._turret_type(cm.tool)  # any "@<turret>": buy/upgrade it on the socket
+		if tt != "":
+			var t := CommandHover.turret_check(cm, c)
+			CastleTurrets.buy(t.castle, t.i, tt, cm.castles.stockpile)
+			Sfx.play("good")
+			cm.set_tool("")
 			return
 		match cm.tool:
 			"@land":
@@ -79,11 +91,6 @@ static func click(cm: CommandMode, shift: bool) -> void:
 				if not shift: cm.set_tool("")
 			"@move":
 				CommandSelect.move_group(cm, c)
-			"@repeater", "@lobber", "@flak":
-				var t := CommandHover.turret_check(cm, c)
-				CastleTurrets.buy(t.castle, t.i, cm.tool.substr(1), cm.castles.stockpile)
-				Sfx.play("good")
-				cm.set_tool("")
 			"@repair":
 				var fixed := WallRepair.apply(cm.castles, c)
 				if fixed.ok:
@@ -96,6 +103,8 @@ static func click(cm: CommandMode, shift: bool) -> void:
 			_:
 				cm.structures.place(cm.tool, c.x, c.y)
 				Sfx.play("click")  # CW3: the tool stays armed; right-click or Esc to stop
+		return
+	if EnemyRangeView.click(cm):
 		return
 	var u := cm.units.nearest(cm.hover.point)
 	if u:
@@ -112,6 +121,9 @@ static func click(cm: CommandMode, shift: bool) -> void:
 
 
 static func right_click(cm: CommandMode) -> void:
+	if cm.tool == "@patrol":
+		CommandPatrol.finish(cm)
+		return
 	if cm.tool != "" and cm.tool != "@land":
 		cm.set_tool("")
 		return
@@ -121,6 +133,11 @@ static func right_click(cm: CommandMode) -> void:
 	var c: Vector2i = cm.hover.cell
 	if not cm.units.selected.is_empty():
 		Bus.metric.emit("order", {})
+		var foe := UnitAttack.enemy_near(cm.units.enemies, p)
+		if not foe.is_empty():
+			UnitAttack.order(cm.units, cm.units.selected, foe)
+			cm.world.effects.burst(p + Vector3(0, 0.3, 0), Color("ff5a4a"), 1.2, 0.3)
+			return
 		cm.units.order(cm.units.selected, Vector2(p.x, p.z), true)
 		cm.world.effects.burst(p + Vector3(0, 0.3, 0), Color("9dff7a"), 1.2, 0.3)
 	elif cm.selected and cm.selected.type == "barracks":

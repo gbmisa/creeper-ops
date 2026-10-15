@@ -33,7 +33,7 @@ static func plan(b, dt: float) -> void:
 		if picked.is_empty():
 			picked = EnemyBuildPlan.pick(b, c)
 		if picked.is_empty():
-			b._cool[c.id] = 5.0
+			b._cool[c.id] = 0.1 if b.plan_more else 5.0
 			continue
 		b.begin(c, str(picked.kind), picked.cell, bool(picked.get("rubble", false)), float(picked.get("cost", -1.0)))
 
@@ -87,7 +87,7 @@ static func growing(b, hub_id: String) -> int:
 static func take(b, c: Dictionary) -> Dictionary:
 	for raw in b.queue:
 		var q: Dictionary = raw
-		if str(q.hub) == str(c.id):
+		if str(q.hub) == str(c.id) and b.time >= float(q.get("ready", 0.0)):
 			b.queue.erase(q)
 			return q
 	return {}

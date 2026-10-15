@@ -29,6 +29,15 @@ static func active(c: Dictionary) -> bool:
 	return c.state == "hostile" and int(c.get("stage", 0)) < 2
 
 
+## Enemy retook the castle: every trebuchet returns at full HP.
+static func revive(c: Dictionary) -> void:
+	for e in c.engines:
+		e.hp = e.max_hp
+		e.dead = 0.0
+		e.cd = E.interval
+		e.shot = {}
+
+
 static func alive(e: Dictionary) -> bool:
 	return e.hp > 0.0
 
@@ -50,7 +59,7 @@ static func attach(s: Strongholds, c: Dictionary, v: Dictionary) -> void:
 		v.engines.append(node)
 		var hit := func(d, _p = null): _hurt(s, c, c.engines[i], node, d)
 		var live := func(): return alive(c.engines[i]) and active(c)
-		s.world.add_target({ "node": node, "radius": 1.6, "oy": 1.5, "alive": live, "on_hit": hit })
+		s.world.add_target({ "node": node, "radius": 1.6, "oy": 1.5, "alive": live, "on_hit": hit, "max_hp": E.hp })
 		var foe := { "node": node, "oy": 1.5, "radius": 1.6, "alive": live, "hit": hit }
 		v.engine_foes.append({ "node": node, "enemy": foe, "alive": live })
 
@@ -77,10 +86,7 @@ static func tick(s: Strongholds, c: Dictionary, v: Dictionary, prey: Array, dt: 
 		var node: Node3D = v.engines[i]
 		node.visible = alive(e) and on
 		if not alive(e):
-			e.dead += dt
-			if on and int(c.get("stage", 0)) < 2 and e.dead >= E.respawn:
-				e.hp = e.max_hp
-				e.cd = E.interval
+			e.dead += dt  # no timed respawn: revive() runs only when the castle is retaken
 			continue
 		if not on:
 			e.shot = {}
@@ -164,6 +170,8 @@ static func impact(world: World, at: Vector3, prey: Array) -> void:
 		if Vector2(p.x - at.x, p.z - at.z).length() > r + float(q.get("radius", 0.5)) or absf(p.y - at.y) > 3.0:
 			continue
 		var kind: String = q.get("kind", "")
+		if q.has("struct"):
+			(q.struct as Structure).last_hit_by = "engine"
 		q.hit.call(E.dmg_operative if kind == "operative" else (E.dmg_unit if kind == "unit" else E.dmg_struct))
 
 

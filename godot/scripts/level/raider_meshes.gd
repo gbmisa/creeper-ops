@@ -24,7 +24,7 @@ static func bone() -> StandardMaterial3D:
 
 
 static func make(tier: Dictionary) -> Node3D:
-	var glow := StructureMeshes.glow(tier.color, 1.0)
+	var glow := CreatureAnim.creature_glow(tier.color)
 	var anim := CreatureAnim.make(CreatureAnim.id_of(str(tier.get("name", ""))), anim_scale(tier), glow)
 	if anim != null:
 		return anim

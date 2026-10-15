@@ -19,6 +19,8 @@ var economy: Economy
 var stockpile: Stockpile
 var flying: Array[Dictionary] = []
 var _cursor := 0
+var _node_atk := {}  # structure id -> last launch-attack msec (0.5 s rate limit)
+var _structs: Array = []  # latest structure list, for relay pass-through (A4)
 
 # Rolling stats (packets/s) for the HUD.
 var sent_rate := 0.0
@@ -66,6 +68,7 @@ static func rate(kind: String) -> float:
 
 
 func update(dt: float, list: Array, sender_ready: bool) -> void:
+	_structs = list  # A4: relay pass-through lookup for the packet attack clip
 	var sent := 0
 	var wanted := 0.0
 	var unmet := 0.0
@@ -108,6 +111,8 @@ func update(dt: float, list: Array, sender_ready: bool) -> void:
 				if kind == "ammo":
 					fly["grade"] = AmmoGrades.surcharge(s, stockpile)  # Salvage surcharge for improved ammo
 				flying.append(fly)
+				Sfx.play("packet", route[0])
+				_node_launch_anim(list, route)
 		if economy.energy < 1.0:
 			for s in list:
 				if s.req_acc >= 1.0 and need(s) != "":
@@ -136,6 +141,7 @@ func _fly(dt: float) -> void:
 				move -= left
 				p.seg += 1
 				p.t = 0.0
+				_relay_pass(route, p)
 			else:
 				p.t += move / len
 				move = 0.0
@@ -149,6 +155,19 @@ func _fly(dt: float) -> void:
 			mm.set_instance_color(shown, COLORS.get(p.kind, Color.WHITE))
 			shown += 1
 	mm.visible_instance_count = shown
+
+
+## A4: a packet passing through a relay plays its attack clip (at most once per 0.5 s).
+## Route waypoints are the chain structures' link_points, so the intermediate relay
+## is the structure whose link_point matches the waypoint the packet just reached.
+func _relay_pass(route: PackedVector3Array, p: Dictionary) -> void:
+	if int(p.seg) >= route.size() - 1:
+		return  # final arrival is handled by _arrive
+	var wp: Vector3 = route[int(p.seg)]
+	for s in _structs:
+		if s.type == "relay" and not s.dead and s.link_point().distance_to(wp) < 0.6:
+			StructureMeshes.model_packet(s)
+			return
 
 
 func _arrive(p: Dictionary) -> void:
@@ -165,6 +184,8 @@ func _arrive(p: Dictionary) -> void:
 			s.delivered += 1
 		"ammo":
 			s.ammo = minf(s.ammo_max(), s.ammo + s.def.ammo.per_packet)
+			if s.ammo_max() - s.ammo < 0.01:
+				s.ammo = s.ammo_max()  # snap: float residue must never leave a magazine visually unfilled
 			AmmoGrades.arrived(s, str(p.get("grade", "")), s.def.ammo.per_packet)
 		"unit":
 			if not s.queue.is_empty():
@@ -199,3 +220,25 @@ func launch_route(route: PackedVector3Array, kind: String, n: float, s: Structur
 
 func count() -> int:
 	return flying.size()
+
+
+## Attack swing on the Command Node's model when a packet leaves it, at most
+## once every 0.5 s. The route starts at the sender's link_point().
+func _node_launch_anim(list: Array, route: PackedVector3Array) -> void:
+	if route.is_empty():
+		return
+	var from: Vector3 = route[0]
+	for t in list:
+		var s: Structure = t
+		if s.type != "node" or s.body == null:
+			continue
+		if s.link_point().distance_squared_to(from) > 0.0001:
+			continue
+		var model := CreatureAnim.of(s.body)
+		if model == null:
+			return
+		var now := Time.get_ticks_msec()
+		if now - int(_node_atk.get(s.id, 0)) >= 500:
+			_node_atk[s.id] = now
+			CreatureAnim.attack(model)
+		return

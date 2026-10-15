@@ -8,8 +8,9 @@ class_name StrongholdHooks
 static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary) -> void:
 	var world := s.world
 	var enemy_owned := func(p: Dictionary, ring: String): return CastleStages.ring_owner(c, lay, ring) == "enemy" and p.hp > 0.0
-	var ours_sealed := func(p: Dictionary, ring: String): return c.owner == "player" and p.hp > 0.0 and StrongholdRules.sealed(c, lay, ring)
-	world.add_target({ "node": v.crown, "radius": 1.9, "oy": 2.0,
+	var ours_sealed := func(p: Dictionary, ring: String): return c.owner == "player" and not c.get("raid", {}).get("grace", false) and p.hp > 0.0 and StrongholdRules.sealed(c, lay, ring)
+	world.add_target({ "node": v.crown, "radius": 1.9, "oy": 2.0, "chargeable": true,
+		"charge_ok": func(): return CastleStages.crown_open(c, lay),  # no charge wasted on a warded crown
 		"alive": func(): return c.state == "hostile", "on_hit": func(d, _p = null): s._hit_crown(c, d) })
 	v["prey"] = []
 	v["enemies"] = []
@@ -36,8 +37,9 @@ static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 		if part != "walls":
 			var e := { "node": p[2], "oy": 0.5, "radius": p[3] * 0.6, "alive": func(): return enemy_owned.call(state.call(), rg), "hit": hit }
 			v.enemies.append(e)
-			world.add_target({ "node": p[2], "radius": e.radius, "oy": 0.5, "alive": e.alive, "on_hit": hit })
+			world.add_target({ "node": p[2], "radius": e.radius, "oy": 0.5, "alive": e.alive, "on_hit": hit, "chargeable": true })
 	_turrets(s, c, v)
+	CastleSocketLook.markers(world, v, c)
 	world.interactables.append({ "pos": v.pump.position, "radius": Config.PUMP_JAM_RANGE,
 		"prompt": func(): return "[%s] Jam the spire pump (%ds)" % [Keybinds.short("use"), Config.PUMP_JAM_TIME] \
 			if c.owner == "enemy" and c.pump.jam <= 0.0 else "",
@@ -45,8 +47,24 @@ static func attach(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary
 			c.pump.jam = Config.PUMP_JAM_TIME
 			Sfx.play("click")
 			Bus.say("Spire pump jammed: %s builds nothing from its moat for %ds." % [c.name, Config.PUMP_JAM_TIME], "good") })
-	world.markers.append({ "pos": (v.crown as Node3D).position + Vector3(0, 5, 0), "label": func(): return label(c, lay),
+	world.markers.append({ "pos": func() -> Vector3: return StrongholdHooks.stage_pos(s, c, lay, v), "label": func(): return label(c, lay),
 		"color": StrongholdMeshes.PLAYER if c.owner == "player" else Color("ff6a8a"), "visible": func(): return true })
+
+
+## Where the castle marker floats: the current stage's objective, not the crown nest.
+## (The marker used to sit over the crown always, so players walked to the heart and shot
+## it while the real objective — gate hall, bailey standard — was somewhere else.)
+static func stage_pos(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionary) -> Vector3:
+	var g := s.world.grid
+	match CastleStages.current(c, lay):
+		"gate":
+			if lay.zones.has("gate"):
+				var cells: Array = lay.zones["gate"].cells
+				var mid: Vector2i = cells[cells.size() / 2]
+				return g.cell_ground(mid.x, mid.y) + Vector3(0, 3, 0)
+		"bailey":
+			return g.cell_ground(lay.home.x, lay.home.y) + Vector3(0, 3, 0)
+	return (v.crown as Node3D).position + Vector3(0, 5, 0)
 
 
 ## Turrets are raider prey, and each socket is an E prompt in first person (arm / upgrade).
@@ -71,7 +89,11 @@ static func label(c: Dictionary, lay: Dictionary) -> String:
 		"hostile": return CastleStages.marker(c, lay)
 		"capturing": return "%s: hold the %s %d%%" % [c.name, "keep hall" if lay.stages.size() > 1 else "spire top", roundi(c.capture.progress * 100.0)]
 		"siege": return "%s UNDER SIEGE %ds" % [c.name, ceili(Config.RETAKE_TIME - c.capture.retake)]
-	return "%s (yours) +%.0f Æ/min" % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)]
+	var yours := "%s (yours) +%.0f Æ/min" % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)]
+	var rd: Dictionary = c.get("raid", {})
+	if rd.get("grace", false) and rd.get("kind", "") == "reprisal":
+		yours += " | reprisal in %ds" % ceili(rd.warn)
+	return yours
 
 
 ## Where raiders gather to break into a sealed ring of a castle you hold (outside its walls).

@@ -1,4 +1,6 @@
-"""War wagon (unit id crawler): oak hull plated in bronze, four wheels, rune sprayer turret.
+"""Crawler (unit id crawler), military: a 4x4 armoured car. A sloped olive hull with a hazard-striped
+glacis, side armour skirts, stowage boxes, a radio whip with a green unit strobe, chunky rubber
+wheels with steel hubs, and a gunmetal sprayer turret whose nozzle glows green (the unit cue).
 Real metres: the game uses it at scale 1. The walk loop turns the wheels exactly once (1 m/s).
 """
 import math
@@ -21,26 +23,30 @@ def build():
     bones += [(n, (x, s * 0.72, WHEEL_R), (x, s * 0.92, WHEEL_R), "root") for n, x, s in WHEELS]
     arm = lib.armature("crawler", bones)
     b = lib.Builder("crawler")
-    b.box((0, 0, 0.75), (2.0, 1.2, 0.65), "oak", "hull")
-    b.box((1.05, 0, 0.85), (0.6, 1.24, 0.12), "bronze", "hull", rot=Quaternion((0, 1, 0), 0.7))
+    b.box((0, 0, 0.72), (1.9, 1.16, 0.5), "olive", "hull")
+    b.box((0.05, 0, 1.02), (1.5, 1.0, 0.14), "olive", "hull")
+    b.box((1.02, 0, 0.82), (0.55, 1.14, 0.12), "olive_dark", "hull", rot=Quaternion((0, 1, 0), 0.75))  # glacis
+    b.box((0.97, 0, 0.66), (0.06, 1.17, 0.1), "hazard", "hull")  # bumper band
+    b.box((-0.98, 0, 0.75), (0.08, 1.1, 0.46), "olive_dark", "hull")  # rear plate
     for s in (1, -1):
-        b.box((0, s * 0.62, 0.82), (2.0, 0.06, 0.42), "bronze_dark", "hull")
-        for x in (-0.7, 0.0, 0.7):  # rivets
-            b.ball((x, s * 0.66, 0.92), 0.04, "bronze", "hull", seg=5, rings=3, smooth=False)
-    b.box((-0.6, 0, 1.1), (0.5, 0.5, 0.06), "cloth", "hull")
-    b.limb((-0.85, 0.45, 1.05), (-0.85, 0.45, 2.0), 0.03, 0.03, "oak", "hull", seg=4)  # banner pole
-    b.box((-0.62, 0.45, 1.8), (0.42, 0.03, 0.34), "cloth", "hull")
-    b.box((-0.62, 0.43, 1.8), (0.12, 0.02, 0.12), "unit_glow", "hull")
-    b.limb((0, 0, 0.91), (0, 0, 1.23), 0.4, 0.32, "bronze", "turret", seg=10)
-    b.limb((0.1, 0, 1.26), (1.0, 0, 1.32), 0.07, 0.07, "iron", "barrel", seg=8)
+        b.box((0, s * 0.6, 0.68), (1.95, 0.06, 0.3), "olive_dark", "hull")  # side skirts
+        b.box((-0.45, s * 0.52, 1.14), (0.5, 0.14, 0.12), "khaki", "hull")  # stowage
+        b.box((0.95, s * 0.45, 0.95), (0.08, 0.14, 0.1), "lamp_amber", "hull")  # headlights
+    b.limb((-0.8, 0.42, 1.08), (-0.8, 0.42, 2.0), 0.015, 0.01, "rubber", "hull", seg=4)  # radio whip
+    b.box((-0.8, 0.42, 1.12), (0.12, 0.12, 0.06), "gunmetal", "hull")
+    b.ball((-0.8, 0.42, 2.02), 0.05, "unit_glow", "hull", seg=5, rings=3)
+    b.limb((0, 0, 0.98), (0, 0, 1.23), 0.38, 0.32, "gunmetal", "turret", seg=8)
+    b.box((0.18, 0, 1.2), (0.34, 0.44, 0.16), "olive_dark", "turret")
+    b.limb((0.1, 0, 1.26), (1.0, 0, 1.32), 0.07, 0.07, "steel", "barrel", seg=8)
+    b.limb((0.6, 0, 1.3), (0.66, 0, 1.3), 0.095, 0.095, "rubber", "barrel", seg=8)
     b.limb((1.0, 0, 1.32), (1.2, 0, 1.33), 0.1, 0.0, "unit_glow", "barrel", seg=6)
     for n, x, s in WHEELS:
-        b.limb((x, s * 0.65, WHEEL_R), (x, s * 0.79, WHEEL_R), WHEEL_R, WHEEL_R, "oak", n, seg=10)
-        b.limb((x, s * 0.78, WHEEL_R), (x, s * 0.84, WHEEL_R), 0.1, 0.06, "bronze", n, seg=6)
-        for k in range(3):  # spokes, so the turning shows
+        b.limb((x, s * 0.65, WHEEL_R), (x, s * 0.82, WHEEL_R), WHEEL_R, WHEEL_R, "rubber", n, seg=12)
+        b.limb((x, s * 0.81, WHEEL_R), (x, s * 0.85, WHEEL_R), 0.2, 0.16, "steel", n, seg=6)
+        for k in range(3):  # tread blocks, so the turning shows
             a = k * math.pi / 3
-            off = (math.cos(a) * WHEEL_R * 0.9, 0, math.sin(a) * WHEEL_R * 0.9)
-            b.limb((x - off[0], s * 0.8, WHEEL_R - off[2]), (x + off[0], s * 0.8, WHEEL_R + off[2]), 0.03, 0.03, "bronze_dark", n, seg=4)
+            off = (math.cos(a) * WHEEL_R * 0.98, 0, math.sin(a) * WHEEL_R * 0.98)
+            b.limb((x - off[0], s * 0.83, WHEEL_R - off[2]), (x + off[0], s * 0.83, WHEEL_R + off[2]), 0.035, 0.035, "olive_dark", n, seg=4)
     b.finish(arm)
     return arm
 

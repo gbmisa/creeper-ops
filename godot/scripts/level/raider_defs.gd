@@ -2,18 +2,29 @@ class_name RaiderDefs
 extends RefCounted
 ## Enemy roster (§4.2). Replaces Config.RAIDER_TIERS.
 ## Brute, Ravager and Behemoth keep today's stats. Skitter dps is the Stage 8 balance pass.
-## The Spitter is the spec lobber: 10 HP, range 20. Unlock is a pressure, not a clock time.
+## The Spitter is the spec lobber: 10 HP, range 14. Unlock is a pressure, not a clock time.
 ## `special` rows are not in the ordinary weighted pick: Spotter arrives with a mortar (phase 7).
 ## Loot numbers are the Salvage pickup when that raider dies (Loot).
-## Weight among the ordinary unlocked rows is 2^order (oldest 1, next 2, ...), so the newest
-## is about half of a two-type pool and still the most common in a larger one.
+## Weight among the ordinary unlocked rows is 2^order (oldest 1, next 2, ...), except the
+## Behemoth, whose weight is capped (see BEHEMOTH_WEIGHT_CAP): uncapped, the newest tier is
+## about half of every spawn pool at unlock, and late-game nests flood Behemoths faster than
+## a maxed arsenal can kill them. The cap keeps the Behemoth the most common front-liner in
+## raid groups without letting it dominate every pick.
+
+
+## Spawn-weight cap for the Behemoth (tunable). Was 2^7 = 128 in pick() (~50% of spawns at
+## the 0.85 unlock) and 2^3 = 8 in group front pools (~53% of the front line). At 4 the
+## Behemoth is ~3% of pick() and ~36% of a group front pool (~18% of the group): still the
+## joint-most-common front-liner, no longer the flood. Early/mid game is untouched: the cap
+## only binds the Behemoth row.
+const BEHEMOTH_WEIGHT_CAP := 4
 
 
 const ROWS := [
 	{ "name": "Skitter", "hp": 4.0, "dps": 6.0, "speed": 4.2, "size": 0.45, "color": Color("a8ff5a"),
 		"attack": "melee", "range": 0.5, "unlock": 0.0, "loot": 1, "loot_p": 0.1, "role": "front" },
 	{ "name": "Spitter", "hp": 10.0, "dps": 0.0, "speed": 3.0, "size": 0.6, "color": Color("d6ff3a"),
-		"attack": "acid", "range": 20.0, "interval": 2.0, "damage": 6.0, "splash": 1.5,
+		"attack": "acid", "range": 14.0, "interval": 2.0, "damage": 6.0, "splash": 1.5,
 		"unlock": 0.10, "loot": 1, "loot_p": 1.0, "role": "ranged" },
 	{ "name": "Brute", "hp": 16.0, "dps": 8.0, "speed": 3.4, "size": 0.75, "color": Color("ffd24a"),
 		"attack": "melee", "range": 0.6, "wall_mult": 3.0, "unlock": 0.20, "loot": 2, "loot_p": 1.0, "role": "front" },
@@ -42,12 +53,16 @@ static func named(n: String) -> Dictionary:
 	return {}
 
 
-## Rows whose unlock is at or below `p`, in unlock order. Includes Spotter.
+## Raider names the current level never spawns (level key `raider_ban`, set by SurfaceHazards).
+static var banned: Array = []
+
+
+## Rows whose unlock is at or below `p`, in unlock order. Includes Spotter. Skips `banned`.
 static func unlocked(p: float) -> Array:
 	var rows: Array = []
 	for row in ROWS:
 		var d: Dictionary = row
-		if float(d.unlock) <= p + 0.0001:
+		if float(d.unlock) <= p + 0.0001 and not banned.has(d.name):
 			rows.append(d)
 	rows.sort_custom(func(a, b): return float(a.unlock) < float(b.unlock))
 	return rows
@@ -65,6 +80,15 @@ static func newest(p: float) -> Dictionary:
 	return best
 
 
+## Spawn weight of `row` at pool index `i`: 2^order, except the Behemoth, which is capped
+## (see BEHEMOTH_WEIGHT_CAP). Shared by pick() and RaiderGroups._from() so both spawn
+## paths agree on the top tier's share.
+static func spawn_weight(row: Dictionary, i: int) -> int:
+	if str(row.get("name", "")) == "Behemoth":
+		return mini(1 << i, BEHEMOTH_WEIGHT_CAP)
+	return 1 << i
+
+
 ## Weighted pick. `roll` in 0..1 picks without touching the global RNG; below 0 uses randf().
 static func pick(p: float, roll := -1.0) -> Dictionary:
 	var rows: Array = []
@@ -77,12 +101,12 @@ static func pick(p: float, roll := -1.0) -> Dictionary:
 		return named("Skitter")
 	var total := 0
 	for i in rows.size():
-		total += 1 << i
+		total += spawn_weight(rows[i], i)
 	var r := randf() if roll < 0.0 else clampf(roll, 0.0, 0.9999)
 	var ticket := mini(total - 1, int(floor(r * float(total))))
 	var acc := 0
 	for i in rows.size():
-		acc += 1 << i
+		acc += spawn_weight(rows[i], i)
 		if ticket < acc:
 			return rows[i] as Dictionary
 	return rows.back() as Dictionary

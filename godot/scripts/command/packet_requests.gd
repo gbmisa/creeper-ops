@@ -27,7 +27,7 @@ static func transit_headroom(network: Network, s: Structure) -> float:
 
 ## "build" | "ammo" | "unit" | "terp" | "". Counts packets already in flight so we never over-send.
 static func need(network: Network, s: Structure) -> String:
-	if not s.connected or s.dead or not s.active or s.def.get("drop_pod", false):
+	if not s.connected or s.dead or not s.active or s.def.get("drop_pod", false) or s.def.get("self_build", false):
 		return ""
 	if not s.is_built():  # a wet site asks for nothing (CW3)
 		if s.wet > Config.MIN_DEPTH:

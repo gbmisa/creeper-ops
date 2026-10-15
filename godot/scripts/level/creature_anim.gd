@@ -22,7 +22,49 @@ const ST_HIT := 3
 const ST_DIE := 4
 
 static var _scenes := {}  # id -> PackedScene (only ids that have a .glb)
+static var lod := true  # CreatureLod drives clip stepping (tests may turn it off)
+static var disabled := false  # test switch: make() returns null, callers use the procedural fallback
 
+
+## The animated model node under `node` (or `node` itself when it is the model),
+## null for procedural meshes. Use it to drive clips on a mesh-maker root.
+static func of(node: Node3D) -> Node3D:
+	if node == null or not is_instance_valid(node):
+		return null
+	if node.has_meta("_anim_player"):
+		return node
+	for n in node.find_children("*", "Node3D", true, false):
+		if (n as Node3D).has_meta("_anim_player"):
+			return n as Node3D
+	return null
+
+
+## How far the model's origin sits above its lowest mesh point (0 when the feet
+## are at y=0, as the model contract requires). Rest a model on the ground with
+## pos.y = ground_y + ground_offset(node). Needs the node in the tree.
+static func ground_offset(node: Node3D) -> float:
+	var min_y := INF
+	for mi in node.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		var a: AABB = m.global_transform * m.get_aabb()
+		min_y = minf(min_y, a.position.y)
+	if min_y == INF:
+		return 0.0
+	return maxf(0.0, node.global_position.y - min_y)
+
+
+## Creature glow material: darkened albedo with a modest emission energy so the
+## tier hue survives instead of blooming to cream (A3 task 0). The tier colours
+## themselves are untouched (the UI uses them).
+static func creature_glow(color: Color) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = color.darkened(0.3)
+	m.metallic = 0.0
+	m.roughness = 0.3
+	m.emission_enabled = true
+	m.emission = color
+	m.emission_energy_multiplier = 0.55
+	return m
 
 ## "Spore Bat" -> "spore_bat", "Skitter" -> "skitter".
 static func id_of(def_name: String) -> String:
@@ -32,7 +74,7 @@ static func id_of(def_name: String) -> String:
 ## Instance the model for `id`, scaled by `scale`, glow materials replaced.
 ## Returns null when there is no .glb (caller falls back to procedural).
 static func make(id: String, scale: float, glow: Material) -> Node3D:
-	if id.is_empty():
+	if id.is_empty() or disabled:
 		return null
 	if not _scenes.has(id):
 		var path := MODEL_DIR + id + ".glb"
@@ -69,6 +111,8 @@ static func _wrap(node: Node3D, glow: Material) -> Node3D:
 				(player.get_animation(clip) as Animation).loop_mode = Animation.LOOP_LINEAR
 	if glow != null:
 		_replace_glow(node, glow)
+	if player != null and lod:
+		CreatureLod.register(node, player)
 	return node
 
 
@@ -147,6 +191,11 @@ static func _oneshot(node: Node3D, clip: String, st: int) -> void:
 	p.speed_scale = 1.0
 	p.play(clip)
 	node.set_meta("_anim_state", st)
+	# Back to idle when the one-shot finishes (static meshes have no per-frame move()).
+	p.animation_finished.connect(func(_clip: StringName) -> void:
+		if is_instance_valid(node) and _state(node) == st:
+			move(node, 0.0)
+	, CONNECT_ONE_SHOT)
 
 
 ## Play the die clip, then call `then`. With no clip (procedural fallback),
@@ -171,3 +220,21 @@ static func die(node: Node3D, then: Callable) -> void:
 	var tree := node.get_tree()
 	if tree != null:
 		tree.create_timer(DIE_MAX).timeout.connect(func() -> void: fire.call())
+
+
+## Freeze (paused=true) or resume every creature AnimationPlayer in the tree.
+## The game drives pause itself (g.paused) rather than get_tree().paused, so the
+## engine keeps advancing the players' clips while the sim is frozen — this stops
+## that. Only creature models have AnimationPlayers, so the walk is safe.
+## speed_scale is used (not pause()/play()) so in-flight clips resume exactly
+## where they froze; the next move()/flap() call recomputes the right scale.
+static func set_all_paused(tree: SceneTree, paused: bool) -> void:
+	if tree == null or tree.root == null:
+		return
+	var stack: Array[Node] = [tree.root]
+	while not stack.is_empty():
+		var n := stack.pop_back() as Node
+		if n is AnimationPlayer:
+			(n as AnimationPlayer).speed_scale = 0.0 if paused else 1.0
+		for c in n.get_children():
+			stack.push_back(c)

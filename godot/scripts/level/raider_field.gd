@@ -3,38 +3,89 @@ extends RefCounted
 ## One flow field shared by every nest raider: breadth-first distance (in steps) from every
 ## cell to the nearest player structure. A step may rise or fall by one terrace only
 ## (RAIDER_CLIMB / RAIDER_DROP). Raiders walk toward the neighbour with the lowest distance.
-## Rebuilt every RAIDER_FIELD_INTERVAL, so a hundred raiders cost one search instead of a
+## Checked every RAIDER_FIELD_INTERVAL and rebuilt only when the goals (your structures) or
+## the ground (Bus.terrain_changed: craters, Terp, breaches, gates) changed, so a hundred raiders cost one search instead of a
 ## hundred A* runs. -1 means no walking route; raiders do not scale that cliff.
+## A rebuild (RaiderFieldBuild) runs RAIDER_FIELD_BUDGET_MS a frame; raiders follow the old
+## field until it is done.
 
-const DIRS := [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
-	Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]
+const DIRS := RaiderFieldBuild.DIRS
 
 var grid: Grid
 var dist := PackedInt32Array()
 var timer := 0.0
+var version := 0  # bumped by invalidate(): raiders re-check their committed path
 var has_goals := false
 var areas := PackedInt32Array()  # walking area id per cell (4-way, one terrace a step)
 var _areas_dirty := true
+var _job: RaiderFieldBuild = null
+var _goal_key := 0  # hash of the goal cells the field was built for
+var _dirty := true  # terrain, gates or decks changed since the last build
+var _wh := PackedFloat32Array()  # enemy walk height per cell (_refresh_heights)
+var _special := PackedInt32Array()  # gate and deck cells
+var _special_scanned := false
+var _next := PackedInt32Array()  # cached next_step per cell: target cell index, -1 no route, -2 unset
 
 
 func _init(g: Grid) -> void:
 	grid = g
 	dist.resize(g.w * g.h)
 	dist.fill(-1)
+	_next.resize(g.w * g.h)
+	_next.fill(-2)
 
 
 func update(dt: float, goal_cells: Array) -> void:
+	if _job != null:
+		if _job.step(int(Config.RAIDER_FIELD_BUDGET_MS * 1000.0)):
+			_finish()
+		return
 	timer -= dt
 	if timer > 0.0:
 		return
 	timer = Config.RAIDER_FIELD_INTERVAL
-	rebuild(goal_cells)
+	_next.fill(-2)  # gates and decks can flip without a terrain edit
+	var key := goal_cells.hash()
+	if key == _goal_key and not _dirty:
+		return  # same goals, same ground: the field is still right
+	_goal_key = key
+	_dirty = false
+	_refresh_heights()
+	_job = RaiderFieldBuild.new(grid, _wh, goal_cells)
+	if _job.step(int(Config.RAIDER_FIELD_BUDGET_MS * 1000.0)):
+		_finish()
 
 
-## Terrain changed: rebuild on the next update instead of waiting out the interval.
+## Terrain changed: rebuild soon instead of waiting out the interval. Edits within
+## RAIDER_FIELD_COALESCE share one rebuild; a build already running restarts on new heights.
 func invalidate() -> void:
-	timer = 0.0
+	version += 1
+	timer = minf(timer, Config.RAIDER_FIELD_COALESCE)
+	_dirty = true
+	_job = null
 	_areas_dirty = true
+	_next.fill(-2)
+
+
+## Current enemy walk heights (refreshed), for per-target walking fields (RaiderPaths).
+func walk_heights() -> PackedFloat32Array:
+	_refresh_heights()
+	return _wh
+
+
+## Build the whole field now (tests, and anything that needs it this frame).
+func rebuild(goal_cells: Array) -> void:
+	_refresh_heights()
+	_job = RaiderFieldBuild.new(grid, _wh, goal_cells)
+	_job.step(0)
+	_finish()
+
+
+func _finish() -> void:
+	dist = _job.dist
+	_next.fill(-2)
+	has_goals = _job.has_goals
+	_job = null
 
 
 ## Can a raider at `from` walk to within striking distance of `to` (prey of `radius` m)?
@@ -70,10 +121,8 @@ func _label_areas() -> void:
 	var next := 0
 	var w := grid.w
 	var h := grid.h
-	var wh := PackedFloat32Array()  # enemy walk height per cell, so each step is one compare
-	wh.resize(w * h)
-	for i in wh.size():
-		wh[i] = grid.walk_height(i % w, int(i / w), Grid.Faction.ENEMY)
+	_refresh_heights()
+	var wh := _wh  # enemy walk height per cell, so each step is one compare
 	var up := Config.RAIDER_CLIMB
 	var down := Config.RAIDER_DROP
 	var open := PackedInt32Array()
@@ -104,32 +153,18 @@ func _label_areas() -> void:
 		next += 1
 
 
-func rebuild(goal_cells: Array) -> void:
-	dist.fill(-1)
-	var open := PackedInt32Array()
-	for c in goal_cells:
-		if grid.in_bounds(c.x, c.y):
-			var i := grid.idx(c.x, c.y)
-			if dist[i] < 0:
-				dist[i] = 0
-				open.append(i)
-	has_goals = not open.is_empty()
-	var head := 0
-	while head < open.size():
-		var b := open[head]
-		head += 1
-		var bx := b % grid.w
-		var bz := b / grid.w
-		for d in DIRS:
-			var ax: int = bx + d.x
-			var az: int = bz + d.y
-			if not grid.in_bounds(ax, az):
-				continue
-			var a := grid.idx(ax, az)
-			if dist[a] >= 0 or not step_ok(ax, az, bx, bz):
-				continue
-			dist[a] = dist[b] + 1
-			open.append(a)
+## Enemy walk height per cell: terrain heights, patched where a gate or deck changes them.
+## Gate and deck cells are fixed at level build; only their state changes, so the list is
+## scanned once and their heights are refreshed on every rebuild.
+func _refresh_heights() -> void:
+	if not _special_scanned:
+		_special_scanned = true
+		for i in grid.gate.size():
+			if grid.gate[i] != Grid.Faction.NONE or grid.deck_owner[i] != Grid.Faction.NONE:
+				_special.append(i)
+	_wh = grid.height.duplicate()
+	for i in _special:
+		_wh[i] = grid.walk_height(i % grid.w, i / grid.w, Grid.Faction.ENEMY)
 
 
 ## Can a raider walk from cell a onto cell b? One terrace either way. No corner cutting:
@@ -152,9 +187,20 @@ func next_step(x: float, z: float) -> Variant:
 	var c := grid.world_to_cell(x, z)
 	if not grid.in_bounds(c.x, c.y):
 		return null
+	var i := grid.idx(c.x, c.y)
+	var hit := _next[i]
+	if hit == -2:
+		hit = _compute_next(c)
+		_next[i] = hit
+	if hit < 0:
+		return null
+	return Vector2((hit % grid.w + 0.5) * Config.CELL, (hit / grid.w + 0.5) * Config.CELL)
+
+
+func _compute_next(c: Vector2i) -> int:
 	var here := dist[grid.idx(c.x, c.y)]
 	if here < 0:
-		return null
+		return -1
 	var best := c
 	var bd := here
 	for d in DIRS:
@@ -165,55 +211,29 @@ func next_step(x: float, z: float) -> Variant:
 		if v >= 0 and v < bd:
 			bd = v
 			best = n
-	return Vector2((best.x + 0.5) * Config.CELL, (best.y + 0.5) * Config.CELL)
+	return grid.idx(best.x, best.y)
 
 
-## Nearest prey that shares a one-terrace walking route, or {}.
+## Nearest prey (straight line) in the raider's walking area, or {}. Areas are the same
+## connectivity as the field's 8-way, no-corner-cut steps.
 func nearest_on_foot(from: Vector3, prey: Array) -> Dictionary:
-	var g := grid
-	var start := g.world_to_cell(from.x, from.z)
-	if not g.in_bounds(start.x, start.y):
+	var start := grid.world_to_cell(from.x, from.z)
+	if not grid.in_bounds(start.x, start.y):
 		return {}
-	var at := {}
+	if _areas_dirty:
+		_label_areas()
+	var mine := areas[grid.idx(start.x, start.y)]
+	var best: Dictionary = {}
+	var bd := INF
 	for q in prey:
 		if not q.alive.call():
 			continue
 		var qp: Vector3 = q.node.position
-		var c := g.world_to_cell(qp.x, qp.z)
-		if not g.in_bounds(c.x, c.y):
+		var c := grid.world_to_cell(qp.x, qp.z)
+		if not grid.in_bounds(c.x, c.y) or areas[grid.idx(c.x, c.y)] != mine:
 			continue
-		var i := g.idx(c.x, c.y)
-		if not at.has(i):
-			at[i] = []
-		(at[i] as Array).append(q)
-	var seen := PackedByteArray()
-	seen.resize(g.w * g.h)
-	var open := PackedInt32Array()
-	open.append(g.idx(start.x, start.y))
-	seen[g.idx(start.x, start.y)] = 1
-	var best: Dictionary = {}
-	var bd := INF
-	var head := 0
-	while head < open.size():
-		var b := open[head]
-		head += 1
-		var bx := b % g.w
-		var bz := int(b / g.w)
-		if at.has(b):
-			for q in at[b]:
-				var qp: Vector3 = q.node.position
-				var d := Vector2(qp.x - from.x, qp.z - from.z).length()
-				if d < bd:
-					bd = d
-					best = q
-		for dir in DIRS:
-			var nx: int = bx + dir.x
-			var nz: int = bz + dir.y
-			if not g.in_bounds(nx, nz) or not step_ok(bx, bz, nx, nz):
-				continue
-			var ni := g.idx(nx, nz)
-			if seen[ni] != 0:
-				continue
-			seen[ni] = 1
-			open.append(ni)
+		var d := Vector2(qp.x - from.x, qp.z - from.z).length()
+		if d < bd:
+			bd = d
+			best = q
 	return best

@@ -11,7 +11,7 @@ var _reason_panel: PanelContainer
 
 
 func setup(parent: CanvasLayer) -> void:
-	_alert_panel = UiKit.panel(Color(0.04, 0.06, 0.09, 0.72))
+	_alert_panel = UiKit.panel(Color(UiKit.BG_SOLID, 0.8))
 	_alert_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_alert_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_alert_panel.position.y = 100
@@ -22,7 +22,7 @@ func setup(parent: CanvasLayer) -> void:
 	_alert_panel.add_child(_alert)
 	_alert_panel.visible = false
 	parent.add_child(_alert_panel)
-	_reason_panel = UiKit.panel(Color(0.04, 0.06, 0.09, 0.72))
+	_reason_panel = UiKit.panel(Color(UiKit.BG_SOLID, 0.8))
 	_reason_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_reason_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_reason_panel.position.y = -180

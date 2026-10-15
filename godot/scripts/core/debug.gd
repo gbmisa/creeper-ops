@@ -14,6 +14,9 @@ class_name Debug
 ##   --look=x,z[,d[,p]] point the command camera at a cell (d = zoom distance, p = pitch rad)   --rocket  Operative fires a rocket
 ##                 just before --shot
 ##   --sim=N       fast-forward N seconds, print a [sim] report
+##   --seed=N      seed the global RNG first (deterministic sims)
+##   --snipe3      playtest-2 defence script: lean economy at once, 3 snipers by the Node at t=180
+##   --raidprobe   during --sim, print [probe] lines every 5 s: raider counts, first contact, per-nest spawns
 ##   --metrics=PATH  write this run's play metrics (a .json file or a folder)
 ##   --metrics-report[=N] [--metrics-dir=D]  print the last N recorded missions and per-level averages
 ##   --smoke       run scripted mechanics checks (smoke_test.gd)
@@ -25,10 +28,15 @@ class_name Debug
 ##                 id "open" shows the first-person Armoury at the Node; "fire" holds
 ##                 the trigger on an unlocked advanced weapon just before --shot
 ##   --landing     dismiss the briefing and stop at the landing-site choice
+##   --briefing    keep the briefing up (screenshots)  --ended=won|lost  show the end screen before --shot
 ##   --hover=x,z   put the (fake) cursor over a cell
 ##   --select=T    select the first structure of type T (T=all-weapons: every movable weapon)
 ##   --keys        open the Controls (keybind) menu
 ##   --gpu-parity / --perf-sim=N   GPU creeper sim checks (SimBench; need a display)
+##   --bench-l2[=S]  play S s and print fps / draw calls (L2Bench; real display)
+##   --perf-probe[=MIN]  fast-forward MIN minutes, then frame cost by cause in both views (PerfProbe)
+##   --raider-probe[=dump]  Level 2 plateau-to-cliff-foot raider route probe (RaiderProbe)
+##   --bench-field  time one RaiderField rebuild/label/on-foot search (FieldBench)
 ##   --cpu-sim     force the CPU creeper sim
 ##   --level=N     play Level N (1 Hollow Ridge, 2 The Crown Marches); see Levels
 ##   --raise=x,z,r,by   raise (negative: lower) a disc of terrain through TerrainEdit
@@ -46,15 +54,22 @@ class_name Debug
 ##   --gallery=anim  every creature model id in a row with labels, cycling animation
 ##                 clips every 2 s (art screenshots of the .glb work; procedural fallback
 ##                 when no .glb is present)
+##   --gallery=anim:<id>  close-up of one model id, camera on its AABB centre
 ##   --creatures   one of each raider tier in a row near the command node, idle clips
 ##                 playing (in-situ art screenshots of the .glb work; A2)
+##   --creatures=near  also a row of the six hive part models behind them (A3)
 ##   --ranged      a Spitter and a Lancer on a flat pad, firing (projectile screenshot)
 ##   --burrow      a Warden ring and a Burrower dust trail    --mortar  enemy mortar and its shell ring
 ##   --fire=rifle|sprayer|rocket  (with --surface) hold the trigger so --shot catches the weapon firing
 ##   --ammo=ap|inc  unlock improved ammo, crossbow loaded with that grade (HUD shows [AP]/[INC])
+##   --cheat-guns  unlock every Operative weapon from the start (cheat; testing only)
 ##   --engine=I[,hold|hooked|top[,S]]  Operative at Salvage Engine I (hold: mid-hook; hooked: all sockets
 ##                 hooked with a relay chain; top: on its roof). See debug_engines.gd
 ##   --shot=PATH   save a screenshot after ~1.5 s and quit;  --quit=S  quit after S seconds
+##   --tour=PATH   screenshot tour: one framed shot per line of PATH (see
+##                 docs/tasks/MUSE_S_shot_tour.md); quits after the last line
+##   --tour-orbit=id,N  N shots orbiting gallery model id at 360/N degree steps,
+##                 named <dir>/<id>_<k>.png with --shot giving the directory
 
 const DEMO_BUILD := [
 	["relay", 34, 58], ["relay", 28, 48], ["relay", 27, 36], ["relay", 24, 24], ["relay", 19, 14], ["nullifier", 17, 14],
@@ -79,17 +94,20 @@ static func apply(g) -> void:
 	print("[debug] ", args)
 	PlayMetrics.persist = false  # debug runs never write to the player's metrics folder
 	PlayMetrics.out_path = str(args.get("metrics", ""))
+	if args.has("seed"):  # --seed=N: deterministic sims (nest timers, spawn picks, shots)
+		seed(int(args.seed))
+		print("[debug] seed ", int(args.seed))
 	if args.has("metrics-report"):
 		MetricsReport.run(args)
 		g.get_tree().quit()
 		return
 	Bus.log_msg.connect(func(t, k): print("[log:%s] %s" % [k, t]))
-	if args.has("nocapture") or args.has("shot"):
+	if args.has("nocapture") or args.has("shot") or args.has("tour") or args.has("tour-orbit"):
 		g.ignore_capture = true
-	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "castle2", "engines", "raid", "gallery", "creatures", "sim", "shot", "smoke", "engine"].any(func(k): return args.has(k))
+	var auto := ["autostart", "demo", "units", "surface", "spire", "cave", "castle", "castle2", "engines", "raid", "gallery", "creatures", "sim", "shot", "tour", "tour-orbit", "smoke", "engine"].any(func(k): return args.has(k))
 	if args.has("landing"):
 		g.flow.begin()  # stop at the landing-site choice
-	elif auto:
+	elif auto and not args.has("briefing"):
 		g.flow.begin()
 		var hint: Vector2i = g.level.landing_hint
 		g.flow.land(hint)
@@ -99,6 +117,15 @@ static func apply(g) -> void:
 		for b in g.level.get("demo", DEMO_BUILD):  # --demo=slow: unbuilt, so every packet must really be delivered
 			g.structures.place(b[0], b[1], b[2], args.demo != "slow")
 		DebugEngines.demo(g)  # scripted: hooks the nearest safe Salvage Engine after DEMO_HOOK_AT seconds
+	if args.has("snipe3"):  # --snipe3: playtest-2 defence script: working economy now, 3 snipers by the Node at t=180
+		var hint3: Vector2i = g.level.landing_hint  # mesa top is ~(80,146) r10: keep everything within 8 cells of it
+		for b in [["collector", 74, 146], ["collector", 86, 146], ["collector", 80, 141], ["collector", 80, 151],
+				["collector", 76, 143], ["collector", 84, 143], ["collector", 76, 149], ["collector", 84, 149],
+				["reactor", 78, 144], ["reactor", 82, 144], ["reactor", 78, 148], ["reactor", 82, 148],
+				["storage", 80, 150], ["beam", 78, 140], ["beam", 82, 140]]:
+			var s = g.structures.place(b[0], int(b[1]), int(b[2]), true)
+		g.set_meta("snipe3", { "placed": false,
+			"snipers": [["sniper", 76, 140], ["sniper", 84, 140], ["sniper", 80, 138]] })
 	if args.has("units"):
 		var p: Vector3 = g.structures.command_node().pos
 		var squad := []
@@ -150,7 +177,7 @@ static func apply(g) -> void:
 	if args.has("gallery"):
 		Gallery.run(g, args.gallery)
 	if args.has("creatures"):
-		CreatureGallery.spawn_near_base(g)
+		CreatureGallery.spawn_near_base(g, str(args.creatures))
 	if args.has("ranged"):
 		RaiderShots.demo(g)
 	if args.has("burrow"):
@@ -166,6 +193,8 @@ static func apply(g) -> void:
 	if args.has("ammo"):  # --ammo=ap|inc: unlock improved ammo and select that crossbow grade
 		AmmoGrades.unlocked = true
 		AmmoGrades.op.rifle = str(args.ammo) if str(args.ammo) in ["ap", "inc"] else "std"
+	if args.has("cheat-guns"):  # cheat: every Operative weapon unlocked from the start
+		OperativeUpgrades.cheat_guns = true
 	if args.has("engine"):
 		DebugEngines.apply(g, str(args.engine))
 	if args.has("look"):
@@ -176,6 +205,17 @@ static func apply(g) -> void:
 			g.command.cam.pitch = float(xz[3])
 	if args.has("gpu-parity") or args.has("perf-sim"):
 		SimBench.run(g, args)
+		return
+	if args.has("bench-l2"):
+		L2Bench.run(g, args)
+	if args.has("perf-probe"):
+		PerfProbe.run(g, args)
+		return
+	if args.has("raider-probe"):
+		RaiderProbe.run(g, args)
+		return
+	if args.has("bench-field"):
+		FieldBench.run(g)
 		return
 	if args.has("raise"):  # --raise=x,z,r,by: TerrainEdit a disc (terrain edit screenshots)
 		var p: PackedStringArray = args.raise.split(",")
@@ -232,7 +272,13 @@ static func apply(g) -> void:
 		DebugFire.run(g, str(args.fire))
 	if args.has("keys"):
 		g.hud.keys.open()
-	if args.has("shot"):
+	if args.has("ended"):
+		g.flow.end_game(args.ended == "won")
+	if args.has("tour"):
+		ShotTour.start_file(g, str(args.tour))
+	elif args.has("tour-orbit"):
+		ShotTour.start_orbit(g, str(args["tour-orbit"]), str(args.get("shot", "")))
+	elif args.has("shot"):
 		DebugHooks._screenshot_later(g, args.shot)
 	elif args.has("quit"):
 		g.get_tree().create_timer(float(args.quit)).timeout.connect(func(): g.get_tree().quit())

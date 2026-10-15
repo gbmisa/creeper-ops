@@ -15,6 +15,11 @@ var hold := false
 var time := 0.0
 var _seq := 1
 var _cool := {}
+var fair_cache := {}  # cell -> fair spitter site? (cleared on terrain change)
+var scans := {}  # hub id -> edge-cell scan job (EnemyBuildScan)
+var plan_more := false  # last planner pass ran out of time
+var plan_t0 := 0
+var fair_new := 0  # uncached fair-site tests this pass
 
 
 func _init(w: World, cs: Strongholds, sn: SporeNests, sm: StructureManager, pile: Stockpile) -> void:
@@ -24,6 +29,31 @@ func _init(w: World, cs: Strongholds, sn: SporeNests, sm: StructureManager, pile
 	structures = sm
 	stockpile = pile
 	w.updaters.append(update)
+	Bus.terrain_changed.connect(_on_terrain)
+
+
+## Terrain edits (enemy mortars, hive growth, burrowers, breaches) skip only
+## player-occupied cells, so the ground can move under an enemy structure after it is
+## placed. Re-seat anything whose cell changed so it stands on the visible ground.
+func _on_terrain(w: World, cells: Array) -> void:
+	if w != world:
+		return
+	fair_cache.clear()
+	scans.clear()
+	var touched := {}
+	for c in cells:
+		touched[c] = true
+	for raw in list:
+		var s: Dictionary = raw
+		if not bool(s.alive):
+			continue
+		if not touched.has(s.cell):
+			continue
+		var p := world.grid.cell_ground(s.cell.x, s.cell.y)
+		var node := s.node as Node3D
+		if node != null and is_instance_valid(node):
+			node.position = p
+		s.pos = p
 
 
 func update(dt: float) -> void:
@@ -201,7 +231,7 @@ func kill(s: Dictionary, sabotage: bool) -> void:
 	s.node = null
 	if not sabotage:
 		var def: Dictionary = EnemyStructures.DEFS[s.kind]
-		queue.append({"hub": s.hub, "kind": s.kind, "cell": s.cell, "rubble": true, "cost": float(def.cost) * 0.5})
+		queue.append({"hub": s.hub, "kind": s.kind, "cell": s.cell, "rubble": true, "ready": time + Config.ENEMY_REBUILD_DELAY, "cost": float(def.cost) * 0.5})
 	list.erase(s)
 	world.effects.burst(s.pos + Vector3.UP, Color("c45cff"), 2.2, 0.4)
 
@@ -244,8 +274,9 @@ func apply_channel(s: Dictionary, feet: Vector3, dt: float) -> bool:
 	s.channel = float(s.channel) - dt
 	if float(s.channel) > 0.0:
 		return false
-	if stockpile != null:
-		stockpile.add("salvage", Config.MORTAR_SALVAGE)
+	var pay := float(EnemyStructures.DEFS[s.kind].get("salvage", Config.MORTAR_SALVAGE))
+	if stockpile != null and pay > 0.0:
+		stockpile.add("salvage", pay)
 	kill(s, true)
-	Bus.say("Sabotaged the %s. +%d Salvage." % [EnemyStructures.DEFS[s.kind].label, int(Config.MORTAR_SALVAGE)], "good")
+	Bus.say("Sabotaged the %s.%s" % [EnemyStructures.DEFS[s.kind].label, " +%d Salvage." % int(pay) if pay > 0.0 else ""], "good")
 	return true

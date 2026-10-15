@@ -14,7 +14,8 @@ const RING := [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(1, 0
 
 ## Tower at `centre` with its roof at `top` (absolute level). `doors`: [{ cell, outside }] where
 ## `cell` is a ring-wall cell (not a corner) and `outside` the level of the ground beyond it.
-## Returns { cells, top, centre, hatch, ok } and appends an interior row to lay.interiors.
+## Returns { cells, top, centre, hatch, ok, doors } (doors: the ring-wall door cells, for
+## door-frame decor) and appends an interior row to lay.interiors.
 static func tower(g: Grid, centre: Vector2i, top: int, doors: Array, lay: Dictionary) -> Dictionary:
 	var cells: Array[Vector2i] = []
 	for dz in range(-2, 3):
@@ -45,7 +46,11 @@ static func tower(g: Grid, centre: Vector2i, top: int, doors: Array, lay: Dictio
 		if top - lvl >= CastleDefs.HEADROOM:
 			roofed.append(d.cell)
 	add_roof(g, lay, "tower", roofed, top, centre)
-	return { "cells": cells, "top": top, "centre": centre, "hatch": centre + RING[best], "ok": best_score < 1000 }
+	var door_cells: Array = []
+	for d in doors:
+		door_cells.append(d.cell)
+	return { "cells": cells, "top": top, "centre": centre, "hatch": centre + RING[best], "ok": best_score < 1000,
+		"doors": door_cells }
 
 
 ## Ring cell i's level when the hatch is ring cell p.

@@ -146,7 +146,7 @@ static func _gate(g: Grid, r: Rect2i, side: String, yard: int, lay: Dictionary, 
 			var c := at(r, side, t, k)
 			if not g.in_bounds(c.x, c.y):
 				continue
-			if bridge:  # the gap stays real ground; the deck is the owner's road over it
+			if bridge:  # the gap stays real ground; the deck is a solid road over it for every faction
 				g.deck[g.idx(c.x, c.y)] = yard
 				g.deck_owner[g.idx(c.x, c.y)] = Grid.Faction.ENEMY
 				g.blocked[g.idx(c.x, c.y)] = 1

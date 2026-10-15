@@ -15,10 +15,16 @@ var field: RaiderField
 ## Raiders with mission "castle" follow this field to held castles (Strongholds sets goals).
 var castle_field: RaiderField
 var castle_goals := func() -> Array: return []
+## Lancer posts: returns garrison dicts of hostile castles, or null when no castles exist.
+var castle_posts := func() -> Variant: return null
 var on_march := func(_r: Dictionary) -> void: pass  # injected: may give a marcher a mission
 var time := 0.0
 var next_group := 1
 var seen := {}  # tier name -> how many have spawned this mission
+var in_update := false  # true inside update(): buckets and group speeds are fresh
+var buckets := {}  # Vector2i (RAIDER_SEP_BUCKET m) -> raiders, for separation
+var group_slow := {}  # group id -> slowest member speed
+var paths: RaiderPaths  # committed routes to targets
 var loot_host = null  # SporeNests, so a death can drop its Salvage pickup
 
 
@@ -26,6 +32,7 @@ func _init(w: World) -> void:
 	world = w
 	field = RaiderField.new(w.grid)
 	castle_field = RaiderField.new(w.grid)
+	paths = RaiderPaths.new(self)
 	Bus.terrain_changed.connect(func(cw, _cells):
 		if cw == world:
 			field.invalidate()
@@ -33,6 +40,12 @@ func _init(w: World) -> void:
 
 
 func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
+	var post: Variant = null
+	if CastleLancers.is_lancer(tier):
+		post = CastleLancers.post(self, nest)
+		if post is Dictionary and post.is_empty():
+			tier = RaiderDefs.named("Spitter")  # every castle has its Lancers
+			post = null
 	var node := HazardMeshes.raider(tier)
 	var a := randf() * TAU
 	node.position = nest.pos + Vector3(cos(a) * 1.8, 0, sin(a) * 1.8)
@@ -51,11 +64,15 @@ func spawn(nest: Dictionary, tier: Dictionary, guard: bool) -> void:
 			kill(r)
 		else:
 			CreatureAnim.hit(r.node)
-	r["enemy"] = { "node": node, "oy": tier.size * 0.6, "radius": tier.size, "alive": func(): return r.alive, "hit": hit, "tier": tier }
+	r["enemy"] = { "node": node, "oy": tier.size * 0.6, "radius": tier.size, "alive": func(): return r.alive, "hit": hit, "tier": tier,
+		"targetable": func(): return str(r.get("burrow", "")) != "down" }
 	r["target"] = { "node": node, "radius": tier.size, "oy": tier.size * 0.6, "alive": func(): return r.alive, "on_hit": hit, "tier": tier }
 	world.add_target(r.target)
 	list.append(r)
 	nest.count += 1
+	if CastleLancers.is_lancer(tier):
+		CastleLancers.hold(self, r, post if post is Dictionary else nest)
+		guard = true
 	seen[tier.name] = int(seen.get(tier.name, 0)) + 1
 	if not guard:
 		on_march.call(r)
@@ -83,9 +100,33 @@ func update(dt: float, prey: Array, goal_cells: Array) -> void:
 	time += dt
 	field.update(dt, goal_cells)
 	castle_field.update(dt, castle_goals.call())
-	var reachable := prey.filter(func(q): return q.alive.call() and _grounded(q))
+	var reachable: Array = []
+	for q in prey:
+		if q.alive.call() and _grounded(q):
+			reachable.append(q)
+	_index()
+	paths.begin_update()
+	paths.serve()
+	in_update = true
 	for r in list.duplicate():
 		_think(r, dt, reachable)
+	in_update = false
+
+
+## Per-frame lookups shared by every raider: separation buckets and group speeds.
+func _index() -> void:
+	buckets.clear()
+	group_slow.clear()
+	for r in list:
+		var p: Vector3 = r.node.position
+		var k := Vector2i(floori(p.x / Config.RAIDER_SEP_BUCKET), floori(p.z / Config.RAIDER_SEP_BUCKET))
+		if buckets.has(k):
+			buckets[k].append(r)
+		else:
+			buckets[k] = [r]
+		var gid := int(r.get("group", -1))
+		if gid >= 0 and r.alive:
+			group_slow[gid] = minf(float(group_slow.get(gid, INF)), float(r.tier.speed))
 
 
 ## Raiders can't reach hovering Thors or structures in flight.
@@ -109,7 +150,46 @@ func _nearest(from: Vector3, prey: Array, max_d: float, leash_home = null) -> Di
 	return best
 
 
+## A raider keeps its target until it dies, leaves the ground, becomes unwalkable-to (checked when
+## the field is invalidated), a moving one gets past RAIDER_LOSE, or a guard's passes NEST_LEASH.
+## Only a raider with no target scans (staggered RAIDER_ACQUIRE_MIN..MAX); a nearer prey never
+## steals the pick. Movement still runs every frame (RaiderPaths).
+func _acquire(r: Dictionary, prey: Array, max_d: float, leash_home = null) -> Dictionary:
+	var held: Dictionary = r.get("_tgt", {})
+	if not held.is_empty():
+		if _keep(r, held, leash_home):
+			return held
+		r["_tgt"] = {}
+		r["_tgt_at"] = 0.0
+		paths.forget(r)
+	if time < float(r.get("_tgt_at", 0.0)):
+		return {}
+	r["_tgt_at"] = time + randf_range(Config.RAIDER_ACQUIRE_MIN, Config.RAIDER_ACQUIRE_MAX)
+	held = _nearest(r.node.position, prey, max_d, leash_home)
+	r["_tgt"] = held
+	r["_tgt_ver"] = field.version
+	return held
+
+
+func _keep(r: Dictionary, q: Dictionary, leash_home) -> bool:
+	if not q.alive.call() or not _grounded(q):
+		return false
+	var qp: Vector3 = q.node.position
+	if leash_home != null and qp.distance_to(leash_home) > Config.NEST_LEASH:
+		return false
+	var p: Vector3 = r.node.position
+	if leash_home == null and not q.has("struct") and Vector2(qp.x - p.x, qp.z - p.z).length() > Config.RAIDER_LOSE:
+		return false
+	if int(r.get("_tgt_ver", -1)) != field.version:
+		if not field.reachable(p, qp, q.radius):
+			return false
+		r["_tgt_ver"] = field.version
+	return true
+
+
 func _think(r: Dictionary, dt: float, prey: Array) -> void:
+	if r.has("guard_post") and not CastleLancers.tend(self, r):
+		return
 	if float(r.get("gather", 0.0)) > 0.0:
 		r["gather"] = float(r.gather) - dt
 		_walk(r, _patrol(r.nest.pos, r), dt)
@@ -131,11 +211,11 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 	var goal = null  # Vector2 XZ
 	var target: Dictionary
 	if r.guard:
-		target = _nearest(p, prey, Config.NEST_AGGRO, home)
+		target = _acquire(r, prey, Config.NEST_AGGRO, home)
 		if target.is_empty():
-			goal = _patrol(home, r)
+			goal = CastlePatrols.waypoint(r) if r.has("wall_patrol") else _patrol(home, r)
 	else:
-		target = _nearest(p, prey, Config.RAIDER_AGGRO)
+		target = _acquire(r, prey, Config.RAIDER_AGGRO)
 		if target.is_empty():
 			goal = _route(r, p)
 			if goal == null:
@@ -152,19 +232,18 @@ func _think(r: Dictionary, dt: float, prey: Array) -> void:
 				dmg *= float(tier.get("wall_mult", 1.0))
 			if target.get("kind", "") == "operative":
 				HitFeel.note_source(p)
+			if target.has("struct"):
+				(target.struct as Structure).last_hit_by = str(tier.get("name", "raider"))
 			target.hit.call(dmg)
 			CreatureAnim.attack(r.node)
 			_face(r, Vector2(tp.x - p.x, tp.z - p.z))
-			r.node.position.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY) + absf(sin(time * 12.0 + r.phase)) * 0.2
+			r.node.position.y = RaiderPerch.y(world, p.x, p.z) + absf(sin(time * 12.0 + r.phase)) * 0.2
 			return
-		# Straight at the target; if a wall is in the way (a garrison inside its castle,
-		# a cliff), follow the flow field round it instead of pressing into the wall.
-		r["detour"] = r.get("detour", 0.0) - dt
-		if r.detour <= 0.0:
-			if _walk(r, Vector2(tp.x, tp.z), dt):
-				return
-			r.detour = Config.RAIDER_DETOUR_TIME
-		goal = _route(r, p)
+		# One committed route: straight when clear, else down the target's walking field
+		# (RaiderPaths); the shared flow field only while that field builds.
+		goal = paths.goal(r, target, dt)
+		if goal == null:
+			goal = _route(r, p)
 	if goal == null:
 		return
 	_walk(r, goal, dt)
@@ -183,65 +262,8 @@ func _route(r: Dictionary, p: Vector3) -> Variant:
 	return field.next_step(p.x, p.z)
 
 
-## Returns false when the raider couldn't move at all (blocked on both axes).
 func _walk(r: Dictionary, goal: Vector2, dt: float) -> bool:
-	var p: Vector3 = r.node.position
-	var v: Vector2 = goal - Vector2(p.x, p.z)
-	if v.length() > 0.001:
-		v = v.normalized()
-	for o in list:  # separation so a pack doesn't merge into one mesh
-		if o == r:
-			continue
-		var op: Vector3 = o.node.position
-		var d := Vector2(p.x - op.x, p.z - op.z)
-		var mn: float = r.size + o.size
-		if d.length() > 0.001 and d.length() < mn:
-			v += d.normalized() * (mn - d.length())
-	v = v.limit_length(1.0)  # separation steers; it must not add speed (a packed group would outrun its slowest)
-	var speed: float = RaiderGroups.speed(self, r)
-	var step: float = speed * dt
-	var nx := p.x + v.x * step
-	var nz := p.z + v.y * step
-	var ws := world.grid.world_size()
-	nx = clampf(nx, 0.5, ws.x - 0.5)
-	nz = clampf(nz, 0.5, ws.y - 0.5)
-	# Per axis, so a cliff blocks that axis and the raider slides along it.
-	var moved := false
-	if _step_into(p.x, p.z, nx, p.z):
-		moved = moved or absf(nx - p.x) > 0.001
-		p.x = nx
-	if _step_into(p.x, p.z, p.x, nz):
-		moved = moved or absf(nz - p.z) > 0.001
-		p.z = nz
-	p.y = world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY)
-	r.node.position = p
-	_face(r, v)
-	CreatureAnim.move(r.node, speed if moved else 0.0)
-	return moved
-
-
-## True when the move stays in this cell or enters a neighbour one terrace away.
-func _step_into(x0: float, z0: float, x1: float, z1: float) -> bool:
-	var g := world.grid
-	var a := g.world_to_cell(x0, z0)
-	var b := g.world_to_cell(x1, z1)
-	if not g.in_bounds(b.x, b.y):
-		return false
-	# Stay off the sloped foot of a tall wall: the ground there is already partway up it.
-	var off := _off_floor(x1, z1, b)
-	if off > Config.RAIDER_CLIMB and off > _off_floor(x0, z0, a):
-		return false
-	if a == b:
-		return true
-	if maxi(absi(b.x - a.x), absi(b.y - a.y)) > 1:
-		return false
-	return field.step_ok(a.x, a.y, b.x, b.y)
-
-
-## How far (levels) the drawn ground at a point sits from its own cell's floor.
-func _off_floor(x: float, z: float, c: Vector2i) -> float:
-	var g := world.grid
-	return absf(g.stand_y(x, z, Grid.Faction.ENEMY) / Config.LEVEL_H - g.walk_height(c.x, c.y, Grid.Faction.ENEMY))
+	return RaiderMove.walk(self, r, goal, dt)
 
 
 func _patrol(home: Vector3, r: Dictionary) -> Vector2:

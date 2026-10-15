@@ -43,6 +43,8 @@ static func _plasma(g) -> void:
 	w.tank = Config.TANK_MAX
 	for i in 8:
 		w._spray(0.05, g.surface, feet)
+	# The sprayer lays anti-creeper; it annihilates on the sim tick (none ran above).
+	g.surface.creeper._annihilate()
 	var spray := _pool(g, saved)
 	for c in saved:
 		g.surface.creeper.set_depth(c.x, c.y, 8.0)
@@ -56,52 +58,40 @@ static func _plasma(g) -> void:
 
 
 static func _demo(g) -> void:
-	OperativeUpgrades.grant("unlock_demo")
 	var core: Dictionary = g.cave_hazards.core
 	var calls := [0]
 	var old: Callable = core.target.on_hit
 	core.target.on_hit = func(_d, _p): calls[0] += 1
 	var near := SmokeArmoury._target(g.cave, core.pos + Vector3(3, 1, 0))
 	var far := SmokeArmoury._target(g.cave, core.pos + Vector3(20, 1, 0))
-	g.fps.weapons.advanced.demo.plant(g.cave, core.pos + Vector3(0, 1, 0))
-	for i in 50:
-		g.fps.weapons.advanced.demo.update(0.05)
-	SmokeTest._check("armoury: demo hurts a target, not the Deep Core", calls[0] == 0 and is_equal_approx(near.dmg, 120.0) and far.dmg == 0.0,
+	DemoCharge.plant(g.cave, core.pos + Vector3(0, 1, 0))
+	for i in 100:
+		DemoCharge.tick(g.cave, 0.05)
+	SmokeTest._check("armoury: demo hurts a target, not the Deep Core", calls[0] == 0 and is_equal_approx(near.dmg, Config.DEMO_DAMAGE) and far.dmg == 0.0,
 		"core calls %d near %.0f far %.0f" % [calls[0], near.dmg, far.dmg])
 	core.target.on_hit = old
 	SmokeArmoury._free_target(g.cave, near)
 	SmokeArmoury._free_target(g.cave, far)
-	_throw_range(g)
-	g.stockpile.salvage = 0.0
-	var before: int = g.fps.weapons.advanced.demo.charges.size()
-	g.fps.weapons.advanced._moaned = false
-	g.fps.weapons.advanced._throw(g.surface)
-	SmokeTest._check("armoury: demo dry does not throw", g.fps.weapons.advanced.demo.charges.size() == before and "Salvage" in g.fps.weapons.advanced.need)
-	g.stockpile.salvage = 8.0
-	g.fps.weapons.advanced._moaned = false
-	g.fps.weapons.advanced._throw(g.surface)
-	SmokeTest._check("armoury: demo spends 8 salvage", g.stockpile.salvage <= 0.001 and g.fps.weapons.advanced.demo.charges.size() == before + 1)
-	g.fps.weapons.advanced.demo.clear()
+	DemoCharge.clear()
+	_buy_charges(g)
 
 
-static func _throw_range(g) -> void:
-	var run := _run(g.surface.grid, 14)
-	if run.x < 0:
-		SmokeTest._check("armoury: demo flat ground", false)
-		return
-	var ground: Vector3 = g.surface.grid.cell_ground(run.x, run.y)
-	var from: Vector3 = ground + Vector3(0, 1.6, 0)
-	g.fps.weapons.advanced.demo.launch(g.surface, from, Vector3(1, 0, 0))
-	var t := 0.0
-	while t < 3.0 and not g.fps.weapons.advanced.demo.charges.is_empty() and not g.fps.weapons.advanced.demo.charges[0].stuck:
-		g.fps.weapons.advanced.demo.update(1.0 / 60.0)
-		t += 1.0 / 60.0
-	var dist := 0.0
-	if not g.fps.weapons.advanced.demo.charges.is_empty():
-		var p: Vector3 = g.fps.weapons.advanced.demo.charges[0].pos
-		dist = Vector2(p.x - from.x, p.z - from.z).length()
-	g.fps.weapons.advanced.demo.clear()
-	SmokeTest._check("armoury: demo throw is about 20 m", dist > 16.0 and dist < 24.0, "%.1f m" % dist)
+static func _buy_charges(g) -> void:
+	OperativeUpgrades.reset()
+	g.stockpile.salvage = Config.DEMO_CHARGE_COST - 1.0
+	var why := OperativeUpgrades.buy_charge(g.stockpile)
+	SmokeTest._check("armoury: charge refused when Salvage is short", why != "" and OperativeUpgrades.charges == 0
+		and is_equal_approx(g.stockpile.salvage, Config.DEMO_CHARGE_COST - 1.0))
+	g.stockpile.salvage = Config.DEMO_CHARGE_COST * (Config.DEMO_CHARGE_MAX + 1)
+	var start: float = g.stockpile.salvage
+	SmokeTest._check("armoury: buying a charge spends Salvage and adds one",
+		OperativeUpgrades.buy_charge(g.stockpile) == "" and OperativeUpgrades.charges == 1
+		and is_equal_approx(g.stockpile.salvage, start - Config.DEMO_CHARGE_COST))
+	for i in Config.DEMO_CHARGE_MAX:
+		OperativeUpgrades.buy_charge(g.stockpile)
+	SmokeTest._check("armoury: charge cap enforced and nothing spent past it", OperativeUpgrades.charges == Config.DEMO_CHARGE_MAX
+		and is_equal_approx(g.stockpile.salvage, start - Config.DEMO_CHARGE_COST * Config.DEMO_CHARGE_MAX))
+	OperativeUpgrades.reset()
 
 
 static func _death(g) -> void:

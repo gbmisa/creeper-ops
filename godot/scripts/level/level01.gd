@@ -11,17 +11,17 @@ const H := 80
 ## When raids start, and when each Config.RAIDER_TIERS index unlocks (seconds).
 const RAID_SCHEDULE := {
 	"raid_delay": 300.0,
-	"tier_times": [0.0, 480.0, 900.0, 1320.0],
+	"tier_times": [0.0, 660.0, 1500.0, 2340.0],
 }
-## Pressure curve (§4.1). Points hold the old unlocks: Brute ~8 min (0.20), Ravager ~15 (0.60),
-## Behemoth ~22 (0.85). Grace matches the raid start; cap is the spec's 2400 s.
-const PRESSURE := { "grace": 300.0, "cap": 2400.0 }
+## Pressure curve (§4.1). Points hold the old unlocks: Brute ~11 min (0.20), Ravager ~25 (0.60),
+## Behemoth ~39 (0.85). Grace matches the raid start; cap is 4500 s.
+const PRESSURE := { "grace": 300.0, "cap": 4500.0 }
 const PRESSURE_POINTS := [
 	{ "t": 300.0, "p": 0.0 },
-	{ "t": 480.0, "p": 0.20 },
-	{ "t": 900.0, "p": 0.60 },
-	{ "t": 1320.0, "p": 0.85 },
-	{ "t": 2400.0, "p": 1.0 },
+	{ "t": 660.0, "p": 0.20 },
+	{ "t": 1500.0, "p": 0.60 },
+	{ "t": 2340.0, "p": 0.85 },
+	{ "t": 4500.0, "p": 1.0 },
 ]
 ## Castles (CastleShape rows). The Operative takes them; raiders take them back.
 ## Ashmoat (Stage 21): a compact concentric castle in the SW (outer wall, bailey, inner wall,
@@ -32,7 +32,7 @@ const PRESSURE_POINTS := [
 const CASTLES := [
 	{ "id": "ashmoat", "name": "Ashmoat Keep", "x": 0, "z": 49, "size": 31, "floor": 2, "plan": "concentric",
 		"bailey": 5, "variant": "ground", "moat": true, "gates": ["n"], "inner_gate": "e", "climbs": ["e"],
-		"spire_h": 20, "engines": 1, "engine_range": 24.0 },
+		"spire_h": 20, "engines": 1, "engine_range": 12.0 },
 	{ "id": "bastion", "name": "High Bastion", "x": 25, "z": 2, "size": 15, "floor": 4,
 		"variant": "raised", "bridge": true, "gates": ["s"], "climbs": ["e"], "spire_h": 20 },
 ]
@@ -48,14 +48,14 @@ const DEMO := [
 	["cannon", 35, 61], ["cannon", 41, 61], ["cannon", 49, 62],
 	["reactor", 36, 66], ["reactor", 40, 66], ["reactor", 44, 66], ["reactor", 36, 69], ["reactor", 44, 69], ["storage", 40, 69],
 ]
-## Salvage Engines (EngineDefs). One safe wreck near the base; the rest sit beside hives and the
-## Bastion, where hooking is a risk: `hive` / `castle` engines ship only once that is razed / held.
+## Salvage Engines (EngineDefs). Hooking one to the network is the only
+## requirement to ship Salvage; the ones beside hives and the Bastion are a risk to reach, not gated.
 const ENGINES := [
 	{ "id": "e1", "x": 58, "z": 67, "kind": "wreck" },
-	{ "id": "e2", "x": 28, "z": 22, "kind": "forge", "hive": "Central knoll" },
-	{ "id": "e3", "x": 47, "z": 15, "kind": "wreck", "castle": "bastion" },
-	{ "id": "e4", "x": 66, "z": 26, "kind": "bore", "hive": "Spire Heights" },
-	{ "id": "e5", "x": 22, "z": 42, "kind": "forge", "hive": "Rift" },
+	{ "id": "e2", "x": 28, "z": 22, "kind": "forge" },
+	{ "id": "e3", "x": 47, "z": 15, "kind": "wreck" },
+	{ "id": "e4", "x": 66, "z": 26, "kind": "bore" },
+	{ "id": "e5", "x": 22, "z": 42, "kind": "forge" },
 ]
 ## Castle stakes (CastleRaids; keys default to Config.CASTLE_RULES). Level 1 is gentle.
 const CASTLE_RULES := { "aggression": 0.5, "reprisal_warn": 90.0, "nest_buff": 0.15 }
@@ -218,6 +218,7 @@ static func build() -> Dictionary:
 			{ "name": "Central knoll", "x": 40, "z": 23, "access": "blight" },
 		],
 		"raid_schedule": RAID_SCHEDULE,
+		"raider_ban": ["Burrower"],  # test levels: it levels a base before anything can answer (playtest 4)
 		"pressure": PRESSURE,
 		"pressure_points": PRESSURE_POINTS,
 		"spire": { "x": 66, "z": 9 },
@@ -237,6 +238,7 @@ static func build() -> Dictionary:
 			["Ops: Energy IS packets. The Node fires one wherever a structure asks, as long as the bank has energy.", "radio"],
 			["Ops: Collectors claim land for income. Relays carry packets to the front. Weapons can fly to new spots.", "radio"],
 			["Ops: Purple Blight can't be built on. Barracks units can go there, but they run dry and must come home.", "radio"],
+			["Ops: Ashmoat falls in rings: hold the gatehouse, wreck the trebuchet on the corner tower and raise the bailey standard, then kill the crown nest in the keep hall.", "radio"],
 		],
 	}
 	level["nests"] = level.hives # alias: older readers still say nests

@@ -12,19 +12,20 @@ var _waiting: Array = []  # [id, slot] while capturing a key
 
 
 func _init() -> void:
-	color = Color(0, 0, 0, 0.6)
+	color = Color(0.02, 0.025, 0.015, 0.62)
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	visible = false
 	var c := CenterContainer.new()
 	c.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(c)
-	var p := UiKit.panel(Color(0.05, 0.07, 0.1, 0.97))
+	var p := UiKit.panel(UiKit.BG_SOLID)
+	UiKit.brackets(p, UiKit.ACCENT, 16.0)
 	c.add_child(p)
 	var v := UiKit.vbox(8)
 	v.mouse_filter = Control.MOUSE_FILTER_PASS
 	p.add_child(v)
-	v.add_child(UiKit.label("CONTROLS", 22))
-	v.add_child(UiKit.label("Click a key to rebind it, then press the new key (Esc cancels). Right-click clears. Saved automatically and kept across updates.", 13, UiKit.DIM))
+	v.add_child(UiKit.header("Controls", 22))
+	v.add_child(UiKit.label("Click a key to rebind it, then press the new key (Esc cancels). Right-click clears. Saved automatically and kept across updates.", 15, UiKit.DIM))
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(640, 560)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -48,19 +49,20 @@ func _init() -> void:
 
 func _build_rows() -> void:
 	for grp in Keybinds.GROUPS:
-		var head := UiKit.label(grp.to_upper(), 15, UiKit.ENERGY)
+		var head := UiKit.label(grp.to_upper(), 16, UiKit.ACCENT)
 		_rows.add_child(head)
 		for id in Keybinds.DEFAULTS:
 			if Keybinds.group(id) != grp:
 				continue
 			var row := UiKit.hbox(8)
 			row.mouse_filter = Control.MOUSE_FILTER_PASS
-			var l := UiKit.label(Keybinds.label(id), 14)
+			var l := UiKit.label(Keybinds.label(id), 16)
 			l.custom_minimum_size.x = 260
 			row.add_child(l)
 			var pair := []
 			for slot in Keybinds.SLOTS:
-				var b := UiKit.button("", func(): _capture(id, slot), 14)
+				var b := UiKit.button("", func(): _capture(id, slot), 15)
+				b.add_theme_font_override("font", UiTheme.font(UiTheme.FONT_MONO))
 				b.custom_minimum_size.x = 150
 				b.gui_input.connect(func(e):
 					if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_RIGHT:

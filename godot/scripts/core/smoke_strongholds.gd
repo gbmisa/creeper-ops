@@ -85,6 +85,10 @@ static func _siege(g, castles: Strongholds, c: Dictionary, lay: Dictionary) -> v
 	var r: Dictionary = raiders.list.back()
 	r.node.position = camp.pos
 	SmokeTest._sim(g, 0.2)
+	SmokeTest._check("castle: grace until the reprisal launches: raiders inside start no siege",
+		c.raid.grace and c.state == "held" and c.capture.retake == 0.0)
+	c.raid.grace = false  # the reprisal has now landed
+	SmokeTest._sim(g, 0.2)
 	SmokeTest._check("castle: raiders inside -> siege", c.state == "siege")
 	SmokeTest._sim(g, Config.RETAKE_TIME + 0.5)
 	SmokeTest._check("castle: unanswered siege retakes it", c.state == "hostile" and c.owner == "enemy"
@@ -98,6 +102,8 @@ static func _siege(g, castles: Strongholds, c: Dictionary, lay: Dictionary) -> v
 static func _assault(g, castles: Strongholds, c: Dictionary, lay: Dictionary) -> void:
 	var raiders: Raiders = castles.nests.raiders
 	StrongholdRules.to_held(g.surface, c, lay)
+	g.castle_raids.update(0.0)
+	c.raid.grace = false  # these are the reprisal's raiders: it has launched
 	var front: Vector2i = lay.gates[0].outer.back() + (lay.gates[0].outer.back() - lay.gates[0].cells[0]).sign() * 3
 	var camp := { "name": "test", "pos": g.surface.grid.cell_ground(front.x, front.y), "count": 0 }
 	for i in 3:

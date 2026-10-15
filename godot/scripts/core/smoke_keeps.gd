@@ -21,7 +21,7 @@ static func _flying_node(g) -> void:
 	sm.network.rebuild(sm.list)
 	var outposts: bool = sm.list.any(func(s): return s.def.get("sender", false) and s != n)
 	SmokeTest._check("flying Node: its network stays connected", before and col.connected and n.connected)
-	SmokeTest._check("flying Node: launches no packets itself", outposts or sm.network.route(col).is_empty())
+	SmokeTest._check("flying Node: still sends packets while connected", not sm.network.route(col).is_empty())
 	while n.is_flying():
 		Mover.update(n, 0.1)
 	sm.network.rebuild(sm.list)

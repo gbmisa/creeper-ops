@@ -29,4 +29,4 @@ static func run(g) -> void:
 			roofed = Vector2i(i % grid.w, i / grid.w)
 			break
 	if roofed.x >= 0 and g.builder != null:
-		SmokeTest._check("enemy builder: never under a castle roof", not EnemyBuildPlan._open(g.builder, roofed, false))
+		SmokeTest._check("enemy builder: never under a castle roof", not EnemyBuildPlan.open(g.builder, roofed, false))

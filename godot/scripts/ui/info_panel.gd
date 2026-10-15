@@ -17,7 +17,8 @@ var _actions: HFlowContainer
 func setup(cm: CommandMode, um: UnitManager) -> void:
 	command = cm
 	units = um
-	add_theme_stylebox_override("panel", UiKit.style())
+	add_theme_stylebox_override("panel", UiKit.style(UiKit.BG, UiKit.EDGE, 1, 10))
+	UiKit.brackets(self)
 	anchor_left = 1.0
 	anchor_right = 1.0
 	anchor_top = 0.0
@@ -26,15 +27,16 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 	offset_top = 64
 	var v := UiKit.vbox(6)
 	add_child(v)
-	_title = UiKit.label("", 18)
-	v.add_child(_title)
+	var head := UiKit.header("", 20, UiKit.TEXT)
+	_title = head.get_node("Text")
+	v.add_child(head)
 	_hp_row = UiKit.hbox(8)
-	_hp_lbl = UiKit.label("", 13)
+	_hp_lbl = UiKit.mono("", 14)
 	_hp_row.add_child(_hp_lbl)
 	_hp_bar = UiKit.bar(170, 10, UiKit.GOOD)
 	_hp_row.add_child(_hp_bar)
 	v.add_child(_hp_row)
-	_body = UiKit.rich(13)
+	_body = UiKit.rich(15)
 	_body.custom_minimum_size.x = 300
 	v.add_child(_body)
 	_actions = HFlowContainer.new()
@@ -46,7 +48,7 @@ func setup(cm: CommandMode, um: UnitManager) -> void:
 
 
 func _btn(text: String, cb: Callable) -> void:
-	_actions.add_child(UiKit.button(text, cb, 13))
+	_actions.add_child(UiKit.button(text, cb, 14))
 
 
 func _rebuild_actions() -> void:
@@ -55,6 +57,8 @@ func _rebuild_actions() -> void:
 	var s := command.selected
 	if s == null:
 		return
+	if (s.type == "beacon" or s.type == "node") and s.is_built() and not s.is_flying():
+		_btn("Deploy here [%s]" % Keybinds.short("teleport"), command.deploy.deploy_totem)
 	if s.def.get("movable", false):
 		_btn("Move [%s]" % Keybinds.short("move"), command.begin_move)
 	if s.type != "node":
@@ -105,6 +109,18 @@ func refresh() -> void:
 		_hp_lbl.text = "HP %d / %d" % [ceili(s.hp), s.def.hp]
 		_body.text = _structure_text(s)
 		return
+	var ei := EnemyRangeView.info(command)
+	if not ei.is_empty():
+		visible = true
+		_hp_row.visible = true
+		_title.text = ei.title
+		_hp_bar.value = ei.frac
+		UiKit.set_bar_color(_hp_bar, UiKit.BAD)
+		_hp_lbl.text = ei.hp
+		_body.text = ei.body
+		for c in _actions.get_children():
+			c.queue_free()
+		return
 	if not units.selected.is_empty():
 		visible = true
 		_hp_row.visible = false
@@ -128,10 +144,10 @@ func _structure_text(s: Structure) -> String:
 		lines.append("[color=#ff5a4a]NOT CONNECTED: no packets reach it[/color]")
 	if s.has_ammo_store():
 		var what := "Supply stock" if s.type == "barracks" else "Ammo"
-		lines.append("%s %d / %d%s" % [what, floori(s.ammo), s.ammo_max(), ""])
+		lines.append("%s %d / %d%s" % [what, floori(s.ammo), s.ammo_max(), "" if s.active else "  [color=#ffc857](deactivated)[/color]"])
 	if AmmoGrades.has_grades(s):
 		var gl := AmmoDefs.label(s.grade)
-		lines.append("Ammo grade: %s%s  [color=#8899aa](%s switches%s)[/color]" % [gl, "" if s.grade == "std" else " (%d graded)" % floori(s.grade_ammo),
+		lines.append("Ammo grade: %s%s  [color=#8899aa](%s switches%s)[/color]" % [gl, "" if s.grade == "std" else " (%d graded)" % roundi(s.grade_ammo),
 			"/".join([Keybinds.short("ammo_next"), Keybinds.short("ammo_prev")]), "" if AmmoGrades.unlocked else "; locked"])
 	if s.hold_fire:
 		lines.append("[color=#ffc857]Holding fire[/color]")
@@ -159,7 +175,7 @@ func _structure_text(s: Structure) -> String:
 func _units_text() -> String:
 	var lines := []
 	for u in units.selected.slice(0, 8):
-		var st := { "idle": "holding", "move": "moving", "resupply": "returning to resupply", "return": "returning to post" }
-		lines.append("%s  HP %d  Ammo %d/%d  %s" % [u.def.label, ceili(u.hp), floori(u.ammo), u.def.ammo, st.get(u.state, u.state)])
-	lines.append("[color=#8899aa]Right-click to move. Units run dry and walk home to restock.[/color]")
+		var st := { "idle": "holding", "move": "moving", "resupply": "returning to resupply", "return": "returning to post", "patrol": "patrolling" }
+		lines.append("%s  HP %d  Ammo %d/%d  %s" % [u.def.label, ceili(u.hp), roundi(u.ammo), u.def.ammo, st.get(u.state, u.state)])
+	lines.append("[color=#8899aa]Right-click to move, [%s] to set a patrol route. Units run dry and walk home to restock.[/color]" % Keybinds.short("patrol"))
 	return "\n".join(lines)

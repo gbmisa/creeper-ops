@@ -22,6 +22,15 @@ static func build(type: String, root: Node3D) -> void:
 ## Command Node: the tallest thing you own. Buttressed citadel tower, merlons, banners and a
 ## turning crown of bronze arms round a great rune crystal.
 static func node(root: Node3D) -> void:
+	var anim := CreatureAnim.make("command_node", 1.0, null)
+	if anim != null:  # the clips turn the wheel: no code-driven Spin needed
+		root.add_child(anim)
+		CreatureAnim.move(anim, 0.0)
+		return
+	_procedural_node(root)
+
+
+static func _procedural_node(root: Node3D) -> void:
 	ShapeKit.lathe(root, PackedVector2Array([Vector2(2.8, 0.0), Vector2(2.8, 0.7), Vector2(2.3, 0.9),
 		Vector2(0.0, 0.9)]), StructureMeshes.pal("stone_dark"), Vector3.ZERO, 8)
 	ShapeKit.lathe(root, PackedVector2Array([Vector2(2.1, 0.9), Vector2(1.55, 1.6), Vector2(1.35, 6.6),
@@ -159,13 +168,22 @@ static func forge(root: Node3D) -> void:
 
 ## Totem: a carved standing stone with a pulsing teal rune ("Glow") and a crystal cap.
 static func beacon(root: Node3D) -> void:
+	var anim := CreatureAnim.make("totem", 1.0, null)  # fixed teal glow: keep the model's materials
+	if anim != null:
+		root.add_child(anim)
+		CreatureAnim.move(anim, 0.0)
+		return
+	_procedural_beacon(root)
+
+
+static func _procedural_beacon(root: Node3D) -> void:
 	StructureMeshes.cyl(root, 0.6, 0.7, 0.3, StructureMeshes.pal("stone_dark"), 0.0, 6)
-	ShapeKit.lathe(root, PackedVector2Array([Vector2(0.42, 0.3), Vector2(0.26, 2.2), Vector2(0.0, 2.35)]), StructureMeshes.pal("stone"), Vector3.ZERO, 4).rotation.y = PI / 4.0
+	ShapeKit.lathe(root, PackedVector2Array([Vector2(0.42, 0.3), Vector2(0.26, 3.6), Vector2(0.0, 3.75)]), StructureMeshes.pal("stone"), Vector3.ZERO, 4).rotation.y = PI / 4.0
 	var teal := StructureMeshes.glow(Color("66ffcc"), 2.0)
 	var g := StructureMeshes._part(root, "Glow", 0.5)
 	for sz in [-1.0, 1.0]:
-		StructureMeshes.box(g, Vector3(0.1, 1.4, 0.05), teal, Vector3(0, 0.75, sz * 0.27))
-	StructureMeshes.crystal(root, 0.14, 0.45, teal, Vector3(0, 2.55, 0))
+		StructureMeshes.box(g, Vector3(0.1, 2.2, 0.05), teal, Vector3(0, 1.2, sz * 0.27))
+	StructureMeshes.ball(root, 0.3, StructureMeshes.glow(Color(1, 0.15, 0.1), 3.0), Vector3(0, 4.3, 0), 16)
 
 
 ## Miner: a stone well with a bronze drill and an amber crystal, short enough to read as a machine.

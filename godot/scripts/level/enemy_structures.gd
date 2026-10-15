@@ -10,14 +10,14 @@ const SHELL_BERTHA := 100.0
 const DEFS := {
 	"leech": {"label": "Leech", "hp": 60.0, "cost": 1.0, "color": Color("c45cff")},
 	"pylon": {"label": "Blight Pylon", "hp": 80.0, "cost": 1.0, "radius": 6.0, "color": Color("6a3a8a")},
-	"spitter": {"label": "Spitter Tower", "hp": 70.0, "cost": 1.0, "color": Color("d6ff3a")},
+	"spitter": {"label": "Spitter Tower", "hp": 70.0, "cost": 1.0, "salvage": 0.0, "color": Color("d6ff3a")},
 	"lancer": {"label": "Lancer Spire", "hp": 90.0, "cost": 1.0, "range": 32.0, "damage": 25.0,
 		"interval": 1.5, "color": Color("e6d2ff")},
-	"dome": {"label": "Shield Dome", "hp": 120.0, "cost": 1.0, "radius": 8.0, "lance": 0.5,
+	"dome": {"label": "Shield Dome", "hp": 120.0, "cost": 1.0, "radius": 8.0, "lance": 0.5, "no_charge": true,
 		"color": Color("d4a6ff")},
 	"pump": {"label": "Creeper Pump", "hp": 100.0, "cost": 1.0, "amount": 1.0, "every": 2.0,
 		"color": Color("3d7bff")},
-	"mortar": {"label": "Enemy Mortar", "hp": 80.0, "cost": 1.0, "color": Color("ff6a4a")},
+	"mortar": {"label": "Enemy Mortar", "hp": 80.0, "cost": 1.0, "salvage": 0.0, "color": Color("ff6a4a")},
 }
 
 

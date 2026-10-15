@@ -50,6 +50,8 @@ static func speed(host: Raiders, r: Dictionary) -> float:
 	var gid := int(r.get("group", -1))
 	if gid < 0:
 		return own
+	if host.in_update and host.group_slow.has(gid):
+		return minf(own, float(host.group_slow[gid]))
 	var slow := own
 	for o in host.list:
 		if not o.alive or int(o.get("group", -1)) != gid:
@@ -78,11 +80,11 @@ static func _from(pools: Dictionary, role: String, roll: float) -> Dictionary:
 		return RaiderDefs.named("Skitter")
 	var total := 0
 	for i in rows.size():
-		total += 1 << i
+		total += RaiderDefs.spawn_weight(rows[i], i)
 	var ticket := mini(total - 1, int(floor(clampf(roll, 0.0, 0.9999) * float(total))))
 	var acc := 0
 	for i in rows.size():
-		acc += 1 << i
+		acc += RaiderDefs.spawn_weight(rows[i], i)
 		if ticket < acc:
 			return rows[i] as Dictionary
 	return rows.back() as Dictionary

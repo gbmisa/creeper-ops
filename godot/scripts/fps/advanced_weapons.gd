@@ -1,29 +1,26 @@
 class_name AdvancedWeapons
 extends RefCounted
-## Operative slots 4/5/6. Usable only after OperativeUpgrades unlocks them. Each shot or
+## Operative slots 4/5. Usable only after OperativeUpgrades unlocks them. Each shot or
 ## second of fire spends Salvage from the shared Stockpile. Numbers live in WEAPONS.
 
 const WEAPONS := {
 	"railgun": { "name": "Railgun", "key": "adv_railgun", "salvage": 2.0, "charge": 1.5, "damage": 30.0 },
 	"plasma": { "name": "Plasma Thrower", "key": "adv_plasma", "salvage": 1.0, "dps": 6.0, "rate_mult": 3.0 },
-	"demo": { "name": "Demolition Charge", "key": "adv_demo", "salvage": 8.0, "range": 20.0,
-		"speed": 18.5, "loft": 0.61, "fuse": 2.0, "damage": 120.0, "radius": 2.0 },
 }
-const IDS := ["railgun", "plasma", "demo"]
+const IDS := ["railgun", "plasma"]
 
 var weapons: OperativeWeapons
 var stockpile: Stockpile
 var charge := 0.0
 var need := ""
+var _need_for := ""  # weapon held when the unlock hint appeared; switching clears it
 var firing := false
 var showcase := false  # debug: hold the trigger for a firing screenshot
-var demo: DemoCharge
 var _moaned := false
 
 
 func _init(host: OperativeWeapons) -> void:
 	weapons = host
-	demo = DemoCharge.new(WEAPONS.demo)
 
 
 func handles(id: String) -> bool:
@@ -32,10 +29,8 @@ func handles(id: String) -> bool:
 
 func label() -> String:
 	var d: Dictionary = WEAPONS[weapons.current]
-	var extra := ""
-	if weapons.current == "railgun" and charge > 0.0:
-		extra = "  %d%%" % roundi(100.0 * charge / float(d.charge))
-	return "[%s] %s%s" % [Keybinds.short(d.key), d.name, extra]
+	# Railgun charge progress shows on the HUD fill bar (charge_ratio), never as a %.
+	return "[%s] %s" % [Keybinds.short(d.key), d.name]
 
 
 func salvage_line() -> String:
@@ -62,8 +57,12 @@ func hud_need() -> String:
 
 
 func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
+	var before := need
 	_pick(input)
-	demo.update(dt)
+	if need != before and need.begins_with("Unlock"):
+		_need_for = weapons.current
+	elif need.begins_with("Unlock") and weapons.current != _need_for:
+		need = ""
 	if not handles(weapons.current) or not OperativeUpgrades.unlocked(weapons.current):
 		charge = 0.0
 		firing = false
@@ -80,10 +79,6 @@ func update(dt: float, input: InputState, world: World, feet: Vector3) -> void:
 			_rail(dt, trigger, world)
 		"plasma":
 			_plasma(dt, trigger, world, feet)
-		"demo":
-			if trigger and not _moaned:
-				_throw(world)
-				_moaned = true  # one charge per click
 
 
 func _pick(input: InputState) -> void:
@@ -93,10 +88,11 @@ func _pick(input: InputState) -> void:
 			continue
 		if OperativeUpgrades.unlocked(id):
 			weapons.current = id
+			need = ""
 			charge = 0.0
 			_moaned = false
 		else:
-			need = "Unlock the %s (%d Salvage)" % [d.name, OperativeUpgrades.cost("unlock_" + id)]
+			need = "Unlock the %s (%d Salvage) at the Armoury: stand at the Command Node and press %s, or select the Node in command mode" % [d.name, OperativeUpgrades.cost("unlock_" + id), Keybinds.short("use")]
 			Sfx.play("deny")
 
 
@@ -147,7 +143,7 @@ func _pierce(world: World, dmg: float) -> void:
 		if not t.alive.call():
 			continue
 		var c: Vector3 = (t.node as Node3D).global_position + Vector3(0, t.get("oy", 0.0), 0)
-		var dist := OperativeWeapons.ray_sphere(origin, dir, c, t.radius)
+		var dist := RifleFire.ray_sphere(origin, dir, c, t.radius)
 		if dist < reach and dist < gd:
 			hits.append({ "t": t, "dist": dist })
 	hits.sort_custom(func(a, b): return float(a.dist) < float(b.dist))
@@ -212,11 +208,3 @@ func _in_cone(feet: Vector3, fwd: Vector3, p: Vector3, range_m: float, cos_a: fl
 	if len > range_m:
 		return false
 	return len < Config.CELL * 0.9 or (dx * fwd.x + dz * fwd.z) / len >= cos_a
-
-
-func _throw(world: World) -> void:
-	if _pay("demo"):
-		var dir := -weapons.camera.global_transform.basis.z
-		demo.launch(world, weapons.gun.global_position, dir)
-		weapons.kick("demo")
-		weapons.muzzle.flash(Color("ff8844"), 0.3, 0.08, 2.0)

@@ -63,6 +63,7 @@ static func _nest_buff(raids: CastleRaids, castles: Strongholds, a: Dictionary, 
 static func _reprisal(raids: CastleRaids, castles: Strongholds, a: Dictionary, raiders: Raiders) -> void:
 	SmokeTest._check("raids: capture starts a reprisal warning", a.raid.kind == "reprisal"
 		and is_equal_approx(a.raid.warn, raids.rules.reprisal_warn))
+	SmokeTest._check("raids: capture starts the grace period", a.raid.grace)
 	var marching := func(): return raiders.list.filter(func(r): return r.get("mission", "") == "castle").size()
 	var m0: int = marching.call()
 	var want := _expected(raids, "reprisal", 1)
@@ -71,6 +72,7 @@ static func _reprisal(raids: CastleRaids, castles: Strongholds, a: Dictionary, r
 	SmokeTest._check("raids: nothing marches during the warning", a.raid.kind == "reprisal" and marching.call() == m0)
 	var room := Config.RAIDER_MAX_TOTAL - raiders.list.size()
 	raids.update(2.0)
+	SmokeTest._check("raids: grace ends when the reprisal launches", not a.raid.grace)
 	SmokeTest._check("raids: the reprisal marches after the warning", a.raid.kind == ""
 		and marching.call() - m0 == mini(want, room) and is_equal_approx(a.raid.next, raids.interval()))
 

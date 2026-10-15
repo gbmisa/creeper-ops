@@ -95,6 +95,7 @@ static func fire(s: Structure, fx: Effects) -> void:
 	e.flash_t = 0.0
 	e.flash_dur = 0.12
 	e.flash_col = col
+	StructureMeshes.model_fire(s)  # A4: attack clip on the arm (no-op when procedural)
 
 
 ## Small flash where a packet lands on its receiver.

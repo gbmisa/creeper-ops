@@ -3,13 +3,18 @@ class_name RaiderShots
 ## Both shots are effects.lob arcs, aimed at where the target stands when the shot leaves,
 ## and only hurt whoever is still inside the impact. A target that walks away is missed.
 ## Range on the roster row is in cells. Lancers prefer a Sniper, then any other weapon.
+## A Spitter fires only when its lob reaches the target; otherwise it closes on it (RaiderPaths).
+
+const SPIT_ARC_K := 0.15  # the acid lob's arc factor (the one _launch is called with)
 
 
 static func step(host: Raiders, r: Dictionary, dt: float, prey: Array) -> void:
 	var tier: Dictionary = r.tier
 	var beam := str(tier.attack) == "beam"
-	var target := _pick(r, prey, beam)
-	_move(host, r, dt, target, tier)
+	var grid: Grid = host.world.grid
+	var target := _held_pick(host, r, prey, beam, grid)
+	var blocked := not beam and not target.is_empty() and not _lob_clear(host, r, target)
+	_move(host, r, dt, target, tier, blocked)
 	var cd: float = float(r.get("shot_cd", 0.0))
 	if cd > 0.0:
 		r["shot_cd"] = cd - dt
@@ -20,13 +25,68 @@ static func step(host: Raiders, r: Dictionary, dt: float, prey: Array) -> void:
 		return
 	if beam:
 		_beam(host, r, dt, target, tier, prey)
-	else:
-		_launch(host.world, r, target, prey, float(tier.get("splash", 1.5)) * Config.CELL, Config.RAIDER_SHOT_SPEED, 0.5, 0.15)
+	elif not blocked:
+		_launch(host.world, r, target, prey, float(tier.get("splash", 1.5)) * Config.CELL, Config.RAIDER_SHOT_SPEED, 0.5, SPIT_ARC_K)
 		r["shot_cd"] = float(tier.interval)
 
 
+## The pick is kept while it is alive and in range (a beam's also in sight, re-tested only when
+## the shooter's or the target's cell changes). Only a raider with no pick scans, on the
+## staggered RAIDER_ACQUIRE_MIN..MAX timer; band priority applies at pick time only.
+static func _held_pick(host: Raiders, r: Dictionary, prey: Array, beam: bool, grid: Grid) -> Dictionary:
+	var held: Dictionary = r.get("_pick", {})
+	if not held.is_empty():
+		if held.alive.call() and _keeps(host, r, held, beam, grid):
+			return held
+		held = {}
+		r["_pick"] = held
+		r.erase("_pk")
+	elif host.time < float(r.get("_pick_at", 0.0)):
+		return held
+	r["_pick_at"] = host.time + randf_range(Config.RAIDER_ACQUIRE_MIN, Config.RAIDER_ACQUIRE_MAX)
+	held = _pick(r, prey, beam, grid)
+	r["_pick"] = held
+	r.erase("_pk")
+	return held
+
+
+static func _keeps(host: Raiders, r: Dictionary, held: Dictionary, beam: bool, grid: Grid) -> bool:
+	var a: Vector3 = (r.node as Node3D).position
+	var b: Vector3 = (held.node as Node3D).position
+	var reach: float = float(r.tier.range) * Config.CELL
+	if Vector2(b.x - a.x, b.z - a.z).length_squared() > reach * reach:
+		return false
+	if not beam:
+		return true
+	var cells := [grid.world_to_cell(a.x, a.z), grid.world_to_cell(b.x, b.z)]
+	if r.get("_pk") == cells:
+		return true
+	r["_pk"] = cells
+	return WeaponLogic.sees(grid, a + Vector3(0, float(r.size), 0), b)
+
+
+## Spitter: does its own lob reach the aim point? Tested when the cells of shooter or target change.
+static func _lob_clear(host: Raiders, r: Dictionary, target: Dictionary) -> bool:
+	var grid: Grid = host.world.grid
+	var a: Vector3 = (r.node as Node3D).position
+	var b: Vector3 = (target.node as Node3D).position
+	var cells := [grid.world_to_cell(a.x, a.z), grid.world_to_cell(b.x, b.z)]
+	var k: Dictionary = r.get("_lob", {})
+	if k.get("tgt") == target and k.get("cells") == cells:
+		return k.ok
+	var from := a + Vector3(0, float(r.size), 0)
+	var dist := maxf(from.distance_to(b), 0.5)
+	var arc := clampf(dist * SPIT_ARC_K, 1.2, 8.0)
+	var end := WeaponLogic.clip_lob(grid, from, b, arc)
+	var ok := end.distance_to(b) <= float(r.tier.get("splash", 1.5)) * Config.CELL
+	r["_lob"] = { "tgt": target, "cells": cells, "ok": ok }
+	return ok
+
+
 ## Sniper (band 0), then other weapons (band 1), then anyone else. Nearest inside a band.
-static func _pick(r: Dictionary, prey: Array, prefer: bool) -> Dictionary:
+## Beam attackers (Lancers) throw a near-flat bolt: no line of sight, no target, so they
+## reposition instead of shooting through walls. Spitters keep lobbing over low walls.
+static func _pick(r: Dictionary, prey: Array, beam: bool, grid: Grid) -> Dictionary:
 	var tier: Dictionary = r.tier
 	var reach: float = float(tier.range) * Config.CELL
 	var from: Vector3 = (r.node as Node3D).position
@@ -41,23 +101,30 @@ static func _pick(r: Dictionary, prey: Array, prefer: bool) -> Dictionary:
 		if d > reach:
 			continue
 		var b := 2
-		if prefer and str(q.get("type", "")) == "sniper":
+		if beam and str(q.get("type", "")) == "sniper":
 			b = 0
-		elif prefer and bool(q.get("weapon", false)):
+		elif beam and bool(q.get("weapon", false)):
 			b = 1
 		if b < band or (b == band and d < bd):
 			band = b
 			bd = d
 			best = q
+	if beam and not best.is_empty():
+		var eye: Vector3 = (r.node as Node3D).position + Vector3(0, float(r.size), 0)
+		var chest: Vector3 = (best.node as Node3D).position
+		if not WeaponLogic.sees(grid, eye, chest):
+			best = {}
 	return best
 
 
-static func _move(host: Raiders, r: Dictionary, dt: float, target: Dictionary, tier: Dictionary) -> void:
+static func _move(host: Raiders, r: Dictionary, dt: float, target: Dictionary, tier: Dictionary, blocked := false) -> void:
 	var node: Node3D = r.node
 	var p: Vector3 = node.position
 	if target.is_empty():
 		var goal: Variant = null
-		if r.guard:
+		if r.has("guard_post"):
+			goal = CastleLancers.stand(host, r)
+		elif r.guard:
 			goal = host._patrol(r.nest.pos, r)
 		else:
 			goal = host._route(r, p)
@@ -69,13 +136,23 @@ static func _move(host: Raiders, r: Dictionary, dt: float, target: Dictionary, t
 	var dist := Vector2(tp.x - p.x, tp.z - p.z).length()
 	var hold: float = float(tier.range) * Config.CELL * Config.RAIDER_STANDOFF
 	host._face(r, Vector2(tp.x - p.x, tp.z - p.z))
-	if dist < hold:
+	if blocked and not r.has("guard_post"):  # no clear lob: close on it along the committed route
+		var g: Variant = host.paths.goal(r, target, dt)
+		if g == null:
+			g = host._route(r, p)
+		if g != null:
+			host._walk(r, g as Vector2, dt)
+			return
+	if dist < hold and not r.has("guard_post"):  # castle guards hold their post
 		var away := Vector2(p.x - tp.x, p.z - tp.z)
 		if away.length() < 0.05:
 			away = Vector2(1, 0)
 		host._walk(r, Vector2(p.x, p.z) + away.normalized() * 3.0, dt)
 		return
-	node.position.y = host.world.grid.stand_y(p.x, p.z, Grid.Faction.ENEMY)
+	# Holding position to shoot: idle the walk clip instead of leaving a stale
+	# sprint playing while standing still.
+	node.position.y = RaiderPerch.y(host.world, p.x, p.z)
+	CreatureAnim.move(node, 0.0)
 
 
 static func _beam(host: Raiders, r: Dictionary, dt: float, target: Dictionary, tier: Dictionary, prey: Array) -> void:
@@ -96,11 +173,25 @@ static func _beam(host: Raiders, r: Dictionary, dt: float, target: Dictionary, t
 	_grow_glow(r, tier)
 	if charge > 0.0:
 		return
+	if not _bolt_clear(host.world.grid, r, target):  # the flat bolt would hit a wall: hold fire
+		_end_glow(r)
+		r["charge"] = -1.0
+		r.erase("aim_node")
+		r["shot_cd"] = Config.RAIDER_LANCER_GAP
+		return
 	_launch(host.world, r, target, prey, Config.RAIDER_BEAM_RADIUS, Config.RAIDER_BEAM_SPEED, 0.28, 0.04)
 	_end_glow(r)
 	r["charge"] = -1.0
 	r.erase("aim_node")
 	r["shot_cd"] = Config.RAIDER_LANCER_GAP
+
+
+## The bolt's own arc, not just the sight line, must reach the target (keep walls, roofs).
+static func _bolt_clear(grid: Grid, r: Dictionary, target: Dictionary) -> bool:
+	var from: Vector3 = (r.node as Node3D).position + Vector3(0, float(r.size), 0)
+	var aim: Vector3 = (target.node as Node3D).position
+	var arc := clampf(maxf(from.distance_to(aim), 0.5) * 0.04, 1.2, 8.0)
+	return WeaponLogic.clip_lob(grid, from, aim, arc).distance_to(aim) <= Config.SNIPER_LOS_SLACK + 0.5
 
 
 static func _launch(world: World, r: Dictionary, target: Dictionary, prey: Array, radius: float, speed: float, size: float, arc_k: float) -> void:
@@ -110,15 +201,19 @@ static func _launch(world: World, r: Dictionary, target: Dictionary, prey: Array
 	var tier: Dictionary = r.tier
 	var dmg := float(tier.damage)
 	var color: Color = tier.color
-	world.effects.lob(from, aim, {
+	var src := str(tier.get("name", "raider")).to_lower() + "_shot"  # "spitter_shot", "lancer_shot"
+	var arc := clampf(dist * arc_k, 1.2, 8.0)
+	var end := WeaponLogic.clip_lob(world.grid, from, aim, arc)
+	var it: Dictionary = world.effects.lob(from, end, {
 		"color": color, "size": size, "time": maxf(dist / speed, 0.35),
-		"arc": clampf(dist * arc_k, 1.2, 8.0),
-		"on_arrive": func(): _impact(world, aim, radius, dmg, color, prey, from),
+		"arc": arc,
+		"on_arrive": func(): _impact(world, end, radius, dmg, color, prey, from, src),
 	})
+	it["foe"] = true  # hostile lob: Beams shoot these down (spitter acid)
 	Sfx.play("mortar", from)
 
 
-static func _impact(world: World, at: Vector3, radius: float, dmg: float, color: Color, prey: Array, from := Vector3.INF) -> void:
+static func _impact(world: World, at: Vector3, radius: float, dmg: float, color: Color, prey: Array, from := Vector3.INF, src := "raider_shot") -> void:
 	world.effects.burst(at + Vector3.UP * 0.3, color, maxf(radius, 1.2), 0.35)
 	Sfx.play("boom", at)
 	for q in prey:
@@ -129,6 +224,8 @@ static func _impact(world: World, at: Vector3, radius: float, dmg: float, color:
 			continue
 		if from != Vector3.INF and str(q.get("kind", "")) == "operative":
 			HitFeel.note_source(from)
+		if q.has("struct"):
+			(q.struct as Structure).last_hit_by = src
 		(q.hit as Callable).call(dmg)
 
 

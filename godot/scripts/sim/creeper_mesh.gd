@@ -23,6 +23,29 @@ var _surf_tex: ImageTexture
 var _depth_img: Image
 var _depth_tex: ImageTexture
 var _last_tick := -1
+var _prev_field := PackedFloat32Array()
+var _prev_height := PackedFloat32Array()
+var _tops := PackedFloat32Array()  # _build_surface scratch: highest wet neighbour level
+
+
+## Color ramp for the rendered fluid (creeper blue; anti-creeper overrides with teal).
+func _fluid_colors() -> Dictionary:
+	return {
+		"shallow": Color(0.07, 0.2, 0.52),
+		"deep": Color(0.008, 0.025, 0.11),
+		"glow": Color(0.12, 0.40, 1.0),
+		"sheen": Color(0.45, 0.6, 0.95),
+	}
+
+
+## The simulated field this mesh renders (creeper depth; anti-creeper overrides).
+func _fluid_field() -> PackedFloat32Array:
+	return sim.depth
+
+
+## Sample the GPU sim textures directly, or upload from the CPU copy each tick.
+func _wants_gpu_tex() -> bool:
+	return sim.is_gpu()
 
 
 func setup(creeper: CreeperSim, height_tex: Texture2D) -> void:
@@ -55,64 +78,85 @@ func setup(creeper: CreeperSim, height_tex: Texture2D) -> void:
 	mat.set_shader_parameter("cell", Config.CELL)
 	mat.set_shader_parameter("level_h", Config.LEVEL_H)
 	mat.set_shader_parameter("band", Config.TERRACE_BAND)
+	var col := _fluid_colors()
+	mat.set_shader_parameter("shallow", col["shallow"])
+	mat.set_shader_parameter("deep", col["deep"])
+	mat.set_shader_parameter("glow", col["glow"])
+	mat.set_shader_parameter("sheen", col["sheen"])
 	material_override = mat
-	if sim.is_gpu():
+	if _wants_gpu_tex():
 		mat.set_shader_parameter("surf_tex", sim.surf_tex)
 		mat.set_shader_parameter("depth_tex", sim.depth_tex)
 		return
 	_surf.resize(g.w * g.h)
 	_surf_img = Image.create_from_data(g.w, g.h, false, Image.FORMAT_RF, _surf.to_byte_array())
 	_surf_tex = ImageTexture.create_from_image(_surf_img)
-	_depth_img = Image.create_from_data(g.w, g.h, false, Image.FORMAT_RF, sim.depth.to_byte_array())
+	_depth_img = Image.create_from_data(g.w, g.h, false, Image.FORMAT_RF, _fluid_field().to_byte_array())
 	_depth_tex = ImageTexture.create_from_image(_depth_img)
 	mat.set_shader_parameter("surf_tex", _surf_tex)
 	mat.set_shader_parameter("depth_tex", _depth_tex)
 
 
 ## Push the latest surface to the GPU (only for the world being rendered, once per sim tick).
+## Skipped when neither the field nor the ground changed (an empty anti-creeper field).
 func refresh() -> void:
-	if sim.is_gpu() or sim.ticks == _last_tick:
+	if _wants_gpu_tex() or sim.ticks == _last_tick:
 		return
 	_last_tick = sim.ticks
-	_build_surface()
 	var g := sim.grid
+	var field := _fluid_field()
+	if field == _prev_field and g.height == _prev_height:
+		return
+	_prev_field = field  # copy-on-write: shares the buffer until the sim writes again
+	_prev_height = g.height
+	_build_surface()
 	_surf_img.set_data(g.w, g.h, false, Image.FORMAT_RF, _surf.to_byte_array())
 	_surf_tex.update(_surf_img)
-	_depth_img.set_data(g.w, g.h, false, Image.FORMAT_RF, sim.depth.to_byte_array())
+	_depth_img.set_data(g.w, g.h, false, Image.FORMAT_RF, field.to_byte_array())
 	_depth_tex.update(_depth_img)
 
 
+## One pass sets wet and hidden cells; only dry neighbours of wet cells need the
+## highest-neighbour rule, so that work scales with the creeper, not the map.
 func _build_surface() -> void:
 	var g := sim.grid
 	var w := g.w
 	var hh := g.h
 	var height := g.height
-	var depth := sim.depth
+	var depth := _fluid_field()
 	var wet_min := Config.MIN_DEPTH
-	for z in hh:
-		for x in w:
-			var i := z * w + x
-			var h := height[i]
-			var d := depth[i]
-			if d > wet_min:
-				_surf[i] = h + maxf(d, MIN_VIS)
+	var wet := PackedInt32Array()
+	for i in w * hh:
+		var d := depth[i]
+		if d > wet_min:
+			_surf[i] = height[i] + maxf(d, MIN_VIS)
+			wet.append(i)
+		else:
+			_surf[i] = height[i] - HIDDEN
+	if wet.is_empty():
+		return
+	_tops.resize(w * hh)
+	_tops.fill(-INF)
+	var shore := PackedInt32Array()
+	for i in wet:
+		var x := i % w
+		var z := i / w
+		var v := _surf[i]
+		for dz in range(-1, 2):
+			var zz := z + dz
+			if zz < 0 or zz >= hh:
 				continue
-			# Highest creeper level among the 8 neighbours.
-			var top := -INF
-			for dz in range(-1, 2):
-				var zz := z + dz
-				if zz < 0 or zz >= hh:
+			for dx in range(-1, 2):
+				var xx := x + dx
+				if xx < 0 or xx >= w:
 					continue
-				for dx in range(-1, 2):
-					var xx := x + dx
-					if xx < 0 or xx >= w or (dx == 0 and dz == 0):
-						continue
-					var j := zz * w + xx
-					if depth[j] > wet_min:
-						top = maxf(top, height[j] + maxf(depth[j], MIN_VIS))
-			if top == -INF:
-				_surf[i] = h - HIDDEN
-			elif top >= h:
-				_surf[i] = h - SHORE_DIP
-			else:
-				_surf[i] = top - 0.02
+				var j := zz * w + xx
+				if depth[j] > wet_min:
+					continue
+				if _tops[j] == -INF:
+					shore.append(j)
+				_tops[j] = maxf(_tops[j], v)
+	for j in shore:
+		var top := _tops[j]
+		var h := height[j]
+		_surf[j] = h - SHORE_DIP if top >= h else top - 0.02

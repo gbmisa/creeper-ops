@@ -8,12 +8,14 @@ var grid: Grid
 var cave := false
 var creeper: CreeperSim
 var creeper_mesh: CreeperMesh
+var anti_creeper_mesh: AntiCreeperMesh
 var terrain: TerrainChunks
 var terrain_mat: ShaderMaterial
 var height_tex: ImageTexture  # one texel per cell; terrain + creeper shaders read it
 var props: Node3D
 ## Injected by the game: is a structure standing on this cell? TerrainEdit skips those.
 var occupied := func(_x: int, _z: int) -> bool: return false
+var occupied_set := {}   # grid idx -> Structure, same dict StructureManager fills (fast path for Pathfind)
 var effects: Effects
 var env: WorldEnvironment
 
@@ -23,7 +25,7 @@ var targets: Array[Dictionary] = []
 var interactables: Array[Dictionary] = []
 ## Per-frame hooks: Callable(dt)
 var updaters: Array[Callable] = []
-## On-screen markers: { pos: Vector3, label: String|Callable, color: Color, visible: Callable, minor: bool }
+## On-screen markers: { pos: Vector3|Callable, label: String|Callable, color: Color, visible: Callable, minor: bool }
 var markers: Array[Dictionary] = []
 
 
@@ -49,6 +51,10 @@ func setup(world_name: String, g: Grid, is_cave: bool, keep_clear := Callable())
 	creeper_mesh = CreeperMesh.new()
 	creeper_mesh.setup(creeper, height_tex)
 	add_child(creeper_mesh)
+	anti_creeper_mesh = AntiCreeperMesh.new()
+	anti_creeper_mesh.setup(creeper, height_tex)
+	anti_creeper_mesh.name = "AntiCreeper"
+	add_child(anti_creeper_mesh)
 
 	effects = Effects.new()
 	add_child(effects)
@@ -102,6 +108,7 @@ func terrain_changed(cells: Array[Vector2i]) -> void:
 
 func refresh_visuals() -> void:
 	creeper_mesh.refresh()
+	anti_creeper_mesh.refresh()
 
 
 ## Visible + environment on (only one World's environment may be active).

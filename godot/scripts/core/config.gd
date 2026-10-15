@@ -74,25 +74,29 @@ const OP_CREEPER_BASE_DPS := 9.0
 const OP_CREEPER_DPS := 14.0
 const CREEPER_SLOW := 0.5
 const TANK_MAX := 100.0
-const TANK_REGEN := 9.0
+const TANK_REGEN := 4.0   # tank refills in 25 s (was 11)
 const RECALL_HOLD := 2.0
 const TOTEM_FREE_RADIUS := 3.0   # metres: deploy to a Totem, and recall this close, are free and instant
 const DROP_BASE := 20.0          # energy to drop on a Totem's own cell
 const DROP_PER_CELLS := 4.0      # +1 energy per this many cells from the nearest Totem
 const DROP_MAX := 80.0
 const DROP_TIME := 3.0           # seconds the pod is visible before the Operative spawns
+const POD_LINGER := 6.0          # seconds the drop pod sits after touchdown before sinking
 const RECALL_COOLDOWN_MULT := 2.0  # teleporter cooldown = this × path metres / WALK
 const RECALL_NO_PATH_MULT := 1.4   # straight-line factor when no walkable path exists
 const RESPAWN_ENERGY := 100.0
 const RESPAWN_SALVAGE := 25.0
 const RESPAWN_TIME := 45.0
 const RESPAWN_GROWTH := 1.5      # each further death this level multiplies both respawn costs
+const RESPAWN_PICK_TIME := 10.0  # seconds to choose a deploy site after respawning (several Totems); then the last-used one
+const RECALL_PATH_CANDIDATES := 3  # recall paths only to this many nearest (straight-line) sites
+const DEPLOY_PICK_RADIUS := 4.0  # cells: how near the pointer must be to a Totem to hover it
 const RIFLE := { "name": "Pulse Rifle", "damage": 1.0, "cooldown": 0.14, "range": 90.0 }
 const ROCKET := { "name": "Rocket Launcher", "speed": 30.0, "range": 90.0, "blast": 3.0, "power": 6.0,
 	"damage": 5.0, "mag": 4, "reload": 6.0 }  # blast in cells; power = creeper removed at the centre
 const CROSSBOW := { "name": "Crossbow", "damage": 4.0, "speed": 75.0, "gravity": 14.0, "reload": 1.2,
 	"range": 120.0, "stick_time": 5.0 }  # one physical bolt per shot, 4x a rifle pulse; stuck bolts stay stick_time s
-const SPRAYER := { "name": "Null Sprayer", "range": 10.0, "half_angle": 0.45, "remove_per_sec": 5.0, "tank_per_sec": 20.0 }
+const SPRAYER := { "name": "Null Sprayer", "range": 10.0, "half_angle": 0.45, "anti_per_sec": 1.7, "tank_per_sec": 12.5 }   # nerfed (playtest 3): ~1/3 removal, tank empties in 8 s
 
 # ---- First-person feel (Stage 23): viewmodel motion, spray, hit feedback --------
 const VM_KICK_BACK := 0.075       # m the weapon snaps back per unit of kick
@@ -163,6 +167,10 @@ const ENEMY_WEAVER_RESPAWN := 8.0
 const ENEMY_LEECH_RANGE := 16.0        # a pump emits while an undenied Leech is this close
 const ENEMY_LEECH_MAT := 0.15          # material/s one grown Leech adds to its hub
 const ENEMY_BLIGHT_DPS := 1.5          # HP/s a Blight Pylon deals to structures in its radius
+const ENEMY_BUILD_MAX_PER_KIND := {"spitter": 2, "pylon": 2, "lancer": 2}  # per-castle base cap; +2 at full pressure
+const ENEMY_SPITTER_FAIR_RANGE := 20.0  # cells; a spitter site needs a buildable sniper cell with LOS inside this. Must match the sniper's range in structure_defs.
+const ENEMY_PLAN_BUDGET_US := 1500      # microseconds one planner pass may spend on fair-site tests; it resumes next update
+const ENEMY_SCAN_TTL := 6.0            # seconds a finished edge-cell scan is reused
 const JUMP_PAD_MARGIN := 1.5      # levels above the column top the pad throws you
 ## Castle stakes (castle_raids.gd). Levels override any key with their CASTLE_RULES.
 const CASTLE_RULES := {
@@ -182,7 +190,6 @@ const GUARD_BOLT_RADIUS := 2.0    # metres from the impact point that still gets
 const GUARD_DMG_OPERATIVE := 14.0 # suit damage (SUIT_MAX is 100)
 const GUARD_DMG_UNIT := 18.0
 const GUARD_DMG_STRUCT := 20.0
-const GUARD_RESPAWN := 90.0       # seconds for a dead Sentinel to regrow from the crown nest
 const SENTINEL := { "name": "Sentinel", "hp": 30.0, "dps": 0.0, "speed": 0.0, "size": 1.1, "color": Color("ff4a5a") }
 
 # ---- threats -------------------------------------------------------------------
@@ -198,6 +205,9 @@ const MITE_SPAWN := 6.0
 const MITE_MAX := 6
 const MITE_SPEED := 4.5
 const MITE_DAMAGE := 12.0
+const MITE_LIFE := 14.0          # s before a mite that cannot reach you pops
+const MITE_CLEARANCE := 0.5      # m of free space it needs ahead of it
+const MITE_STEER_ANGLES := [0.0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5]   # rad yaw tried around the direct line
 const NEST_HP := 40.0
 const NEST_HP_GROWTH := 0.1    # nests heal/grow by this share of NEST_HP per minute (max +10%/min)
 const NEST_AGGRO := 22.0       # guards attack prey this close (metres)...
@@ -265,7 +275,20 @@ const MORTAR_SABOTAGE_RANGE := 3.0  # metres from an enemy mortar/structure cent
 const SNIPER_LOS_SLACK := 1.0   # metres: a ray hit this close to the target still counts as a clear shot
 const SNIPER_LOS_RETRY := 0.25  # seconds a Sniper waits before looking again when no foe is in sight
 const MORTAR_SALVAGE := 5.0
+const DEMO_CHARGE_COST := 15.0  # Salvage per demolition charge, bought one at a time at the Armoury
+const DEMO_CHARGE_MAX := 3      # charges the Operative can carry
+const DEMO_FUSE := 4.0          # s between planting and the blast
+const DEMO_PLANT_HOLD := 1.5    # s holding the use key to plant
+const DEMO_DAMAGE := 120.0      # blast damage to ordinary targets in reach
+const DEMO_KILL_DAMAGE := 99999.0  # blast damage to a chargeable target: destroyed outright
+const DEMO_MIN_HP := 50.0       # a non-living target with at least this max HP (or chargeable: true) can be charged
+const DEMO_REACH := 2.0         # m beyond a target's radius within which E plants a charge
+const DEMO_RADIUS := 2.0        # blast reach in cells
+const ENEMY_REBUILD_DELAY := 30.0  # s before a destroyed enemy structure is re-raised from rubble
 const MORTAR_SPOTTER_RESPAWN := 30.0
+const MORTAR_SHELL_SPEED := 30.0  # m/s; shells fly as tracked lobs so Beams can intercept them
+const ENEMY_MORTAR_PRESSURE := 0.5  # castles build mortars in the normal rotation from this pressure
+const ENEMY_MORTAR_CAP_PRESSURE := 0.75  # second castle mortar allowed from this pressure
 ## Overrun (§4.1): at pressure 1, every OVERRUN_INTERVAL each active nest sends this many
 ## straight at the Node. "Tier" is Pressure.legacy_tier (0..3), so a capped wave is 12.
 const OVERRUN_INTERVAL := 45.0
@@ -274,9 +297,29 @@ const OVERRUN_PER_TIER := 2
 const RAIDER_MAX_TOTAL := 60
 const RAIDER_AGGRO := 9.0      # metres: a marching raider attacks anything this close
 const RAIDER_CLIMB := 1.1      # max terrain levels a raider may step up between cells
-const RAIDER_DETOUR_TIME := 2.0  # s a raider blocked on its way to a target follows the flow field
+const RAIDER_ACQUIRE_MIN := 0.3  # s between a raider's target scans (staggered per raider)
+const RAIDER_ACQUIRE_MAX := 0.5
+const RAIDER_SEP_BUCKET := 3.0  # m: separation bucket size (>= largest size pair, 2.8)
+const FLYER_GROUND_SAMPLE := 0.75  # m a flyer moves before it re-samples the ground height under it
+const HIVE_SYNC_INTERVAL := 0.25  # s between a hive's bookkeeping passes (stage unlock, HP caps, mortar count)
+const MORTAR_AIM_INTERVAL := 0.3  # s between a mortar's target scans
+const MORTAR_ROUTE_INTERVAL := 0.25  # s between "is the Node reachable by walking" checks
+const NEST_SPAWN_CHECK := 0.25  # s between a nest's spawn-due checks
+const CASTLE_SCAN_INTERVAL := 0.2  # s between "raiders in this castle zone" scans
+const RAIDER_LOSE := 18.0        # m: a raider drops a moving target (unit, Operative) this far away
+const RAIDER_TARGET_FIELD_BUDGET_MS := 1.0  # per update: time-sliced walking-distance builds for blocked routes
+const RAIDER_FIELD_CHECK_STEPS := 12  # after a terrain change, steps of the route checked before a raider rebuilds
+const RAIDER_REPATH_CELLS := 4    # a moving target's field is rebuilt only when it is this many cells from the field's goal
+const RAIDER_REPATH_MIN := 1.5    # s: and no more often than this per target
+const RAIDER_TARGET_FIELDS := 8   # cached per-target walking fields (least recently used dropped)
 const RAIDER_DROP := RAIDER_CLIMB # one terrace down as well; steeper ground is a wall
 const RAIDER_FIELD_INTERVAL := 2.0
+const RAIDER_FIELD_BUDGET_MS := 1.0   # per field per frame; a rebuild spreads over frames
+const CREATURE_LOD_NEAR := 90.0   # m from the camera: full-rate clips + shadows (CreatureLod)
+const CREATURE_LOD_FAR := 170.0   # beyond: clips at FAR_HZ
+const CREATURE_LOD_MID_HZ := 15.0
+const CREATURE_LOD_FAR_HZ := 5.0
+const RAIDER_FIELD_COALESCE := 0.25   # terrain edits within this window share one rebuild
 const RAIDER_STANDOFF := 0.65  # ranged raiders back up when closer than this share of their range
 const RAIDER_SHOT_SPEED := 18.0 # m/s, acid lobs. A 40 m shot takes about 2 s and can be walked out of
 const RAIDER_BEAM_SPEED := 32.0 # m/s, Lancer bolts. Still a travel time, so a moving target is missed
@@ -302,12 +345,26 @@ const METRICS_MIN_QUIT := 60.0 # a quit/level change writes a partial file only 
 const METRICS_HIT_GAP := 5.0   # Node-hit events are throttled to one per this many seconds
 
 # ---- units (barracks) --------------------------------------------------------------
-const UNITS_PER_BARRACKS := 4  # population cap: more barracks, more (dependent) units
+const UNITS_PER_BARRACKS := 8  # population cap: more barracks, more (dependent) units
 const RESUPPLY_RANGE := 4.0    # metres from a barracks to draw supply
 const RESUPPLY_RATE := 8.0     # ammo/s transferred while docked
 const UNIT_CREEPER_BASE_DPS := 6.0
 const UNIT_CREEPER_DPS := 12.0
+const ATTACK_PICK_RADIUS := 3.0     # metres from a right-click to the enemy it picks as an attack target
+const ATTACK_REPATH := 1.0          # seconds between re-paths toward a moving attack target
+const PATH_SMOOTH_WINDOW := 32      # cells of lookahead when string-pulling a path
+const PATH_MAX_NODES := 6000        # A* expansion cap; past it the best partial path is used
+const PATH_FRAME_MS := 3.0          # soft budget of group path searches per update (rest are queued)
+const PATH_FAIL_COOLDOWN := 3.0     # seconds an unreachable goal is not searched again
+const RETALIATE_CELLS := 8          # idle allies within this many cells of a hurt unit join its counter-attack
+const RETALIATE_HELPERS := 4        # most allies that join
+const RETALIATE_SEEK := 30.0        # metres: nearest enemy within this of a hurt unit is taken as its attacker
+const RETALIATE_LEASH := 30.0       # metres a retaliating unit may stray from where it was hit before giving up
+const AUTO_PATROL_RADIUS := 7.0     # half-size (m) of the loop a new unit patrols around its barracks/rally
+const PATROL_INSET := 3        # cells in from the courtyard's edge for a castle garrison's auto-patrol corners
+const PATROL_LINE_STEP := 2.5  # metres between samples when drawing a patrol route over terrain
 
-# ---- effects (visual only; perf caps) -------------------------------------------------
-const FX_MAX_ITEMS := 400  # live fx items; lobs are gameplay-relevant and are never culled
-const FX_MAX_DEBRIS := 48  # live debris chunks from structure deaths
+# Base alerts (BaseAlerts): centre alert + FPS pulse when structures are attacked or lost
+const BASE_ALERT_COOLDOWN := 4.0   # s between centre alerts / alarm sounds
+const BASE_LOST_WINDOW := 60.0     # s a loss counts toward the "lost recently" chip
+const BASE_ALERT_PULSE := 0.8      # s the red screen-edge pulse lasts

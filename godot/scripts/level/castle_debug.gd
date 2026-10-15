@@ -42,7 +42,8 @@ static func _drop(g, p: PackedStringArray) -> void:
 	var y := -1.0
 	match spot:
 		"gate":
-			at = g0.outer.back() + (g0.outer.back() - g0.cells[0]).sign() * 5
+			var gdir: Vector2i = (g0.outer.back() - g0.cells[0]).sign()
+			at = _open_approach(grid, g0.cells[0], gdir)
 			look = g0.cells[0]
 		"gatehall":
 			at = lay.zones.gate.cells[7]
@@ -70,4 +71,27 @@ static func _drop(g, p: PackedStringArray) -> void:
 	if y > 0.0:
 		g.fps.controller.pos.y = y
 		g.fps.controller.on_ground = true
-	g.fps.controller.pitch = 0.05 if spot != "roof" else -0.25
+	g.fps.controller.pitch = pitch_for(spot)
+
+
+## First-person pitch per spot: the tower stair climbs, so pitch up to keep it in view.
+static func pitch_for(spot: String) -> float:
+	return 0.5 if spot == "tower" else (-0.25 if spot == "roof" else 0.05)
+
+
+## The gate spot from the open side: walk the gate axis outward while the ground stays
+## open and roughly gate-level; the drop is the last such cell (a slope or wall ends
+## the walk). Falls back to the old fixed offset when the ray never opens.
+static func _open_approach(grid: Grid, gate: Vector2i, dir: Vector2i) -> Vector2i:
+	var d := dir if dir != Vector2i.ZERO else Vector2i(1, 0)
+	var gy := grid.height_at(gate.x, gate.y)
+	var at := gate + d * 7
+	for k in range(1, 12):
+		var c := gate + d * k
+		if not grid.in_bounds(c.x, c.y):
+			break
+		var i := grid.idx(c.x, c.y)
+		if grid.blocked[i] or absf(grid.height_at(c.x, c.y) - gy) > 1.0:
+			break
+		at = c
+	return at

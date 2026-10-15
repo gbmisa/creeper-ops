@@ -5,9 +5,9 @@ extends PanelContainer
 ## Each hint says WHO can do it (Network, Units, Operative) and HOW.
 
 const LIST := [
-	{ "id": "spire", "who": "Operative", "text": "Destroy the Spore Spire", "hint": "NE Blight plateau. Drop a Totem (Orbital tab) near the ramp south of it, press T, climb, press E at the Spire. Or use Drop to pod in. Beams shoot its volleys down." },
+	{ "id": "spire", "who": "Operative", "text": "Destroy the Spore Spire", "hint": "NE Blight plateau. Place a Totem (Orbital tab) near the ramp south of it, press {teleport}, climb, press {use} at the Spire. Or use Drop to pod in. Beams shoot its volleys down." },
 	{ "id": "e1", "who": "Network", "text": "Nullify Emitter NW", "hint": "Push Relays and weapons to it, clear the creeper around it, then build a Nullifier within 10 cells. Creeper destroys it on contact." },
-	{ "id": "core", "who": "Operative", "text": "Destroy the Deep Core", "hint": "Walk the Operative into the Rift (west Blight) and press E. Shoot the 3 Shield Pylons, then the Core." },
+	{ "id": "core", "who": "Operative", "text": "Destroy the Deep Core", "hint": "Walk the Operative into the Rift (west Blight) and press {use}. Shoot the 3 Shield Pylons, then the Core." },
 	{ "id": "e2", "who": "Network", "text": "Nullify Emitter East", "hint": "Shielded until the Deep Core dies (follow the purple link). Then nullify it." },
 	{ "id": "nests", "who": "Units", "text": "Destroy all Spore Nests", "hint": "Optional, but the clock is against you: nests raid your base and breed tougher raiders every few minutes. Send units or the Operative.", "optional": true },
 ]
@@ -25,15 +25,17 @@ var _flash := {}  # id -> seconds of hint still showing
 
 
 func _init(rows: Array = LIST) -> void:
-	add_theme_stylebox_override("panel", UiKit.style())
+	add_theme_stylebox_override("panel", UiKit.style(UiKit.BG, UiKit.EDGE, 1, 10))
+	UiKit.brackets(self)
 	position = Vector2(10, 64)
 	custom_minimum_size.x = 330
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var v := UiKit.vbox(4)
 	add_child(v)
-	_head = UiKit.label("OBJECTIVES", 12, UiKit.DIM)
-	v.add_child(_head)
-	_text = UiKit.rich(13)
+	var head := UiKit.header("Objectives", 14)
+	_head = head.get_node("Text")
+	v.add_child(head)
+	_text = UiKit.rich(16)
 	_text.custom_minimum_size.x = 310
 	v.add_child(_text)
 	for o in rows:
@@ -106,7 +108,7 @@ func _render() -> void:
 		if o.done:
 			body = "[color=#5a6a5a][s]%s[/s][/color]" % o.text
 		if _full or flashing:
-			lines.append("%s\n[color=#8899aa][font_size=11]%s[/font_size][/color]" % [body, o.hint])
+			lines.append("%s\n[color=#9a9c84][font_size=14]%s[/font_size][/color]" % [body, Keybinds.fill(o.hint)])
 		else:
 			lines.append(body)
 	_text.text = "\n".join(lines)

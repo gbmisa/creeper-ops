@@ -8,6 +8,7 @@ static func run(g) -> void:
 	_ammo_requests(g)
 	_raiders(g)
 	_keybinds()
+	_balance(g)
 
 
 static func _wet(g, x: int, z: int, depth: float) -> void:
@@ -133,3 +134,13 @@ static func _keybinds() -> void:
 	SmokeTest._check("operative keys separate", Keybinds.matches("op_forward", KEY_W))
 	Keybinds.load_binds()  # back to the player's saved layout (nothing was written)
 	Keybinds.persist = true
+
+
+static func _balance(g) -> void:
+	var sniper_range := float(StructureDefs.DEFS["sniper"].range)
+	for row in RaiderDefs.ROWS:
+		var d: Dictionary = row
+		if d.get("attack") == "acid":
+			var reach := float(d.range) + float(d.get("splash", 0.0))
+			SmokeTest._check("spitters: acid reach is inside sniper range",
+				reach < sniper_range, "(%s: %.1f < %.1f)" % [d.name, reach, sniper_range])

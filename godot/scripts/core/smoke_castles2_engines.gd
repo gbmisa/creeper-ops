@@ -1,7 +1,7 @@
 class_name SmokeCastles2Engines
 ## Stage 21 war engines: trebuchets on a hostile concentric castle pick targets in range
 ## (weapons first, the Operative only in sight), telegraph a ring, and hit whatever stayed;
-## an Operative who walks out of the ring takes nothing. They die, respawn, and stop for good
+## an Operative who walks out of the ring takes nothing. They die, return only on a retake, and stop for good
 ## once the bailey is taken. Runs on its own Level 2 World (SmokeCastles2Capture.rig).
 
 
@@ -24,27 +24,31 @@ static func run(g) -> void:
 	SmokeTest._check("castles2 engines: two trebuchets on the corner towers", c.engines.size() == CastleDefs.ENGINES_DEFAULT
 		and r.lay.engine_posts.has(c.engines[0].post))
 	var e: Dictionary = c.engines[0]
+	_charge(r.w, v, e)
 	c.engines[1].cd = 1e6  # only the first engine shoots in these checks
+	# L2 castle rows shorten engine reach ("engine_range"); the test stands inside the real range.
+	var reach: float = float(e.get("range", CastleDefs.ENGINE.range))
 	var from: Vector3 = (v.engines[0] as Node3D).position
 	var out := (from - grid.cell_center(r.lay.rect.get_center().x, r.lay.rect.get_center().y)).normalized()
 	out.y = 0.0
-	out = out.normalized()
-	var spot := _ground(grid, from + out * 20.0 * Config.CELL)
+	out = _open_bearing(grid, from, out.normalized(), reach * 0.75)
+	var spot := _ground(grid, from + out * (reach * 0.75) * Config.CELL)
 	var op := Dummy.new()
 	op.node.position = spot
 	var gun := Dummy.new()
-	gun.node.position = _ground(grid, from + out * 24.0 * Config.CELL)
+	gun.node.position = _ground(grid, from + out * (reach * 0.9) * Config.CELL)
 	var far := Dummy.new()
-	far.node.position = _ground(grid, from + out * (CastleDefs.ENGINE.range + 4.0) * Config.CELL)
+	far.node.position = _ground(grid, from + out * (reach + 4.0) * Config.CELL)
 	var list := [_prey(op, "operative"), _prey(gun, "", true), _prey(far, "", true)]
-	var q := CastleEngines.pick(grid, from, list)
+	var q := CastleEngines.pick(grid, from, list, reach)
 	SmokeTest._check("castles2 engines: weapons first, nothing out of range", not q.is_empty() and q.node == gun.node)
-	var q2 := CastleEngines.pick(grid, from, [list[0], list[2]])
-	SmokeTest._check("castles2 engines: the Operative in sight is a target", not q2.is_empty() and q2.node == op.node)
+	var q2 := CastleEngines.pick(grid, from, [list[0], list[2]], reach)
+	SmokeTest._check("castles2 engines: the Operative in sight is a target", not q2.is_empty() and q2.node == op.node,
+		"(reach %.1f, %.1f cells, sees %s, sight %.1f)" % [reach, Vector2(spot.x - from.x, spot.z - from.z).length() / Config.CELL, CastleEngines._sees(grid, from, spot), CastleDefs.ENGINE.sight])
 	var hall: Vector2i = r.lay.zones.gate.cells[4]
 	var hidden := Dummy.new()
 	hidden.node.position = grid.cell_center(hall.x, hall.y)
-	SmokeTest._check("castles2 engines: no shot at an Operative under a roof", CastleEngines.pick(grid, from, [_prey(hidden, "operative")]).is_empty())
+	SmokeTest._check("castles2 engines: no shot at an Operative under a roof", CastleEngines.pick(grid, from, [_prey(hidden, "operative")], reach).is_empty())
 	# Fair: a shot at a standing target lands; one that walks 6 m away during the telegraph doesn't.
 	var stay := Dummy.new()
 	stay.node.position = spot
@@ -69,16 +73,30 @@ static func run(g) -> void:
 	for i in c.engines.size():
 		(v.engine_foes[i].enemy.hit as Callable).call(CastleDefs.ENGINE.hp + 1.0)
 	SmokeTest._check("castles2 engines: can be destroyed", CastleEngines.alive_count(c) == 0 and v.engine_foes.all(func(f): return not f.alive.call()))
-	CastleEngines.tick(castles, c, v, [], CastleDefs.ENGINE.respawn + 1.0)
-	SmokeTest._check("castles2 engines: rebuilt while the bailey is hostile", CastleEngines.alive_count(c) == c.engines.size())
+	CastleEngines.tick(castles, c, v, [], 1000.0)
+	SmokeTest._check("castles2 engines: no timed respawn", CastleEngines.alive_count(c) == 0)
+	CastleEngines.revive(c)
+	SmokeTest._check("castles2 engines: back at full HP when the castle is retaken", CastleEngines.alive_count(c) == c.engines.size()
+		and c.engines.all(func(x): return x.hp == x.max_hp))
 	CastleStages.set_stage(castles, c, 2)
 	for x in c.engines:
 		x.hp = 0.0
-	CastleEngines.tick(castles, c, v, [], CastleDefs.ENGINE.respawn + 1.0)
+	CastleEngines.tick(castles, c, v, [], 1000.0)
 	SmokeTest._check("castles2 engines: gone for good once the bailey is yours", CastleEngines.alive_count(c) == 0 and not CastleEngines.active(c))
 	for d in [op, gun, far, hidden, stay, mover]:
 		d.node.free()
 	r.w.queue_free()
+
+
+## The bearing nearest `out` from which the engine sees a target `cells` away:
+## the castle's own stone hides some bearings, depending on the level's layout.
+static func _open_bearing(grid: Grid, from: Vector3, out: Vector3, cells: float) -> Vector3:
+	for i in 24:
+		var turn := ceili(i / 2.0) * (PI / 12.0) * (1.0 if i % 2 == 0 else -1.0)
+		var dir := out.rotated(Vector3.UP, turn)
+		if CastleEngines._sees(grid, from, _ground(grid, from + dir * cells * Config.CELL)):
+			return dir
+	return out
 
 
 static func _ground(grid: Grid, p: Vector3) -> Vector3:
@@ -92,3 +110,24 @@ static func _shoot(castles: Strongholds, c: Dictionary, v: Dictionary, rows: Arr
 	while t < CastleDefs.ENGINE.telegraph + 0.5:
 		CastleEngines.tick(castles, c, v, rows, 0.1)
 		t += 0.1
+
+
+## A planted demolition charge destroys a trebuchet outright (chargeable by max HP).
+static func _charge(w: World, v: Dictionary, e: Dictionary) -> void:
+	OperativeUpgrades.reset()
+	OperativeUpgrades.charges = 1
+	var node: Node3D = v.engines[0]
+	var plant := {}
+	for it in DemoCharge.candidates(w):
+		if (it.pos as Vector3).distance_to(node.global_position) < 0.01:
+			plant = it
+	SmokeTest._check("castles2 engines: a trebuchet offers a plant prompt", not plant.is_empty() and "Plant" in String(plant.prompt.call()))
+	if plant.is_empty():
+		return
+	plant.use.call()
+	DemoCharge.tick(w, Config.DEMO_FUSE + 0.1)
+	SmokeTest._check("castles2 engines: a planted charge destroys the trebuchet", e.hp <= 0.0 and OperativeUpgrades.charges == 0)
+	e.hp = e.max_hp
+	e.dead = 0.0
+	OperativeUpgrades.reset()
+	DemoCharge.clear()

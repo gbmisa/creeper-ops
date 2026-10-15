@@ -10,7 +10,8 @@ import lib  # noqa: E402
 
 AXLE = (0.0, 0.0, 3.0)
 SHORT, LONG = 1.0, -3.4
-COCK, THROW = -0.9, 2.1
+COCK, THROW = -0.7, 2.1
+REST = -1.2  # sling angle at rest: the pot lies forward in the trough under the frame
 
 
 def build():
@@ -22,7 +23,8 @@ def build():
                                      ("stone", (LONG, 0, 2.4), (LONG, 0, 2.1), "sling"),
                                      ("beacon", (0, 0, 3.3), (0, 0, 3.7), "frame")])
     b = lib.Builder("trebuchet")
-    b.box((0, 0, 0.2), (2.6, 2.6, 0.4), "stone", "frame")
+    b.box((0, 0, 0.2), (3.0, 2.8, 0.4), "stone", "frame")
+    b.box((0, 0, 0.36), (3.1, 2.9, 0.08), "bronze_dark", "frame")
     for s in (1, -1):
         b.box((0, s * 0.9, 0.48), (2.4, 0.18, 0.16), "oak", "frame")  # sole beams
         b.limb((-1.0, s * 0.9, 0.4), (0, s * 0.9, 3.0), 0.12, 0.1, "oak", "frame")
@@ -35,16 +37,22 @@ def build():
     b.limb((0, -1.0, 3.0), (0, 1.0, 3.0), 0.1, 0.1, "bronze", "frame", seg=8)  # axle
     b.limb((0, 0, 3.05), (0, 0, 3.32), 0.04, 0.04, "iron", "frame", seg=4)
     b.ball((0, 0, 3.45), 0.22, "glow", "beacon", seg=8, rings=6)
-    b.limb((SHORT + 0.15, 0, 3.0), (LONG, 0, 3.0), 0.14, 0.08, "oak", "arm", seg=6)
+    b.limb((SHORT + 0.15, 0, 3.0), (LONG, 0, 3.0), 0.19, 0.1, "oak", "arm", seg=6)
+    for x in (-1.2, -2.4):  # iron bands
+        b.limb((x - 0.05, 0, 3.0), (x + 0.05, 0, 3.0), 0.17 - 0.02 * abs(x), 0.17 - 0.02 * abs(x), "iron", "arm", seg=6)
     b.box((SHORT - 0.1, 0, 3.0), (0.4, 0.3, 0.3), "bronze_dark", "arm")
     for s in (1, -1):
         b.limb((SHORT, s * 0.32, 3.0), (SHORT, s * 0.32, 2.85), 0.035, 0.035, "iron", "cw", seg=4)
     b.box((SHORT, 0, 2.45), (0.9, 0.9, 0.8), "bronze", "cw")
     b.box((SHORT, 0, 2.45), (0.95, 0.95, 0.12), "iron", "cw")
     for s in (1, -1):
-        b.limb((LONG, 0, 3.0), (LONG, s * 0.14, 2.42), 0.02, 0.02, "dark", "sling", seg=3)
+        b.limb((LONG, 0, 3.0), (LONG, s * 0.14, 2.42), 0.035, 0.035, "dark", "sling", seg=4)
     b.ball((LONG, 0, 2.4), 0.16, "oak", "sling", scale=(1.2, 1.2, 0.5), seg=6, rings=4, smooth=False)  # pouch
-    b.ball((LONG, 0, 2.3), 0.32, "stone", "stone", seg=8, rings=6, smooth=False)
+    b.ball((LONG, 0, 2.3), 0.3, "flame", "stone", seg=8, rings=6)  # fire pot
+    for z in (2.18, 2.42):
+        b.lathe([(0.29, z - 0.03), (0.31, z), (0.29, z + 0.03), (0.27, z), (0.29, z - 0.03)], "iron", "stone", at=(LONG, 0, 0), seg=10, cap=False)
+    for dx, dy, h in ((0, 0, 0.8), (0.14, 0.1, 0.55), (-0.12, -0.12, 0.6)):  # flame tufts
+        b.limb((LONG + dx, dy, 2.5), (LONG + dx * 1.5, dy * 1.5, 2.5 + h), 0.18, 0.0, "flame", "stone", seg=5)
     b.finish(arm)
     return arm
 
@@ -64,35 +72,40 @@ def rig(arm, a, sling_lag=0.0, stone=1.0, beacon=1.0):
 
 def clips(arm):
     def idle(t):
-        return rig(arm, COCK + 0.01 * math.sin(2 * math.pi * t), 0.05 * math.sin(2 * math.pi * t), 1.0,
+        return rig(arm, COCK + 0.01 * math.sin(2 * math.pi * t), REST + 0.05 * math.sin(2 * math.pi * t), 1.0,
                    1 + 0.12 * lib.pulse(t, 0.0, 0.3))
     lib.action(arm, "idle", 48, idle, step=2, loop=True)
     lib.action(arm, "walk", 48, idle, step=2, loop=True)
 
     def attack(t):  # 3 s: swing over in 0.35 s, release, then winch back down and reload
-        swing = t / 0.12
-        if swing < 1.0:
+        swing = (t - 0.08) / 0.12
+        if t < 0.08:  # anticipation: the winch takes up slack
+            a, lag, stone = COCK - 0.15 * lib.ease(t / 0.08), REST - 0.2 * lib.ease(t / 0.08), 1.0
+        elif swing < 1.0:
             a = COCK + (THROW - COCK) * swing * swing
-            lag = 1.6 * swing
+            lag = REST + 2.8 * swing
             stone = 1.0
         else:
-            back = lib.ease(min(1.0, (t - 0.18) / 0.72)) if t > 0.18 else 0.0
+            back = lib.ease(min(1.0, (t - 0.26) / 0.64)) if t > 0.26 else 0.0
             a = THROW + (COCK - THROW) * back
-            lag = 1.6 * (1.0 - min(1.0, (t - 0.12) / 0.1)) + 0.3 * math.sin(20 * t) * (1 - back)
+            lag = 1.6 * (1.0 - min(1.0, (t - 0.2) / 0.1)) + 0.3 * math.sin(20 * t) * (1 - back) + REST * back
             stone = 0.0 if t < 0.85 else (t - 0.85) / 0.15
-        return rig(arm, a, lag, stone, 1.4 if t < 0.15 else 1.0)
+        p = rig(arm, a, lag, stone, 1.4 if t < 0.15 else 1.0)
+        rock = math.exp(-6 * (t - 0.2)) * math.sin(25 * (t - 0.2)) if t > 0.2 else 0.0
+        p["frame"] = (lib.world_rot(arm, "frame", (0, 1, 0), 0.06 * rock), lib.world_loc(arm, "frame", (0.12 * rock, 0, 0)))
+        return p
     lib.action(arm, "attack", 72, attack, step=1)
 
     def hit(t):
         j = lib.pulse(t, 0.0, 1.0) * (1.0 - t)
-        p = rig(arm, COCK + 0.08 * j, 0.3 * j)
-        p["frame"] = (lib.world_rot(arm, "frame", (1, 0, 0), 0.03 * math.sin(30 * t) * j), None)
+        p = rig(arm, COCK + 0.2 * j, REST + 0.5 * j, 1.0, 1 + 0.6 * j)
+        p["frame"] = (lib.world_rot(arm, "frame", (1, 0, 0), 0.16 * math.sin(30 * t) * j), lib.world_loc(arm, "frame", (-0.1 * j, 0, 0)))
         return p
     lib.action(arm, "hit", 10, hit, step=1)
 
     def die(t):  # the frame racks over, the arm drops and the beacon goes out
         k = lib.ease(min(1.0, t / 0.7))
-        p = rig(arm, COCK + (0.9 - COCK) * lib.ease(min(1.0, t / 0.4)), -0.5 * k, 1.0 - k, max(0.01, 1.0 - k))
+        p = rig(arm, COCK + (0.9 - COCK) * lib.ease(min(1.0, t / 0.4)), REST * (1 - k) - 0.5 * k, 1.0 - k, max(0.01, 1.0 - k))
         p["frame"] = (lib.world_rot(arm, "frame", (1, 0, 0), 0.45 * k), lib.world_loc(arm, "frame", (0, 0, -0.3 * k)))
         return p
     lib.action(arm, "die", 36, die, step=1)

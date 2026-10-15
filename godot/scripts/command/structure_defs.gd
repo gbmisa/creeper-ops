@@ -11,10 +11,10 @@ const TABS := ["Structures", "Weapons", "Titans", "Orbital", "Castle"]
 ## Build menu contents per tab. Entries are structure types, or "@action" for orbital actions.
 const MENU := {
 	"Structures": ["collector", "relay", "outpost", "miner", "reactor", "storage", "barracks"],
-	"Weapons": ["cannon", "mortar", "beam", "sniper", "nullifier"],
+	"Weapons": ["cannon", "mortar", "beam", "sniper", "nullifier", "trebuchet"],
 	"Titans": ["bertha", "thor", "forge", "terp", "@terp"],
 	"Orbital": ["beacon", "@drop", "@lance", "@operative"],
-	"Castle": ["@repeater", "@lobber", "@flak", "@repair"],
+	"Castle": ["@repeater", "@lobber", "@flak", "@ballista", "@ward_lamp", "@repair"],
 }
 
 static var ACTIONS := _turret_actions().merged({
@@ -23,7 +23,7 @@ static var ACTIONS := _turret_actions().merged({
 	"@lance": { "label": "Orbital Lance", "cost_text": "%d now" % Config.LANCE_COST,
 		"desc": "Strike from orbit: after %ds, burns away creeper in a %.0f-cell radius anywhere you can see. Paid up front (%d), %ds cooldown." % [Config.LANCE_DELAY, Config.LANCE_RADIUS, Config.LANCE_COST, Config.LANCE_COOLDOWN] },
 	"@operative": { "label": "Deploy Operative", "cost_text": "T",
-		"desc": "Send the Operative to the selected Totem (or the newest). Free and instant while the teleporter is ready. Only the Operative can plant charges, enter the Rift and kill the Deep Core." },
+		"desc": "Send the Operative to the selected Totem (or the newest) — or the Command Node if no Totem is finished. Free and instant while the teleporter is ready. Only the Operative can plant charges, enter the Rift and kill the Deep Core." },
 	"@terp": { "label": "Terp Paint", "cost_text": "paint", "unlock": "terp",
 		"desc": "Drag a rectangle to paint a target level (0-%d). It starts at the ground under the first cell; Page Up and Page Down change it, hold C to erase. Hatched until a Terp finishes the cell." % Config.MAX_LEVEL },
 	"@repair": { "label": "Repair Wall", "cost_text": "Salvage",
@@ -33,7 +33,7 @@ static var ACTIONS := _turret_actions().merged({
 static var DEFS := {
 	"node": { "label": "Command Node", "hp": 500.0, "link": 10.0, "relays": true, "sender": true, "link_y": 3.2, "footprint": 1,
 		"movable": true, "move_speed": 2.5, "wet_time": 90.0, "buildable": false,
-		"desc": "Your base and a packet sender. Turns energy into packets; a request launches from the nearest sender. It can lift off and relocate (this Node sends nothing while flying). If it falls, you lose." },
+		"desc": "Your base and a packet sender. Turns energy into packets; a request launches from the nearest sender. It can lift off and relocate (while flying it still sends packets if connected, but produces nothing). If it falls, you lose." },
 	"collector": { "tab": "Structures", "label": "Collector", "cost": 5, "hp": 30.0, "link": 6.0, "relays": true, "link_y": 0.9,
 		"desc": "Claims the dry land in a 7x7 square around it (green tiles) for energy, ~0.25/s when the field is full. Overlapping fields share tiles, so space them out. Relays packets (link 6)." },
 	"relay": { "tab": "Structures", "label": "Relay", "cost": 10, "hp": 25.0, "link": 13.0, "relays": true, "link_y": 2.9,
@@ -64,11 +64,18 @@ static var DEFS := {
 	"beam": { "tab": "Weapons", "label": "Beam", "cost": 20, "hp": 45.0, "link": 4.0, "link_y": 1.6,
 		"movable": true, "move_speed": 6.0, "range": 23.0, "fire_rate": 0.15, "power": 1.0, "weapon": true, "wet_time": 1.6,
 		"ammo": { "max": 20.0, "per_packet": 5.0 }, "targets": "air",
-		"desc": "Surface-to-air laser: burns flying enemies within range 23 (spore volleys and flyers). Ignores creeper and ground raiders. Fragile: dies after 1.6 s in creeper. Movable." },
+		"desc": "Surface-to-air laser: burns flying enemies within range 23 (spore volleys and flyers) and shoots down spitter acid globs. Ignores creeper and ground raiders. Fragile: dies after 1.6 s in creeper. Movable." },
 	"sniper": { "tab": "Weapons", "label": "Sniper", "cost": 75, "hp": 40.0, "link": 4.0, "link_y": 1.8,
 		"movable": true, "move_speed": 6.0, "range": 20.0, "fire_rate": 1.5, "power": 4.0, "weapon": true, "grades": true,
 		"ammo": { "max": 60.0, "per_packet": 2.0, "per_shot": 5.0 }, "targets": "raiders",  # playtest 1: 2.5 packets a shot (was 5)
 		"desc": "Long-range rifle that picks off nest raiders within range 20 (Skitters die in one shot; later tiers take several). 2.5 packets per shot, holds 12. Can't hurt nests: those still need units or the Operative. Movable." },
+	"trebuchet": { "tab": "Weapons", "label": "Trebuchet", "cost": 80, "hp": 140.0, "link": 5.0, "link_y": 1.6,
+		"castle_only": true, "range": CastleDefs.P_TREB.range, "min_range": CastleDefs.P_TREB.min_range,
+		"fire_rate": CastleDefs.P_TREB.fire_rate, "power": CastleDefs.P_TREB.power, "splash": CastleDefs.P_TREB.splash,
+		"weapon": true, "targets": "siege",
+		"ammo": { "max": CastleDefs.P_TREB.ammo_max, "per_packet": CastleDefs.P_TREB.ammo_per_packet,
+			"per_shot": CastleDefs.P_TREB.ammo_per_shot },
+		"desc": "Castle-only siege engine: lobs a stone at the nearest enemy structure, hive part or enemy mortar within range 40 (never at creeper). 3 packets a stone, needs the network. Can only be built inside a castle you hold." },
 	"bertha": { "tab": "Titans", "label": "Big Bertha", "cost": 250, "hp": 220.0, "link": 5.0, "link_y": 2.6, "footprint": 1,
 		"movable": true, "move_speed": 3.0, "range": 200.0, "min_range": 5, "fire_rate": 10.0, "power": 100.0, "splash": 10.0,
 		"weapon": true, "wet_time": 160.0,
@@ -83,8 +90,8 @@ static var DEFS := {
 	"keep": { "label": "Castle Keep", "cost": 0, "hp": 300.0, "link": 10.0, "relays": true, "sender": true, "link_y": 4.0,
 		"movable": false, "buildable": false, "reserve": true, "wet_time": 60.0,
 		"desc": "Your held castle's keep. A packet sender and relay (link 10): structures nearby take packets from it, like an Outpost. Comes with the castle and falls with it." },
-	"beacon": { "tab": "Orbital", "label": "Totem", "cost": 10, "hp": 40.0, "link": 0.0, "needs_network": false, "link_y": 1.0, "drop_pod": true,
-		"desc": "Operative arrival point, dropped from orbit: no network, paid up front, not in Blight. Deploying here (T) is free and instant. Recalling within %.0f m is free and does not cool the teleporter down." % Config.TOTEM_FREE_RADIUS },
+	"beacon": { "tab": "Orbital", "label": "Totem", "cost": 5, "hp": 40.0, "link": 0.0, "needs_network": false, "link_y": 1.0, "self_build": true,
+		"desc": "Operative arrival point, built on site: no network, paid up front, not in Blight. Deploying here (T) is free and instant — T uses the Command Node when no Totem stands. Recalling within %.0f m is free and does not cool the teleporter down." % Config.TOTEM_FREE_RADIUS },
 	"terp": { "tab": "Titans", "label": "Terp", "cost": 25, "hp": 80.0, "link": 6.0, "link_y": 1.5,
 		"work_range": 7.0, "movable": false, "unlock": "terp",
 		"desc": "Raises or lowers painted ground one level at a time, within 7 cells. Each level costs %d packets and takes %.0fs once they arrive. Earth only. Link 6. Not movable." % [Config.TERP_PACKETS, Config.TERP_STEP_TIME] },
@@ -110,7 +117,7 @@ static func cost_text(type: String) -> String:
 	var d: Dictionary = DEFS[type]
 	if type == "outpost":
 		return "%d Ore + %d" % [int(Config.OUTPOST_ORE), int(d.cost)]
-	return ("%d now" % d.cost) if d.get("drop_pod", false) else str(d.cost)
+	return ("%d now" % d.cost) if d.get("self_build", false) else str(d.cost)
 
 
 static func label(type: String) -> String:

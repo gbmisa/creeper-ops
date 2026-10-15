@@ -26,9 +26,9 @@ static func _pressure(g) -> void:
 			mono = false
 		prev = p
 	SmokeTest._check("pressure monotonic", mono, "(last %.2f)" % prev)
-	SmokeTest._check("pressure holds brute time", absf(Pressure.value(level, 480.0) - 0.20) < 0.021)
-	SmokeTest._check("pressure holds ravager time", absf(Pressure.value(level, 900.0) - 0.60) < 0.021)
-	SmokeTest._check("pressure holds behemoth time", absf(Pressure.value(level, 1320.0) - 0.85) < 0.021)
+	SmokeTest._check("pressure holds brute time", absf(Pressure.value(level, 660.0) - 0.20) < 0.021)
+	SmokeTest._check("pressure holds ravager time", absf(Pressure.value(level, 1500.0) - 0.60) < 0.021)
+	SmokeTest._check("pressure holds behemoth time", absf(Pressure.value(level, 2340.0) - 0.85) < 0.021)
 
 
 static func _spawn_curve(g) -> void:
@@ -100,7 +100,7 @@ static func _roster(g) -> void:
 	SmokeTest._check("roster unlocks spitter at 0.10", _has(0.10, "Spitter") and not _has(0.10, "Brute"))
 	var spit := RaiderDefs.named("Spitter")
 	SmokeTest._check("spitter matches the spec", is_equal_approx(float(spit.hp), 10.0)
-		and is_equal_approx(float(spit.range), 20.0) and str(spit.attack) == "acid")
+		and is_equal_approx(float(spit.range), 14.0) and str(spit.attack) == "acid")
 	SmokeTest._check("roster unlocks brute at 0.20", _has(0.20, "Brute") and not _has(0.20, "Lancer"))
 	SmokeTest._check("roster holds spotter until 0.70", not _has(0.69, "Spotter") and _has(0.70, "Spotter"))
 	SmokeTest._check("roster unlocks behemoth at 0.85", _has(0.85, "Behemoth"))

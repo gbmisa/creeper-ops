@@ -20,6 +20,7 @@ var level: Dictionary = {}
 var overrun_t := 0.0
 var seal := 0.0
 var seal_arm := 0.0
+var mortar_route_t := 0.0
 var operative: Callable = func(): return null
 var node_pos := func() -> Vector3: return Vector3.ZERO
 var builder = null                 # EnemyBuilder: Lance scale inside a Shield Dome
@@ -106,7 +107,7 @@ func _escalate() -> void:
 		for n in nests:
 			var g := raiders.list.filter(func(r): return r.nest == n and r.guard)
 			for i in range(Config.NEST_GUARDS, g.size()):
-				g[i].guard = false
+				g[i].guard = g[i].has("guard_post")
 		Bus.say("Spore Nests are sending raiders at your base. Snipers and units can stop them.", "bad")
 	if time >= _tier_time(tier + 1):
 		tier += 1
@@ -126,7 +127,10 @@ func update(dt: float) -> void:
 		var growth: float = 1.0 + minutes() * 0.1
 		sac.scale = sac.scale.lerp(Vector3.ONE * growth * (1.0 + 0.08 * sin(time * 3.0 + n.x)), 0.2)
 		n.timer += dt
-		try_spawn(n)
+		n["chk"] = float(n.get("chk", 0.0)) - dt
+		if float(n.chk) <= 0.0:  # spawn-due check is staggered; the timer keeps counting
+			n.chk = Config.NEST_SPAWN_CHECK
+			try_spawn(n)
 	EnemyMortars.tick(self, dt)
 	flyers.update(dt)
 	raiders.update(dt, prey.call(), goal_cells.call())
@@ -153,7 +157,26 @@ func try_spawn(n: Dictionary) -> int:
 		RaiderGroups.spawn(raiders, n, RaiderGroups.compose(batch, pressure(), int(n.x) + int(time)))
 	else:
 		raiders.spawn(n, pick_tier(), guard)
-	return raiders.list.size() - before
+	var spawned := raiders.list.size() - before
+	n["spawned"] = int(n.get("spawned", 0)) + spawned
+	if spawned > 0:
+		_spawn_attack(n)
+	return spawned
+
+
+## The core pulses and a grown pit heaves when the nest breeds (models only).
+static func _spawn_attack(n: Dictionary) -> void:
+	var core := Hives.find(n, "core")
+	if not core.is_empty():
+		HiveParts.attack_anim(core)
+	var pits := []
+	for part in n.parts:
+		var p: Dictionary = part
+		if p.alive and p.grown and str(p.kind) == "pit":
+			pits.append(p)
+	if not pits.is_empty():
+		var pit: Dictionary = pits[randi() % pits.size()]
+		HiveParts.attack_anim(pit)
 
 
 func _wait(n: Dictionary, guard: bool) -> float:
@@ -167,27 +190,7 @@ func _wait(n: Dictionary, guard: bool) -> float:
 
 
 func _overrun(dt: float) -> void:
-	if pressure() < 1.0 or alive_count() == 0:
-		overrun_t = 0.0
-		return
-	overrun_t += dt
-	if overrun_t < Config.OVERRUN_INTERVAL:
-		return
-	overrun_t = 0.0
-	var dest: Vector3 = node_pos.call()
-	var wave := Config.OVERRUN_BASE + Config.OVERRUN_PER_TIER * Pressure.legacy_tier(pressure())
-	for n in nests:
-		if not n.alive:
-			continue
-		for _i in wave:
-			if raiders.list.size() >= Config.RAIDER_MAX_TOTAL:
-				return
-			raiders.spawn(n, pick_tier(), false)
-			var r: Dictionary = raiders.list.back()
-			r.guard = false
-			r["overrun"] = true
-			r["rush"] = dest
-	Bus.say("The nests overrun: a wave is marching straight at the Command Node.", "bad")
+	NestOverrun.tick(self, dt)
 
 
 func on_lance(ats: Array) -> void:

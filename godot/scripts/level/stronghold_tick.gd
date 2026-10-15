@@ -11,13 +11,18 @@ static func hostile(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 	c.crown.max_hp = Config.CROWN_HP * growth
 	c.crown.hp = minf(c.crown.max_hp, c.crown.hp + Config.CROWN_HP * Config.NEST_HP_GROWTH / 60.0 * dt)
 	c.garrison_timer += dt
-	if c.garrison_timer >= nests.spawn_interval() and v.garrison.count < Config.CASTLE_GARRISON \
+	if c.garrison_timer >= maxf(nests.spawn_interval(), c.get("garrison_wait", 0.0)) and v.garrison.count < Config.CASTLE_GARRISON \
 			and nests.raiders.list.size() < Config.RAIDER_MAX_TOTAL:
 		c.garrison_timer = 0.0
 		nests.raiders.spawn(v.garrison, nests.pick_tier(), true)
-		nests.raiders.list.back().node.position = v.garrison.pos  # not on the wall
+		var born: Dictionary = nests.raiders.list.back()
+		born.node.position = v.garrison.pos  # not on the wall
+		c["garrison_wait"] = float(born.hp) / CastleDefs.spawn_budget()  # HP budget: the next one waits
+		if lay.stages.size() > 1:
+			CastlePatrols.on_garrison_tick(s, c, lay, v)
 	if lay.stages.size() > 1:
 		CastleStages.tick(s, c, lay, p, dt)
+		CastlePatrols.ensure(s, c, lay, v)
 
 
 static func capturing(s: Strongholds, c: Dictionary, lay: Dictionary, p, dt: float) -> void:
@@ -27,16 +32,18 @@ static func capturing(s: Strongholds, c: Dictionary, lay: Dictionary, p, dt: flo
 		cap.progress = minf(1.0, cap.progress + dt / Config.CAPTURE_TIME)
 		if cap.progress >= 1.0:
 			StrongholdRules.to_held(s.world, c, lay)
+			CastlePatrols.clear(s, s.views[c.id])  # the wall patrols and the hall guard are gone
 			if s.stockpile:
 				s.stockpile.add("salvage", Config.CASTLE_CAPTURE_SALVAGE)
 			Sfx.play("good")
-			Bus.say("%s is yours: +%.0f Aether/min while you hold it. Raiders will come for it." % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)], "good")
+			Bus.say("%s is yours: +%.0f Aether/min while you hold it. Raiders will come for it — select troops and right-click to garrison the courtyard." % [c.name, Config.CASTLE_AETHER_RATE * 60.0 * c.get("yield", 1.0)], "good")
 			StrongholdMeshes.refresh(s.views[c.id], c)
 		return
 	cap.away += dt
 	cap.progress = maxf(0.0, cap.progress - Config.CAPTURE_DECAY * dt)
 	if cap.progress <= 0.0 and cap.away >= Config.CAPTURE_ABANDON:
 		StrongholdRules.to_hostile(s.world, c, lay, Config.CROWN_REGROW)
+		CastlePatrols.release(s.views[c.id])
 		if lay.stages.size() > 1:  # the outer rings stay yours: only the keep is lost
 			CastleStages.set_stage(s, c, lay.stages.size() - 1)
 		Bus.say("%s: the crown nest regrew. Nobody held the %s." % [c.name, "keep hall" if lay.stages.size() > 1 else "spire"], "bad")
@@ -50,7 +57,8 @@ static func holding(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 		s.stockpile.add("salvage", Config.CASTLE_SALVAGE_RATE * c.get("yield", 1.0) * dt)
 	CastleTurretFire.tick(s.world, c, v, nests.raiders, dt)
 	CastlePerks.ward(s, c, lay, dt)
-	var inside := nests.raiders.list.filter(func(r): return StrongholdRules.in_courtyard(lay, r.node.position))
+	var grace: bool = c.get("raid", {}).get("grace", false)  # until the reprisal launches nobody can retake or besiege
+	var inside := [] if grace else nests.raiders.list.filter(func(r): return StrongholdRules.in_courtyard(lay, r.node.position))
 	if inside.is_empty():
 		if c.state == "siege":
 			c.state = "held"
@@ -68,6 +76,7 @@ static func holding(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 	if c.capture.retake < Config.RETAKE_TIME:
 		return
 	StrongholdRules.to_hostile(s.world, c, lay, Config.CROWN_REGROW)
+	CastlePatrols.release(v)  # old patrols stand down; fresh ones spawn on the wall
 	s.on_lost.call(lay.courtyard)
 	for r in inside:  # the raiders inside become its new garrison
 		r.nest.count -= 1
@@ -76,6 +85,8 @@ static func holding(s: Strongholds, c: Dictionary, lay: Dictionary, v: Dictionar
 		r.erase("mission")
 		v.garrison.count += 1
 	CastleStages.set_stage(s, c, 0)
+	CastleLancers.retaken(v.garrison)
+	CastleEngines.revive(c)  # the trebuchets come back only when the enemy retakes the castle
 	Sfx.play("lost")
 	Bus.say("%s has fallen. The crown nest is growing back." % c.name, "bad")
 	StrongholdMeshes.refresh(v, c)

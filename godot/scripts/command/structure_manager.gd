@@ -4,7 +4,7 @@ extends Node3D
 ## tick. Rules live in Placement / Network / Packets / CollectorField / Mover / WeaponLogic /
 ## StructureBehaviors / StructureUpkeep (creeper contact, construction, bars).
 
-const DROP_POD_TIME := 3.0
+const SELF_BUILD_TIME := 3.0  # seconds for a self-building structure (Totem) to finish
 
 var world: World
 var economy: Economy
@@ -16,6 +16,7 @@ var list: Array[Structure] = []
 var occupied := {}            # grid idx -> Structure
 var selected_beacon: Structure = null
 var dirty := true
+var _anim_hit := {}  # structure id -> last hit-clip msec (model rate limit)
 var network: Network
 var packets: Packets
 var field: CollectorField
@@ -27,6 +28,7 @@ func setup(w: World, eco: Economy) -> void:
 	world = w
 	economy = eco
 	w.occupied = func(x: int, z: int) -> bool: return occupied.has(w.grid.idx(x, z))
+	w.occupied_set = occupied
 	network = Network.new()
 	add_child(network)
 	packets = Packets.new()
@@ -47,6 +49,16 @@ func beacons() -> Array[Structure]:
 	for s in list:
 		if s.type == "beacon" and s.is_built():
 			out.append(s)
+	return out
+
+
+## Every place the Operative can deploy from: finished Command Nodes (not flying), then finished Totems.
+func deploy_sites() -> Array[Structure]:
+	var out: Array[Structure] = []
+	for s in list:
+		if s.type == "node" and s.is_built() and not s.is_flying():
+			out.append(s)
+	out.append_array(beacons())
 	return out
 
 
@@ -74,7 +86,7 @@ func structure_at(x: int, z: int) -> Structure:
 # ---- lifecycle --------------------------------------------------------------------
 func place(type: String, x: int, z: int, instant := false) -> Structure:
 	var s := Structure.new(type, x, z)
-	if s.def.get("drop_pod", false) and not instant and not economy.spend(s.def.cost):
+	if s.def.get("self_build", false) and not instant and not economy.spend(s.def.cost):
 		return null
 	if not _pay_ore(type, x, z, instant):
 		return null
@@ -97,7 +109,7 @@ func place(type: String, x: int, z: int, instant := false) -> Structure:
 	else:
 		s.body.scale.y = 0.15
 	s.prey = { "node": s.node, "radius": 2.5 if big else 1.0, "alive": func(): return not s.dead,
-		"hit": func(d): damage(s, d) }
+		"hit": func(d): damage(s, d), "struct": s }
 	occupy(s)
 	list.append(s)
 	dirty = true
@@ -114,11 +126,13 @@ func remove(s: Structure, reason := "") -> void:
 	list.erase(s)
 	s.dead = true
 	vacate(s)
+	_anim_hit.erase(s.id)
 	if selected_beacon == s:
 		selected_beacon = null
 	if reason == "destroyed" or reason == "recycled":
+		var by := s.last_hit_by if s.last_hit_by != "" else ("creeper" if s.wet > Config.MIN_DEPTH else "unknown")
 		Bus.metric.emit("structure_lost" if reason == "destroyed" else "recycled",
-			{ "type": s.type, "reason": reason, "wet": s.wet > Config.MIN_DEPTH, "built": s.is_built() })
+			{ "type": s.type, "reason": reason, "wet": s.wet > Config.MIN_DEPTH, "built": s.is_built(), "by": by })
 	if reason != "":
 		WeaponFx.death(world.effects, s, reason)  # P2: debris + dust for kills (visual only)
 	if reason == "destroyed":
@@ -126,8 +140,20 @@ func remove(s: Structure, reason := "") -> void:
 		if s.type == "node":
 			Bus.node_destroyed.emit()
 		else:
+			Bus.base_lost.emit(s.type)
 			Bus.say("%s destroyed%s" % [s.def.label, " by creeper" if s.wet > Config.MIN_DEPTH else ""], "bad")
-	s.node.queue_free()
+	if not StructureMeshes.model_parts(s).is_empty():
+		# A4: die clip on the multi-part models; free the node when the base clip ends.
+		StructureMeshes.model_die(s, func(): if is_instance_valid(s.node): s.node.queue_free())
+	else:
+		var model: Node3D = CreatureAnim.of(s.body) if reason == "destroyed" else null
+		if model != null:
+			var sn := s.node
+			CreatureAnim.die(model, func() -> void:
+				if is_instance_valid(sn):
+					sn.queue_free())
+		else:
+			s.node.queue_free()
 	dirty = true
 	Bus.structure_removed.emit(s)
 
@@ -140,11 +166,25 @@ func recycle(s: Structure) -> void:
 	remove(s, "recycled")
 
 
-func damage(s: Structure, amount: float) -> void:
+func damage(s: Structure, amount: float, source := "") -> void:
 	if s.dead:
 		return
+	if source != "":
+		s.last_hit_by = source
+		if s.type != "node":
+			Bus.base_attacked.emit(s.type)
 	s.hp -= amount
 	s.hurt = 0.25
+	if not StructureMeshes.model_parts(s).is_empty():
+		StructureMeshes.model_hit(s)  # A4: multi-part models rate-limit their own hit clip
+	else:
+		var model := CreatureAnim.of(s.body)
+		if model != null:
+			var now := Time.get_ticks_msec()
+			if now - int(_anim_hit.get(s.id, 0)) >= 300:
+				_anim_hit[s.id] = now
+				CreatureAnim.hit(model)
+	s.regen_delay = StructureUpkeep.REGEN_DELAY  # hits pause passive healing so chip damage sticks
 	if s.type == "node":
 		Bus.node_hit.emit()
 	if s.hp <= 0.0:
@@ -238,9 +278,9 @@ func _pay_ore(type: String, x: int, z: int, instant: bool) -> bool:
 	return true
 
 
-## Packets launch while any sender is built, connected and on the ground.
+## Packets launch while any sender is built and connected (a flying Node counts).
 func _sender_ready() -> bool:
 	for s in list:
-		if s.def.get("sender", false) and s.is_built() and s.connected and not s.is_flying():
+		if s.def.get("sender", false) and s.is_built() and s.connected:
 			return true
 	return false
