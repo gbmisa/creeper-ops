@@ -130,6 +130,10 @@ static func util(item: String, ev: String, pos: Variant = null) -> bool:
 	return play(SoundDefs.UTILITY.get(item, {}).get(ev, ""), pos, -2.0)
 
 
+static func med(item: String) -> bool:
+	return play(SoundDefs.MEDS.get(item, "inv_cloth"), null, -4.0)
+
+
 ## The single entry point: an event dictionary {kind: shot|gun|attach|inventory|util|sample, item, ev, pos?, local?,
 ## suppressed?, cal?, cls?}. Gameplay emits these (the server would send the same dictionary to clients); local == true
 ## is the player's own sound (non-positional), otherwise it plays 3D at pos. No state is kept per player.
@@ -147,6 +151,8 @@ static func event(e: Dictionary) -> void:
 			inventory(item, e["ev"])
 		"util":
 			util(item, e["ev"], pos)
+		"med":
+			med(item)
 		"sample":
 			play(item, pos, e.get("db", 0.0))
 

@@ -6,6 +6,7 @@ extends Control
 signal drop_requested(item: Dictionary, target: Dictionary, origin: Dictionary)  # target {} = outside every region
 signal quick_requested(item: Dictionary)
 signal unfit_requested(gun_item: Dictionary, slot: String, drag: bool)  # right-click a fitted-part chip = remove, left-press = drag it off
+signal use_requested(item: Dictionary)  # right-click a med item = use it
 
 const C := 36  # cell px
 const SLOT_CELLS := {"primary": Vector2i(5, 2), "secondary": Vector2i(5, 2), "holster": Vector2i(5, 1),
@@ -115,6 +116,10 @@ func _gui_input(e: InputEvent) -> void:
 		var c := chip_at(e.position)
 		if not c.is_empty():
 			unfit_requested.emit(c["item"], c["slot"], false)
+		else:
+			var it := item_at(e.position)
+			if not it.is_empty() and ItemDefs.def_of(it).get("kind") == "med":
+				use_requested.emit(it)
 	elif e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
 		var chip := chip_at(e.position) if e.pressed else {}
 		if not chip.is_empty():

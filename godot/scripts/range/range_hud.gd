@@ -17,12 +17,18 @@ var _arm: ProgressBar
 var _dot: ColorRect
 var _msg_t := 0.0
 var _show_dot := false
+var _status_lbl: Label
+var _tunnel := ColorRect.new()
 
 
 func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	weapons = w
 	player = p
 	layer = 5
+	_tunnel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tunnel.color = Color(0, 0, 0, 0)
+	_tunnel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_tunnel)
 	add_child(scope)
 	var right := UiKit.panel(Color(0.04, 0.05, 0.07, 0.6))
 	right.position = Vector2(1330, 700)
@@ -63,7 +69,11 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	_dot.position = Vector2(798, 448)
 	_dot.visible = false
 	add_child(_dot)
+	_status_lbl = UiKit.label("", 13, Color(1.0, 0.62, 0.4))
+	_status_lbl.position = Vector2(20, 690)
+	add_child(_status_lbl)
 	w.message.connect(say)
+	p.message.connect(say)
 
 
 func say(text: String) -> void:
@@ -82,7 +92,8 @@ func _help_text() -> String:
 		[k.call(["t_use"]), "Use (rack, benches, items)"], ["1-3", "Primary / secondary / holster"],
 		[k.call(["inventory"]), "Inventory"], [k.call(["drop"]), "Drop gun"], [k.call(["t_reload"]), "Reload (x2 fast)"],
 		[k.call(["t_fire_mode"]), "Fire mode"], [k.call(["t_mag_check"]), "Check mag"], [k.call(["t_inspect"]), "Inspect / fix"],
-		[k.call(["t_zero_up", "t_zero_down"]), "Zero up/down"], [k.call(["t_crosshair"]), "Hip dot"], [k.call(["t_help"]), "Help"]]
+		[k.call(["t_zero_up", "t_zero_down"]), "Zero up/down"], [k.call(["t_crosshair"]), "Hip dot"],
+		[k.call(["med_quick_1", "med_quick_2", "med_quick_3", "med_quick_4"]), "Quick-use meds"], [k.call(["t_help"]), "Help"]]
 	var out := "LMB Fire   RMB Aim   Esc Menu\n"
 	for r in rows:
 		out += "%s  %s\n" % [r[0], r[1]]
@@ -124,3 +135,42 @@ func _process(delta: float) -> void:
 	_msg_lbl.visible = _msg_t > 0.0
 	_leg.value = player.leg_stamina * 100.0
 	_arm.value = weapons.arm_stamina * 100.0
+	_status_lbl.text = _status_text()
+	var tun := 0.0
+	if player.body.total_frac() < 0.35 or float(player.status.m["dehydration"]) > 0.8:
+		tun = 0.45
+	_tunnel.color = Color(0, 0, 0, tun)
+
+
+## Status icons with timers + build-up bars, only when something is active.
+static func _bar(full: int, total: int) -> String:
+	var s := ""
+	for i in total:
+		s += "▓" if i < full else "░"
+	return s
+
+
+func _status_text() -> String:
+	var b := player.body
+	var s := player.status
+	var parts := []
+	if not b.bleeds.is_empty():
+		parts.append("BLEED x%d" % b.bleeds.size())
+	if not b.fractured.is_empty():
+		parts.append("FRACTURE")
+	var names := {"pain": "PAIN", "radiation": "RAD", "toxication": "TOX", "dehydration": "DEHYDR",
+		"energy": "ENERGY", "fatigue": "FATIGUE", "contusion": "CONCUSS"}
+	for k in StatusEffects.METERS:
+		var v: float = s.m[k]
+		if v >= 0.5:
+			var bar := int(5.0 * v)
+			parts.append("%s %s" % [names[k], _bar(bar, 5)])
+	if s.pain_off_t > 0.0:
+		parts.append("ANALGESIA %d:%02d" % [int(s.pain_off_t) / 60, int(s.pain_off_t) % 60])
+	if s.regen_t > 0.0:
+		parts.append("REGEN %d:%02d" % [int(s.regen_t) / 60, int(s.regen_t) % 60])
+	if s.stam_buff_t > 0.0:
+		parts.append("STIM %ds" % int(s.stam_buff_t))
+	if not player.med_use.is_empty():
+		parts.append("USING %.1fs" % float(player.med_use.get("t", 0.0)))
+	return "   ".join(parts)

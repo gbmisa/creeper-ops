@@ -150,7 +150,7 @@ func _pickup_and_slots() -> void:
 func _ads(delta: float) -> void:
 	var want: bool = trigger_ads or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
 	want = want and not ui_open and not player.sprinting and draw_t < DRAW_TIME * 0.5 and gun.busy_kind != "reload"
-	var rate := 1.0 / (RecoilModel.ads_time(gun.def["ergo"]) * gun.stat("ads_mult"))
+	var rate := 1.0 / (RecoilModel.ads_time(gun.def["ergo"]) * gun.stat("ads_mult") * player.status.ads_time_mult())
 	ads_amt = move_toward(ads_amt, 1.0 if want else 0.0, rate * delta)
 	player.ads_amt = ads_amt
 	holding_breath = ads_amt > 0.9 and input.held("t_sprint") and arm_stamina > 0.0
@@ -260,7 +260,7 @@ func _apply_view(_delta: float) -> void:
 	player.recoil_off = recoil.offset
 	var tired := arm_stamina < 0.12
 	var sw := RecoilModel.sway(_t, gun.def, holding_breath, tired)
-	player.sway_off = sw * ads_amt
+	player.sway_off = sw * ads_amt * player.status.sway_mult()  # tremor doubles sway
 	player.cam.fov = fov_for(ads_amt, gun.stat("scope"))
 
 

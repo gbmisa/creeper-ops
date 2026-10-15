@@ -9,6 +9,7 @@ const SPILL := {"larm": 0.7, "rarm": 0.7, "lleg": 1.0, "rleg": 1.0, "stomach": 1
 const LIMBS := ["larm", "rarm", "lleg", "rleg"]
 
 var hp := {}
+var max_mult := {}  # zone -> max HP multiplier (surgery restores a blacked limb lower)
 var armor := {}  # zone -> {"id", "dur"}
 var bleeds: Array = []  # {"zone", "rate"}
 var fractured := {}
@@ -23,6 +24,7 @@ func _init() -> void:
 func reset() -> void:
 	for z in ZONES:
 		hp[z] = MAX[z]
+		max_mult[z] = 1.0
 	bleeds.clear()
 	fractured.clear()
 	dead = false
@@ -120,7 +122,58 @@ func heal(frac: float) -> void:
 	bleeds.clear()
 	for z in ZONES:
 		if hp[z] > 0.0:
-			hp[z] = minf(MAX[z], hp[z] + MAX[z] * frac)
+			hp[z] = minf(zone_max(z), hp[z] + MAX[z] * frac)
+
+
+func zone_max(zone: String) -> float:
+	return MAX[zone] * float(max_mult.get(zone, 1.0))
+
+
+## HP pool: heals the worst (most damaged, living) zone first until the pool is spent.
+func heal_pool(amount: float) -> void:
+	if dead:
+		return
+	var left: float = amount
+	while left > 0.0:
+		var worst := ""
+		var worst_missing := 0.0
+		for z in ZONES:
+			if hp[z] > 0.0:
+				var missing: float = zone_max(z) - hp[z]
+				if missing > worst_missing:
+					worst_missing = missing
+					worst = z
+		if worst == "":
+			return
+		var give: float = minf(left, worst_missing)
+		hp[worst] += give
+		left -= give
+
+
+## Stop bleeds. kind: "" = all, "light", "heavy". zone "" = every zone. Returns stopped count.
+func stop_bleed(zone: String = "", kind: String = "") -> int:
+	var n := 0
+	var kept: Array = []
+	for b in bleeds:
+		var heavy: bool = float(b["rate"]) >= TacticalConfig.HEAVY_BLEED_DPS
+		var match_kind: bool = kind == "" or (kind == "heavy") == heavy
+		if (zone == "" or b["zone"] == zone) and match_kind:
+			n += 1
+		else:
+			kept.append(b)
+	bleeds = kept
+	return n
+
+
+## Surgery (CMS kit): restore a blacked-out limb at 60 % max HP. Returns false if nothing to fix.
+func surgery(zone: String) -> bool:
+	if dead or not zone in LIMBS or hp[zone] > 0.0:
+		return false
+	max_mult[zone] = 0.6
+	hp[zone] = MAX[zone] * 0.6
+	fractured.erase(zone)
+	stop_bleed(zone)
+	return true
 
 
 func tick(dt: float) -> void:

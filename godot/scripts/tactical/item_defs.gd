@@ -29,8 +29,48 @@ const ROWS := {
 	"rig_chest": {"name": "Chest rig", "kind": "rig", "w": 3, "h": 2, "kg": 0.8, "grid": [4, 2]},
 	"pack_small": {"name": "Small backpack", "kind": "backpack", "w": 3, "h": 3, "kg": 0.9, "grid": [4, 4]},
 	"pack_big": {"name": "Large backpack", "kind": "backpack", "w": 4, "h": 4, "kg": 1.6, "grid": [5, 6]},
-	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4},
-	"med_bandage": {"name": "Bandage", "kind": "med", "w": 1, "h": 1, "kg": 0.05},
+	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4,
+		"use": {"time": 3.0, "effect": "hp_pool", "amount": 150.0, "stop": ["light"]}},
+	"med_bandage": {"name": "Bandage", "kind": "med", "w": 1, "h": 1, "kg": 0.05,
+		"use": {"time": 2.0, "effect": "stop_bleed", "bleed": "light"}},
+	"med_esmarch": {"name": "Esmarch tourniquet", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 3.0, "effect": "stop_bleed", "bleed": "heavy", "limb_only": true}},
+	"med_splint": {"name": "Aluminium splint", "kind": "med", "w": 2, "h": 1, "kg": 0.2,
+		"use": {"time": 5.0, "effect": "fix_fracture"}},
+	"med_cms": {"name": "CMS surgical kit", "kind": "med", "w": 2, "h": 2, "kg": 1.0,
+		"use": {"time": 15.0, "effect": "surgery", "uses": 3}},
+	"med_ai2": {"name": "AI-2 medkit", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "hp_pool", "amount": 100.0}},
+	"med_car": {"name": "Car first aid kit", "kind": "med", "w": 2, "h": 1, "kg": 0.3,
+		"use": {"time": 4.0, "effect": "hp_pool", "amount": 220.0, "stop": ["light"]}},
+	"med_salewa": {"name": "Salewa first aid kit", "kind": "med", "w": 2, "h": 2, "kg": 0.5,
+		"use": {"time": 5.0, "effect": "hp_pool", "amount": 400.0, "stop": ["light", "heavy"]}},
+	"med_grizzly": {"name": "Grizzly medical kit", "kind": "med", "w": 3, "h": 2, "kg": 1.2,
+		"use": {"time": 8.0, "effect": "hp_pool", "amount": 1800.0, "stop": ["light", "heavy"], "all_wounds": true}},
+	"med_analgin": {"name": "Analgin painkillers", "kind": "med", "w": 1, "h": 1, "kg": 0.05,
+		"use": {"time": 1.0, "effect": "pain_off", "dur": 95.0, "uses": 4}},
+	"med_morphine": {"name": "Morphine syrette", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "pain_off", "dur": 300.0, "dehydration": 0.3}},
+	"med_propital": {"name": "Propital RG stimulant", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 3.0, "effect": "regen", "rate": 1.0, "dur": 300.0, "id": "med_propital"}},
+	"med_sj6": {"name": "SJ6 TGLabs stim", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "sj6"}},
+	"med_adrenaline": {"name": "Adrenaline syrette", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "adrenaline", "dehydration": 0.25}},
+	"med_etgc": {"name": "eTG-c stim", "kind": "med", "w": 1, "h": 1, "kg": 0.15,
+		"use": {"time": 3.0, "effect": "etgc"}},
+	"med_iodine": {"name": "Iodine pills", "kind": "med", "w": 1, "h": 1, "kg": 0.05,
+		"use": {"time": 1.0, "effect": "iodine"}},
+	"med_water": {"name": "Water bottle", "kind": "med", "w": 1, "h": 2, "kg": 0.5,
+		"use": {"time": 2.0, "effect": "hydrate", "amount": 0.5}},
+	"med_juice": {"name": "Juice carton", "kind": "med", "w": 1, "h": 1, "kg": 0.3,
+		"use": {"time": 2.0, "effect": "hydrate", "amount": 0.35, "energy": 0.2}},
+	"med_crackers": {"name": "Crackers", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "feed", "amount": 0.3, "dehydration": 0.1}},
+	"med_mre": {"name": "MRE ration", "kind": "med", "w": 2, "h": 1, "kg": 0.5,
+		"use": {"time": 4.0, "effect": "feed", "amount": 0.6, "dehydration": -0.2}},
+	"med_stim": {"name": "Combat stim", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "stim", "dur": 20.0, "mult": 2.0}},
 }
 
 const ARMOR_SIZE := {"vest2": [3, 3, 1.5], "plate4": [3, 3, 6.0], "steel6": [2, 2, 3.5], "helmet3": [2, 2, 1.2]}
@@ -87,6 +127,9 @@ static func make(id: String, opts: Dictionary = {}) -> Dictionary:
 			it["gun"] = opts.get("gun", Gun.new(id))
 		"rig", "backpack":
 			it["items"] = []
+		"med":
+			if d.get("use", {}).has("uses"):
+				it["uses"] = int(d["use"]["uses"])
 	return it
 
 

@@ -30,6 +30,10 @@ var spot_mult := 1.0  # bots notice this player from range x this (laser lit); s
 var recoil_off := Vector2.ZERO  # deg, x = pitch up, y = yaw
 var sway_off := Vector2.ZERO
 var body := BodyHealth.new()  # zones the bots shoot at
+var status := StatusEffects.new()  # build-up meters + med buffs (Track MED)
+var in_hot_zone := false  # set by the map (Kestrel radar array); drives radiation
+signal message(text: String)
+var med_use := {}  # {item, zone, t, inv} while a med use is in progress
 var label_name := "You"
 var god := false  # --god (screenshots): body health never drops
 var dead_t := 0.0
@@ -73,6 +77,7 @@ func _ready() -> void:
 ## Called by RangeFeedback with the Ballistics.body_hit dictionary (a bot's bullet).
 func on_hit(res: Dictionary) -> void:
 	hit_taken.emit(res.get("origin", global_position), res)
+	status.on_hit(float(res.get("dmg", 0.0)), false, bool(res.get("fracture", false)))
 
 
 ## Bleeds, death and respawn. Called every frame, also when the menu is open.
@@ -85,6 +90,11 @@ func tick_body(delta: float) -> void:
 			respawn()
 		return
 	body.tick(delta)
+	var ctx := {"sprinting": sprinting, "jumping": _jump, "moving": Vector2(velocity.x, velocity.z).length() > 0.5,
+		"bleeding": not body.bleeds.is_empty(),
+		"heavy_bleed": body.bleeds.any(func(b): return float(b["rate"]) >= TacticalConfig.HEAVY_BLEED_DPS),
+		"fractured": not body.fractured.is_empty(), "in_hot_zone": in_hot_zone}
+	status.tick(delta, ctx, body)
 	move_mult = body.move_mult()
 	if body.dead:
 		enabled = false
@@ -96,6 +106,8 @@ func tick_body(delta: float) -> void:
 
 func respawn() -> void:
 	body.reset()
+	status.reset()
+	med_use = {}
 	global_position = RangeLayout.SPAWN
 	velocity = Vector3.ZERO
 	yaw = 0.0
@@ -107,12 +119,67 @@ func respawn() -> void:
 	respawned.emit()
 
 
+## Start using a med item from the inventory. Zone "" = auto-pick the worst target.
+## Timed: slows to x0.6, interrupts on sprint/aim/weapon swap. Returns false if it can't start.
+func use_med(item: Dictionary, zone: String, inv: Inventory) -> bool:
+	if not med_use.is_empty() or dead_t > 0.0 or not enabled:
+		return false
+	var d := ItemDefs.def_of(item)
+	if d["kind"] != "med" or not (d.get("use", {}) as Dictionary).has("effect"):
+		return false
+	zone = StatusEffects.pick_zone(body, d["use"], zone)
+	if zone == "NO_TARGET":
+		message.emit("Nothing to treat with %s" % d["name"])
+		return false
+	med_use = {"item": item, "zone": zone, "t": float(d["use"]["time"]), "inv": inv}
+	RangeAudio.med(item["id"])
+	return true
+
+
+func _finish_med() -> void:
+	var it: Dictionary = med_use["item"]
+	var inv: Inventory = med_use["inv"]
+	var d := ItemDefs.def_of(it)
+	var r := status.apply_med(d["use"], String(med_use["zone"]), body)
+	if bool(r["stamina_refill"]):
+		leg_stamina = 1.0
+	var uses_left := int(it.get("uses", 1)) - 1
+	if uses_left <= 0:
+		inv.remove(it)
+	else:
+		it["uses"] = uses_left
+	med_use = {}
+	RangeAudio.med(it["id"])
+	message.emit(String(r["msg"]))
+
+
+func _med_tick(delta: float) -> void:
+	if med_use.is_empty():
+		return
+	var cancel := input.held("t_sprint") and Vector2(velocity.x, velocity.z).length() > 0.5
+	if not cancel and ads_amt > 0.3:
+		cancel = true  # aiming interrupts
+	if not cancel:
+		for s in ["t_slot_1", "t_slot_2", "t_slot_3", "t_slot_4", "t_slot_5", "t_slot_6"]:
+			if input.act(s):
+				cancel = true  # weapon swap interrupts
+				break
+	if cancel:
+		med_use = {}
+		message.emit("Med use interrupted")
+		return
+	med_use["t"] = float(med_use["t"]) - delta
+	if float(med_use["t"]) <= 0.0:
+		_finish_med()
+
+
 func eye_pos() -> Vector3:
 	return cam.global_position
 
 
 func _process(delta: float) -> void:
 	tick_body(delta)
+	_med_tick(delta)
 	var crouch_k := (1.2 if crouching else 1.8) / 1.8
 	for z in rig:  # hitboxes follow a crouch
 		(rig[z] as Node3D).position.y = (HitboxRig.SHAPES[z][0] as Vector3).y * crouch_k
@@ -159,13 +226,14 @@ func _physics_process(delta: float) -> void:
 		if leg_stamina <= 0.0:
 			_exhausted = true
 	elif velocity.length() < 5.0:
-		leg_stamina = minf(1.0, leg_stamina + TacticalConfig.LEG_STAMINA_REGEN * delta)
+		leg_stamina = minf(status.max_stamina_mult(),
+			leg_stamina + TacticalConfig.LEG_STAMINA_REGEN * status.stamina_regen_mult() * delta)
 		if leg_stamina > 0.25:
 			_exhausted = false
 	var speed := TacticalConfig.SPRINT if sprinting else TacticalConfig.WALK
 	if crouching:
 		speed *= 0.55
-	speed *= lerpf(1.0, 0.6, ads_amt) * move_mult
+	speed *= lerpf(1.0, 0.6, ads_amt) * move_mult * (0.6 if not med_use.is_empty() else 1.0)
 	var wish := (global_transform.basis * Vector3(dir.x, 0, dir.y)).normalized() * speed if dir != Vector2.ZERO else Vector3.ZERO
 	var accel := ACCEL / (1.0 + carried_kg * 0.12)
 	var hv := Vector2(wish.x, wish.z)  # no inertia on the ground: velocity snaps to the input

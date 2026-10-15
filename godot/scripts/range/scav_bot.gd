@@ -153,6 +153,7 @@ func think(dt: float, over := {}) -> void:
 	if to != "":
 		if from == BotBrain.HEAL and to == BotBrain.SEARCH:
 			body.heal(0.4)
+			body.bleeds.clear()  # bandage from its loot
 		_enter(to)
 		print("[bot] ", label_name, " ", from, " -> ", to)
 		state_changed.emit(self, from, to)

@@ -8,6 +8,10 @@ var player: TacticalPlayer
 var world: WorldItems
 var view := InventoryView.new()
 var is_open := false
+var _zone_pop := PopupMenu.new()
+var _zone_item := {}
+var _health_panel: PanelContainer
+var _health_lbl: Label
 
 
 func setup(w: PlayerWeapons, p: TacticalPlayer, wi: WorldItems) -> void:
@@ -20,6 +24,15 @@ func setup(w: PlayerWeapons, p: TacticalPlayer, wi: WorldItems) -> void:
 	view.drop_requested.connect(_on_drop)
 	view.quick_requested.connect(quick_move)
 	view.unfit_requested.connect(_on_unfit)
+	view.use_requested.connect(_on_use)
+	_zone_pop.id_pressed.connect(_on_zone_picked)
+	add_child(_zone_pop)
+	_health_panel = UiKit.panel(Color(0.04, 0.05, 0.07, 0.85))
+	_health_panel.position = Vector2(1090, 60)
+	_health_lbl = UiKit.mono("", 13)
+	_health_panel.add_child(_health_lbl)
+	_health_panel.visible = false
+	add_child(_health_panel)
 	add_child(view)
 
 
@@ -29,6 +42,11 @@ func _process(_dt: float) -> void:
 			close()
 		else:
 			open()
+	for i in 4:
+		if player.input.act("med_quick_%d" % (i + 1)):
+			_quick_med(i)
+	if is_open:
+		_health_lbl.text = _health_text()
 
 
 func open() -> void:
@@ -37,6 +55,8 @@ func open() -> void:
 	weapons.ui_open = true
 	refresh_ground()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_health_panel.visible = true
+	_health_lbl.text = _health_text()
 	view.queue_redraw()
 
 
@@ -45,7 +65,104 @@ func close() -> void:
 	visible = false
 	weapons.ui_open = false
 	view.drag = {}
+	_health_panel.visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## Right-click a med in the inventory: pick a body part when several qualify, else use at once.
+func _on_use(it: Dictionary) -> void:
+	var d := ItemDefs.def_of(it)
+	var use: Dictionary = d.get("use", {})
+	if use.is_empty():
+		return
+	var cands := StatusEffects.zone_candidates(player.body, use)
+	if String(use.get("effect", "")) in ["stop_bleed", "fix_fracture", "surgery"] and cands.is_empty():
+		weapons.message.emit("Nothing to treat with %s" % d["name"])
+		return
+	if cands.size() > 1:
+		_zone_menu(it, cands)
+	else:
+		_use_med(it, String(cands[0]) if not cands.is_empty() else "")
+
+
+func _use_med(it: Dictionary, zone: String) -> void:
+	if not player.use_med(it, zone, weapons.inv):
+		weapons.message.emit("Can't use that right now")
+
+
+func _zone_menu(it: Dictionary, cands: Array) -> void:
+	_zone_item = it
+	_zone_pop.clear()
+	for i in cands.size():
+		var z := String(cands[i])
+		_zone_pop.add_item("%s (%d/%d HP)" % [z.capitalize(), int(player.body.hp[z]), int(player.body.zone_max(z))], i)
+		_zone_pop.set_item_metadata(i, z)
+	_zone_pop.popup_centered()
+
+
+func _on_zone_picked(id: int) -> void:
+	var zone := String(_zone_pop.get_item_metadata(id))
+	var it := _zone_item
+	_zone_item = {}
+	_use_med(it, zone)
+
+
+## Quick-use keys: the nth med in rig then pockets.
+func _quick_med(n: int) -> void:
+	var meds := []
+	for loc in ["rig_g", "pockets"]:
+		for it in weapons.inv.grid_items(loc):
+			if ItemDefs.def_of(it).get("kind") == "med":
+				meds.append(it)
+	if n < meds.size():
+		_use_med(meds[n], "")
+	else:
+		weapons.message.emit("No med in quick slot %d" % (n + 1))
+
+
+## Health panel: zone HP, wound icons, build-up meters.
+static func _bar(full: int, total: int) -> String:
+	var s := ""
+	for i in total:
+		s += "▓" if i < full else "░"
+	return s
+
+
+func _health_text() -> String:
+	var b := player.body
+	var s := player.status
+	var out := ["== HEALTH =="]
+	for z in BodyHealth.ZONES:
+		var bar := int(10.0 * float(b.hp[z]) / b.zone_max(z))
+		var icons := ""
+		for bl in b.bleeds:
+			if bl["zone"] == z:
+				icons += " BLEED" if float(bl["rate"]) < TacticalConfig.HEAVY_BLEED_DPS else " H.BLEED"
+		if b.fractured.has(z):
+			icons += " FRACTURE"
+		if float(b.hp[z]) <= 0.0:
+			icons += " BLACKED"
+		out.append("%-7s %s %3d/%-3d%s" % [z.to_upper(), _bar(bar, 10),
+			int(b.hp[z]), int(b.zone_max(z)), icons])
+	out.append("== STATUS ==")
+	var names := {"pain": "PAIN", "radiation": "RAD", "toxication": "TOX", "dehydration": "DEHYDR",
+		"energy": "ENERGY", "fatigue": "FATIGUE", "contusion": "CONCUSS"}
+	for k in StatusEffects.METERS:
+		var v: float = s.m[k]
+		if v > 0.01:
+			var bar := int(5.0 * v)
+			out.append("%-7s %s%s" % [names[k], _bar(bar, 5), " !" if v >= 0.5 else ""])
+	if s.pain_off_t > 0.0:
+		out.append("ANALGESIA %ds" % int(s.pain_off_t))
+	if s.regen_t > 0.0:
+		out.append("REGEN %ds" % int(s.regen_t))
+	if s.stam_buff_t > 0.0:
+		out.append("STIM %ds" % int(s.stam_buff_t))
+	if s.iodine_t > 0.0:
+		out.append("IODINE %ds" % int(s.iodine_t))
+	if not player.med_use.is_empty():
+		out.append("USING... %.1fs" % float(player.med_use.get("t", 0.0)))
+	return "\n".join(out)
 
 
 ## Ground grid = the world items within reach; existing cells are kept, new ones take the first free spot.

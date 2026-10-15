@@ -144,6 +144,9 @@ func loot(c: Dictionary) -> void:
 				_restock(g)
 		elif item == "meds":
 			player.body.heal(0.6)
+			var ai2 := ItemDefs.make("med_ai2")
+			if not weapons.inv.add(ai2):
+				weapons.message.emit("No room for the AI-2")
 	log.add("Looted: %s" % ", ".join(c["loot"]))
 
 

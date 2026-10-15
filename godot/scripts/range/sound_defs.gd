@@ -102,6 +102,19 @@ const UTILITY := {
 }
 
 
+## Medical items (MED code calls RangeAudio.med(id)). Placeholder stems; the SOUND track
+## replaces them with recorded samples.
+const MEDS := {
+	"med_bandage": "inv_cloth", "med_esmarch": "inv_cloth", "med_splint": "inv_wood",
+	"med_cms": "inv_metal", "med_ai2": "inv_plastic", "med_car": "inv_plastic",
+	"med_salewa": "inv_plastic", "med_grizzly": "inv_leather_big", "med_analgin": "inv_coins",
+	"med_morphine": "inv_plastic", "med_propital": "inv_plastic", "med_sj6": "stim_use",
+	"med_adrenaline": "inv_plastic", "med_etgc": "stim_use", "med_iodine": "inv_coins",
+	"med_water": "inv_soft", "med_juice": "inv_soft", "med_crackers": "inv_cloth",
+	"med_mre": "inv_cloth", "med_stim": "stim_use", "med_ifak": "inv_plastic",
+}
+
+
 ## Profile key for a gun: explicit id, else calibre, else class.
 static func profile_of(gun_id: String, cal := "", cls := "") -> String:
 	if GUN_PROFILE.has(gun_id):
