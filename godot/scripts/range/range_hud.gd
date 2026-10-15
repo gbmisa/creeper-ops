@@ -62,6 +62,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	_dot.color = Color(1, 1, 1, 0.8)
 	_dot.position = Vector2(798, 448)
 	_dot.visible = false
+	_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE  # it sits under the captured cursor: don't eat the fire click
 	add_child(_dot)
 	w.message.connect(say)
 

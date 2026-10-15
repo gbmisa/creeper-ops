@@ -9,6 +9,10 @@ const HIDDEN_LAYER := 2  # render layer bit value; the camera's cull_mask exclud
 const SCALE := 0.965  # model eyes ~1.68 m, player eyes 1.62 m
 const BACK := 0.26  # body sits this far behind the camera so the chest never reaches the near plane
 const MAX_YAW := deg_to_rad(70.0)
+## Run clips lean the torso forward (sprint: neck ~0.3 m), which would put the headless neck under the camera.
+## While jogging/sprinting the body slides back by however far the neck is ahead of its idle spot.
+const LEAN_CLIPS := ["jog", "sprint"]
+const NECK_REST_Z := 0.03  # neck_01 z in the yaw node's frame in the idle clip (model faces -Z)
 const LOOPED := ["idle", "walk", "jog", "sprint", "crouch_idle", "crouch_walk", "jump"]
 ## Ground speed (m/s) at which each clip's feet stay planted (measured on the glb).
 const CLIP_SPEED := {"walk": 0.9, "jog": 3.35, "sprint": 3.6, "crouch_walk": 0.5}
@@ -22,6 +26,9 @@ var auto := true  # false: the caller drives step() (tests)
 var _yaw_node: Node3D
 var _leg_yaw := 0.0
 var _arms: Array[MeshInstance3D] = []
+var _skel: Skeleton3D
+var _neck := -1
+var _lean := 0.0
 
 
 func setup(p: TacticalPlayer) -> void:
@@ -35,6 +42,8 @@ func setup(p: TacticalPlayer) -> void:
 	scene.scale = Vector3.ONE * SCALE
 	_yaw_node.add_child(scene)
 	anim = scene.find_children("*", "AnimationPlayer", true, false)[0]
+	_skel = scene.find_children("*", "Skeleton3D", true, false)[0]
+	_neck = _skel.find_bone("neck_01")
 	for n in LOOPED:
 		anim.get_animation(n).loop_mode = Animation.LOOP_LINEAR
 	for mi in scene.find_children("*", "MeshInstance3D", true, false):
@@ -77,6 +86,12 @@ func step(delta: float, vel: Vector3, crouching: bool, grounded: bool) -> void:
 	_leg_yaw = lerp_angle(_leg_yaw, -yaw_t, minf(1.0, delta * 10.0))
 	_yaw_node.rotation.y = _leg_yaw
 	_play(want, -rate if reverse else rate)
+	var lean_t := 0.0
+	if want in LEAN_CLIPS and _neck >= 0 and _skel.is_inside_tree():
+		var neck := _yaw_node.to_local(_skel.to_global(_skel.get_bone_global_pose(_neck).origin))
+		lean_t = maxf(0.0, NECK_REST_Z - neck.z)
+	_lean = lerpf(_lean, lean_t, minf(1.0, delta * 10.0))
+	_yaw_node.position = Vector3(0, 0, BACK) + Basis(Vector3.UP, _leg_yaw) * Vector3(0, 0, _lean)
 
 
 ## Standing locomotion clip for a ground speed (m/s); shared with the enemy bots.

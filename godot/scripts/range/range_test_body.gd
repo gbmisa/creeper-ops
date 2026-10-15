@@ -28,6 +28,18 @@ static func run(t: RangeTest) -> void:
 	t.check("body: crouch walk when crouched and moving", b.clip == "crouch_walk", b.clip)
 	b.step(0.1, Vector3(0, 0, 0), false, false)
 	t.check("body: jump clip airborne", b.clip == "jump", b.clip)
+	# F45: the sprint lean must not bring the headless neck under the camera
+	var worst := 9.0
+	for i in 40:
+		b.step(0.05, Vector3(0, 0, -5.5), false, true)
+		b.anim.advance(0.05)
+		var neck := b.to_local(b._skel.to_global(b._skel.get_bone_global_pose(b._neck).origin))
+		if i > 20:
+			worst = minf(worst, neck.z)
+	t.check("body: sprinting keeps the neck >= 0.2 m behind the camera", b.clip == "sprint" and worst >= 0.2, "%.2f m" % worst)
+	for i in 40:
+		b.step(0.05, Vector3.ZERO, false, true)
+	t.check("body: standing still restores the idle offset", absf(b._yaw_node.position.z - FpBody.BACK) < 0.001)
 	var head := p.find_child("Head", true, false) as MeshInstance3D
 	t.check("body: Head is not in the camera cull mask", head != null and (p.cam.cull_mask & head.layers) == 0 and head.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
 	p.queue_free()
