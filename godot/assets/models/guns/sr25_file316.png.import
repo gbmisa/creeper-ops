@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cofmcnc48krew"
-path="res://.godot/imported/acog3x_Mesh_0_tex.png-e418fd5058fc08a3d6cdea1ef4ea2caf.ctex"
+uid="uid://cfrehd2m6h24p"
+path="res://.godot/imported/sr25_file316.png-f820a5938ee7f4f26a095c1b37d77852.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "1dc9bf8260241bc3cd2a39c81c108816"
+"md5": "3bfa87889d6dadb215e2ec897e54c5fa"
 }
 
 [deps]
 
-source_file="res://assets/models/attachments/acog3x_Mesh_0_tex.png"
-dest_files=["res://.godot/imported/acog3x_Mesh_0_tex.png-e418fd5058fc08a3d6cdea1ef4ea2caf.ctex"]
+source_file="res://assets/models/guns/sr25_file316.png"
+dest_files=["res://.godot/imported/sr25_file316.png-f820a5938ee7f4f26a095c1b37d77852.ctex"]
 
 [params]
 

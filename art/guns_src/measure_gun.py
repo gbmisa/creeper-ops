@@ -1,6 +1,7 @@
 # blender -b --python measure_gun.py -- gun.glb gun_id mounts.json
 # Measures an exported gun (muzzle -Z, Y up, origin at bbox centre) and writes its row in mounts.json:
 # ads_y (top of the centreline = iron sight line), rail, muzzle, under, grip_r, grip_l, mag_l, length.
+# --rail-top: rail y = receiver top instead of ads_y - 0.015 (needed when the iron sights stand well above the receiver).
 # Prints FLIP if the muzzle looks like it points +Z (the thin end should be at -Z); re-export with flip toggled.
 import bpy, sys, json
 from mathutils import Vector
@@ -41,6 +42,10 @@ row = {"length": round(L, 3), "ads_y": round(ads_y, 4),
        "grip_r": [0.0, round(grip_r.y, 4), round(grip_r.z, 4)],
        "grip_l": [0.0, round(under_y, 4), round(zmin + 0.3 * L, 4)],
        "mag_l": [0.0, round(grip_r.y, 4), round(grip_r.z - 0.04 * L, 4)]}
+if "--rail-top" in sys.argv:  # sight bases sit ON the receiver: rail y = median centreline top over +-5 cm around the rail point
+    rz = row["rail"][2]
+    tops = sorted(max(p.y for p in band(z, z + 0.005) if abs(p.x) < 0.01) for z in [rz - 0.05 + 0.005 * i for i in range(20)] if [p for p in band(z, z + 0.005) if abs(p.x) < 0.01])
+    row["rail"][1] = round(tops[len(tops) // 2], 4)
 d = json.load(open(path))
 d[gid] = row
 json.dump(d, open(path, "w"), indent=1, sort_keys=True)
