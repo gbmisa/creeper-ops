@@ -12,6 +12,7 @@ var events := TacEvents.new()
 var noise := BotNoise.new()
 var maps := RangeMaps.new()
 var saved_kit := {}  # was static RangeLoadout.saved: carried kit between maps
+var util := UtilState.new()  # thrown grenades, smoke volumes, grapple hooks (server-owned in MP-2)
 var _seed_counter := 0
 
 

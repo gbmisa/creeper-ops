@@ -31,6 +31,11 @@ const ROWS := {
 	"pack_big": {"name": "Large backpack", "kind": "backpack", "w": 4, "h": 4, "kg": 1.6, "grid": [5, 6]},
 	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4},
 	"med_bandage": {"name": "Bandage", "kind": "med", "w": 1, "h": 1, "kg": 0.05},
+	"util_grapple": {"name": "Grappling hook", "kind": "utility", "w": 2, "h": 2, "kg": 1.1},
+	"util_frag": {"name": "Frag grenade", "kind": "utility", "w": 1, "h": 1, "kg": 0.4},
+	"util_smoke": {"name": "Smoke grenade", "kind": "utility", "w": 1, "h": 1, "kg": 0.5},
+	"util_flash": {"name": "Flashbang", "kind": "utility", "w": 1, "h": 1, "kg": 0.3},
+	"util_binoculars": {"name": "Binoculars", "kind": "utility", "w": 2, "h": 1, "kg": 0.8},
 }
 
 const ARMOR_SIZE := {"vest2": [3, 3, 1.5], "plate4": [3, 3, 6.0], "steel6": [2, 2, 3.5], "helmet3": [2, 2, 1.2]}

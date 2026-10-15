@@ -9,10 +9,11 @@ signal unfit_requested(gun_item: Dictionary, slot: String, drag: bool)  # right-
 
 const C := 36  # cell px
 const SLOT_CELLS := {"primary": Vector2i(5, 2), "secondary": Vector2i(5, 2), "holster": Vector2i(5, 1),
-	"armor": Vector2i(3, 3), "rig": Vector2i(3, 2), "backpack": Vector2i(4, 4)}
-const SLOT_TITLE := {"primary": "PRIMARY", "secondary": "SECONDARY", "holster": "HOLSTER", "armor": "ARMOR", "rig": "RIG", "backpack": "BACKPACK"}
+	"armor": Vector2i(3, 3), "rig": Vector2i(3, 2), "backpack": Vector2i(4, 4), "utility1": Vector2i(2, 2), "utility2": Vector2i(2, 2)}
+const SLOT_TITLE := {"primary": "PRIMARY", "secondary": "SECONDARY", "holster": "HOLSTER", "armor": "ARMOR", "rig": "RIG", "backpack": "BACKPACK", "utility1": "UTILITY 1", "utility2": "UTILITY 2"}
 const KIND_COL := {"gun": Color(0.32, 0.36, 0.42), "mag": Color(0.3, 0.3, 0.3), "ammo": Color(0.55, 0.42, 0.12), "armor": Color(0.25, 0.4, 0.28),
-	"rig": Color(0.45, 0.38, 0.22), "backpack": Color(0.35, 0.45, 0.3), "med": Color(0.6, 0.18, 0.18), "attach": Color(0.2, 0.42, 0.5)}
+	"rig": Color(0.45, 0.38, 0.22), "backpack": Color(0.35, 0.45, 0.3), "med": Color(0.6, 0.18, 0.18), "attach": Color(0.2, 0.42, 0.5),
+	"utility": Color(0.5, 0.32, 0.14)}
 const CHIP := 14.0
 
 var inv: Inventory

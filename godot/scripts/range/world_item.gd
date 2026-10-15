@@ -5,7 +5,8 @@ extends RigidBody3D
 
 const CELL_M := 0.05
 const KIND_COLOUR := {"mag": Color(0.2, 0.2, 0.22), "ammo": Color(0.7, 0.55, 0.15), "armor": Color(0.25, 0.3, 0.22),
-	"rig": Color(0.35, 0.3, 0.2), "backpack": Color(0.3, 0.35, 0.25), "med": Color(0.7, 0.15, 0.15), "attach": Color(0.15, 0.35, 0.45)}
+	"rig": Color(0.35, 0.3, 0.2), "backpack": Color(0.3, 0.35, 0.25), "med": Color(0.7, 0.15, 0.15), "attach": Color(0.15, 0.35, 0.45),
+	"utility": Color(0.45, 0.3, 0.15)}
 
 var item: Dictionary
 
@@ -19,7 +20,15 @@ func setup(it: Dictionary) -> WorldItem:
 	collision_mask = TacticalConfig.LAYER_WORLD
 	mass = maxf(0.2, d["kg"])
 	var size := Vector3(d["w"] * CELL_M, 0.04 + 0.01 * d["h"], d["h"] * CELL_M)
-	if d["kind"] == "gun":
+	if d["kind"] == "utility":
+		var uid: String = str(it["id"]).replace("util_", "")
+		var uglb := (load("res://assets/models/utility/%s.glb" % uid) as PackedScene).instantiate() as Node3D
+		var umi := uglb.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+		var ubb := umi.get_aabb()
+		size = Vector3(maxf(ubb.size.x, 0.05), maxf(ubb.size.y, 0.05), maxf(ubb.size.z, 0.05))
+		uglb.position = -ubb.get_center()
+		add_child(uglb)
+	elif d["kind"] == "gun":
 		var glb := (load("res://assets/models/guns/%s.glb" % WeaponDefs.of(it["id"])["model"]) as PackedScene).instantiate() as Node3D
 		var mi := glb.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
 		var bb := mi.get_aabb()
