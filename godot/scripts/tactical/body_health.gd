@@ -150,3 +150,27 @@ func _check_death() -> bool:
 		bleeds.clear()
 		return true
 	return false
+
+
+## Plain-data snapshot (MULTIPLAYER.md rule 6). Rng state is not serialized.
+func to_dict() -> Dictionary:
+	return {
+		"hp": hp.duplicate(),
+		"armor": armor.duplicate(true),
+		"bleeds": bleeds.duplicate(true),
+		"fractured": fractured.duplicate(),
+		"dead": dead,
+	}
+
+
+static func from_dict(d: Dictionary) -> BodyHealth:
+	var b := BodyHealth.new()
+	b.hp = (d.get("hp", {}) as Dictionary).duplicate()
+	for z in ZONES:
+		if not b.hp.has(z):
+			b.hp[z] = MAX[z]
+	b.armor = (d.get("armor", {}) as Dictionary).duplicate(true)
+	b.bleeds = (d.get("bleeds", []) as Array).duplicate(true)
+	b.fractured = (d.get("fractured", {}) as Dictionary).duplicate()
+	b.dead = bool(d.get("dead", false))
+	return b

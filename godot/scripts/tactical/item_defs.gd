@@ -35,13 +35,6 @@ const ROWS := {
 
 const ARMOR_SIZE := {"vest2": [3, 3, 1.5], "plate4": [3, 3, 6.0], "steel6": [2, 2, 3.5], "helmet3": [2, 2, 1.2]}
 
-static var _uid := 0
-
-
-## Keeps new uids above any loaded one.
-static func note_uid(u: int) -> void:
-	_uid = maxi(_uid, u)
-
 
 static func has(id: String) -> bool:
 	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id) or AttachmentDefs.has(id)
@@ -72,10 +65,10 @@ static func of(id: String) -> Dictionary:
 
 
 ## A fresh item instance. opts: count (ammo), rounds + ammo (mags), rot, gun (a Gun).
-static func make(id: String, opts: Dictionary = {}) -> Dictionary:
-	_uid += 1
+## Uids come from the session's IdSource (MULTIPLAYER.md rule 6), never a static counter.
+static func make(id: String, opts: Dictionary, ids: IdSource) -> Dictionary:
 	var d := of(id)
-	var it := {"id": id, "uid": _uid, "rot": int(opts.get("rot", 0)), "loc": "", "x": 0, "y": 0}
+	var it := {"id": id, "uid": ids.next(), "rot": int(opts.get("rot", 0)), "loc": "", "x": 0, "y": 0}
 	match d["kind"]:
 		"ammo":
 			it["count"] = int(opts.get("count", d["stack"]))

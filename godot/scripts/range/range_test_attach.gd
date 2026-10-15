@@ -12,20 +12,21 @@ static func run(t: RangeTest) -> void:
 	await _functional(t)
 
 
-static func _hand_item(id: String) -> Dictionary:
-	var it := ItemDefs.make(id)
+static func _hand_item(inv: Inventory, id: String) -> Dictionary:
+	var it := inv.make(id)
 	(it["gun"] as Gun).spares.clear()
 	return it
 
 
 static func _data(t: RangeTest) -> void:
+	var scratch := Inventory.new()
 	t.check("attach: 12 attachments (5 sights, 3 muzzle, 3 under, extmag)", AttachmentDefs.ROWS.size() == 12)
 	var counts := {"sight": 0, "muzzle": 0, "under": 0, "mag": 0}
 	var ok := true
 	for id in AttachmentDefs.ROWS:
 		var r: Dictionary = AttachmentDefs.ROWS[id]
 		counts[r["slot"]] += 1
-		ok = ok and ItemDefs.has(id) and ItemDefs.of(id)["kind"] == "attach" and r["note"] != "" and ItemDefs.make(id)["id"] == id
+		ok = ok and ItemDefs.has(id) and ItemDefs.of(id)["kind"] == "attach" and r["note"] != "" and scratch.make(id)["id"] == id
 		for k in r["mods"]:
 			ok = ok and k in STATS
 	t.check("attach: slots 5/3/3/1, every one is an item with a note and known mods", ok and counts == {"sight": 5, "muzzle": 3, "under": 3, "mag": 1})
@@ -92,30 +93,30 @@ static func _modifiers(t: RangeTest) -> void:
 
 static func _inventory(t: RangeTest) -> void:
 	var inv := Inventory.new()
-	var gi := _hand_item("m4a1")
+	var gi := _hand_item(inv, "m4a1")
 	inv.place(gi, "primary")
-	var red := ItemDefs.make("reddot")
+	var red := inv.make("reddot")
 	inv.place(red, "pockets", 0, 0)
 	var r := inv.request_fit(gi, red)
 	t.check("fit: reddot goes on the m4a1 and leaves the inventory", r["ok"] and gi["gun"].fit["sight"] == "reddot" and red["loc"] == "" and not inv.pockets.has(red))
-	var holo := ItemDefs.make("holo")
+	var holo := inv.make("holo")
 	inv.place(holo, "pockets", 1, 0)
 	r = inv.request_fit(gi, holo)
 	t.check("fit: a second sight replaces the first, which comes back as an item", r["ok"] and r["old"]["id"] == "reddot" and gi["gun"].fit["sight"] == "holo")
-	var bad := ItemDefs.make("scope8x")
+	var bad := inv.make("scope8x")
 	r = inv.request_fit(gi, bad)
 	t.check("fit: scope8x on an m4a1 is refused and nothing changes", not r["ok"] and r["why"] != "" and gi["gun"].fit["sight"] == "holo")
 	t.check("fit: weight includes the fitted part", is_equal_approx(ItemDefs.item_kg(gi), WeaponDefs.of("m4a1")["kg"] + AttachmentDefs.ROWS["holo"]["kg"]))
 	gi["gun"].busy_t = 1.0
 	gi["gun"].busy_kind = "reload"
-	t.check("fit: refused while the gun is busy", Attachments.why_not(gi, ItemDefs.make("vgrip")) == "Weapon is busy")
+	t.check("fit: refused while the gun is busy", Attachments.why_not(gi, inv.make("vgrip")) == "Weapon is busy")
 	gi["gun"].busy_t = 0.0
 	gi["gun"].busy_kind = ""
-	var back := InventoryIO.item_from_dict(InventoryIO.item_to_dict(gi))
+	var back := InventoryIO.item_from_dict(InventoryIO.item_to_dict(gi), inv.ids)
 	t.check("fit: the fitted parts survive save / load (map switch)", back["gun"].fit == {"sight": "holo"})
 	var left := Attachments.unfit_to_inv(inv, gi, "sight")
 	t.check("fit: remove puts the part back in the inventory", left.is_empty() and not gi["gun"].fit.has("sight") and inv.pockets.any(func(i): return i["id"] == "holo"))
-	var em := ItemDefs.make("extmag")
+	var em := inv.make("extmag")
 	inv.place(em, "pockets", 2, 0)
 	inv.request_fit(gi, em)
 	var g: Gun = gi["gun"]
@@ -135,21 +136,24 @@ static func _inventory(t: RangeTest) -> void:
 
 ## The live rig: player + weapons + viewmodel, the gun in hand swapped through the primary slot.
 static func _rig(t: RangeTest) -> Dictionary:
+	var session := RangeSession.new(99)
 	var input := InputState.new()
 	t.add_child(input)
 	var player := TacticalPlayer.new()
 	player.input = input
+	player.session = session
+	session.add_player(1, true).node = player
 	t.add_child(player)
 	player.set_physics_process(false)
 	var rack := RangeRack.new()
 	t.add_child(rack)
 	var w := PlayerWeapons.new()
 	t.add_child(w)
-	w.setup(player, input, t.bal, rack)
+	w.setup(player, input, t.bal, rack, session)
 	var vm := TacticalViewmodel.new()
 	player.cam.add_child(vm)
 	vm.setup(w, player)
-	return {"input": input, "player": player, "rack": rack, "w": w, "vm": vm}
+	return {"input": input, "player": player, "rack": rack, "w": w, "vm": vm, "session": session}
 
 
 static func _equip(r: Dictionary, id: String, fit: Array = []) -> Gun:
@@ -157,10 +161,10 @@ static func _equip(r: Dictionary, id: String, fit: Array = []) -> Gun:
 	var old = w.inv.equipped("primary")
 	if old != null:
 		w.inv.remove(old)
-	var it := _hand_item(id)
+	var it := _hand_item(w.inv, id)
 	w.inv.place(it, "primary")
 	for f in fit:
-		w.inv.request_fit(it, ItemDefs.make(f))
+		w.inv.request_fit(it, w.inv.make(f))
 	w.gun_item = {}
 	w.sync()
 	w.select_slot("primary")
@@ -210,6 +214,7 @@ static func _functional(t: RangeTest) -> void:
 	var vm: TacticalViewmodel = r["vm"]
 	var player: TacticalPlayer = r["player"]
 	var input: InputState = r["input"]
+	var session: RangeSession = r["session"]
 	var tree := t.get_tree()
 	await tree.process_frame
 	await _sights(t, r)
@@ -219,7 +224,7 @@ static func _functional(t: RangeTest) -> void:
 	var base_kick := _first_kick(w)
 	var base_noise := [0.0]
 	var cb := func(_p, rad, _k, _s): base_noise[0] = rad
-	BotNoise.listen(cb)
+	session.noise.listen(cb)
 	_fire(w)
 	var base_radius: float = base_noise[0]
 	var base_vel: float = (t.bal.shots.back()["vel"] as Vector3).length()
@@ -251,7 +256,7 @@ static func _functional(t: RangeTest) -> void:
 	_equip(r, "m4a1", ["flashhider"])
 	vm._on_shot({"fired": true, "last": false}, w.gun)
 	t.check("flashhider: no muzzle flash, same noise", not vm.flash.active())
-	BotNoise.listeners.erase(cb)
+	session.noise.listeners.erase(cb)
 	# under grips and laser, extmag
 	await _under_and_mag(t, r)
 	r["w"].queue_free()
@@ -315,11 +320,13 @@ static func _sights(t: RangeTest, r: Dictionary) -> void:
 			await _settle(r, true)
 			t.check("lpvo: starts at 6x", g.stat("scope") == 6.0)
 			input._pressed[Keybinds.DEFAULTS["t_zoom"][2][0]] = true
+			input.frame = input.snap()  # gameplay reads the snapped frame
 			w._commands()  # the action path: t_zoom pressed this frame
 			input._pressed.clear()
 			await t.get_tree().create_timer(0.2).timeout
 			t.check("lpvo: t_zoom drops it to 1x: FOV back to iron, no overlay", g.stat("scope") == 1.0 and is_equal_approx(player.cam.fov, irons) and not w.scoped())
 			input._pressed[Keybinds.DEFAULTS["t_zoom"][2][0]] = true
+			input.frame = input.snap()  # gameplay reads the snapped frame
 			w._commands()  # the action path: t_zoom pressed this frame
 			input._pressed.clear()
 			await t.get_tree().create_timer(0.2).timeout
@@ -399,7 +406,7 @@ static func _under_and_mag(t: RangeTest, r: Dictionary) -> void:
 	eg.mag.rounds.clear()
 	eg.chamber = ""
 	eg.spares.clear()
-	eg.spares.append(InvReload.mag_from_item(ItemDefs.make("mag_m4a1"), int(eg.stat("mag"))))
+	eg.spares.append(InvReload.mag_from_item(w.inv.make("mag_m4a1"), int(eg.stat("mag"))))
 	t.check("extmag: reload is slower (x1.2 time)", eg.reload(false) and is_equal_approx(eg.busy_t, (base_reload * 1.2) + TacticalConfig.CHAMBER_TIME))
 	eg.update(20.0)
 	t.check("extmag: a stock mag loaded into the extended gun holds up to 45", eg.mag.cap == 45)

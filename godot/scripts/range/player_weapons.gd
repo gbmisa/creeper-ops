@@ -18,6 +18,7 @@ var player: TacticalPlayer
 var input: InputState
 var bal: Ballistics
 var rack: RangeRack
+var session: RangeSession
 const HAND_SLOTS := ["primary", "secondary", "holster"]  # keys 1 / 2 / 3
 
 var inv := Inventory.new()
@@ -44,16 +45,19 @@ var _was_left := false
 var _clicked := false
 
 
-func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack) -> void:
+func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack, s: RangeSession) -> void:
 	player = p
 	input = i
 	bal = b
 	rack = r
-	rng.randomize()
-	if RangeLoadout.saved.is_empty():
+	session = s
+	rng.seed = s.next_seed()
+	if s.saved_kit.is_empty():
 		StarterLoadout.fill(inv)
 	else:
-		inv.load_dict(RangeLoadout.saved)
+		inv.load_dict(s.saved_kit)
+	inv.ids = s.ids
+	recoil.tarkov = s.local.recoil_mode if s.local != null else false
 	player.carried_kg = inv.total_kg()
 	select_slot("primary")
 
@@ -101,6 +105,8 @@ func drop_current() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if session != null and session.local != null:
+		recoil.tarkov = session.local.recoil_mode
 	player.spot_mult = LASER_SPOT if gun != null and gun.fit.get("under", "") == "laser" else 1.0
 	_pickup_and_slots()
 	sync()
@@ -139,21 +145,21 @@ func _pickup_and_slots() -> void:
 	var id := rack.pick(player.eye_pos(), -player.cam.global_basis.z)
 	if id != "":
 		prompt = "%s: take %s" % [Keybinds.short("t_use"), WeaponDefs.of(id)["name"]]
-		if player.enabled and input.act("t_use"):
+		if player.enabled and input.frame.act("t_use"):
 			give(id)
 			RangeAudio.event({"kind": "inventory", "item": "gun", "ev": "pick", "local": true})
 	for n in HAND_SLOTS.size():
-		if player.enabled and input.act("t_slot_%d" % (n + 1)):
+		if player.enabled and input.frame.act("t_slot_%d" % (n + 1)):
 			select_slot(HAND_SLOTS[n])
 
 
 func _ads(delta: float) -> void:
-	var want: bool = trigger_ads or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
+	var want: bool = trigger_ads or input.frame.right
 	want = want and not ui_open and not player.sprinting and draw_t < DRAW_TIME * 0.5 and gun.busy_kind != "reload"
 	var rate := 1.0 / (RecoilModel.ads_time(gun.def["ergo"]) * gun.stat("ads_mult"))
 	ads_amt = move_toward(ads_amt, 1.0 if want else 0.0, rate * delta)
 	player.ads_amt = ads_amt
-	holding_breath = ads_amt > 0.9 and input.held("t_sprint") and arm_stamina > 0.0
+	holding_breath = ads_amt > 0.9 and input.frame.held("t_sprint") and arm_stamina > 0.0
 	var drain := 0.0
 	if ads_amt > 0.9:
 		drain = TacticalConfig.ARM_STAMINA_DRAIN_ADS * gun.def["kg"] / 4.0
@@ -166,7 +172,7 @@ func _ads(delta: float) -> void:
 
 
 func _trigger() -> void:
-	var down: bool = (input.left or trigger_down) and not ui_open and not player.sprinting and draw_t <= 0.0
+	var down: bool = (input.frame.left or trigger_down) and not ui_open and not player.sprinting and draw_t <= 0.0
 	var pressed := down and not _was_left
 	_was_left = down
 	if not down:
@@ -193,7 +199,9 @@ func _shoot(res: Dictionary) -> void:
 	for d in gun.shot_dirs(recoil.aim_basis(basis), res["ammo"], ads_amt > 0.8, rng):
 		bal.spawn(origin, d, res["ammo"], [], gun.stat("vel"))
 	recoil.shoot(gun.eff_def(), rng)
-	BotNoise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
+	if session != null:
+		session.noise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
+		session.events.shot_fired.emit(res, gun)
 	RangeAudio.event({"kind": "shot", "item": gun.id, "local": true, "cal": gun.def["cal"], "cls": gun.def["class"],
 		"suppressed": gun.stat("noise") < 0.9})
 	if res["ping"]:
@@ -206,31 +214,31 @@ func _gun_snd(ev: String) -> void:
 
 
 func _commands() -> void:
-	if input.act("drop"):
+	if input.frame.act("drop"):
 		drop_current()
 		return
-	if input.act("t_reload"):
+	if input.frame.act("t_reload"):
 		if _reload_t < DOUBLE_TAP and gun.busy_kind == "reload" and not _reload_fast:
 			gun.busy_t = 0.0
 			gun.busy_kind = ""
 			start_reload(true)
 		else:
 			start_reload(false)
-	if input.act("t_zoom"):
+	if input.frame.act("t_zoom"):
 		gun.toggle_zoom()
 		Sfx.play("click")
-	if input.act("t_fire_mode"):
+	if input.frame.act("t_fire_mode"):
 		gun.cycle_mode()
 		_gun_snd("mode")
-	if input.act("t_zero_up"):
+	if input.frame.act("t_zero_up"):
 		gun.zero_step(1)
-	if input.act("t_zero_down"):
+	if input.frame.act("t_zero_down"):
 		gun.zero_step(-1)
-	if input.act("t_mag_check") and not gun.busy():
+	if input.frame.act("t_mag_check") and not gun.busy():
 		_check_t = TacticalConfig.MAG_CHECK_TIME
 		mag_text = ""
 		action.emit("check", TacticalConfig.MAG_CHECK_TIME)
-	if input.act("t_inspect"):
+	if input.frame.act("t_inspect"):
 		var r := gun.inspect()
 		match r:
 			"ok":

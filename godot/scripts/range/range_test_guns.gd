@@ -19,6 +19,7 @@ static func run(t: RangeTest) -> void:
 static func _each_gun(t: RangeTest) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
+	var rl := InvReload.new(Inventory.new())
 	t.check("roster: 17 guns", WeaponDefs.ORDER.size() == 17 and WeaponDefs.ROWS.size() == 17)
 	for id in WeaponDefs.ORDER:
 		var d := WeaponDefs.of(id)
@@ -49,7 +50,7 @@ static func _each_gun(t: RangeTest) -> void:
 		g.update(10.0)
 		var want: int = d["mag"] if d["action"] != "tube" else 1
 		t.check("%s: reloads from its spare mag" % id, started and (g.mag.count() + (1 if g.chamber != "" else 0)) >= mini(want, spare_rounds if d["action"] != "tube" else 1), "%d" % g.mag.count())
-		var inv_item := InvReload.item_from_mag(id, g.mag, d["cal"]) if d["action"] != "tube" else {}
+		var inv_item := rl.item_from_mag(id, g.mag, d["cal"]) if d["action"] != "tube" else {}
 		if d["action"] != "tube":
 			t.check("%s: gun mag converts to its item" % id, inv_item["id"] == mag_id)
 

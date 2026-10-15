@@ -11,6 +11,7 @@ var player: TacticalPlayer
 var weapons: PlayerWeapons
 var bal: Ballistics
 var log: RangeHitLog
+var session: RangeSession
 var time_s := 0.0
 var kills := 0
 var progress := 0.0
@@ -27,12 +28,13 @@ func build_world() -> void:
 	layout.build()
 
 
-func start(p: TacticalPlayer, w: PlayerWeapons, b: Ballistics, l: RangeHitLog, hud_parent: Node) -> void:
+func start(p: TacticalPlayer, w: PlayerWeapons, b: Ballistics, l: RangeHitLog, hud_parent: Node, s: RangeSession) -> void:
 	player = p
 	weapons = w
 	bal = b
 	log = l
-	BotNoise.reset()
+	session = s
+	session.noise.reset()
 	layout.bake()
 	_label = UiKit.label("", 20, Color(0.8, 1.0, 0.8))
 	_label.position = Vector2(520, 14)
@@ -75,7 +77,7 @@ func spawn_enemies() -> void:
 
 func _spawn(kind: String, pos: Vector3, route: Array[Vector3], idx: int) -> ScavBot:
 	var bot := ScavBot.new()
-	bot.setup(player, bal, layout, "%s %d" % [BotDefs.of(kind)["name"], idx + 1], idx, kind, route)
+	bot.setup(session, bal, layout, "%s %d" % [BotDefs.of(kind)["name"], idx + 1], idx, kind, route)
 	add_child(bot)
 	bot.global_position = pos
 	bot.state_changed.connect(func(b, _f, to): log.add("%s: %s" % [b.label_name, to]))
@@ -168,12 +170,12 @@ func finish(win: bool) -> void:
 	over = true
 	won = win
 	if win:
-		RangeLoadout.save(weapons.inv)   # extract keeps what you carried out, loot included
+		session.save_kit(weapons.inv)   # extract keeps what you carried out, loot included (no map change here; the end screen offers it)
 	else:
-		RangeLoadout.clear()   # KIA loses the kit
+		session.clear_kit()   # KIA loses the kit
 	player.enabled = false
 	for b in bots:
 		if is_instance_valid(b):
 			b.set_physics_process(false)
-	end_screen = SkirmishEnd.new(win, time_s, kills, bots.size())
+	end_screen = SkirmishEnd.new(win, time_s, kills, bots.size(), session)
 	add_child(end_screen)

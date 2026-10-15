@@ -25,7 +25,7 @@ static func build(parent: Node3D, world_items: WorldItems) -> void:
 	l.position = POS + Vector3(0, 0.9, -0.35)
 	var i := 0
 	for row in LOOT:
-		var it := ItemDefs.make(row[0], row[1])
+		var it := world_items.weapons.inv.make(row[0], row[1])
 		var x := -3.0 + (i % COLUMNS) * 0.55
 		var z := 8.6 - (i / COLUMNS) * 0.5
 		world_items.drop(it, Vector3(x, 0.15, z))

@@ -17,6 +17,42 @@ var wheel := 0.0
 var shift := false
 ## Set by the HUD when a key it handles (e.g. menu hotkeys) should not reach the game.
 var on_key: Callable = Callable()
+## Latest input snapshot for gameplay (MULTIPLAYER.md rule 3). Snapped in _process before
+## gameplay runs; gameplay reads frame, never Input.* directly.
+var frame := InputFrame.new()
+var right := false  # right mouse held
+var _seq := 0
+
+
+func _ready() -> void:
+	process_priority = -100  # snap before gameplay
+
+
+func _process(_delta: float) -> void:
+	frame = snap()
+
+
+## Plain-data snapshot of this frame's input for gameplay (or the network, in MP-2).
+func snap() -> InputFrame:
+	var f := InputFrame.new()
+	f.seq = _seq
+	_seq += 1
+	for id in Keybinds.action_ids():
+		if act(id):
+			f._pressed[id] = true
+		if held(id):
+			f._held[id] = true
+	f.mouse = mouse
+	f.mouse_delta = mouse_delta
+	f.left = left
+	f.left_pressed = left_pressed
+	f.left_released = left_released
+	f.right = right
+	f.right_clicked = right_clicked
+	f.wheel = wheel
+	f.shift = shift
+	f.captured = Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	return f
 
 
 func _input(e: InputEvent) -> void:
@@ -43,7 +79,10 @@ func _unhandled_input(e: InputEvent) -> void:
 					down_pos = e.position
 			MOUSE_BUTTON_RIGHT:
 				if e.pressed:
+					right = true
 					right_clicked = true
+				else:
+					right = false
 			MOUSE_BUTTON_WHEEL_UP:
 				if e.ctrl_pressed:  # Ctrl + wheel switches ammo; it does not also zoom or scroll
 					_pressed[Keybinds.CTRL_WHEEL_UP] = true

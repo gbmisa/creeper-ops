@@ -304,3 +304,40 @@ static func _disc(rng: RandomNumberGenerator, radius: float) -> Vector2:
 	var ang := rng.randf() * TAU
 	var r := radius * sqrt(rng.randf())
 	return Vector2(cos(ang), sin(ang)) * r
+
+
+## Plain-data snapshot (MULTIPLAYER.md rule 6). Rng state is not serialized.
+func to_dict() -> Dictionary:
+	var sp := []
+	for m in spares:
+		sp.append(m.to_dict())
+	return {
+		"id": id, "mag": mag.to_dict(), "spares": sp, "chamber": chamber, "mode": mode,
+		"needs_cycle": needs_cycle, "durability": durability, "malf": malf,
+		"malf_known": malf_known, "zero_idx": zero_idx, "busy_kind": busy_kind,
+		"busy_t": busy_t, "fire_cd": fire_cd, "ammo_pick": ammo_pick,
+		"fit": fit.duplicate(), "fit_ver": fit_ver, "zoom_hi": zoom_hi,
+	}
+
+
+static func from_dict(d: Dictionary) -> Gun:
+	var g := Gun.new(str(d.get("id", "ak47")))
+	g.mag = Magazine.from_dict(d.get("mag", {}) as Dictionary)
+	g.spares.clear()
+	for m in d.get("spares", []):
+		g.spares.append(Magazine.from_dict(m as Dictionary))
+	g.chamber = str(d.get("chamber", ""))
+	g.mode = str(d.get("mode", "semi"))
+	g.needs_cycle = bool(d.get("needs_cycle", false))
+	g.durability = float(d.get("durability", 1.0))
+	g.malf = str(d.get("malf", ""))
+	g.malf_known = bool(d.get("malf_known", false))
+	g.zero_idx = int(d.get("zero_idx", 0))
+	g.busy_kind = str(d.get("busy_kind", ""))
+	g.busy_t = float(d.get("busy_t", 0.0))
+	g.fire_cd = float(d.get("fire_cd", 0.0))
+	g.ammo_pick = str(d.get("ammo_pick", ""))
+	g.fit = (d.get("fit", {}) as Dictionary).duplicate()
+	g.fit_ver = int(d.get("fit_ver", 0))
+	g.zoom_hi = bool(d.get("zoom_hi", true))
+	return g

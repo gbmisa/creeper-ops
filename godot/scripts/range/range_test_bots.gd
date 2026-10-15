@@ -3,19 +3,23 @@ class_name RangeTestBots
 ## shooting the player, player death / respawn. Bots run with physics_process off and are stepped by hand.
 
 static var t: RangeTest
+static var session: RangeSession
 static var house: KillHouse
 static var player: TacticalPlayer
 
 
 static func run(test: RangeTest) -> void:
 	t = test
-	BotNoise.reset()
+	session = RangeSession.new(4242)
+	session.noise.reset()
 	house = KillHouse.new()
 	t.add_child(house)
 	house.build()
 	house.bake()
 	player = TacticalPlayer.new()
 	player.input = InputState.new()
+	player.session = session
+	session.add_player(1, true).node = player
 	t.add_child(player)
 	t.add_child(player.input)
 	for i in 8:  # the navigation map syncs every other physics frame
@@ -27,13 +31,13 @@ static func run(test: RangeTest) -> void:
 	_hearing()
 	_cover_heal()
 	await _combat()
-	await RangeTestRoster.run(t, house, player)
-	await RangeTestBotMesh.run(t, house, player)
+	await RangeTestRoster.run(t, session, house, player)
+	await RangeTestBotMesh.run(t, session, house, player)
 
 
 static func _bot(local: Vector3, yaw_deg := 0.0, name := "Test") -> ScavBot:
 	var b := ScavBot.new()
-	b.setup(player, t.bal, house, name, 0)
+	b.setup(session, t.bal, house, name, 0)
 	t.add_child(b)
 	b.set_physics_process(false)
 	b.global_position = house.to_global(local)
@@ -124,14 +128,14 @@ static func _los() -> void:
 static func _hearing() -> void:
 	var b := _bot(Vector3(-10, 0, 8))
 	t.check("scav starts on Patrol", b.brain.state == "Patrol")
-	BotNoise.emit(b.global_position + Vector3(0, 0, 100), BotNoise.SHOT_R, "shot", player)
+	session.noise.emit(b.global_position + Vector3(0, 0, 100), BotNoise.SHOT_R, "shot", player)
 	b.think(0.03)
 	t.check("a shot 100 m away triggers Investigate", b.brain.state == "Investigate")
 	var c := _bot(Vector3(-10, 0, 8), 0.0, "Test2")
-	BotNoise.emit(c.global_position + Vector3(0, 0, 30), BotNoise.step_radius(false, false), "step", player)
+	session.noise.emit(c.global_position + Vector3(0, 0, 30), BotNoise.step_radius(false, false), "step", player)
 	c.think(0.03)
 	t.check("walking footsteps 30 m away are not heard", c.brain.state == "Patrol")
-	BotNoise.emit(c.global_position + Vector3(0, 0, 15), BotNoise.step_radius(true, false), "step", player)
+	session.noise.emit(c.global_position + Vector3(0, 0, 15), BotNoise.step_radius(true, false), "step", player)
 	c.think(0.03)
 	t.check("sprint footsteps 15 m away are heard", c.brain.state == "Investigate")
 	b.queue_free()
