@@ -9,6 +9,15 @@ func run(app: FiringRange) -> void:
 	var w: PlayerWeapons = app.weapons
 	if a.has("weapon"):
 		w.give(str(a["weapon"]))
+		if w.gun == null or w.gun.def["id"] != str(a["weapon"]):  # hand slot for it was full (pistol vs the M1911)
+			for s in PlayerWeapons.HAND_SLOTS:
+				var have = w.inv.equipped(s)
+				if have != null and WeaponDefs.of(have["id"])["class"] == WeaponDefs.of(str(a["weapon"]))["class"]:
+					w.inv.remove(have)
+			w.sync()
+			w.give(str(a["weapon"]))
+		if w.gun != null:
+			w.switched.emit(w.gun)  # the starting gun was selected before the viewmodel connected
 	if a.has("fit") and w.gun != null:  # --fit=reddot,laser: fit those parts on the gun in hand (--zoom=lo = variable sight at 1x)
 		for id in str(a["fit"]).split(","):
 			var r := w.inv.request_fit(w.gun_item, w.inv.make(id))

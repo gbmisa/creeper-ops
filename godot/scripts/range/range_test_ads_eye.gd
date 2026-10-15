@@ -26,5 +26,15 @@ static func run(t: RangeTest) -> void:
 	var pos: Vector3 = TacticalViewmodel.base_pos(def2, 0.45, 1.0)
 	t.check("ADS: base_pos places the butt plate `butt` m behind the eye",
 		absf(pos.z + 0.45 - def2["butt"]) < 0.001)
+	# FB-G: `eye` only ever moves the eye back from the cheek weld (behind a rear sight near the stock).
+	var fwd := []
+	for id in WeaponDefs.ORDER:
+		var d := WeaponDefs.of(id)
+		if TacticalViewmodel.ads_eye(d) > float(d["butt"]) + 0.001:
+			fwd.append(id)
+	t.check("ADS: per-gun eye is never ahead of the cheek weld", fwd.is_empty(), str(fwd))
+	var m4 := WeaponDefs.of("m4a1")
+	t.check("ADS: base_pos uses the per-gun eye when set (m4a1)",
+		absf(TacticalViewmodel.base_pos(m4, 0.42, 1.0).z + 0.42 - float(m4["eye"])) < 0.001)
 	t.check("ADS: near plane is low enough not to clip the visible stock",
 		TacticalViewmodel.ADS_NEAR <= 0.1)

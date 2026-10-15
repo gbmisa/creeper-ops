@@ -29,6 +29,19 @@ no mesh through the camera, stock/receiver not filling the view.
 7. **sr25**: rail top = sight line (0.101), no real rear sight; front post ~1 cm left (x -0.0115). Needs a flip-up rear
    or a default optic: ask Gregory.
 
+## Status 2026-10-15 (Opus, done on fix/fb-guns)
+- Real cause of #2: iron ADS reads `WeaponDefs` `ads_pos.y`, which was a placeholder copied between rows (mp5 0.090,
+  saiga 0.097, sks 0.094 …); `mounts.json` `ads_y` is now kept equal to it. Sight lines measured with
+  `art/guns_src/gun_profile.gd` (vertex dump; wrong for skinned glbs) and from `gun_ortho` `_side` silhouettes.
+- #1: new optional def key `eye` (ADS eye-to-butt, `TacticalViewmodel.ads_eye`, else `butt`; bots keep `butt`):
+  m4a1 0.08, mp5 0.10, vector -0.12, scarh 0.19, sks 0.19, saiga12 0.16, pkm 0.17. #6 mosin x +0.008; sr25 x +0.0115.
+- Hook: `--weapon` now equips pistols (replaces the holstered M1911) and the starting AK (it was selected before the
+  viewmodel connected, so the AK never appeared in shots).
+- Judged (Opus): good: ak47, scarh, saiga12, sks, revolver, glock18, mosin, garand (post barely over the receiver).
+  Look over a solid rear block (no modelled aperture): m4a1, mp5, vector. Model-blocked: pkm (carry handle on the
+  sight line), p90 (no irons), sr25 (rear diopter hole below the rail top; eye 0.104 looks over it). After-sheet:
+  `docs/art/ads/ads_sheet_after.jpg`. #4 garand pitch not needed.
+
 ## Order
 Fix #2 data + #1 code (test: every gun's eye is behind its rear sight), retake the sheet, judge per gun, iterate.
 Then #3/#4/#6, then report #5/#7 choices to Gregory.

@@ -171,19 +171,25 @@ func _process(delta: float) -> void:
 func ads_near() -> float:
 	if _gun == null or not _gun.fit.has("sight"):
 		return ADS_NEAR
-	var sight_z := half_len - float(_def["butt"]) - AttachmentMounts.mount(_def, "sight", half_len).z  # eye to sight centre
+	var sight_z := half_len - ads_eye(_def) - AttachmentMounts.mount(_def, "sight", half_len).z  # eye to sight centre
 	return clampf(sight_z - float(AttachmentDefs.ROWS[_gun.fit["sight"]]["depth"]) * 0.5 - 0.04, 0.03, ADS_NEAR)
 
 
 ## Gun model position under the camera, hip (a = 0) to ADS (a = 1). The butt is shouldered at the hip; when
-## aiming the eye sits `butt` (per-gun data, 0.30 m for stocked guns) ahead of the butt plate (cheek weld, P4),
-## so the stock is in view — ADS_NEAR is small enough not to clip it.
+## aiming the eye sits `ads_eye` ahead of the butt plate (cheek weld, P4), so the stock is in view — ADS_NEAR is
+## small enough not to clip it.
 static func base_pos(def: Dictionary, half: float, a: float) -> Vector3:
 	var hip: Vector3 = def["hip_pos"]
 	hip.z = -maxf(half - HIP_BUTT, HIP_MIN_Z)  # butt tucked behind the eye, gun parallel to the view
 	var ads: Vector3 = def["ads_pos"]
-	ads.z = -(half - float(def["butt"]))
+	ads.z = -(half - ads_eye(def))
 	return hip.lerp(ads, a)
+
+
+## Eye-to-butt-plate distance at full ADS: `eye` where the rear sight is closer to the butt than the cheek weld
+## (the eye must stay behind it), else `butt` (0.30 m for stocked guns, P4).
+static func ads_eye(def: Dictionary) -> float:
+	return float(def.get("eye", def["butt"]))
 
 
 static var tune := false
