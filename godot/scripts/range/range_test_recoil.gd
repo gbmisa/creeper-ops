@@ -7,8 +7,11 @@ const DT := 1.0 / 120.0
 static func run(t: RangeTest) -> void:
 	_rise(t)
 	_plateau(t)
+	_plateau_m4_exact(t)
+	_determinism(t)
 	_camera_vs_barrel(t)
 	_semi_returns(t)
+	_semi_returns_exact(t)
 	_aim_basis(t)
 	_classic(t)
 	if OS.get_cmdline_user_args().has("--recoil-probe"):
@@ -16,10 +19,10 @@ static func run(t: RangeTest) -> void:
 
 
 ## Fires `n` shots at `cadence` s apart (-1 = the gun's rpm); returns [pitch, yaw] of the bore at each shot.
-static func spray(id: String, n: int, cadence := -1.0, tarkov := true) -> Array:
+static func spray(id: String, n: int, cadence := -1.0, tarkov := true, seed := 7) -> Array:
 	var def := WeaponDefs.of(id)
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 7
+	rng.seed = seed
 	var rm := RecoilModel.new()
 	rm.tarkov = tarkov
 	var gap: float = cadence if cadence > 0.0 else 60.0 / def["rpm"]
@@ -147,3 +150,46 @@ static func probe() -> void:
 			for i in 30:
 				row += "%.2f/%.2f " % [s[i][0], s[i][1]]
 			print("[probe] %s %s pitch/yaw per shot: %s" % [id, "tarkov" if mode else "classic", row])
+
+static func _plateau_m4_exact(t: RangeTest) -> void:
+	# Brief: 30-shot M4A1 burst plateaus — climb of shots 20-30 < 10% of climb of shots 1-10.
+	var s := spray("m4a1", 31)
+	var early: float = s[10][0] - s[0][0]
+	var late: float = s[30][0] - s[19][0]
+	t.check("tarkov: M4A1 shots 20-30 climb < 10%% of shots 1-10 (%.3f vs %.3f)" % [late, early],
+		early > 0.0 and late < 0.1 * early)
+
+
+static func _determinism(t: RangeTest) -> void:
+	# Same seed -> the same learnable pattern; a different seed -> a different one.
+	var a := spray("ak47", 30, -1.0, true, 7)
+	var b := spray("ak47", 30, -1.0, true, 7)
+	var same := true
+	for i in 30:
+		same = same and (a[i] as Vector2).is_equal_approx(b[i])
+	t.check("tarkov: same seed gives the same recoil pattern", same)
+	var c := spray("ak47", 30, -1.0, true, 8)
+	var diff := false
+	for i in 30:
+		diff = diff or not (a[i] as Vector2).is_equal_approx(c[i])
+	t.check("tarkov: different seed gives a different pattern", diff)
+
+
+static func _semi_returns_exact(t: RangeTest) -> void:
+	# Brief: semi at 2 shots/s (0.5 s apart) returns within 0.1 deg of the start before each shot.
+	var def := WeaponDefs.of("sks")
+	var rm := RecoilModel.new()
+	rm.tarkov = true
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var ok := true
+	for i in 6:
+		if i > 0:
+			ok = ok and rm.barrel.length() < 0.1
+		rm.shoot(def, rng)
+		var left := 0.5
+		while left > 1e-6:
+			var h := minf(DT, left)
+			rm.update(h, def["ergo"], def)
+			left -= h
+	t.check("tarkov: SKS at 2 shots/s is within 0.1 deg of aim before every shot", ok)
