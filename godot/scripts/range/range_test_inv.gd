@@ -11,6 +11,11 @@ static func run(t: RangeTest) -> void:
 	_reload_swap(t)
 	_tube(t)
 	_weight(t)
+	_drop_pickup(t)
+	_drop_no_room(t)
+	_quick_move(t)
+	_crate(t)
+	_keybinds(t)
 
 
 static func _defs(t: RangeTest) -> void:
@@ -176,3 +181,77 @@ static func _weight(t: RangeTest) -> void:
 	inv.to_gun(mp["uid"], m1911["uid"])
 	# 3.6 + 1.1 + 0.8 + (0.23+0.48) + (0.09+0.105) = 6.405
 	t.check("weight sums items + mags + rounds", absf(inv.total_kg() - 6.405) < 0.01, str(inv.total_kg()))
+
+
+static func _drop_pickup(t: RangeTest) -> void:
+	var inv := Inventory.new()
+	var ak: Dictionary = inv.make("ak47")
+	inv.place(ak["uid"], "primary", 0, 0)
+	var mag: Dictionary = inv.make("mag_762x39")
+	inv.to_gun(mag["uid"], ak["uid"])
+	var gun := Gun.new("ak47")
+	var data := WorldItem.pack_gun(inv, ak["uid"], gun)
+	t.check("drop packs gun and its mag", (data["items"] as Array).size() == 2)
+	t.check("gun leaves the inventory", not inv.items.has(ak["uid"]))
+	var placed: Array = WorldItem.unpack(inv, data)
+	t.check("pickup restores both items", placed.size() == 2)
+	t.check("gun back in primary", str((inv.loc[ak["uid"]] as Dictionary)["c"]) == "primary")
+	var mid := inv.mag_in_gun(ak["uid"])
+	t.check("mag re-attached with 30 rounds",
+		mid != -1 and int((inv.items[mid] as Dictionary)["rounds"]) == 30)
+
+
+static func _drop_no_room(t: RangeTest) -> void:
+	var inv := Inventory.new()
+	for s in ["primary", "secondary"]:
+		var g: Dictionary = inv.make("ak47")
+		inv.place(g["uid"], s, 0, 0)
+	var ak: Dictionary = inv.make("ak47")  # never placed
+	var mag: Dictionary = inv.make("mag_762x39")
+	inv.to_gun(mag["uid"], ak["uid"])
+	var mid := inv.mag_in_gun(ak["uid"])
+	var data := {"items": [inv.items[mid], ak]}  # mag first on purpose
+	inv.items.erase(ak["uid"])
+	inv.items.erase(mid)
+	var placed: Array = WorldItem.unpack(inv, data)
+	t.check("gun does not fit anywhere", not placed.has(ak["uid"]))
+	t.check("mag becomes loose", placed.has(mid) and not bool((inv.items[mid] as Dictionary)["in_gun"]))
+	t.check("loose mag lands in pockets", str((inv.loc[mid] as Dictionary)["c"]) == "pockets")
+
+
+static func _quick_move(t: RangeTest) -> void:
+	var inv := Inventory.new()
+	var rig: Dictionary = inv.make("rig_std")
+	inv.place(rig["uid"], "rig", 0, 0)
+	var pack: Dictionary = inv.make("pack_small")
+	inv.place(pack["uid"], "backpack", 0, 0)
+	var ak: Dictionary = inv.make("ak47")
+	inv.place(ak["uid"], "primary", 0, 0)
+	t.check("quick move slotted gun to grid", inv.quick_move(ak["uid"]))
+	t.check("gun left primary", (inv.equipped("primary") as Dictionary).is_empty())
+	t.check("gun in rig grid first", str((inv.loc[ak["uid"]] as Dictionary)["c"]) == "rig_grid")
+	var inv2 := Inventory.new()
+	var rig2: Dictionary = inv2.make("rig_std")
+	inv2.place(rig2["uid"], "rig", 0, 0)
+	var mag: Dictionary = inv2.make("mag_762x39")
+	inv2.place(mag["uid"], "pockets", 0, 0, 1)  # 1x2 mag fits 4x1 pockets rotated
+	t.check("quick move mag prefers rig", inv2.quick_move(mag["uid"]))
+	t.check("mag in rig grid", str((inv2.loc[mag["uid"]] as Dictionary)["c"]) == "rig_grid")
+
+
+static func _crate(t: RangeTest) -> void:
+	var s := RangeCrate.default_stock()
+	t.check("crate has stock", s.size() >= 15)
+	var ok := true
+	for id in s:
+		if (ItemDefs.of(id) as Dictionary).is_empty():
+			ok = false
+	t.check("all crate ids valid", ok)
+	t.check("crate covers mags/ammo/rig/pack/armor/med",
+		s.has("mag_762x39") and s.has("ammo_12ga") and s.has("rig_std")
+		and s.has("pack_big") and s.has("armor_vest") and s.has("med_ifak"))
+
+
+static func _keybinds(t: RangeTest) -> void:
+	t.check("t_inventory bound to Tab", Keybinds.keys("t_inventory").has(KEY_TAB))
+	t.check("t_drop bound to G", Keybinds.keys("t_drop").has(KEY_G))

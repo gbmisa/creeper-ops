@@ -12,6 +12,9 @@ var menu: RangeMenu
 var targets: RangeTargets
 var hit_log: RangeHitLog
 var bots: RangeBots
+var inv_ui: InventoryUI
+var crate: RangeCrate
+var world_items: Array = []
 
 
 func _ready() -> void:
@@ -71,6 +74,15 @@ func _build() -> void:
 	var bench := RangeBench.new()
 	add_child(bench)
 	bench.setup(weapons, player, targets, hit_log)
+	crate = RangeCrate.new()
+	add_child(crate)
+	crate.position = RangeLayout.RACK_POS + Vector3(2.2, 0, 0)
+	inv_ui = InventoryUI.new()
+	add_child(inv_ui)
+	inv_ui.setup(player, weapons)
+	inv_ui.world_items = world_items
+	weapons.world_items = world_items
+	weapons.drop_requested.connect(_on_drop_requested)
 	var hud := RangeHud.new()
 	add_child(hud)
 	hud.setup(weapons, player)
@@ -100,4 +112,38 @@ func _process(_dt: float) -> void:
 		else:
 			player.enabled = false
 			menu.open()
+	if not menu.visible and player.enabled and input.act("t_inventory"):
+		inv_ui.toggle()
+	if not menu.visible and player.enabled and not inv_ui.is_open and input.act("t_drop"):
+		weapons.drop_held()
+	_take_from_crate()
 	input.end_frame()
+
+
+## Supply crate: F takes the next stocked item via first_fit (only when nothing
+## else claimed the use prompt this frame).
+func _take_from_crate() -> void:
+	if crate == null or not player.enabled or inv_ui.is_open or weapons.prompt != "":
+		return
+	var cid := crate.pick(player.eye_pos())
+	if cid == "":
+		return
+	weapons.prompt = "%s: take %s (crate)" % [Keybinds.short("t_use"), ItemDefs.of(cid)["name"]]
+	if input.act("t_use"):
+		var id := crate.take_next()
+		var item := weapons.inv.make(id)
+		if weapons.inv.first_fit(item):
+			weapons.sync_weight()
+		else:
+			weapons.inv.remove(item["uid"])
+			weapons.message.emit("No room for %s" % ItemDefs.of(id)["name"])
+
+
+## An inventory item dropped to the ground becomes a physics pickup in front of the player.
+func _on_drop_requested(data: Dictionary) -> void:
+	var wi := WorldItem.make_node(data)
+	var fwd := -player.cam.global_basis.z
+	fwd.y = 0.0
+	wi.position = player.global_position + fwd.normalized() * 1.2 + Vector3(0, 0.6, 0)
+	add_child(wi)
+	world_items.append(wi)

@@ -268,6 +268,33 @@ func _activate_grid(grid: String, wh: Array) -> void:
 
 
 ## Returns false if a rig/backpack grid still holds items (caller must empty it first).
+## Ctrl+click: a slotted item goes to the first fitting grid (rig, pockets, backpack);
+## a grid item uses first_fit (slot first, then grids).
+func quick_move(uid: int) -> bool:
+	if not items.has(uid) or not loc.has(uid):
+		return false
+	var item: Dictionary = items[uid]
+	var from: String = (loc[uid] as Dictionary)["c"]
+	var dims := cell_size(item)
+	if SLOT_NAMES.has(from):
+		var w: int = dims[0]
+		var h: int = dims[1]
+		for g in _grid_order():
+			var dd: Vector2i = grid_dim[g]
+			for r in [0, 1]:
+				var cw := w if r == 0 else h
+				var ch := h if r == 0 else w
+				if cw > dd.x or ch > dd.y:
+					continue
+				for yy in dd.y - ch + 1:
+					for xx in dd.x - cw + 1:
+						if place(uid, g, xx, yy, r):
+							return true
+		return false
+	item["rot"] = 0
+	return first_fit(item)
+
+
 func _unplace(uid: int, force: bool = false) -> bool:
 	if not loc.has(uid):
 		return true

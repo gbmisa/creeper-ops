@@ -98,6 +98,8 @@ const DEFAULTS := {
 	"t_slot_4": ["Tactical", "Weapon slot 4", [KEY_4]],
 	"t_slot_5": ["Tactical", "Weapon slot 5", [KEY_5]],
 	"t_slot_6": ["Tactical", "Weapon slot 6", [KEY_6]],
+	"t_inventory": ["Tactical", "Open inventory", [KEY_TAB]],
+	"t_drop": ["Tactical", "Drop held weapon", [KEY_G]],
 }
 
 static var _map := {}  # id -> Array[int] (current keys)

@@ -1,6 +1,7 @@
 class_name RangeRack
 extends Node3D
-## Wall rack with the six guns. pick() chooses the gun nearest the player's view ray; take() hides it.
+## Wall rack with the six guns. pick() chooses the gun nearest the player's view ray.
+## F takes a copy via first_fit; the rack keeps its guns (take() is kept for API compat).
 
 const TIER_Y := 0.75
 const TIER_STEP := 0.3

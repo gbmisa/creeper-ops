@@ -7,6 +7,7 @@ signal shot(res: Dictionary, gun: Gun)
 signal action(kind: String, secs: float)  # "reload", "fix", "cycle"
 signal switched(gun: Gun)
 signal message(text: String)
+signal drop_requested(data: Dictionary)  # inventory item(s) dropped to the ground
 
 const DOUBLE_TAP := 0.35
 const DRAW_TIME := 0.45
@@ -17,6 +18,8 @@ var input: InputState
 var bal: Ballistics
 var rack: RangeRack
 var inv: Inventory
+var world_items: Array = []  # WorldItem nodes, set by FiringRange
+var ui_open := false  # set by InventoryUI; blocks shooting / commands / pickups
 var gun_objs := {}  # gun item uid -> Gun
 var gun_uid := -1  # item uid of the selected gun
 var gun: Gun
@@ -88,7 +91,7 @@ func give(id: String) -> void:
 		inv.remove(item["uid"])
 		message.emit("No room for %s" % ItemDefs.of(id)["name"])
 		return
-	rack.take(id)
+	# rack keeps its guns: F takes a copy
 	_sync_weight()
 	# select the slot it landed in
 	var l: Dictionary = inv.loc[item["uid"]]
@@ -148,7 +151,8 @@ func select_slot(slot: String) -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	_pickup_and_slots()
+	if not ui_open:
+		_pickup_and_slots()
 	if gun == null or not player.enabled:
 		_idle(delta)
 		return
@@ -156,9 +160,13 @@ func _process(delta: float) -> void:
 	gun.update(delta)
 	draw_t = maxf(0.0, draw_t - delta)
 	_reload_t += delta
-	_ads(delta)
-	_trigger()
-	_commands()
+	if ui_open:
+		ads_amt = move_toward(ads_amt, 0.0, delta * 4.0)
+		player.ads_amt = ads_amt
+	else:
+		_ads(delta)
+		_trigger()
+		_commands()
 	if before != "" and gun.busy_kind == "" and before == "reload":
 		Sfx.play("crossbow_clack")
 	recoil.update(delta, gun.def["ergo"])
@@ -183,6 +191,12 @@ func _pickup_and_slots() -> void:
 		prompt = "%s: take %s" % [Keybinds.short("t_use"), WeaponDefs.of(id)["name"]]
 		if player.enabled and input.act("t_use"):
 			give(id)
+	else:
+		var wi := nearest_world_item()
+		if wi != null:
+			prompt = "%s: take %s" % [Keybinds.short("t_use"), wi.title_text()]
+			if player.enabled and input.act("t_use"):
+				pickup_world_item(wi)
 	for pair in [["t_slot_1", "primary"], ["t_slot_2", "secondary"], ["t_slot_3", "holster"]]:
 		if player.enabled and input.act(pair[0]):
 			select_slot(pair[1])
@@ -385,6 +399,79 @@ func cycle_ammo_grade() -> void:
 		if d["kind"] == "mag" and d["cal"] == gun.def["cal"]:
 			it["ammo"] = grade
 			it["rounds"] = d["cap"]
+	_sync_weight()
+
+
+## Recompute carried weight (public so the inventory UI can call it after moves).
+func sync_weight() -> void:
+	_sync_weight()
+
+
+## Drop the gun in hand to the ground (G). Selects another gun if one is left.
+func drop_held() -> void:
+	if gun == null or gun_uid == -1:
+		return
+	drop_item(gun_uid)
+	if gun == null:
+		for s in ["primary", "secondary", "holster"]:
+			if not (inv.equipped(s) as Dictionary).is_empty():
+				select_slot(s)
+				break
+
+
+## Drop any inventory item to the ground; guns take their inserted mag with them.
+func drop_item(uid: int) -> void:
+	if not inv.items.has(uid):
+		return
+	var idef := ItemDefs.of((inv.items[uid] as Dictionary)["id"])
+	var data := {"items": []}
+	if idef["kind"] == "gun":
+		var g: Gun = gun_objs.get(uid)
+		if uid == gun_uid:
+			_write_mag_back()
+			g = gun
+			gun = null
+			gun_uid = -1
+		data = WorldItem.pack_gun(inv, uid, g)
+		gun_objs.erase(uid)
+	else:
+		(data["items"] as Array).append(inv.remove(uid))
+	if (data["items"] as Array).is_empty():
+		return
+	drop_requested.emit(data)
+	_sync_weight()
+
+
+func nearest_world_item() -> WorldItem:
+	var best: WorldItem = null
+	var bd := WorldItem.REACH
+	var ep := player.eye_pos()
+	for wi in world_items:
+		if not is_instance_valid(wi):
+			continue
+		var d: float = ep.distance_to((wi as Node3D).global_position)
+		if d < bd:
+			bd = d
+			best = wi
+	return best
+
+
+## Pick up a world item via first_fit. Items that don't fit stay on the ground.
+func pickup_world_item(wi: WorldItem) -> void:
+	var placed: Array = WorldItem.unpack(inv, wi.data)
+	if placed.is_empty():
+		message.emit("No room for %s" % wi.title_text())
+		return
+	var remaining: Array = []
+	for it in wi.data.get("items", []):
+		if not placed.has((it as Dictionary)["uid"]):
+			remaining.append(it)
+	wi.data["items"] = remaining
+	if remaining.is_empty():
+		world_items.erase(wi)
+		wi.queue_free()
+	else:
+		wi.refresh_label()
 	_sync_weight()
 
 
