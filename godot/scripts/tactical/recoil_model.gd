@@ -2,10 +2,11 @@ class_name RecoilModel
 extends RefCounted
 ## Camera / viewmodel recoil offset (degrees: x = pitch up, y = yaw) plus idle sway.
 
-## Classic (default): instant offset, bullets follow the camera. Tarkov (static flag, Esc menu): each shot is an
-## impulse into a critically damped spring on the BARREL; the camera only follows by `cam_share`, the viewmodel and
-## the bullets use the full barrel angle. `conv` pulls the barrel target back, so auto fire plateaus.
-static var tarkov := false
+## Classic (default): instant offset, bullets follow the camera. Tarkov (per-player flag, Esc menu):
+## each shot is an impulse into a critically damped spring on the BARREL; the camera only follows
+## by `cam_share`, the viewmodel and the bullets use the full barrel angle. `conv` pulls the
+## barrel target back, so auto fire plateaus.
+var tarkov := false
 
 var offset := Vector2.ZERO  # camera offset (deg): x = pitch up, y = yaw
 var barrel := Vector2.ZERO  # Tarkov only: bore angle from the un-recoiled aim (deg)

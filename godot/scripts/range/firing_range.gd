@@ -4,6 +4,7 @@ extends Node3D
 
 var args := {}
 var input: InputState
+var session: RangeSession
 var player: TacticalPlayer
 var weapons: PlayerWeapons
 var bal: Ballistics
@@ -21,7 +22,7 @@ func _ready() -> void:
 	Keybinds.persist = false
 	args = RangeArgs.parse()
 	if args.has("map"):
-		RangeMaps.selected = str(args["map"])
+		RangeMaps.pending = str(args["map"])
 	process_priority = 100  # runs after the player / weapons, so end_frame() clears input last
 	if args.has("range-test"):
 		var t := RangeTest.new()
@@ -38,9 +39,13 @@ func _ready() -> void:
 
 
 func _build() -> void:
+	session = RangeSession.new(int(args.get("seed", 0)))
+	if args.has("map"):
+		RangeMaps.pending = str(args["map"])
+	session.maps.selected = RangeMaps.pending
 	input = InputState.new()
 	add_child(input)
-	var is_skirmish := RangeMaps.selected == "skirmish"
+	var is_skirmish := session.maps.selected == "skirmish"
 	if is_skirmish:
 		skirmish = SkirmishGame.new()
 		add_child(skirmish)
@@ -56,8 +61,11 @@ func _build() -> void:
 	var impacts := RangeImpacts.new()
 	add_child(impacts)
 	bal.impact.connect(impacts.on_impact)
+	var ps := session.add_player(1, true)
 	player = TacticalPlayer.new()
 	player.input = input
+	player.session = session
+	ps.node = player
 	add_child(player)
 	player.global_position = SkirmishData.SPAWN if is_skirmish else RangeLayout.SPAWN
 	player.yaw = 0.0
@@ -67,7 +75,7 @@ func _build() -> void:
 	fp_body.setup(player)
 	weapons = PlayerWeapons.new()
 	add_child(weapons)
-	weapons.setup(player, input, bal, rack)
+	weapons.setup(player, input, bal, rack, session)
 	var vm := TacticalViewmodel.new()
 	player.cam.add_child(vm)
 	vm.setup(weapons, player)
@@ -102,21 +110,22 @@ func _build() -> void:
 	body_hud.setup(player)
 	bots = RangeBots.new()
 	if is_skirmish:
-		skirmish.start(player, weapons, bal, hit_log, hud)
+		skirmish.start(player, weapons, bal, hit_log, hud, session)
 		bots.bots = skirmish.bots
-		if RangeLoadout.saved.is_empty():
+		if session.saved_kit.is_empty():
 			weapons.give("m1911")   # fallback only when no kit was deployed
 	else:
 		add_child(bots)
-		bots.setup(player, weapons, bal, hit_log)
+		bots.setup(session, weapons, bal, hit_log)
 	player.god = args.has("god")
 	if args.has("bots") and not is_skirmish:
 		bots.spawn_scavs()
 	menu = RangeMenu.new()
 	add_child(menu)
+	menu.setup(session)
 	menu.resumed.connect(func(): player.enabled = true)
-	menu.deploy_requested.connect(func(): RangeLoadout.deploy(weapons.inv))
-	menu.reset_requested.connect(func(): get_tree().reload_current_scene())
+	menu.deploy_requested.connect(func(): session.deploy(weapons.inv))
+	menu.reset_requested.connect(func(): session.maps.change(session.maps.selected))
 	if not args.has("shot"):
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 

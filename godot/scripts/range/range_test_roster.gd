@@ -3,20 +3,22 @@ class_name RangeTestRoster
 ## relocation, shotgunner closing in, boss followers staying near. Reuses the kill house and player from RangeTestBots.
 
 static var t: RangeTest
+static var session: RangeSession
 
 
-static func run(test: RangeTest, house: Node3D, player: TacticalPlayer) -> void:
+static func run(test: RangeTest, s: RangeSession, house: Node3D, player: TacticalPlayer) -> void:
 	t = test
+	session = s
 	_rows(house, player)
 	_marksman(house, player)
 	await _shotgunner(house, player)
 	await _boss(house, player)
-	await RangeTestSkirmish.run(t, player)
+	await RangeTestSkirmish.run(t, session, player)
 
 
-static func make(house: Node3D, player: TacticalPlayer, kind: String, local: Vector3, yaw := 0.0, route: Array[Vector3] = []) -> ScavBot:
+static func make(s: RangeSession, house: Node3D, player: TacticalPlayer, kind: String, local: Vector3, yaw := 0.0, route: Array[Vector3] = []) -> ScavBot:
 	var b := ScavBot.new()
-	b.setup(player, t.bal, house, kind, 0, kind, route)
+	b.setup(s, t.bal, house, kind, 0, kind, route)
 	t.add_child(b)
 	b.set_physics_process(false)
 	b.global_position = house.to_global(local)
@@ -28,7 +30,7 @@ static func _rows(house: Node3D, player: TacticalPlayer) -> void:
 	var ok := true
 	var why := ""
 	for k in BotDefs.ORDER:
-		var b := make(house, player, k, Vector3(-10, 0, 8))
+		var b := make(session, house, player, k, Vector3(-10, 0, 8))
 		var d := BotDefs.of(k)
 		if b.gun.def["id"] != d["gun"]:
 			ok = false
@@ -57,8 +59,8 @@ static func _rows(house: Node3D, player: TacticalPlayer) -> void:
 
 static func _marksman(house: Node3D, player: TacticalPlayer) -> void:
 	var spots: Array[Vector3] = [house.to_global(Vector3(-10, 0, 8)), house.to_global(Vector3(-10, 0, -8))]
-	var m := make(house, player, "marksman", Vector3(-10, 0, 8), 0.0, spots)
-	var r := make(house, player, "rifleman", Vector3(-10, 0, 8))
+	var m := make(session, house, player, "marksman", Vector3(-10, 0, 8), 0.0, spots)
+	var r := make(session, house, player, "rifleman", Vector3(-10, 0, 8))
 	t.check("marksman sight range is longer than a rifleman's (>= 120 m)", m.percept.range_m > r.percept.range_m and m.percept.range_m >= 120.0)
 	var eye := Vector3.ZERO
 	t.check("marksman sees a target at 150 m, rifleman does not", BotPerception.in_view(eye, Vector3.FORWARD, Vector3(0, 0, -150), m.percept.range_m) \
@@ -91,8 +93,8 @@ static func _marksman(house: Node3D, player: TacticalPlayer) -> void:
 static func _shotgunner(house: Node3D, player: TacticalPlayer) -> void:
 	player.god = true
 	player.global_position = house.to_global(Vector3(14, 0, 3.8))
-	var sg := make(house, player, "shotgunner", Vector3(-3, 0, 3.8), -90.0)
-	var rf := make(house, player, "rifleman", Vector3(-3, 0, 3.8), -90.0)
+	var sg := make(session, house, player, "shotgunner", Vector3(-3, 0, 3.8), -90.0)
+	var rf := make(session, house, player, "rifleman", Vector3(-3, 0, 3.8), -90.0)
 	sg.percept.alert(player.global_position)
 	rf.percept.alert(player.global_position)
 	var start := sg.global_position.distance_to(player.global_position)
@@ -113,10 +115,10 @@ static func _shotgunner(house: Node3D, player: TacticalPlayer) -> void:
 
 static func _boss(house: Node3D, player: TacticalPlayer) -> void:
 	player.global_position = house.to_global(Vector3(-30, 0, 0))
-	var boss := make(house, player, "boss", Vector3(-10, 0, -8))
+	var boss := make(session, house, player, "boss", Vector3(-10, 0, -8))
 	var fs: Array[ScavBot] = []
 	for i in BotDefs.of("boss")["followers"]:
-		var f := make(house, player, "rifleman", Vector3(-10 + i, 0, -9))
+		var f := make(session, house, player, "rifleman", Vector3(-10 + i, 0, -9))
 		f.leader = boss
 		fs.append(f)
 	for i in 900:

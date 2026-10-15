@@ -23,7 +23,7 @@ static func fit(inv: Inventory, gun_item: Dictionary, att: Dictionary) -> Dictio
 	var slot: String = AttachmentDefs.ROWS[att["id"]]["slot"]
 	var old := {}
 	if g.fit.has(slot):
-		old = ItemDefs.make(g.fit[slot])
+		old = inv.make(g.fit[slot])
 	inv.remove(att)
 	g.set_fit(slot, att["id"])
 	return {"ok": true, "why": "", "old": old}
@@ -31,7 +31,7 @@ static func fit(inv: Inventory, gun_item: Dictionary, att: Dictionary) -> Dictio
 
 ## Takes the part in `slot` off. Returns {item, spill}: the part as a new item (loc "") and loose rounds that no
 ## longer fit the magazine as ammo items. {} if nothing is fitted or the gun is busy.
-static func unfit(gun_item: Dictionary, slot: String) -> Dictionary:
+static func unfit(inv: Inventory, gun_item: Dictionary, slot: String) -> Dictionary:
 	var g: Gun = gun_item["gun"]
 	if not g.fit.has(slot) or g.busy():
 		return {}
@@ -42,13 +42,13 @@ static func unfit(gun_item: Dictionary, slot: String) -> Dictionary:
 	for r in spill_rounds:
 		counts[r] = int(counts.get(r, 0)) + 1
 	for r in counts:
-		spill.append(ItemDefs.make(r, {"count": counts[r]}))
-	return {"item": ItemDefs.make(id), "spill": spill}
+		spill.append(inv.make(r, {"count": counts[r]}))
+	return {"item": inv.make(id), "spill": spill}
 
 
 ## unfit + put the part (and spill) in the inventory. Returns the items that found no room (the caller drops them).
 static func unfit_to_inv(inv: Inventory, gun_item: Dictionary, slot: String) -> Array:
-	var r := unfit(gun_item, slot)
+	var r := unfit(inv, gun_item, slot)
 	var left := []
 	if r.is_empty():
 		return left

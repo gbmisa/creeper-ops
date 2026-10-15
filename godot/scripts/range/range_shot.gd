@@ -11,7 +11,7 @@ func run(app: FiringRange) -> void:
 		w.give(str(a["weapon"]))
 	if a.has("fit") and w.gun != null:  # --fit=reddot,laser: fit those parts on the gun in hand (--zoom=lo = variable sight at 1x)
 		for id in str(a["fit"]).split(","):
-			var r := w.inv.request_fit(w.gun_item, ItemDefs.make(id))
+			var r := w.inv.request_fit(w.gun_item, w.inv.make(id))
 			if not r["ok"]:
 				print("[range] fit ", id, " refused: ", r["why"])
 		w.gun.zoom_hi = str(a.get("zoom", "hi")) != "lo"

@@ -43,17 +43,17 @@ static func item_to_dict(it: Dictionary) -> Dictionary:
 	return out
 
 
-static func item_from_dict(d: Dictionary) -> Dictionary:
+static func item_from_dict(d: Dictionary, ids: IdSource) -> Dictionary:
 	var it := {}
 	for k in d:
 		match k:
 			"gun":
 				it[k] = gun_from_dict(d[k])
 			"items":
-				it[k] = (d[k] as Array).map(item_from_dict)
+				it[k] = (d[k] as Array).map(func(x): return item_from_dict(x, ids))
 			_:
 				it[k] = d[k]
-	ItemDefs.note_uid(int(it["uid"]))
+	ids.note(int(it["uid"]))
 	return it
 
 
@@ -67,6 +67,6 @@ static func to_dict(inv: Inventory) -> Dictionary:
 static func load_dict(inv: Inventory, d: Dictionary) -> void:
 	for s in Inventory.SLOTS:
 		var sd: Dictionary = d["slots"].get(s, {})
-		inv.slots[s] = item_from_dict(sd) if not sd.is_empty() else null
-	inv.pockets = (d["pockets"] as Array).map(item_from_dict)
+		inv.slots[s] = item_from_dict(sd, inv.ids) if not sd.is_empty() else null
+	inv.pockets = (d["pockets"] as Array).map(func(x): return item_from_dict(x, inv.ids))
 	inv.ground.clear()
