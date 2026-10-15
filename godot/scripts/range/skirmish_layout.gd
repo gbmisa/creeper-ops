@@ -45,11 +45,32 @@ func _building(d: Dictionary, id: String) -> void:
 		_second_floor(r, h, d)
 	else:
 		SkirmishParts.slab(self, Rect2(r.position - Vector2(0.15, 0.15), r.size + Vector2(0.3, 0.3)), h + 0.2, 0.2, "concrete", Color(0.3, 0.3, 0.32))
+	_ceiling_light(r.get_center().x, h, r.get_center().y)
+	if d["floors"] == 2:
+		_ceiling_light(r.get_center().x, h * 2.0, r.get_center().y)
+
+
+## F26: ceiling light fixture (emissive mesh + OmniLight3D, shadows off) for a building interior.
+## Replaces the old bare floating light; `ceil_y` is the ceiling height the fixture hangs from.
+func _ceiling_light(x: float, ceil_y: float, z: float) -> void:
+	var fix := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.6, 0.12, 0.6)
+	fix.mesh = bm
+	var fm := StandardMaterial3D.new()
+	fm.albedo_color = Color(0.85, 0.82, 0.7)
+	fm.emission_enabled = true
+	fm.emission = Color(1.0, 0.85, 0.6)
+	fm.emission_energy_multiplier = 2.0
+	fix.material_override = fm
+	fix.position = Vector3(x, ceil_y - 0.12, z)
+	add_child(fix)
 	var l := OmniLight3D.new()
-	l.position = Vector3(r.get_center().x, h - 0.4, r.get_center().y)
+	l.position = Vector3(x, ceil_y - 0.35, z)
 	l.omni_range = 11.0
 	l.light_energy = 1.2
 	l.light_color = Color(1.0, 0.85, 0.65)
+	l.shadow_enabled = false
 	add_child(l)
 
 

@@ -140,7 +140,7 @@ static func _wall_signs(n: Node3D) -> void:
 	LookSigns.stencil(n, "BLOCK B", Vector3(26.5, 2.0, 10.2), 0.0, 0.5, c)
 	LookSigns.stencil(n, "BLOCK B", Vector3(26.5, 2.0, -0.2), 180.0, 0.5, c)
 	LookSigns.stencil(n, "ADMIN", Vector3(-22.0, 3.45, -0.82), 0.0, 0.45, c)
-	LookSigns.stencil(n, "WH-1", Vector3(28.0, 2.9, -25.8), 0.0, 0.6, c)
+	# F26: the "WH-1" stencil in the ammo+meds room (warehouse) was removed per playtest feedback.
 	for cv in SkirmishData.COVER:
 		if cv[0] == "barrier":
 			var k := 1 + int(absf(cv[1] + cv[2])) % 9

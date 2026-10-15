@@ -4,6 +4,14 @@ class_name BotShooting
 const COVER_CHECK := 0.4
 
 
+## F18: aim spread in degrees. Warm-up error shrinks with time on target; every kind gains spread
+## with distance (at least 1.0 growth at 50 m+, plus its aim_far), so long shots stay inaccurate.
+static func aim_spread_deg(b: ScavBot, dist: float) -> float:
+	var df := b.def
+	return BotBrain.aim_error(b.percept.sight_t) * float(df["aim_mult"]) \
+		* (1.0 + maxf(1.0, float(df["aim_far"])) * clampf(dist / 50.0, 0.0, 1.0))
+
+
 static func fire(b: ScavBot, point: Vector3) -> void:
 	var dist := b.eye().distance_to(point)
 	if b.gun.busy() or b.cd > 0.0:
@@ -12,6 +20,10 @@ static func fire(b: ScavBot, point: Vector3) -> void:
 	# so the bot's own body (LAYER_BODY) never blocks it; cover, walls and props do.
 	var muzzle := b.eye() + (point - b.eye()).normalized() * 0.4
 	if not BotPerception.los(b.get_world_3d().direct_space_state, muzzle, [point]):
+		return
+	# F18: reaction delay before the first aimed shot after spotting. Only gates aimed fire at a
+	# seen target; suppressing fire at last-known (not seeing) still goes out.
+	if b.percept.seeing and b.percept.sight_t < b.react_t:
 		return
 	var df := b.def
 	var wu: float = df["windup"]
@@ -37,7 +49,7 @@ static func fire(b: ScavBot, point: Vector3) -> void:
 	b.cd = b.rng.randf_range(df["cd"][0], df["cd"][1]) if b.burst <= 0 else 0.0
 	var dir := (point - b.eye()).normalized()
 	var basis := Basis.looking_at(dir)
-	var err := deg_to_rad(BotBrain.aim_error(b.percept.sight_t) * float(df["aim_mult"]) * (1.0 + float(df["aim_far"]) * clampf(dist / 50.0, 0.0, 1.0)))
+	var err := deg_to_rad(aim_spread_deg(b, dist))
 	var ang := b.rng.randf() * TAU
 	var r := err * sqrt(b.rng.randf())
 	dir = dir.rotated(basis.x, sin(ang) * r).rotated(basis.y, cos(ang) * r)
