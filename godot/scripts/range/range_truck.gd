@@ -50,4 +50,4 @@ func _process(_dt: float) -> void:
 	if to.length() < REACH:
 		weapons.prompt = "%s: Deploy to Skirmish with this kit" % Keybinds.short("t_use")
 		if player.input.act("t_use"):
-			RangeLoadout.deploy(weapons.inv)
+			player.session.deploy(weapons.inv)
