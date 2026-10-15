@@ -28,10 +28,10 @@ A hybrid of **Creeper World 3-style fluid tower defense** (top-down command mode
 - Research and pillars: [docs/RESEARCH.md](docs/RESEARCH.md) · Level 1: [docs/LEVEL01_DESIGN.md](docs/LEVEL01_DESIGN.md) · Roadmap: [docs/DEV_PLAN.md](docs/DEV_PLAN.md)
 
 ## Token budget rules (the user's budget is limited)
-- **Agent choice:** never spawn `general-purpose`. Use `stage-runner` (Sonnet) for brief phases, `feature-dev` (Sonnet) for one-off features, `auditor` / `balance-tester` (Haiku) for status, tests, sims and screenshot verdicts. Opus subagents only for cross-system design, named in the brief, and say why.
+- **Agent choice:** never spawn `general-purpose`. Use `stage-runner` (Sonnet) for brief phases, `feature-dev` (Sonnet) for one-off features, `auditor` / `balance-tester` (Haiku) for status, tests and sims only. **Haiku never judges images** (Gregory, 2026-10-14): every screenshot, model or look verdict is Opus, with a reference image and a rubric. Opus subagents only for cross-system design, named in the brief, and say why.
 - **Short runs:** a subagent does at most 2 phases, then stops; the next phase is a fresh agent resuming from the progress log. No subagent should need more than ~100k context.
 - **Lean reading:** agents read AGENTS.md, the brief, its progress log and the files they change. Briefs name the exact MASTER_PLAN/design sections; nobody reads whole design docs "for context".
-- **Orchestrator session:** don't Read screenshots or long logs here; ask an `auditor` for a verdict in words. Pipe all tool output through grep/tail. After each merge cycle, update HANDOFF.md and tell the user to `/clear` (or `/compact`) before the next one; a new session resumes from HANDOFF.md.
+- **Orchestrator session:** don't Read long logs here. Screenshots are judged by Opus (here or an Opus agent), never by an `auditor`. Pipe all tool output through grep/tail. After each merge cycle, update HANDOFF.md and tell the user to `/clear` (or `/compact`) before the next one; a new session resumes from HANDOFF.md.
 
 ## Codebases
 - **`godot/` is the game** (Godot 4.7, GDScript, Forward+). All new work goes here.

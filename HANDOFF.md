@@ -13,9 +13,11 @@ Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHu
   own shadow up to 0.3 m further back while running), **F35** P90 echo (sample cut before its slapback).
 - **FB-F Mosin bolt animation**: brief `docs/tasks/FB_F_mosin_bolt.md`, Sonnet agent running on `feat/fb-f-mosin-bolt`
   (worktree `../fb-f`). The glb is rigged (`Bolt`, `BoltHandle`); the cycle rule already existed. Opus judges its shots.
-- **FB-G ADS sights (next Opus job)**: `docs/tasks/FB_G_ads_sights.md` has the root causes and tools. Main ones: P4 puts the
-  eye in front of the rear sight on short guns, and `ads_y` = tallest point (AK eye inside the receiver). ADS before-sheet:
-  `docs/art/ads/`. Open for Gregory: P90 and SR-25 have no usable irons (model work or a default optic?).
+- **FB-G ADS sights DONE 2026-10-15** (committed on fix/fb-guns, not pushed): per-gun sight lines in `ads_pos`
+  (+ `mounts.json` ads_y), new optional def key `eye` (ADS eye-to-butt; bots keep `butt`), mosin/sr25 x offsets,
+  `--weapon` hook now equips pistols and the starting AK. Range OK 545, smoke 0 fail. Status + verdicts in
+  `docs/tasks/FB_G_ads_sights.md`; after-sheet `docs/art/ads/ads_sheet_after.jpg`. Still model-blocked: pkm (carry
+  handle on the sight line), p90 (no irons), sr25 (diopter below rail top); m4a1/mp5/vector rear sights are solid blocks.
 - Still open from before: the m4a1 question below; FB-E models pkm, mp5, vector, sks, saiga12, acog3x, compensator, flashhider.
 
 ## 2026-10-14 night: FB-E part 1 + gun feedback F32-F44 (READ FIRST, Gregory: "fix these")
