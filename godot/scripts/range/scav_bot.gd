@@ -43,6 +43,7 @@ var _target := Vector3.ZERO
 var _has_target := false
 var burst := 0
 var cd := 0.0
+var react_t := 0.0   # F18: rolled per engagement; the bot will not fire at a seen target before sight_t passes this
 var cover_t := 0.0
 var _dying := false
 var _go_age := 0.0
@@ -186,6 +187,10 @@ func _enter(s: String) -> void:
 	match s:
 		BotBrain.PATROL:
 			_go(patrol[patrol_i])
+		BotBrain.ENGAGE:
+			# F18: reaction delay before the first aimed shot of this engagement.
+			var rc: Array = def.get("react", [0.5, 1.0])
+			react_t = rng.randf_range(float(rc[0]), float(rc[1]))
 		BotBrain.INVESTIGATE:
 			_go(percept.noise_pos)
 		BotBrain.COVER:

@@ -14,6 +14,10 @@ static func run(test: RangeTest) -> void:
 	await _sandbag_blocks_player()
 	await _f5_no_fire_through_wall()
 	await _bullet_stops_on_barrel()
+	_f18_spread_grows()
+	await _f18_reaction_gate()
+	await _f19_pause_freezes()
+	_f26_fixtures()
 
 
 static func _collider_specs() -> void:
@@ -140,3 +144,165 @@ static func _bullet_stops_on_barrel() -> void:
 	t.check("F25 bullet into a barrel hits the drum and stops", hit_drum and t.bal.shots.is_empty() and t._hits.is_empty(),
 		"impacts %d" % t._impacts.size())
 	root.queue_free()
+
+
+class HouseStub extends Node3D:
+	var covers: Array[Vector3] = []
+	var patrol: Array[Vector3] = [Vector3.ZERO]
+
+
+static func _open_bot(kind := "rifleman") -> Array:
+	# Open flat ground, a player at the origin and a bot 10 m south facing it. Returns [ground, player, bot].
+	var ground := StaticBody3D.new()
+	ground.collision_layer = TacticalConfig.LAYER_WORLD
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(400, 1, 400)
+	cs.shape = box
+	ground.add_child(cs)
+	ground.position = Vector3(0, -0.5, 5)
+	t.add_child(ground)
+	var player := TacticalPlayer.new()
+	player.input = InputState.new()
+	player.session = session
+	session.add_player(1, true).node = player
+	t.add_child(player)
+	t.add_child(player.input)
+	player.global_position = Vector3.ZERO
+	var bot := ScavBot.new()
+	bot.setup(session, t.bal, HouseStub.new(), kind, 0, kind, [])
+	t.add_child(bot)
+	bot.set_physics_process(false)
+	bot.global_position = Vector3(0, 0.1, 10)
+	bot.rotation.y = PI
+	bot.rng.seed = 31337
+	return [ground, player, bot]
+
+
+## F18: spread grows with distance for every kind (rifleman had aim_far 0).
+static func _f18_spread_grows() -> void:
+	var parts: Array = _open_bot()
+	var bot: ScavBot = parts[2]
+	bot.percept.sight_t = 10.0   # fully warmed up: worst-case steady-state accuracy
+	var s10 := BotShooting.aim_spread_deg(bot, 10.0)
+	var s50 := BotShooting.aim_spread_deg(bot, 50.0)
+	var s100 := BotShooting.aim_spread_deg(bot, 100.0)
+	t.check("F18 aim spread grows with distance (10/50/100 m)", s50 > s10 * 1.5 and s100 >= s50,
+		"%.2f %.2f %.2f deg" % [s10, s50, s100])
+	for n in parts:
+		(n as Node).queue_free()
+
+
+## F18: no aimed shot before the reaction delay; suppressing fire (not seeing) is exempt.
+static func _f18_reaction_gate() -> void:
+	var parts: Array = _open_bot()
+	var player: TacticalPlayer = parts[1]
+	var bot: ScavBot = parts[2]
+	await t.get_tree().physics_frame
+	await t.get_tree().physics_frame
+	var chest := player.global_position + Vector3(0, 1.3, 0)
+	bot.cd = 0.0
+	bot.react_t = 1.0
+	bot.percept.seeing = true
+	bot.percept.sight_t = 0.5
+	var n0 := t.bal.shots.size()
+	bot.gun.fire_cd = 0.0
+	bot.gun.busy_t = 0.0
+	BotShooting.fire(bot, chest)
+	t.check("F18 bot holds fire before its reaction delay", t.bal.shots.size() == n0)
+	bot.percept.sight_t = 2.0
+	bot.cd = 0.0
+	bot.gun.fire_cd = 0.0
+	bot.gun.busy_t = 0.0
+	n0 = t.bal.shots.size()
+	BotShooting.fire(bot, chest)
+	t.check("F18 bot fires once the reaction delay has passed", t.bal.shots.size() > n0)
+	bot.cd = 0.0
+	bot.gun.fire_cd = 0.0
+	bot.gun.busy_t = 0.0
+	bot.percept.seeing = false   # suppressing at last-known: no reaction gate
+	bot.percept.sight_t = 0.0
+	n0 = t.bal.shots.size()
+	BotShooting.fire(bot, chest)
+	t.check("F18 suppressing fire is not gated by the reaction delay", t.bal.shots.size() > n0)
+	for n in parts:
+		(n as Node).queue_free()
+
+
+## F19: opening the Esc menu pauses the tree; a bot mid-burst deals 0 damage over 3 s; closing resumes.
+static func _f19_pause_freezes() -> void:
+	var parts: Array = _open_bot()
+	var player: TacticalPlayer = parts[1]
+	var bot: ScavBot = parts[2]
+	# _open_bot leaves the bot rotated PI (logical forward +Z, away from the player);
+	# perception recomputes `seeing` from actual facing every frame, so turn it to face
+	# the player (-Z toward the origin) or the brain never engages and never shoots.
+	bot.rotation.y = 0.0
+	bot.set_physics_process(true)   # driven by the tree, so the pause actually freezes it
+	bot.percept.aware = true
+	bot.percept.seeing = true
+	bot.percept.sight_t = 99.0
+	bot.react_t = 0.0
+	bot.percept.last_known = player.global_position + Vector3(0, 1.3, 0)
+	bot.brain.state = BotBrain.ENGAGE
+	bot.cd = 0.0
+	var on_hit := func(r):
+		var o: Object = r.get("owner")
+		if o is TacticalPlayer or o is ScavBot:
+			o.on_hit(r)
+	t.bal.body_hit.connect(on_hit)
+	var menu := RangeMenu.new()
+	t.add_child(menu)
+	menu.setup(session)
+	for i in 90:
+		await t.get_tree().physics_frame
+		t.bal.step(1.0 / 60.0)   # the harness runs bal with auto_step=false: advance shots manually
+	var hp_before: float = player.body.total_frac()
+	t.check("F19 bot bursts and damages the player while unpaused", hp_before < 1.0, "hp %.3f" % hp_before)
+	menu.open()
+	t.check("F19 opening the menu pauses the tree", t.get_tree().paused)
+	await t.get_tree().create_timer(3.0, true, false, true).timeout
+	var hp_paused: float = player.body.total_frac()
+	t.check("F19 bot mid-burst deals 0 damage over 3 s while paused", is_equal_approx(hp_paused, hp_before),
+		"hp %.4f -> %.4f" % [hp_before, hp_paused])
+	menu.close()
+	t.check("F19 closing the menu resumes the tree", not t.get_tree().paused)
+	# The phase-1 burst can kill the player (head/thorax at 0 HP = dead by game rules).
+	# Death also zeroes the hitbox collision layers via tick_body, so a plain body.reset()
+	# is not enough: restore the hitbox layers too, then re-establish a fresh engagement.
+	player.body.reset()
+	for z in player.rig:
+		(player.rig[z] as CollisionObject3D).collision_layer = TacticalConfig.LAYER_HITBOX
+	bot.global_position = Vector3(0, 0.1, 10)
+	bot.rotation.y = 0.0
+	bot.brain.state = BotBrain.ENGAGE
+	bot.percept.seeing = true
+	bot.percept.aware = true
+	bot.percept.sight_t = 99.0
+	bot.react_t = 0.0
+	bot.percept.last_known = player.global_position + Vector3(0, 1.3, 0)
+	bot.cd = 0.0
+	for i in 90:
+		await t.get_tree().physics_frame
+		t.bal.step(1.0 / 60.0)   # the harness runs bal with auto_step=false: advance shots manually
+	var hp_after: float = player.body.total_frac()
+	t.check("F19 damage resumes after the menu closes", hp_after < 1.0, "hp %.4f" % hp_after)
+	t.bal.body_hit.disconnect(on_hit)
+	for n in parts:
+		(n as Node).queue_free()
+	menu.queue_free()
+
+
+## F26: interiors get real fixtures (mesh + light, shadows off), not a bare floating light.
+static func _f26_fixtures() -> void:
+	var layout := SkirmishLayout.new()
+	layout._ceiling_light(0.0, 3.0, 0.0)
+	var mesh_ok := false
+	var light_ok := false
+	for c in layout.get_children():
+		if c is MeshInstance3D:
+			mesh_ok = true
+		if c is OmniLight3D and not (c as OmniLight3D).shadow_enabled:
+			light_ok = true
+	t.check("F26 ceiling fixture is a mesh plus an OmniLight3D with shadows off", mesh_ok and light_ok)
+	layout.queue_free()
