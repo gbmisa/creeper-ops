@@ -1,13 +1,26 @@
 class_name SkirmishData
-## Skirmish map tables (all coordinates in metres on the 120 x 120 m map, x right, z toward the spawn edge).
+## Skirmish map tables (all coordinates in metres on the 220 x 220 m map, x right, z toward the spawn edge).
+## The original 120 m compound sits at the centre; four districts extend to the new perimeter.
 
-const HALF := 60.0
-const SPAWN := Vector3(0, 0.05, 54.0)
-const RACK_POS := Vector3(-5.0, 0, 59.2)
-const EXTRACT := Vector3(0, 0, -52.0)
+const HALF := 110.0
+const SPAWN := Vector3(0, 0.05, 54.0)   # legacy compound spawn (tests); the game uses SPAWNS
+const RACK_POS := Vector3(0.0, 0, 96.0)
+const EXTRACT := Vector3(0, 0, -52.0)   # legacy (tests); the game uses EXTRACTS
 const EXTRACT_R := 4.0
 const EXTRACT_TIME := 8.0
+const CALL_TIME := 15.0   # west extract: stand in the zone this long to call it in, then hold EXTRACT_TIME
 const WALL_H := 4.0
+const GATE_W := 8.0       # perimeter gate openings (N/E/S/W)
+
+## Player spawns: 3 points on the south edge, picked at random each run.
+const SPAWNS := [Vector3(-40, 0.05, 102), Vector3(0, 0.05, 104), Vector3(40, 0.05, 102)]
+
+## Extracts, one per non-spawn side. cond: "open" always | "boss" after the Warlord dies | "call" costs CALL_TIME.
+const EXTRACTS := [
+	{"pos": Vector3(30, 0, -100), "cond": "open", "name": "RIDGE"},
+	{"pos": Vector3(95, 0, 28), "cond": "boss", "name": "DEPOT"},
+	{"pos": Vector3(-95, 0, -20), "cond": "call", "name": "RIVER"},
+]
 
 const BRICK := Color(0.55, 0.3, 0.24)
 const CONCRETE := Color(0.5, 0.5, 0.47)
@@ -57,10 +70,11 @@ const TOWER := {"rect": [-51.0, -48.0, -41.0, -40.0], "top": 6.0, "lane_x": [-43
 const LOOT := [[-26, -13, ["ammo", "meds"]], [30, 8, ["ammo"]], [-29, 31, ["meds"]], [22, -36, ["ammo", "meds"]],
 	[0, -41, ["ammo"]], [0, 50, ["ammo"]]]
 
-## Marksman overwatch spots (x, y, z): tower top, hotel upstairs window.
-const SPOTS := [Vector3(-47, 6.0, -44), Vector3(-20, 3.0, -2.6)]
+## Marksman overwatch spots (x, y, z): tower top, hotel upstairs window, radar hilltop.
+const SPOTS := [Vector3(-47, 6.0, -44), Vector3(-20, 3.0, -2.6), Vector3(5, 4.5, -80)]
 
 ## Enemies: kind, start [x, z], patrol route [[x, z], ...], ally index (-1 none). Boss gets 2 rifleman followers.
+## Compound rows are unchanged; the Warlord's route now spans the east and south districts.
 const ENEMIES := [
 	{"kind": "rifleman", "at": [0, 10], "route": [[-8, 12], [8, 12], [8, 22], [-8, 22]], "ally": 4},
 	{"kind": "rifleman", "at": [25, 5], "route": [[16, 5], [34, 5], [30, 13], [20, 13]], "ally": -1},
@@ -71,5 +85,5 @@ const ENEMIES := [
 	{"kind": "pistol", "at": [-14, 28], "route": [[-14, 28], [-6, 32], [-22, 28]], "ally": -1},
 	{"kind": "shotgunner", "at": [-22, -12], "route": [[-26, -12], [-18, -12], [-20, -5], [-27, -5]], "ally": 5},
 	{"kind": "marksman", "at": [-47, -44], "route": [], "ally": -1},
-	{"kind": "boss", "at": [0, -34], "route": [[0, -34], [-10, -36], [8, -36], [0, -46]], "ally": -1},
+	{"kind": "boss", "at": [0, -34], "route": [[0, -34], [30, -20], [60, -5], [85, 10], [60, 30], [30, 50], [5, 70], [30, 45], [60, 20]], "ally": -1},
 ]

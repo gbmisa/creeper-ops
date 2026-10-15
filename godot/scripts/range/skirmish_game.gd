@@ -14,7 +14,8 @@ var log: RangeHitLog
 var session: RangeSession
 var time_s := 0.0
 var kills := 0
-var progress := 0.0
+var boss_dead := false
+var extracts: Array = []   # {pos, cond, name, progress, call_progress}
 var over := false
 var won := false
 var end_screen: SkirmishEnd
@@ -36,6 +37,8 @@ func start(p: TacticalPlayer, w: PlayerWeapons, b: Ballistics, l: RangeHitLog, h
 	session = s
 	session.noise.reset()
 	layout.bake()
+	for e in SkirmishData.EXTRACTS:
+		extracts.append({"pos": e["pos"], "cond": e["cond"], "name": e["name"], "progress": 0.0, "call_progress": 0.0})
 	_label = UiKit.label("", 20, Color(0.8, 1.0, 0.8))
 	_label.position = Vector2(520, 14)
 	var cl := CanvasLayer.new()
@@ -47,32 +50,56 @@ func start(p: TacticalPlayer, w: PlayerWeapons, b: Ballistics, l: RangeHitLog, h
 	log.add("Skirmish: reach EXTRACT and hold it %d s" % int(SkirmishData.EXTRACT_TIME))
 
 
+## All roster rows: the compound table plus one list per district (brief: roster rows unchanged).
+func _rows() -> Array:
+	var rows: Array = []
+	rows.append_array(SkirmishData.ENEMIES)
+	rows.append_array(SkirmishDistrictNorth.enemies())
+	rows.append_array(SkirmishDistrictEast.enemies())
+	rows.append_array(SkirmishDistrictSouth.enemies())
+	rows.append_array(SkirmishDistrictWest.enemies())
+	return rows
+
+
 func spawn_enemies() -> void:
+	var rows := _rows()
+	var row_bot: Array[int] = []   # row index -> bots[] index (boss followers shift the array)
 	var idx := 0
-	for row in SkirmishData.ENEMIES:
+	for row in rows:
 		var route: Array[Vector3] = []
 		for q in row["route"]:
 			route.append(Vector3(q[0], 0, q[1]))
 		var kind: String = row["kind"]
+		var pos := Vector3(row["at"][0], float(row.get("y", 0.1)), row["at"][1])
 		if kind == "marksman":
-			for s in SkirmishData.SPOTS:
-				route.append(s)
-		var b := _spawn(kind, Vector3(row["at"][0], 0.1, row["at"][1]) if kind != "marksman" else SkirmishData.SPOTS[0] + Vector3(0, 0.1, 0), route, idx)
+			if row.has("spot"):
+				var sp: Vector3 = SkirmishData.SPOTS[int(row["spot"])]
+				route.append(sp)
+				pos = sp + Vector3(0, 0.1, 0)
+			else:
+				for s in SkirmishData.SPOTS.slice(0, 2):
+					route.append(s)
+				pos = SkirmishData.SPOTS[0] + Vector3(0, 0.1, 0)
+		var b := _spawn(kind, pos, route, idx)
+		row_bot.append(bots.size() - 1)
 		idx += 1
 		if kind == "boss":
 			for i in BotDefs.of("boss")["followers"]:
-				var f := _spawn("rifleman", b.global_position + Vector3(1.5 * (i * 2 - 1), 0, 1.5), route, idx + i)
+				var f := _spawn("rifleman", b.global_position + Vector3(1.5 * (i * 2 - 1), 0, 1.5), route, idx)
+				idx += 1
 				f.leader = b
 				f.ally = b
 				f.label_name = "Guard %d" % (i + 1)
 				if i == 0:
 					b.ally = f
-	for i in SkirmishData.ENEMIES.size():
-		var a: int = SkirmishData.ENEMIES[i]["ally"]
-		if a >= 0 and bots[i].ally == null:
-			bots[i].ally = bots[a]
-			if bots[a].ally == null:
-				bots[a].ally = bots[i]
+	for i in rows.size():
+		var a: int = rows[i]["ally"]
+		var bi: int = row_bot[i]
+		if a >= 0 and bots[bi].ally == null:
+			var ba: int = row_bot[a]
+			bots[bi].ally = bots[ba]
+			if bots[ba].ally == null:
+				bots[ba].ally = bots[bi]
 
 
 func _spawn(kind: String, pos: Vector3, route: Array[Vector3], idx: int) -> ScavBot:
@@ -89,6 +116,17 @@ func _spawn(kind: String, pos: Vector3, route: Array[Vector3], idx: int) -> Scav
 func _on_bot_died(b: ScavBot) -> void:
 	kills += 1
 	log.add("%s: KILLED" % b.label_name)
+	if b.kind == "boss" and not boss_dead:
+		boss_dead = true
+		log.add("WARLORD DOWN: DEPOT extract is open")
+		# turn the amber DEPOT marker green
+		for i in extracts.size():
+			if extracts[i]["cond"] == "boss" and i < layout.extract_markers.size():
+				var mk: Dictionary = layout.extract_markers[i]
+				var green := Color(0.2, 1.0, 0.4)
+				mk["mat"].albedo_color = Color(green.r, green.g, green.b, 0.45)
+				mk["label"].text = "EXTRACT DEPOT\nOPEN"
+				mk["label"].modulate = green.lightened(0.3)
 
 
 func alive_count() -> int:
@@ -99,27 +137,57 @@ func alive_count() -> int:
 	return n
 
 
-## Extract zone timer. Returns true once the player has stood in the zone for EXTRACT_TIME.
-func tick_extract(dt: float, pos: Vector3) -> bool:
-	var d := Vector2(pos.x - SkirmishData.EXTRACT.x, pos.z - SkirmishData.EXTRACT.z).length()
-	if d <= SkirmishData.EXTRACT_R:
-		progress = minf(progress + dt, SkirmishData.EXTRACT_TIME)
-	else:
-		progress = 0.0
-	return progress >= SkirmishData.EXTRACT_TIME
+## Extract zone timers. Returns the index of the extract that just completed, or -1.
+## "boss" extracts stay locked until the Warlord dies; "call" extracts need CALL_TIME in the
+## zone to call the extract in before the normal hold starts. Leaving a zone resets it.
+func tick_extract(dt: float, pos: Vector3) -> int:
+	for i in extracts.size():
+		var e: Dictionary = extracts[i]
+		var ep: Vector3 = e["pos"]
+		var d := Vector2(pos.x - ep.x, pos.z - ep.z).length()
+		if d > SkirmishData.EXTRACT_R:
+			e["progress"] = 0.0
+			e["call_progress"] = 0.0
+			continue
+		if e["cond"] == "boss" and not boss_dead:
+			continue
+		if e["cond"] == "call" and float(e["call_progress"]) < SkirmishData.CALL_TIME:
+			e["call_progress"] = minf(float(e["call_progress"]) + dt, SkirmishData.CALL_TIME)
+			continue
+		e["progress"] = minf(float(e["progress"]) + dt, SkirmishData.EXTRACT_TIME)
+		if float(e["progress"]) >= SkirmishData.EXTRACT_TIME:
+			return i
+	return -1
+
+
+func extract_status(i: int) -> String:
+	var e: Dictionary = extracts[i]
+	if e["cond"] == "boss" and not boss_dead:
+		return "LOCKED"
+	if e["cond"] == "call" and float(e["call_progress"]) < SkirmishData.CALL_TIME:
+		return "CALL"
+	return "OPEN"
 
 
 func _process(dt: float) -> void:
 	if player == null or over:
 		return
 	time_s += dt
-	if not player.body.dead and tick_extract(dt, player.global_position):
+	if not player.body.dead and tick_extract(dt, player.global_position) >= 0:
 		finish(true)
 		return
-	var d := Vector2(player.global_position.x - SkirmishData.EXTRACT.x, player.global_position.z - SkirmishData.EXTRACT.z).length()
-	var txt := "OBJECTIVE: reach EXTRACT (%d m) and hold it %d s    Hostiles left: %d" % [int(d), int(SkirmishData.EXTRACT_TIME), alive_count()]
-	if progress > 0.0:
-		txt = "EXTRACTING  %.1f / %d s  (stay in the zone)" % [progress, int(SkirmishData.EXTRACT_TIME)]
+	var parts: Array[String] = []
+	for i in extracts.size():
+		var e: Dictionary = extracts[i]
+		var ep: Vector3 = e["pos"]
+		var d := Vector2(player.global_position.x - ep.x, player.global_position.z - ep.z).length()
+		var st := extract_status(i)
+		if st == "OPEN" and float(e["progress"]) > 0.0:
+			st = "EXTRACTING %.1f/%d" % [float(e["progress"]), int(SkirmishData.EXTRACT_TIME)]
+		elif st == "CALL":
+			st = "CALLING %.0f/%d" % [float(e["call_progress"]), int(SkirmishData.CALL_TIME)]
+		parts.append("%s %s %dm" % [e["name"], st, int(d)])
+	var txt := "EXTRACT: " + " | ".join(parts) + "    Hostiles left: %d" % alive_count()
 	_label.text = txt
 	_loot_prompt()
 

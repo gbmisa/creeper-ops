@@ -1,12 +1,16 @@
 class_name SkirmishLayout
 extends Node3D
-## The Skirmish map: 120 x 120 m walled compound with five enterable buildings (the hotel has a second floor
-## reached by a ramp), a watchtower, vehicles / crates / barriers as cover and a whole-map navmesh.
+## The Skirmish map: ~220 x 220 m. The original 120 m walled compound sits at the centre (its
+## walls now have gates); four districts extend to the outer fence: radar hill (N), motor pool (E),
+## checkpoint town (S), birch forest + river (W). Five enterable compound buildings (the hotel has
+## a second floor reached by a ramp), a watchtower, vehicles / crates / barriers as cover and a
+## whole-map navmesh.
 ## Duck-types KillHouse for ScavBot: `covers` and `patrol` are world positions.
 
 var covers: Array[Vector3] = []
 var patrol: Array[Vector3] = []
 var loot_crates: Array[Dictionary] = []   # {pos, loot: Array, taken}
+var extract_markers: Array[Dictionary] = []   # {node, mat, label}
 var region: NavigationRegion3D
 
 
@@ -17,9 +21,8 @@ func _init() -> void:
 func build() -> void:
 	var H := SkirmishData.HALF
 	RangeLayout.box(self, "ground", Vector3(0, -0.5, 0), Vector3(H * 2, 1.0, H * 2), "dirt_berm", 1.0, Color(0.26, 0.3, 0.16))
-	for s in [-1.0, 1.0]:
-		RangeLayout.box(self, "perimeter", Vector3(0, SkirmishData.WALL_H * 0.5, s * (H + 0.5)), Vector3(H * 2 + 2, SkirmishData.WALL_H, 1.0), "concrete", 1.0, SkirmishData.CONCRETE)
-		RangeLayout.box(self, "perimeter", Vector3(s * (H + 0.5), SkirmishData.WALL_H * 0.5, 0), Vector3(1.0, SkirmishData.WALL_H, H * 2), "concrete", 1.0, SkirmishData.CONCRETE)
+	_compound_walls()
+	_outer_fence()
 	for id in SkirmishData.BUILDINGS:
 		_building(SkirmishData.BUILDINGS[id], id)
 	_tower()
@@ -27,10 +30,43 @@ func build() -> void:
 		_cover(c)
 	for l in SkirmishData.LOOT:
 		_loot(l)
-	_extract_marker()
+	SkirmishDistrictNorth.build(self)
+	SkirmishDistrictEast.build(self)
+	SkirmishDistrictSouth.build(self)
+	SkirmishDistrictWest.build(self)
+	_extract_markers()
 	for p in [Vector2(0, 40), Vector2(-20, 20), Vector2(20, 20), Vector2(0, 0), Vector2(-40, 0), Vector2(40, -10), Vector2(0, -30)]:
 		patrol.append(Vector3(p.x, 0, p.y))
 	LookKestrel.build(self)
+
+
+## The original 120 m compound keeps its walls, but each side opens with a gate to the districts.
+func _compound_walls() -> void:
+	var c := 60.5
+	var gw := SkirmishData.GATE_W * 0.5
+	var wh := SkirmishData.WALL_H
+	for s in [-1.0, 1.0]:
+		for seg in [[-61.0, -gw], [gw, 61.0]]:
+			var w: float = seg[1] - seg[0]
+			var mid: float = (seg[0] + seg[1]) * 0.5
+			RangeLayout.box(self, "perimeter", Vector3(mid, wh * 0.5, s * c), Vector3(w, wh, 1.0), "concrete", 1.0, SkirmishData.CONCRETE)
+			RangeLayout.box(self, "perimeter", Vector3(s * c, wh * 0.5, mid), Vector3(1.0, wh, w), "concrete", 1.0, SkirmishData.CONCRETE)
+	# gate posts
+	for g in [Vector2(0, -c), Vector2(0, c), Vector2(-c, 0), Vector2(c, 0)]:
+		var along_x := absf(g.y) > 0.1
+		for o in [-gw - 0.3, gw + 0.3]:
+			var px: float = (0.0 if along_x else g.x) + (o if along_x else 0.0)
+			var pz: float = (g.y if along_x else 0.0) + (0.0 if along_x else o)
+			RangeLayout.box(self, "gatepost", Vector3(px, wh * 0.5, pz), Vector3(0.6, wh, 0.6), "concrete", 0.6, SkirmishData.CONCRETE.darkened(0.15))
+
+
+## Low outer boundary at the 220 m map edge.
+func _outer_fence() -> void:
+	var H := SkirmishData.HALF
+	var fh := 2.5
+	for s in [-1.0, 1.0]:
+		RangeLayout.box(self, "fence", Vector3(0, fh * 0.5, s * (H + 0.5)), Vector3(H * 2 + 2, fh, 0.6), "concrete", 0.6, Color(0.42, 0.42, 0.4))
+		RangeLayout.box(self, "fence", Vector3(s * (H + 0.5), fh * 0.5, 0), Vector3(0.6, fh, H * 2), "concrete", 0.6, Color(0.42, 0.42, 0.4))
 
 
 func _building(d: Dictionary, id: String) -> void:
@@ -108,34 +144,46 @@ func _loot(l: Array) -> void:
 	loot_crates.append({"pos": pos, "loot": l[2].duplicate(), "taken": false})
 
 
-func _extract_marker() -> void:
-	var m := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = SkirmishData.EXTRACT_R
-	cm.bottom_radius = SkirmishData.EXTRACT_R
-	cm.height = 0.06
-	m.mesh = cm
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 1.0, 0.4, 0.45)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.material_override = mat
-	m.position = SkirmishData.EXTRACT + Vector3(0, 0.04, 0)
-	add_child(m)
-	var l := Label3D.new()
-	l.text = "EXTRACT"
-	l.font_size = 120
-	l.pixel_size = 0.01
-	l.outline_size = 16
-	l.modulate = Color(0.5, 1.0, 0.6)
-	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	l.position = SkirmishData.EXTRACT + Vector3(0, 4.5, 0)
-	add_child(l)
-	var beam := OmniLight3D.new()
-	beam.position = SkirmishData.EXTRACT + Vector3(0, 3.0, 0)
-	beam.light_color = Color(0.4, 1.0, 0.5)
-	beam.omni_range = 14.0
-	add_child(beam)
+## One marker per extract, colour-coded by condition: green always-open, amber boss-gated, blue call-in.
+func _extract_markers() -> void:
+	for e in SkirmishData.EXTRACTS:
+		var col := Color(0.2, 1.0, 0.4)
+		var cond_txt := "OPEN"
+		if e["cond"] == "boss":
+			col = Color(1.0, 0.7, 0.2)
+			cond_txt = "KILL THE WARLORD"
+		elif e["cond"] == "call":
+			col = Color(0.3, 0.6, 1.0)
+			cond_txt = "CALL IN: HOLD %d S" % int(SkirmishData.CALL_TIME)
+		var pos: Vector3 = e["pos"]
+		var m := MeshInstance3D.new()
+		var cm := CylinderMesh.new()
+		cm.top_radius = SkirmishData.EXTRACT_R
+		cm.bottom_radius = SkirmishData.EXTRACT_R
+		cm.height = 0.06
+		m.mesh = cm
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(col.r, col.g, col.b, 0.45)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.material_override = mat
+		m.position = pos + Vector3(0, 0.04, 0)
+		add_child(m)
+		var l := Label3D.new()
+		l.text = "EXTRACT %s\n%s" % [e["name"], cond_txt]
+		l.font_size = 120
+		l.pixel_size = 0.01
+		l.outline_size = 16
+		l.modulate = col.lightened(0.3)
+		l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		l.position = pos + Vector3(0, 4.5, 0)
+		add_child(l)
+		var beam := OmniLight3D.new()
+		beam.position = pos + Vector3(0, 3.0, 0)
+		beam.light_color = col
+		beam.omni_range = 14.0
+		add_child(beam)
+		extract_markers.append({"node": m, "mat": mat, "label": l, "base_col": col})
 
 
 ## NavigationRegion3D over every world collider on the map (call once the node is in the tree).

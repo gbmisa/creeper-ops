@@ -67,7 +67,8 @@ func _build() -> void:
 	player.session = session
 	ps.node = player
 	add_child(player)
-	player.global_position = SkirmishData.SPAWN if is_skirmish else RangeLayout.SPAWN
+	# 3 edge spawns, picked at random each run (Track EXPAND).
+	player.global_position = SkirmishData.SPAWNS[randi_range(0, SkirmishData.SPAWNS.size() - 1)] if is_skirmish else RangeLayout.SPAWN
 	player.yaw = 0.0
 	player.pitch = 0.0
 	var fp_body := FpBody.new()

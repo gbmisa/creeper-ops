@@ -50,6 +50,33 @@ static func slab(parent: Node3D, r: Rect2, y_top: float, thick: float, mat: Stri
 		Vector3(r.size.x, thick, r.size.y), mat, thick, col)
 
 
+## Vertical cylinder collider + mesh (fuel tanks, water towers).
+static func cylinder(parent: Node3D, pos: Vector3, r: float, h: float, mat: String, col: Color) -> StaticBody3D:
+	var sb := StaticBody3D.new()
+	sb.name = "cyl_" + mat
+	sb.position = pos
+	sb.collision_layer = TacticalConfig.LAYER_WORLD
+	sb.collision_mask = 0
+	sb.set_meta("mat", mat)
+	sb.set_meta("thick", r)
+	var cs := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = r
+	shape.height = h
+	cs.shape = shape
+	sb.add_child(cs)
+	var mi := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = r
+	cm.bottom_radius = r
+	cm.height = h
+	mi.mesh = cm
+	mi.material_override = LookMaterials.get_mat(mat, col, sb.name)
+	sb.add_child(mi)
+	parent.add_child(sb)
+	return sb
+
+
 ## Walkable ramp (the stairs): top surface runs from `lo` (bottom centre) to `hi` (top centre), with tread strips.
 static func ramp(parent: Node3D, lo: Vector3, hi: Vector3, width: float, col: Color) -> void:
 	var dir := hi - lo

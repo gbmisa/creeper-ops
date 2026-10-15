@@ -67,7 +67,12 @@ static func _free(p: Vector3, id: String) -> bool:
 	var lx: Array = t["lane_x"]
 	if p.x > lx[0] - rad and p.x < lx[1] + rad and p.z > tr[3] and p.z < t["ramp_z0"] + rad:
 		return false
-	return p.distance_to(SkirmishData.SPAWN) > 4.0 and p.distance_to(SkirmishData.EXTRACT) > 6.0
+	if p.distance_to(SkirmishData.SPAWNS[0]) < 4.0 or p.distance_to(SkirmishData.SPAWNS[1]) < 4.0 or p.distance_to(SkirmishData.SPAWNS[2]) < 4.0:
+		return false
+	for e in SkirmishData.EXTRACTS:
+		if p.distance_to(e["pos"]) < 6.0:
+			return false
+	return true
 
 
 ## Fit a prop's bounding box to `size` (bottom centre at `pos`) and add it to `parent`. Used to re-skin cover boxes: the
