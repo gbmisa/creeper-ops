@@ -1,19 +1,23 @@
 class_name LookProps
-## Places the Hunyuan props (assets/models/props) and a MultiMesh of dead grass, leaves and stones. Visual only.
-## Repeats of one prop share a MultiMesh; singles are plain instances. Skipped when headless.
+## Places the Hunyuan props (assets/models/props) and a MultiMesh of dead grass, leaves and stones.
+## Brief-named cover props (see LookPropDefs.COLLISION) also get StaticBody3D colliders on LAYER_WORLD;
+## colliders are built even when headless, only the visuals are skipped there.
 
 static var _scenes := {}
 
 
-static func build(parent: Node3D, defs: Array, filter := false) -> void:
-	if DisplayServer.get_name() == "headless":
-		return
+static func build(parent: Node3D, defs: Array, filter := false, colliders := false) -> void:
+	var headless := DisplayServer.get_name() == "headless"
 	var root := Node3D.new()
 	root.name = "LookProps"
 	parent.add_child(root)
 	for d in defs:
 		var pos := Vector3(d[1], 0.0, d[2])
 		if filter and not _free(pos, d[0]):
+			continue
+		if colliders:
+			_collider(root, d)
+		if headless:
 			continue
 		var sc := _scene(d[0])
 		if sc == null:
@@ -24,6 +28,36 @@ static func build(parent: Node3D, defs: Array, filter := false) -> void:
 		n.scale = Vector3.ONE * float(d[4])
 		_tint(n, LookPropDefs.TINT.get(d[0], Color.WHITE))
 		root.add_child(n)
+
+
+## F25: StaticBody3D on LAYER_WORLD for the brief-named cover props. Blocks the player, bots and
+## bullets, and breaks bot sight lines; the navmesh bake picks it up as a static collider.
+static func _collider(root: Node3D, d: Array) -> void:
+	var spec: Dictionary = LookPropDefs.COLLISION.get(d[0], {})
+	if spec.is_empty():
+		return
+	var sc := float(d[4])
+	var sb := StaticBody3D.new()
+	sb.collision_layer = TacticalConfig.LAYER_WORLD
+	sb.collision_mask = 0
+	var cs := CollisionShape3D.new()
+	if str(spec["kind"]) == "cyl":
+		var cyl := CylinderShape3D.new()
+		cyl.radius = float(spec["radius"]) * sc
+		cyl.height = float(spec["height"]) * sc
+		cs.shape = cyl
+		cs.position.y = cyl.height * 0.5
+	else:
+		var b := BoxShape3D.new()
+		b.size = (spec["size"] as Vector3) * sc
+		cs.shape = b
+		cs.position.y = b.size.y * 0.5
+	sb.add_child(cs)
+	sb.position = Vector3(d[1], 0.0, d[2])
+	sb.rotation_degrees.y = float(d[3])
+	sb.set_meta("mat", str(spec["mat"]))
+	sb.set_meta("thick", float(spec["thick"]))
+	root.add_child(sb)
 
 
 static func _scene(id: String) -> PackedScene:

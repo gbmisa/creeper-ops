@@ -31,6 +31,8 @@ func build() -> void:
 	for p in [Vector2(0, 40), Vector2(-20, 20), Vector2(20, 20), Vector2(0, 0), Vector2(-40, 0), Vector2(40, -10), Vector2(0, -30)]:
 		patrol.append(Vector3(p.x, 0, p.y))
 	LookKestrel.build(self)
+	LookKestrel.gate_collider(self)
+	LookScatter.tree_colliders(self)
 
 
 func _building(d: Dictionary, id: String) -> void:
