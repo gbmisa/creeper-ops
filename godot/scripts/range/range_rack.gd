@@ -12,6 +12,7 @@ const GRID := [["m1911", "glock18", "revolver"], ["mp5", "p90", "vector"], ["ak4
 
 var taken := {}
 var _slots := {}  # id -> Node3D
+var _labels := {}  # id -> Label3D (hidden with the gun on take)
 
 
 func _init() -> void:
@@ -42,7 +43,9 @@ func _add_gun(id: String, at: Vector3) -> void:
 	if def.get("flip", false):
 		gun.rotation.y = PI
 	holder.add_child(gun)
-	add_child(label_for(def, at + Vector3(0, -0.1, -0.05)))
+	var lbl := label_for(def, at + Vector3(0, -0.1, -0.05))
+	add_child(lbl)
+	_labels[id] = lbl
 	_slots[id] = holder
 
 
@@ -88,9 +91,11 @@ func pick(eye: Vector3, forward: Vector3) -> String:
 func take(id: String) -> void:
 	taken[id] = true
 	(_slots[id] as Node3D).visible = false
+	(_labels[id] as Label3D).visible = false
 
 
 func reset() -> void:
 	taken.clear()
 	for id in _slots:
 		(_slots[id] as Node3D).visible = true
+		(_labels[id] as Label3D).visible = true

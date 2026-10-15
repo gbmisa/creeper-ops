@@ -10,6 +10,38 @@ static func run(t: RangeTest) -> void:
 	_modifiers(t)
 	_inventory(t)
 	await _functional(t)
+	_give_holster(t)
+
+
+## VIEW-FIX: --weapon=<id> must put the gun in the hand even when its slot is taken
+## (starter loadout holds the M1911 in the holster, so --weapon=glock18 used to stash it).
+static func _give_holster(t: RangeTest) -> void:
+	var r := _rig(t)
+	var w: PlayerWeapons = r["w"]
+	t.check("give: starter has AK primary, M1911 holster",
+		(w.inv.equipped("primary") as Dictionary)["id"] == "ak47" and (w.inv.equipped("holster") as Dictionary)["id"] == "m1911")
+	w.give("glock18")
+	var hol = w.inv.equipped("holster")
+	t.check("give: pistol with a full holster lands in the holster and is selected",
+		hol != null and (hol as Dictionary)["id"] == "glock18" and (w.gun_item as Dictionary)["id"] == "glock18")
+	var kept := w.inv.all_items().any(func(i): return (i as Dictionary)["id"] == "m1911")
+	t.check("give: the displaced M1911 is kept in the inventory", kept)
+	# fill secondary too, so the long gun's force path is exercised (inventory otherwise full)
+	var mp5 := ItemDefs.make("mp5")
+	(mp5["gun"] as Gun).spares.clear()
+	w.inv.add(mp5)
+	var dropped := []
+	w.item_dropped.connect(func(it): dropped.append((it as Dictionary)["id"]))
+	w.give("m4a1")
+	t.check("give: long gun with full hand slots lands in primary and is selected",
+		(w.inv.equipped("primary") as Dictionary)["id"] == "m4a1" and (w.gun_item as Dictionary)["id"] == "m4a1")
+	var ak_kept := w.inv.all_items().any(func(i): return (i as Dictionary)["id"] == "ak47")
+	t.check("give: the displaced AK is kept or dropped to the world, never lost", ak_kept or "ak47" in dropped)
+	r["w"].queue_free()
+	(r["vm"] as Node).queue_free()
+	(r["player"] as Node).queue_free()
+	(r["input"] as Node).queue_free()
+	(r["rack"] as Node).queue_free()
 
 
 static func _hand_item(id: String) -> Dictionary:

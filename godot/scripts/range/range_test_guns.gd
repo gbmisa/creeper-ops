@@ -14,6 +14,29 @@ static func run(t: RangeTest) -> void:
 	_lines(t)
 	_specials(t)
 	_rack_and_crate(t)
+	_viewdata(t)
+
+
+## VIEW-FIX: the 11 new guns take ads_pos.y = -ads_y and the grip/mag targets straight from
+## art/gen/mounts.json (measured from their glbs), so the sight line lands on the camera axis.
+static func _viewdata(t: RangeTest) -> void:
+	var path := ProjectSettings.globalize_path("res://").path_join("../art/gen/mounts.json")
+	var mounts: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var ids := ["glock18", "revolver", "mp5", "vector", "m4a1", "scarh", "saiga12", "sks", "sr25", "mosin", "pkm"]
+	var v := func(a): return Vector3(a[0], a[1], a[2])
+	var ok := true
+	for id in ids:
+		var d := WeaponDefs.of(id)
+		var m: Dictionary = mounts[id]
+		ok = ok and is_equal_approx((d["ads_pos"] as Vector3).y, -float(m["ads_y"])) \
+			and (d["grip_r"] as Vector3).is_equal_approx(v.call(m["grip_r"])) \
+			and (d["grip_l"] as Vector3).is_equal_approx(v.call(m["grip_l"])) \
+			and (d["mag_l"] as Vector3).is_equal_approx(v.call(m["mag_l"]))
+	t.check("viewfix: 11 new guns take ads/grips from mounts.json", ok)
+	for id in ids:
+		var d := WeaponDefs.of(id)
+		t.check("%s: sight line on the camera axis at ADS" % id,
+			is_equal_approx((d["ads_pos"] as Vector3).y + AttachmentMounts.iron_y(d), 0.0))
 
 
 static func _each_gun(t: RangeTest) -> void:
@@ -113,6 +136,10 @@ static func _rack_and_crate(t: RangeTest) -> void:
 	t.check("rack holds all 17 guns", rack._slots.size() == 17)
 	var lbl := RangeRack.label_text(WeaponDefs.of("scarh"))
 	t.check("rack label shows name, tier and role", "SCAR-H" in lbl and "T3" in lbl and WeaponDefs.of("scarh")["role"] in lbl)
+	rack.take("m4a1")
+	t.check("rack take hides the gun and its label", not (rack._slots["m4a1"] as Node3D).visible and not (rack._labels["m4a1"] as Label3D).visible)
+	rack.reset()
+	t.check("rack reset shows the gun and its label again", (rack._slots["m4a1"] as Node3D).visible and (rack._labels["m4a1"] as Label3D).visible)
 	rack.queue_free()
 	var mags := 0
 	for row in RangeCrate.LOOT:

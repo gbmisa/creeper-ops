@@ -10,12 +10,29 @@ static func give(w: PlayerWeapons, id: String) -> void:
 			return
 	var it := ItemDefs.make(id)
 	(it["gun"] as Gun).spares.clear()
-	if not w.inv.add(it):
-		w.message.emit("No room for %s" % WeaponDefs.of(id)["name"])
-		return
+	var d := ItemDefs.def_of(it)
+	var want := "holster" if d["kind"] == "gun" and d.get("pistol", false) else "primary"
+	w.inv.add(it)  # may fail when full; place() below handles an unplaced item
 	if it["loc"] in PlayerWeapons.HAND_SLOTS:
 		w.select_slot(it["loc"])
+		return
+	# Debug give (--weapon): the gun must end up in the hand even when its slot is taken
+	# or the inventory is full. Force it into the want slot, re-homing the occupant —
+	# or dropping it to the world when nothing fits.
+	var occ = w.inv.equipped(want)
+	if occ != null:
+		w.inv.remove(occ)
+	if w.inv.place(it, want):
+		if occ != null:
+			var to := w.inv.first_fit(occ, want)
+			if to.is_empty():
+				w.item_dropped.emit(occ)
+			else:
+				w.inv.place(occ, to["loc"], to["x"], to["y"], to["rot"])
+		w.select_slot(want)
 	else:
+		if occ != null:
+			w.inv.place(occ, want)
 		w.message.emit("%s put away" % WeaponDefs.of(id)["name"])
 
 
