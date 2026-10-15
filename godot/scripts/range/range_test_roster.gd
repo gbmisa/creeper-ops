@@ -59,13 +59,15 @@ static func _rows(house: Node3D, player: TacticalPlayer) -> void:
 
 static func _marksman(house: Node3D, player: TacticalPlayer) -> void:
 	var spots: Array[Vector3] = [house.to_global(Vector3(-10, 0, 8)), house.to_global(Vector3(-10, 0, -8))]
-	var m := make(session, house, player, "marksman", Vector3(-10, 0, 8), 0.0, spots)
+	# F5: bots only fire with a clear muzzle line, so the marksman stands outside the house (south)
+	# and fires further south, away from it; the wind-up / glint / relocation checks are unchanged.
+	var m := make(session, house, player, "marksman", Vector3(0, 0, 20), 0.0, spots)
 	var r := make(session, house, player, "rifleman", Vector3(-10, 0, 8))
 	t.check("marksman sight range is longer than a rifleman's (>= 120 m)", m.percept.range_m > r.percept.range_m and m.percept.range_m >= 120.0)
 	var eye := Vector3.ZERO
 	t.check("marksman sees a target at 150 m, rifleman does not", BotPerception.in_view(eye, Vector3.FORWARD, Vector3(0, 0, -150), m.percept.range_m) \
 		and not BotPerception.in_view(eye, Vector3.FORWARD, Vector3(0, 0, -150), r.percept.range_m))
-	var pt := m.global_position + Vector3(0, 1.3, -40)
+	var pt := m.global_position + Vector3(0, 1.3, 40)
 	var before := m.gun.rounds_total()
 	m.cd = 0.0
 	BotShooting.fire(m, pt)

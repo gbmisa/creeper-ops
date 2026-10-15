@@ -33,6 +33,7 @@ func run() -> void:
 	await _wall_checks()
 	await RangeTestTargets.run(self)
 	await RangeTestBots.run(self)
+	await RangeTestFbb.run(self)
 	await RangeTestBody.run(self)
 	await RangeTestDeploy.run(self)
 	RangeTestMp1.run(self)

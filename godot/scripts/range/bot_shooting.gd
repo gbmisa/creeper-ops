@@ -8,6 +8,11 @@ static func fire(b: ScavBot, point: Vector3) -> void:
 	var dist := b.eye().distance_to(point)
 	if b.gun.busy() or b.cd > 0.0:
 		return
+	# F5: only fire with a clear line from the muzzle to the target. The ray runs on LAYER_WORLD,
+	# so the bot's own body (LAYER_BODY) never blocks it; cover, walls and props do.
+	var muzzle := b.eye() + (point - b.eye()).normalized() * 0.4
+	if not BotPerception.los(b.get_world_3d().direct_space_state, muzzle, [point]):
+		return
 	var df := b.def
 	var wu: float = df["windup"]
 	if wu > 0.0:  # marksman: scope glint first, shot after the wind-up
