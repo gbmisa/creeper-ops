@@ -169,10 +169,11 @@ func _process(delta: float) -> void:
 ## Camera near plane while aiming: small enough not to clip the visible stock, but never past the sight
 ## (a pistol red dot sits close to the eye).
 func ads_near() -> float:
+	var cap := float(_def.get("ads_near", ADS_NEAR)) if _gun != null else ADS_NEAR  # per-gun cap (M1911: 0.25, F50)
 	if _gun == null or not _gun.fit.has("sight"):
-		return ADS_NEAR
+		return cap
 	var sight_z := half_len - ads_eye(_def) - AttachmentMounts.mount(_def, "sight", half_len).z  # eye to sight centre
-	return clampf(sight_z - float(AttachmentDefs.ROWS[_gun.fit["sight"]]["depth"]) * 0.5 - 0.04, 0.03, ADS_NEAR)
+	return clampf(sight_z - float(AttachmentDefs.ROWS[_gun.fit["sight"]]["depth"]) * 0.5 - 0.04, 0.03, cap)
 
 
 ## Gun model position under the camera, hip (a = 0) to ADS (a = 1). The butt is shouldered at the hip; when
