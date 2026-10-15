@@ -21,7 +21,8 @@ var _cycle_clip := ""
 const HIP_BUTT := 0.1  # how far the butt sits behind the eye at the hip
 const HIP_MIN_Z := 0.3  # pistols: held out at least this far
 const HIP_YAW := 2.5
-const ADS_NEAR := 0.25  # aiming: camera near plane (m) clips the stock (see WeaponDefs butt)
+const ADS_NEAR := 0.06  # P4: the eye sits 0.30 m ahead of the butt plate (cheek weld), so the stock is in
+                        # view while ADS — 0.06 keeps it from clipping. ads_near() still guards the sight.
 
 
 func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
@@ -141,7 +142,8 @@ func _process(delta: float) -> void:
 	arms.update(model, delta)
 
 
-## Camera near plane while aiming: clips the stock, but never the sight (a pistol red dot sits close to the eye).
+## Camera near plane while aiming: small enough not to clip the visible stock, but never past the sight
+## (a pistol red dot sits close to the eye).
 func ads_near() -> float:
 	if _gun == null or not _gun.fit.has("sight"):
 		return ADS_NEAR
@@ -149,8 +151,9 @@ func ads_near() -> float:
 	return clampf(sight_z - float(AttachmentDefs.ROWS[_gun.fit["sight"]]["depth"]) * 0.5 - 0.04, 0.03, ADS_NEAR)
 
 
-## Gun model position under the camera, hip (a = 0) to ADS (a = 1). The butt is shouldered at the hip and sits
-## `butt` (per-gun data) behind the eye when aiming, so the stock is never in view.
+## Gun model position under the camera, hip (a = 0) to ADS (a = 1). The butt is shouldered at the hip; when
+## aiming the eye sits `butt` (per-gun data, 0.30 m for stocked guns) ahead of the butt plate (cheek weld, P4),
+## so the stock is in view — ADS_NEAR is small enough not to clip it.
 static func base_pos(def: Dictionary, half: float, a: float) -> Vector3:
 	var hip: Vector3 = def["hip_pos"]
 	hip.z = -maxf(half - HIP_BUTT, HIP_MIN_Z)  # butt tucked behind the eye, gun parallel to the view
