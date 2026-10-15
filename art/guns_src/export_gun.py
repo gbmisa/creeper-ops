@@ -5,8 +5,18 @@ a = sys.argv[sys.argv.index("--")+1:]
 out, length, flip = a[0], float(a[1]), int(a[2])
 special = a[3] if len(a) > 3 else ""
 sc = bpy.context.scene
+shapes = {pb.custom_shape for o in bpy.data.objects if o.type == 'ARMATURE' for pb in o.pose.bones if pb.custom_shape}
 for o in list(bpy.data.objects):
-    if o.type not in ('MESH', 'ARMATURE'): bpy.data.objects.remove(o)
+    if o.type not in ('MESH', 'ARMATURE') or o in shapes: bpy.data.objects.remove(o)
+# The game sizes a gun from its first MeshInstance, so an unrigged multi-part gun is joined into one mesh.
+meshes = [o for o in bpy.data.objects if o.type == 'MESH']
+if len(meshes) > 1 and not any(o.type == 'ARMATURE' for o in bpy.data.objects):
+    for o in meshes:
+        if o.name not in sc.collection.objects and not o.users_collection: sc.collection.objects.link(o)
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in meshes: o.select_set(True)
+    bpy.context.view_layer.objects.active = meshes[0]
+    bpy.ops.object.join()
 dg = bpy.context.evaluated_depsgraph_get()
 mn = Vector((1e9,)*3); mx = Vector((-1e9,)*3)
 for o in bpy.data.objects:
@@ -24,6 +34,14 @@ for o in list(bpy.data.objects):
     if o is root or o.parent: continue
     o.parent = root; o.matrix_parent_inverse = Matrix.Identity(4)
 root.matrix_world = M
+if not any(o.type == 'ARMATURE' for o in bpy.data.objects):
+    # Unrigged: bake the scale into the mesh, since the game reads the gun's size from the MeshInstance's own AABB.
+    bpy.context.view_layer.update()
+    for o in bpy.data.objects:
+        if o.type == 'MESH':
+            w = o.matrix_world.copy(); o.data.transform(w); o.matrix_parent_inverse = Matrix.Identity(4)
+            o.matrix_basis = Matrix.Identity(4)
+    root.matrix_world = Matrix.Identity(4)
 # bake root transform into children's parent inverse is not needed: glTF keeps the node
 if special == "ak":
     arm = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
