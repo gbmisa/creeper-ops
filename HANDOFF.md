@@ -4,6 +4,20 @@
 Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) (new Stage 25 row). Run: [RUN.md](RUN.md). Opus long-horizon plan: [docs/tasks/ART3_OPUS_plan.md](docs/tasks/ART3_OPUS_plan.md).
 Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHub branches; **Opus** orchestrates, merges and does the visuals. Opus → Muse notes go in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md); the latest note covers A4/A5 merge order and the new glbs.
 
+## 2026-10-14 late night: gun fixes on `fix/fb-guns` (READ FIRST)
+- **New branch `fix/fb-guns`** (worktree `../fb-guns`, pushed, d315b85) = fb-e + Muse's `feat/fb-d-recoil-ads` (P3 Tarkov
+  recoil toggle, P4 eye position) + `feat/mp1`. **Gregory plays it:** `godot --path "../creeper fps td-worktrees/fb-guns/godot"`.
+  Range 532 PASS / 0 FAIL, smoke 0 failures, parse clean. **Muse:** fb-d and mp1 were broken alone (fb-d lacked mp1's
+  RangeBots fix; mp1's `range_truck.gd` still called the removed `RangeLoadout`); both fixed on fix/fb-guns.
+- Fixed there: **F44** (hip dot ate the fire click: mouse filter), **F45** (body slides back by the run lean; side effect:
+  own shadow up to 0.3 m further back while running), **F35** P90 echo (sample cut before its slapback).
+- **FB-F Mosin bolt animation**: brief `docs/tasks/FB_F_mosin_bolt.md`, Sonnet agent running on `feat/fb-f-mosin-bolt`
+  (worktree `../fb-f`). The glb is rigged (`Bolt`, `BoltHandle`); the cycle rule already existed. Opus judges its shots.
+- **FB-G ADS sights (next Opus job)**: `docs/tasks/FB_G_ads_sights.md` has the root causes and tools. Main ones: P4 puts the
+  eye in front of the rear sight on short guns, and `ads_y` = tallest point (AK eye inside the receiver). ADS before-sheet:
+  `docs/art/ads/`. Open for Gregory: P90 and SR-25 have no usable irons (model work or a default optic?).
+- Still open from before: the m4a1 question below; FB-E models pkm, mp5, vector, sks, saiga12, acog3x, compensator, flashhider.
+
 ## 2026-10-14 night: FB-E part 1 + gun feedback F32-F44 (READ FIRST, Gregory: "fix these")
 - **FB-E part 1 done**: worktree `../fb-e`, branch `art/fb-e-free-models` (4ea30f4, pushed, NOT merged into integ). Free models for scarh, saiga12, sks, sr25 (MK14), m4a1 (carry handle) + 10 attachments; licenses `art/free_src/LICENSES.md`; sheets `docs/art/free/`. Rails re-measured to receiver top on replaced guns. Part 2 (utility + props) not started.
 - **Gregory played fb-e** (`godot --path ../fb-e/godot`) and logged F32-F44 in `docs/playtests/feedback_2026-10-14.md`: ADS sights off/sideways on scarh, m4a1 (no irons), saiga, p90 (+ sound echo), sks, vector, sr25 (rail blocks sight, canted), mosin (sideways); pkm/mp5/vector models bad; **Mosin bolt action + animation (new feature)**; **hip fire doesn't fire while the hip dot (X) is on (F44)**; **looking down while running shows the inside of the body's neck hole (F45)**.
