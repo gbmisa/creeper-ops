@@ -8,6 +8,11 @@ const SCENE := "res://scenes/firing_range.tscn"
 
 static var pending := "range"
 
+## Kit carried across scene reloads (deploy / restart / back-to-range). Written by
+## RangeSession.save_kit, cleared by clear_kit (KIA); FiringRange restores it into the
+## fresh session. Same bootstrap category as `pending`, not per-player state.
+static var carried_kit := {}
+
 var selected := "range"
 
 

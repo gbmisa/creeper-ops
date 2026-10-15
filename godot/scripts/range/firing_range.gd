@@ -40,6 +40,7 @@ func _ready() -> void:
 
 func _build() -> void:
 	session = RangeSession.new(int(args.get("seed", 0)))
+	session.saved_kit = RangeMaps.carried_kit  # F6: keep the deployed kit across map reloads
 	if args.has("map"):
 		RangeMaps.pending = str(args["map"])
 	session.maps.selected = RangeMaps.pending
@@ -102,6 +103,10 @@ func _build() -> void:
 	inv_ui = InventoryUI.new()
 	add_child(inv_ui)
 	inv_ui.setup(weapons, player, world_items)
+	if not is_skirmish:
+		var bench := RangeWorkbench.new()  # F11: weapon customization station
+		add_child(bench)
+		bench.setup(weapons, player, inv_ui)
 	var hud := RangeHud.new()
 	add_child(hud)
 	hud.setup(weapons, player)

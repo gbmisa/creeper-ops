@@ -59,8 +59,10 @@ func deploy(inv: Inventory) -> void:
 ## Save the kit without changing map (tests).
 func save_kit(inv: Inventory) -> void:
 	saved_kit = inv.to_dict()
+	RangeMaps.carried_kit = saved_kit  # F6: survives the scene reload (fresh session each map)
 
 
 ## KIA: the kit is lost, the next start uses the default kit (was RangeLoadout.clear).
 func clear_kit() -> void:
 	saved_kit = {}
+	RangeMaps.carried_kit = {}
