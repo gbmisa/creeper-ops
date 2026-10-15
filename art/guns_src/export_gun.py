@@ -77,6 +77,7 @@ if special == "ak":
 def to_principled(m):
     if not m.use_nodes or not m.node_tree: return
     nt = m.node_tree
+    if any(n.type == 'TEX_IMAGE' for n in nt.nodes): return  # textured free models keep their texture
     src = next((n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED'), None) or next((n for n in nt.nodes if n.type == 'BSDF_DIFFUSE'), None)
     col = list(src.inputs[0].default_value) if src else list(m.diffuse_color)
     if col[0] > 0.95 and col[1] > 0.95 and col[2] > 0.95: col = [0.12, 0.12, 0.13, 1]  # untextured white -> gunmetal

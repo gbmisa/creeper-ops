@@ -5,3 +5,6 @@ godot/.godot/
 .claude/settings.local.json
 art/operative/src/
 art/gen/*_raw.glb
+
+# FB-E raw free-model downloads (only art/free_src/LICENSES.md is tracked)
+art/free_src/*/
