@@ -4,7 +4,28 @@
 Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) (new Stage 25 row). Run: [RUN.md](RUN.md). Opus long-horizon plan: [docs/tasks/ART3_OPUS_plan.md](docs/tasks/ART3_OPUS_plan.md).
 Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHub branches; **Opus** orchestrates, merges and does the visuals. Opus → Muse notes go in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md); the latest note covers A4/A5 merge order and the new glbs.
 
-## 2026-10-14 late night: gun fixes on `fix/fb-guns` (READ FIRST)
+## 2026-10-15: PAUSED BY GREGORY (READ FIRST)
+Gregory paused all work "until a new, better model comes out", after playtesting the merge below. Don't resume unasked.
+- **Merged + pushed:** `fix/fb-guns` fast-forwarded into `integ/2026-10-09` (6182f1d). After a merge that adds
+  `class_name` files, run `godot --headless --path godot --import` in integ, or the range fails to parse (happened).
+- **Run integ:** `godot --path "<repo>-worktrees/integ/godot" res://scenes/firing_range.tscn`. RUN.md's "from anywhere"
+  path points at the main checkout, which has no range code.
+- **Feedback F46-F54** in `docs/playtests/feedback_2026-10-14.md` (main checkout). Summary:
+  F46 invisible AK at range start (gun selected before viewmodel connects); F47 SCAR-H ADS (solid rear block, floating
+  left hand); F48 REGRESSION from MP-1: deploy loses the kit (session rebuilt per map load); F49 AK clips in ADS;
+  F50 REGRESSION: M1911 ADS worse (FB-D P4 near plane 0.25→0.06 for all guns); F51 recoil toggle resets per map (MP-1);
+  F52 Tarkov recoil has no camera kick, only the gun rises; F53 arms stick out + hands flop on weapon switch;
+  F54 bullets ignore barrel/recoil direction. F19 (killed while paused) still open in FB-B (Muse, not started).
+- **Stopped agents, WIP commits, UNTESTED:** `fix/f46-start-gun` (../f46), `fix/f48-deploy-kit` (../f48, also recoil
+  toggle persistence), `fix/f50-m1911-ads` (../f50). Briefs in each worktree's `docs/tasks/F4x_*.md`. Review from zero.
+- **Gregory's direction for ADS:** align every gun by one rule, not per-gun numbers: normalize each model (bore on -Z,
+  zero pitch/yaw, sights up, zero roll), mark rear + front sight points, compute ADS so both sit on the camera axis,
+  one test for all guns. Open question: does the M1911 follow the rule or stay as restored (F50)?
+- **Recoil rework (F52/F54) needs a CHANGES.md entry first:** separate camera kick/return/shake, gun kick-back, bullets
+  along the barrel, live tuning panel, a Tarkov clip as the target.
+- **Lesson:** I merged MP-1 and FB-D without playing range start → deploy → skirmish. Play that flow before any merge.
+
+## 2026-10-14 late night: gun fixes on `fix/fb-guns`
 - **New branch `fix/fb-guns`** (worktree `../fb-guns`, pushed, d315b85) = fb-e + Muse's `feat/fb-d-recoil-ads` (P3 Tarkov
   recoil toggle, P4 eye position) + `feat/mp1`. **Gregory plays it:** `godot --path "../creeper fps td-worktrees/fb-guns/godot"`.
   Range 532 PASS / 0 FAIL, smoke 0 failures, parse clean. **Muse:** fb-d and mp1 were broken alone (fb-d lacked mp1's
