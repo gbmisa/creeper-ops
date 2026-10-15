@@ -18,6 +18,7 @@ var _kick_v := 0.0
 var _bob_t := 0.0
 var _check := 0.0
 var _cycle_clip := ""
+var _posed := false  # held gun uses hand-posed arms (WeaponDefs arms_pose) instead of the IK arms
 const HIP_BUTT := 0.1  # how far the butt sits behind the eye at the hip
 const HIP_MIN_Z := 0.3  # pistols: held out at least this far
 const HIP_YAW := 2.5
@@ -61,6 +62,20 @@ func _on_switched(g: Gun) -> void:
 	model.add_child(rig)
 	rig.build(g, half_len)
 	arms.set_gun(_def)
+	_posed = _add_posed_arms(String(_def.get("arms_pose", "")))
+	arms.visible = not _posed
+
+
+## Arms posed by hand in Blender for this gun (gun-model space), in place of the IK arms. False if none exist.
+func _add_posed_arms(id: String) -> bool:
+	var path := "res://assets/models/operative/%s.glb" % id
+	if id == "" or not ResourceLoader.exists(path):
+		return false
+	var posed := (load(path) as PackedScene).instantiate()
+	model.add_child(posed)
+	for mi in posed.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return true
 
 
 func _on_shot(res: Dictionary, g: Gun) -> void:
@@ -138,7 +153,8 @@ func _process(delta: float) -> void:
 		rot += Vector3(0.15, 0.3, 1.1)
 	model.position = model.position.lerp(pos, minf(1.0, delta * 20.0))
 	model.rotation = model.rotation.lerp(rot, minf(1.0, delta * 20.0))
-	arms.update(model, delta)
+	if not _posed:
+		arms.update(model, delta)
 
 
 ## Camera near plane while aiming: clips the stock, but never the sight (a pistol red dot sits close to the eye).
