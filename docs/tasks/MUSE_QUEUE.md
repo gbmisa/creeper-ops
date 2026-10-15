@@ -19,6 +19,15 @@ clean, `godot --headless --path . res://scenes/firing_range.tscn -- --range-test
 | `feat/r5-util` | Utility items + grappling hook (`RANGE5_brief.md` "Track UTIL") | Skip `stim` (MED owns it); models exist |
 | `feat/r5-expand` | Skirmish ~220 m: districts, spawns, 3 extracts, ~24 bots, navmesh, tests (`RANGE5_brief.md` "Track EXPAND", phase 1 only) | Graphics dressing of the districts is Opus's phase 2 |
 
+## Wave 3: 2026-10-14 playtest feedback (start after `feat/mp1` merges; else base on `origin/feat/mp1`)
+| Branch | Brief | Who |
+|---|---|---|
+| `fix/fb-a-ragdoll` | `FB_A_ragdoll.md`: enemy death ragdoll (F14) | Muse |
+| `fix/fb-b-skirmish` | `FB_B_skirmish_fixes.md`: prop collision, LOS, aimbots, pause, interiors (F5/F18/F19/F25/F26) | Muse |
+| `fix/fb-c-range` | `FB_C_range_fixes.md`: gun invisible, restart loadout, shotgun tube, sprint-jump, stations, workbench | Muse |
+| `feat/fb-d-recoil-ads` | `FB_D_recoil_ads.md`: Tarkov recoil P3 + ADS eye P4 (approved) | Muse |
+| `art/fb-e-free-models` | `FB_E_free_models.md`: free models replace every Hunyuan model | Sonnet local; Opus judges, models the rest |
+
 ## Opus (local)
 - Finish `feat/r5-look3` (WIP 9fd79ef, map graphics fixes) and `feat/r5-artfix` (WIP 42d034e, model shading/textures).
 - Hunyuan models for MED items; EXPAND district props + dressing after Muse's phase 1.
