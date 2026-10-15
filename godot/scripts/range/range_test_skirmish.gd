@@ -2,12 +2,19 @@ class_name RangeTestSkirmish
 ## Skirmish checks for `--range-test`: map builds, navmesh path spawn -> extract / upstairs / tower, roster counts,
 ## extract timer wins, end screen, loot, map switch default.
 
-static func run(t: RangeTest, player: TacticalPlayer) -> void:
-	t.check("RangeMaps defaults to the Firing Range", RangeMaps.selected == "range")
+static func run(t: RangeTest, session: RangeSession, player: TacticalPlayer) -> void:
+	t.check("RangeMaps defaults to the Firing Range", session.maps.selected == "range")
 	var game := SkirmishGame.new()
 	t.add_child(game)
 	game.build_world()
-	game.layout.bake()
+	var rack := RangeRack.new()
+	t.add_child(rack)
+	var weapons := PlayerWeapons.new()
+	t.add_child(weapons)
+	weapons.setup(player, player.input, t.bal, rack, session)
+	var log := RangeHitLog.new()
+	t.add_child(log)
+	game.start(player, weapons, t.bal, log, t, session)
 	for i in 8:
 		await t.get_tree().physics_frame
 	var lay := game.layout
@@ -19,13 +26,6 @@ static func run(t: RangeTest, player: TacticalPlayer) -> void:
 	t.check("navmesh path spawn -> extract", _reaches(map, SkirmishData.SPAWN, SkirmishData.EXTRACT))
 	t.check("navmesh path up the hotel stairs to the second floor", _reaches(map, SkirmishData.SPAWN, SkirmishData.SPOTS[1], 0.8))
 	t.check("navmesh path up the tower ramp to the platform", _reaches(map, SkirmishData.SPAWN, SkirmishData.SPOTS[0], 0.8))
-	var log := RangeHitLog.new()
-	t.add_child(log)
-	game.player = player
-	game.weapons = PlayerWeapons.new()
-	game.bal = t.bal
-	game.log = log
-	game.spawn_enemies()
 	var kinds := {}
 	for b in game.bots:
 		kinds[b.kind] = kinds.get(b.kind, 0) + 1

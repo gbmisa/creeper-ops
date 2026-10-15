@@ -1,11 +1,30 @@
 class_name RecoilModel
 extends RefCounted
 ## Camera / viewmodel recoil offset (degrees: x = pitch up, y = yaw) plus idle sway.
-
-## Classic (default): instant offset, bullets follow the camera. Tarkov (static flag, Esc menu): each shot is an
-## impulse into a critically damped spring on the BARREL; the camera only follows by `cam_share`, the viewmodel and
-## the bullets use the full barrel angle. `conv` pulls the barrel target back, so auto fire plateaus.
-static var tarkov := false
+##
+## Two models; the Esc menu toggles per player (range/range_menu.gd), Classic is the default.
+## Classic (default): instant offset, bullets follow the camera.
+## Tarkov (per-player flag): each shot is an impulse into a spring-damper on the BARREL;
+## the camera only follows by `cam_share`, the viewmodel and the bullets use the full barrel
+## angle. `conv` pulls the barrel target back, so auto fire plateaus.
+##
+## Model notes (TRP spec, TRP/docs/spec/weapon-handling.md, Apache-2.0 — numbers used, no code copied):
+## - "Recoil / The position and camera processes": a shot adds force to a spring, then per step
+##   `Velocity += Force * Intensity; Velocity -= (Current - Offset) * ReturnSpeed; Velocity *= Damping`.
+##   Ours is the same shape with an explicit dt and critical damping (OMEGA), so it is
+##   frame-rate independent where TRP's runs at the physics step.
+## - "Recoil / The rotation process": TRP enters stable mode on the weapon's RecoilStableIndexShot
+##   (5 for the AKM) and the muzzle stops climbing from there. Ours plateaus via per-gun `conv`
+##   pulling the spring target back; `conv` values are tuned so the plateau sets in around shot 5.
+## - "Recoil / What a shot does": recoil angle about 90 deg = straight up (AKM 80..90). Our per-gun
+##   `angle` column follows the same convention (80..100).
+## - "Recoil / Onto the camera": the camera blends toward the weapon's climb by a per-frame fraction
+##   (AKM CameraToWeaponAngleSpeedRange 0.1..0.2). Our `cam_share` is the same idea as one number;
+##   per-class values follow the proposal (pistols ~0.15, stocked ~0.35).
+## - "Recoil / Measured" (stock AKM, standing): one shot raises the muzzle 1.6 deg from the hip,
+##   1.2 deg aiming; full auto sits 7..8 deg from the 5th shot, never above 10.3. Our `up` column
+##   keeps the game's existing tuning (smaller, game-feel scaled); the plateau SHAPE matches.
+var tarkov := false
 
 var offset := Vector2.ZERO  # camera offset (deg): x = pitch up, y = yaw
 var barrel := Vector2.ZERO  # Tarkov only: bore angle from the un-recoiled aim (deg)

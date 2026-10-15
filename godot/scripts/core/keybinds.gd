@@ -114,6 +114,11 @@ static func keys(id: String) -> Array:
 	return _map.get(id, [])
 
 
+## All rebindable action ids (for InputState.snap()).
+static func action_ids() -> Array:
+	return DEFAULTS.keys()
+
+
 static func matches(id: String, keycode: int) -> bool:
 	return keys(id).has(keycode)
 

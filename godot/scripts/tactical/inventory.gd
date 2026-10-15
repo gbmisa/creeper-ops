@@ -8,14 +8,21 @@ const GRIDS := ["rig_g", "pockets", "pack_g"]  # grid locs (a worn rig / backpac
 const BAG_OF := {"rig_g": "rig", "pack_g": "backpack"}
 const GROUND_SIZE := Vector2i(10, 14)
 
+var ids: IdSource  # set by the session (server-issued in MP-2); item uids come from here
 var slots := {}  # slot name -> item or null
 var pockets: Array = []
 var ground: Array = []
 
 
-func _init() -> void:
+func _init(p_ids: IdSource = null) -> void:
+	ids = p_ids if p_ids != null else IdSource.new()
 	for s in SLOTS:
 		slots[s] = null
+
+
+## A fresh item instance with a session-issued uid (MULTIPLAYER.md rule 6).
+func make(id: String, opts: Dictionary = {}) -> Dictionary:
+	return ItemDefs.make(id, opts, ids)
 
 
 func equipped(slot: String):
@@ -177,7 +184,53 @@ func request_fit(gun_item: Dictionary, att: Dictionary) -> Dictionary:
 
 ## The one entry for taking a part off. {item, spill} or {}; see Attachments.unfit.
 func request_unfit(gun_item: Dictionary, slot: String) -> Dictionary:
-	return Attachments.unfit(gun_item, slot)
+	return Attachments.unfit(self, gun_item, slot)
+
+
+## --- Request API (MULTIPLAYER.md rule 4): the only way to mutate the inventory. ---
+## Each validates and returns {ok, why}. In MP-2 these become server RPCs; the UI calls only these.
+
+func request_move(item: Dictionary, to: Dictionary) -> Dictionary:
+	if item.get("loc", "") == "":
+		return {"ok": false, "why": "not in inventory"}
+	if move(item, to):
+		return {"ok": true, "why": ""}
+	return {"ok": false, "why": "does not fit"}
+
+
+func request_place(item: Dictionary, loc: String, x: int = 0, y: int = 0, rot: int = -1) -> Dictionary:
+	if place(item, loc, x, y, rot):
+		return {"ok": true, "why": ""}
+	return {"ok": false, "why": "does not fit"}
+
+
+func request_remove(item: Dictionary) -> Dictionary:
+	if item.get("loc", "") == "":
+		return {"ok": false, "why": "not in inventory"}
+	remove(item)
+	return {"ok": true, "why": ""}
+
+
+## Take an item out of the inventory for the world (drop/pickup flows). The caller spawns it.
+func request_drop(item: Dictionary) -> Dictionary:
+	return request_remove(item)
+
+
+## Put a world item into the inventory (first fit). {ok, why, loc}.
+func request_pick(item: Dictionary) -> Dictionary:
+	var to := first_fit(item)
+	if to.is_empty():
+		return {"ok": false, "why": "no room", "loc": {}}
+	if place(item, to["loc"], to["x"], to["y"], to["rot"]):
+		return {"ok": true, "why": "", "loc": to}
+	return {"ok": false, "why": "does not fit", "loc": {}}
+
+
+## Add an item (tops up stacks, then first fit). {ok, why}.
+func request_add(item: Dictionary) -> Dictionary:
+	if add(item):
+		return {"ok": true, "why": ""}
+	return {"ok": false, "why": "no room"}
 
 
 ## Everything carried (slots and bag contents, not the ground).
@@ -239,7 +292,7 @@ func load_dict(d: Dictionary) -> void:
 	InventoryIO.load_dict(self, d)
 
 
-static func from_dict(d: Dictionary) -> Inventory:
-	var inv := Inventory.new()
+static func from_dict(d: Dictionary, ids: IdSource = null) -> Inventory:
+	var inv := Inventory.new(ids)
 	inv.load_dict(d)
 	return inv

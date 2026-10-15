@@ -31,7 +31,8 @@ static var _tex := {}
 
 
 static func map_id() -> String:
-	return "skirmish" if RangeMaps.selected == "skirmish" else "range"
+	# Navigation state: pending equals the session's selected map for this scene's lifetime.
+	return "skirmish" if RangeMaps.pending == "skirmish" else "range"
 
 
 ## Material for a layout box, or the flat colour material when the mat id has no style.

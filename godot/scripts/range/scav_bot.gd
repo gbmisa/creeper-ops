@@ -21,7 +21,7 @@ var gun: Gun
 var brain := BotBrain.new()
 var percept := BotPerception.new()
 var rig := {}
-var player: TacticalPlayer
+var session: RangeSession
 var bal: Ballistics
 var covers: Array[Vector3] = []
 var patrol: Array[Vector3] = []
@@ -61,8 +61,8 @@ func _init() -> void:
 
 
 ## `house` is anything with `covers` and `patrol` (KillHouse, SkirmishLayout); `route` overrides its patrol.
-func setup(p: TacticalPlayer, b: Ballistics, house: Node3D, label: String, start_idx: int, bot_kind := "rifleman", route: Array[Vector3] = []) -> void:
-	player = p
+func setup(s: RangeSession, b: Ballistics, house: Node3D, label: String, start_idx: int, bot_kind := "rifleman", route: Array[Vector3] = []) -> void:
+	session = s
 	bal = b
 	kind = bot_kind
 	def = BotDefs.of(kind)
@@ -73,11 +73,11 @@ func setup(p: TacticalPlayer, b: Ballistics, house: Node3D, label: String, start
 	percept.range_m = def["sight"]
 	label_name = label
 	patrol_i = start_idx % patrol.size()
-	rng.randomize()
+	rng.seed = s.next_seed()
 	gun = Gun.new(def["gun"])
 	for a in def["armor"]:
 		body.equip(a)
-	BotNoise.listen(_on_noise)
+	s.noise.listen(_on_noise)
 
 
 func _ready() -> void:
@@ -122,7 +122,8 @@ func on_hit(res: Dictionary) -> void:
 	if not _dying and not body.dead and def["overwatch"]:
 		BotEngage.relocate(self)
 	if not _dying:
-		percept.alert(player.global_position if player != null else res.get("origin", global_position))
+		var target := session.nearest_player(global_position) if session != null else null
+		percept.alert(target.node.global_position if target != null and target.node != null else res.get("origin", global_position))
 	if body.dead:
 		_die()
 
@@ -160,6 +161,8 @@ func think(dt: float, over := {}) -> void:
 
 
 func _sense(dt: float) -> void:
+	var target := session.nearest_player(global_position) if session != null else null
+	var player := target.node if target != null else null
 	if player == null or player.body.dead:
 		percept.seeing = false
 		percept.aware = false
@@ -262,3 +265,28 @@ func _die() -> void:
 	tw.tween_interval(8.5)
 	tw.tween_callback(queue_free)
 	died.emit(self)
+
+
+## State needed to spawn this bot mid-session (MULTIPLAYER.md rule 6).
+func to_dict() -> Dictionary:
+	return {
+		"kind": kind,
+		"label": label_name,
+		"pos": [global_position.x, global_position.y, global_position.z],
+		"yaw": rotation.y,
+		"body": body.to_dict(),
+		"gun": gun.to_dict(),
+		"patrol_i": patrol_i,
+		"brain": brain.state,
+	}
+
+
+static func from_dict(d: Dictionary) -> ScavBot:
+	var b := ScavBot.new()
+	b.kind = str(d.get("kind", "rifleman"))
+	b.def = BotDefs.of(b.kind)
+	b.label_name = str(d.get("label", "Scav"))
+	b.body = BodyHealth.from_dict(d.get("body", {}) as Dictionary)
+	b.gun = Gun.from_dict(d.get("gun", {}) as Dictionary)
+	b.patrol_i = int(d.get("patrol_i", 0))
+	return b

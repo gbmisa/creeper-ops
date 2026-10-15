@@ -8,7 +8,7 @@ static func give(w: PlayerWeapons, id: String) -> void:
 		if have != null and have["id"] == id:
 			w.select_slot(s)
 			return
-	var it := ItemDefs.make(id)
+	var it := w.inv.make(id)
 	(it["gun"] as Gun).spares.clear()
 	if not w.inv.add(it):
 		w.message.emit("No room for %s" % WeaponDefs.of(id)["name"])

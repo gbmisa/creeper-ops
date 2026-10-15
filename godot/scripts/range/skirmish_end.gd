@@ -3,7 +3,7 @@ extends CanvasLayer
 ## EXTRACTED / KIA screen: time and kills, Restart / Level select / Back to Firing Range.
 
 
-func _init(won: bool, time_s: float, kills: int, total: int) -> void:
+func _init(won: bool, time_s: float, kills: int, total: int, session: RangeSession) -> void:
 	layer = 20
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.6)
@@ -17,7 +17,7 @@ func _init(won: bool, time_s: float, kills: int, total: int) -> void:
 	p.add_child(col)
 	col.add_child(UiKit.label("EXTRACTED" if won else "KIA", 34, Color(0.5, 1.0, 0.6) if won else Color(1.0, 0.4, 0.35)))
 	col.add_child(UiKit.label("Time %d:%02d   Kills %d / %d" % [int(time_s) / 60, int(time_s) % 60, kills, total], 18))
-	col.add_child(UiKit.button("Restart", func(): get_tree().reload_current_scene()))
+	col.add_child(UiKit.button("Restart", func(): session.maps.change(session.maps.selected)))
 	col.add_child(UiKit.button("Level select", func(): get_tree().change_scene_to_file("res://scenes/main.tscn")))
-	col.add_child(UiKit.button("Back to Firing Range", func(): RangeMaps.go("range")))
+	col.add_child(UiKit.button("Back to Firing Range", func(): session.maps.change("range")))
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

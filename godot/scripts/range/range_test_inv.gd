@@ -18,23 +18,23 @@ static func _kit() -> Inventory:
 
 static func _grids(t: RangeTest) -> void:
 	var inv := _kit()
-	var pk := ItemDefs.make("pack_small")
+	var pk := inv.make("pack_small")
 	inv.place(pk, "backpack")
-	var med := ItemDefs.make("med_ifak")  # 1x2
+	var med := inv.make("med_ifak")  # 1x2
 	t.check("inv: item fits an empty cell", inv.fits("pack_g", med, 0, 0, 0))
 	t.check("inv: out of bounds is refused", not inv.fits("pack_g", med, 4, 0, 0) and not inv.fits("pack_g", med, 0, 3, 0))
 	t.check("inv: rotation swaps the footprint", inv.fits("pack_g", med, 2, 3, 1) and not inv.fits("pack_g", med, 3, 3, 1))
 	inv.place(med, "pack_g", 1, 1, 0)
-	var other := ItemDefs.make("med_ifak")
+	var other := inv.make("med_ifak")
 	t.check("inv: overlap is refused", not inv.fits("pack_g", other, 1, 2, 0) and inv.fits("pack_g", other, 2, 1, 0))
 	t.check("inv: an item ignores itself when moved within a grid", inv.fits("pack_g", med, 1, 2, 0))
-	var ak := ItemDefs.make("ak47")
-	t.check("inv: pockets are 1x1 only", not inv.fits("pockets", ak, 0, 0, 0) and inv.fits("pockets", ItemDefs.make("med_bandage"), 3, 0, 0))
-	var b1 := ItemDefs.make("pack_small")
+	var ak := inv.make("ak47")
+	t.check("inv: pockets are 1x1 only", not inv.fits("pockets", ak, 0, 0, 0) and inv.fits("pockets", inv.make("med_bandage"), 3, 0, 0))
+	var b1 := inv.make("pack_small")
 	inv.place(b1, "ground", 0, 0)
-	t.check("inv: ground items obey bounds and overlap, bags included", not inv.fits("ground", ItemDefs.make("pack_small"), 1, 1, 0) \
-		and not inv.fits("ground", ItemDefs.make("pack_small"), 9, 0, 0) and inv.fits("ground", ItemDefs.make("pack_small"), 3, 0, 0))
-	t.check("inv: bags cannot go inside grids", not inv.fits("pack_g", ItemDefs.make("rig_chest"), 0, 0, 0))
+	t.check("inv: ground items obey bounds and overlap, bags included", not inv.fits("ground", inv.make("pack_small"), 1, 1, 0) \
+		and not inv.fits("ground", inv.make("pack_small"), 9, 0, 0) and inv.fits("ground", inv.make("pack_small"), 3, 0, 0))
+	t.check("inv: bags cannot go inside grids", not inv.fits("pack_g", inv.make("rig_chest"), 0, 0, 0))
 
 
 static func _slots_and_order(t: RangeTest) -> void:
@@ -44,23 +44,23 @@ static func _slots_and_order(t: RangeTest) -> void:
 		and inv.equipped("rig") != null)
 	var rig_mags: Array = inv.grid_items("rig_g").filter(func(i): return i["id"] == "mag_ak47")
 	t.check("inv: start rig holds 3 AK mags and 2 pistol mags", rig_mags.size() == 3 and inv.grid_items("rig_g").size() == 5)
-	var sniper := ItemDefs.make("sniper")
+	var sniper := inv.make("sniper")
 	t.check("inv: long gun is refused by the holster, accepted by secondary", not inv.fits("holster", sniper, 0, 0) and inv.fits("secondary", sniper, 0, 0))
-	t.check("inv: pistol is refused by primary", not inv.fits("primary", ItemDefs.make("m1911"), 0, 0))
+	t.check("inv: pistol is refused by primary", not inv.fits("primary", inv.make("m1911"), 0, 0))
 	t.check("inv: first_fit prefers an equipment slot", inv.first_fit(sniper)["loc"] == "secondary")
 	inv.add(sniper)
-	var p90 := ItemDefs.make("p90")  # 3x2, primary and secondary taken, rig is full of mags, no pockets fit it, no backpack
+	var p90 := inv.make("p90")  # 3x2, primary and secondary taken, rig is full of mags, no pockets fit it, no backpack
 	t.check("inv: a gun with no slot, rig or pocket space does not fit", inv.first_fit(p90).is_empty())
-	var pack := ItemDefs.make("pack_big")
+	var pack := inv.make("pack_big")
 	inv.add(pack)
 	t.check("inv: backpack goes to its slot", pack["loc"] == "backpack")
 	var to := inv.first_fit(p90)
 	t.check("inv: then the gun falls through to the backpack grid", to.get("loc", "") == "pack_g")
-	var m := ItemDefs.make("med_bandage")
+	var m := inv.make("med_bandage")
 	t.check("inv: small items go to pockets when the rig is full", inv.first_fit(m)["loc"] == "pockets")
-	var f := ItemDefs.make("med_ifak")
+	var f := inv.make("med_ifak")
 	inv.add(f)
-	inv.add(ItemDefs.make("med_ifak"))
+	inv.add(inv.make("med_ifak"))
 	inv.remove(f)
 	t.check("inv: remove clears the item's place", f["loc"] == "")
 
@@ -68,24 +68,24 @@ static func _slots_and_order(t: RangeTest) -> void:
 static func _weight_and_stacks(t: RangeTest) -> void:
 	var inv := Inventory.new()
 	t.check("inv: empty weight is 0", inv.total_kg() == 0.0)
-	var ak := ItemDefs.make("ak47")
+	var ak := inv.make("ak47")
 	inv.add(ak)
 	t.check("inv: weight sums the gun", absf(inv.total_kg() - 3.6) < 0.001)
-	var rig := ItemDefs.make("rig_chest")
+	var rig := inv.make("rig_chest")
 	inv.add(rig)
-	var mag := ItemDefs.make("mag_ak47")
+	var mag := inv.make("mag_ak47")
 	inv.add(mag)
 	var expect: float = 3.6 + 0.8 + 0.25 + 30 * ItemDefs.ROUND_KG["762x39"]
 	t.check("inv: weight counts bag contents and mag rounds", absf(inv.total_kg() - expect) < 0.001, str(inv.total_kg()))
 	inv.remove(ak)
 	t.check("inv: weight follows removal", absf(inv.total_kg() - (expect - 3.6)) < 0.001)
-	var a := ItemDefs.make("762_ps", {"count": 80})
-	var b := ItemDefs.make("762_ps", {"count": 30})
+	var a := inv.make("762_ps", {"count": 80})
+	var b := inv.make("762_ps", {"count": 30})
 	inv.add(a)
 	inv.add(b)
 	t.check("inv: loose ammo stacks up to the cap", int(a["count"]) == 90 and int(b["count"]) == 20, "%d %d" % [a["count"], b["count"]])
 	t.check("inv: stack total is kept", _stack_total(inv) == 110)
-	var bag_in_bag := ItemDefs.make("pack_small")
+	var bag_in_bag := inv.make("pack_small")
 	inv.add(bag_in_bag)
 	var moved := inv.move(rig, {"loc": "ground", "x": 0, "y": 0})
 	t.check("inv: a bag carries its contents to the ground", moved and rig["items"].size() > 0 and inv.equipped("rig") == null and inv.ground.size() == 1)
@@ -124,17 +124,17 @@ static func _reload(t: RangeTest) -> void:
 	rl.finish(gi)
 	t.check("reload: fast reload drops the old mag (not returned)", fast == "ok" and inv.find_mags("ak47").size() == before)
 	var empty := Inventory.new()
-	var gi2 := ItemDefs.make("ak47")
+	var gi2 := empty.make("ak47")
 	(gi2["gun"] as Gun).spares.clear()
 	empty.place(gi2, "primary")
 	t.check("reload: no magazine means no reload", InvReload.new(empty).begin(gi2, false) == "none" and not (gi2["gun"] as Gun).busy())
-	var sg := ItemDefs.make("shotgun")
+	var inv3 := Inventory.new()
+	var sg := inv3.make("shotgun")
 	(sg["gun"] as Gun).spares.clear()
 	(sg["gun"] as Gun).mag.rounds.resize(3)
-	var inv3 := Inventory.new()
 	inv3.place(sg, "primary")
-	inv3.place(ItemDefs.make("rig_chest"), "rig")
-	var shells := ItemDefs.make("12_buck7", {"count": 2})
+	inv3.place(inv3.make("rig_chest"), "rig")
+	var shells := inv3.make("12_buck7", {"count": 2})
 	inv3.add(shells)
 	var rl3 := InvReload.new(inv3)
 	t.check("reload: shotgun takes one loose shell", rl3.begin(sg, false) == "ok" and int(shells["count"]) == 1)
@@ -150,10 +150,13 @@ static func _reload(t: RangeTest) -> void:
 
 ## Needs the scene tree: PlayerWeapons on a real player, drop -> world item -> pickup round trip.
 static func world(t: RangeTest) -> void:
+	var session := RangeSession.new(7)
 	var input := InputState.new()
 	t.add_child(input)
 	var player := TacticalPlayer.new()
 	player.input = input
+	player.session = session
+	session.add_player(1, true).node = player
 	t.add_child(player)
 	var rack := RangeRack.new()
 	t.add_child(rack)
@@ -161,7 +164,7 @@ static func world(t: RangeTest) -> void:
 	t.add_child(weapons)
 	var bal := Ballistics.new()
 	t.add_child(bal)
-	weapons.setup(player, input, bal, rack)
+	weapons.setup(player, input, bal, rack, session)
 	var wi := WorldItems.new()
 	t.add_child(wi)
 	wi.setup(player, weapons)
@@ -184,11 +187,11 @@ static func world(t: RangeTest) -> void:
 	t.check("inv: weight is back after the pickup", absf(player.carried_kg - start_kg) < 0.001)
 	_ui_checks(t, weapons, wi, player)
 	_fill_bags(inv)
-	var big := ItemDefs.make("sniper")
+	var big := inv.make("sniper")
 	for slot in ["primary", "secondary"]:
 		if inv.equipped(slot) != null:
 			inv.remove(inv.equipped(slot))
-		inv.place(ItemDefs.make("sniper"), slot)
+		inv.place(inv.make("sniper"), slot)
 	wi.drop(big, Vector3(0, 0.5, 4.0))
 	t.check("inv: a pickup with no room is refused and the item stays in the world", not wi.take(big, inv) and wi.items.has(big))
 	t.check("inv: world items can be located by the view ray", wi.pick(Vector3(0, 0.6, 3.0), Vector3(0, 0, 1)) == big)
@@ -196,14 +199,14 @@ static func world(t: RangeTest) -> void:
 
 ## Pockets, rig and backpack all full of bandages.
 static func _fill_bags(inv: Inventory) -> void:
-	inv.place(ItemDefs.make("pack_small"), "backpack")
+	inv.place(inv.make("pack_small"), "backpack")
 	for g in Inventory.GRIDS:
 		var gs := inv.grid_size(g)
 		for it in inv.grid_items(g).duplicate():
 			inv.remove(it)
 		for y in gs.y:
 			for x in gs.x:
-				inv.place(ItemDefs.make("med_bandage"), g, x, y)
+				inv.place(inv.make("med_bandage"), g, x, y)
 
 
 static func _ui_checks(t: RangeTest, weapons: PlayerWeapons, wi: WorldItems, player: TacticalPlayer) -> void:
@@ -211,7 +214,7 @@ static func _ui_checks(t: RangeTest, weapons: PlayerWeapons, wi: WorldItems, pla
 	var ui := InventoryUI.new()
 	t.add_child(ui)
 	ui.setup(weapons, player, wi)
-	var sn := ItemDefs.make("sniper")
+	var sn := inv.make("sniper")
 	wi.drop(sn, player.eye_pos() + Vector3(0, -0.5, -1.0))
 	ui.open()
 	t.check("inv ui: ground grid lists items within 2 m", sn["loc"] == "ground" and inv.ground.size() == 1 and weapons.ui_open)
@@ -234,8 +237,8 @@ static func _ui_checks(t: RangeTest, weapons: PlayerWeapons, wi: WorldItems, pla
 
 static func _round_trip(t: RangeTest) -> void:
 	var inv := _kit()
-	inv.place(ItemDefs.make("pack_small"), "backpack")
-	var ammo := ItemDefs.make("762_ps", {"count": 45})
+	inv.place(inv.make("pack_small"), "backpack")
+	var ammo := inv.make("762_ps", {"count": 45})
 	inv.place(ammo, "pack_g", 2, 1, 1)
 	var mag: Dictionary = inv.find_mags("ak47")[0]
 	mag["rounds"] = 11
