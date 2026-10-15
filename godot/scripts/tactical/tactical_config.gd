@@ -74,3 +74,8 @@ const LEG_STAMINA_DRAIN := 0.12
 const LEG_STAMINA_REGEN := 0.08
 const LEAN_ROLL_DEG := 12.0
 const LEAN_OFFSET := 0.35
+
+# Ragdoll (FB-A: enemy death; local cosmetic, no multiplayer sync)
+const DEATH_IMPULSE := 250.0  # N·s on the hit bone for a killing shot, scaled by bullet damage
+const DEATH_IMPULSE_REF_DMG := 57.0  # reference rifle-round damage for the scaling
+const RAGDOLL_SLEEP := 4.0  # s after death before ragdoll bones freeze (0 = never)
