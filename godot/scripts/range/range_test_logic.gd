@@ -4,6 +4,7 @@ class_name RangeTestLogic
 static func run(t: RangeTest) -> void:
 	_penetration(t)
 	_mags_and_reloads(t)
+	RangeTestInv.run(t)
 	_actions(t)
 	_body(t)
 	_malfunction(t)

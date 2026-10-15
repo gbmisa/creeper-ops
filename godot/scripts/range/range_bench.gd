@@ -56,7 +56,7 @@ func _process(_dt: float) -> void:
 		var next := TacAmmoDefs.next_grade(weapons.gun.ammo_pick)
 		weapons.prompt = "%s: load %s and refill mags" % [Keybinds.short("t_use"), TacAmmoDefs.of(next)["name"]]
 		if player.enabled and player.input.act("t_use"):
-			cycle_ammo(weapons.gun)
+			weapons.cycle_ammo_grade()
 			weapons.message.emit("Loaded %s, mags refilled" % TacAmmoDefs.of(weapons.gun.ammo_pick)["name"])
 	elif _near(ARMOR_POS):
 		var n: int = (targets.loadout + 1) % ArmorDefs.LOADOUTS.size()
@@ -65,11 +65,6 @@ func _process(_dt: float) -> void:
 			cycle_armor(targets, n)
 			log.clear()
 			_refresh_armor()
-
-
-static func cycle_ammo(g: Gun) -> void:
-	g.ammo_pick = TacAmmoDefs.next_grade(g.ammo_pick)
-	g.refill()
 
 
 static func cycle_armor(t: RangeTargets, idx: int) -> void:

@@ -16,8 +16,9 @@ var player: TacticalPlayer
 var input: InputState
 var bal: Ballistics
 var rack: RangeRack
-var guns := {}  # id -> Gun
-var slots: Array[String] = []
+var inv: Inventory
+var gun_objs := {}  # gun item uid -> Gun
+var gun_uid := -1  # item uid of the selected gun
 var gun: Gun
 var ads_amt := 0.0
 var arm_stamina := 1.0
@@ -44,23 +45,101 @@ func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack) -> voi
 	bal = b
 	rack = r
 	rng.randomize()
+	inv = Inventory.new()
+	_starting_kit()
+	select_slot("primary")
+	_sync_weight()
+
+
+## Brief loadout: AK in primary, M1911 in holster, rig with 3 AK mags + 2 pistol mags.
+func _starting_kit() -> void:
+	var rig := inv.make("rig_std")
+	inv.place(rig["uid"], "rig")
+	var ak := inv.make("ak47")
+	inv.place(ak["uid"], "primary")
+	var m1911 := inv.make("m1911")
+	inv.place(m1911["uid"], "holster")
+	_add_mag("ak47", ak["uid"], true)
+	for i in 3:
+		_add_mag("ak47", -1, false)
+	_add_mag("m1911", m1911["uid"], true)
+	for i in 2:
+		_add_mag("m1911", -1, false)
+
+
+## Create a full mag item for a weapon; in_gun attaches it to the gun item.
+func _add_mag(weapon_id: String, for_gun_uid: int, in_gun: bool) -> void:
+	var cal: String = WeaponDefs.of(weapon_id)["cal"]
+	var mid: String = ItemDefs.MAG_FOR_CAL[cal]
+	var m := inv.make(mid)
+	if in_gun:
+		inv.to_gun(m["uid"], for_gun_uid)
+	else:
+		inv.first_fit(m)
+
+
+func _sync_weight() -> void:
+	player.carried_kg = inv.total_kg()
 
 
 func give(id: String) -> void:
-	if guns.has(id):
-		select(id)
+	var item := inv.make(id)
+	if not inv.first_fit(item):
+		inv.remove(item["uid"])
+		message.emit("No room for %s" % ItemDefs.of(id)["name"])
 		return
-	guns[id] = Gun.new(id)
-	slots.append(id)
 	rack.take(id)
-	player.carried_kg += guns[id].def["kg"]
-	select(id)
+	_sync_weight()
+	# select the slot it landed in
+	var l: Dictionary = inv.loc[item["uid"]]
+	select_slot(str(l["c"]))
 
 
-func select(id: String) -> void:
-	if not guns.has(id) or (gun != null and gun.def["id"] == id):
+## Gun instance for an inventory gun item, seeded from its inserted mag.
+func _gun_for(gun_item: Dictionary) -> Gun:
+	var uid: int = gun_item["uid"]
+	if gun_objs.has(uid):
+		return gun_objs[uid]
+	var g := Gun.new(str(gun_item["id"]))
+	g.spares.clear()
+	var mid := inv.mag_in_gun(uid)
+	if mid != -1:
+		var mi: Dictionary = inv.items[mid]
+		g.mag = magazine_from_item(mi)
+		if g.def["action"] == "detachable" and g.mag.count() > 0:
+			g.chamber = g.mag.pop()
+	else:
+		g.mag = Magazine.new(g.def["mag"])
+	gun_objs[uid] = g
+	return g
+
+
+## Persist the selected gun's remaining rounds back into its mag item.
+func _write_mag_back() -> void:
+	if gun_uid == -1 or not gun_objs.has(gun_uid):
 		return
-	gun = guns[id]
+	var g: Gun = gun_objs[gun_uid]
+	var mid := inv.mag_in_gun(gun_uid)
+	if mid == -1:
+		return
+	var mi: Dictionary = inv.items[mid]
+	mi["rounds"] = g.mag.count() + (1 if g.chamber != "" else 0)
+	if g.mag.count() > 0:
+		mi["ammo"] = g.mag.top()
+	elif g.chamber != "":
+		mi["ammo"] = g.chamber
+
+
+func select_slot(slot: String) -> void:
+	var item := inv.equipped(slot)
+	if item.is_empty() or ItemDefs.of(item["id"])["kind"] != "gun":
+		return
+	_write_mag_back()
+	var uid: int = item["uid"]
+	if gun_uid == uid and gun != null:
+		return
+	gun_uid = uid
+	gun = _gun_for(item)
 	draw_t = DRAW_TIME
 	_check_t = 0.0
 	mag_text = ""
@@ -104,9 +183,9 @@ func _pickup_and_slots() -> void:
 		prompt = "%s: take %s" % [Keybinds.short("t_use"), WeaponDefs.of(id)["name"]]
 		if player.enabled and input.act("t_use"):
 			give(id)
-	for n in 6:
-		if player.enabled and input.act("t_slot_%d" % (n + 1)) and n < slots.size():
-			select(slots[n])
+	for pair in [["t_slot_1", "primary"], ["t_slot_2", "secondary"], ["t_slot_3", "holster"]]:
+		if player.enabled and input.act(pair[0]):
+			select_slot(pair[1])
 
 
 func _ads(delta: float) -> void:
@@ -196,12 +275,117 @@ func _commands() -> void:
 
 
 func start_reload(fast: bool) -> void:
+	if gun == null or gun_uid == -1:
+		return
+	var res: Dictionary
+	if gun.def["action"] == "tube":
+		res = feed_shell(inv, gun, fast)
+	else:
+		if gun.def["action"] == "enbloc" and gun.mag.count() > 0:
+			return  # matches Gun: en-bloc only reloads empty
+		res = swap_mag(inv, gun, gun_uid, fast)
+	if not bool(res.get("ok", false)):
+		message.emit(str(res.get("msg", "Can't reload")))
+		return
+	gun.external_mag = true  # mags already swapped via the inventory; Gun only runs the timer
 	if gun.reload(fast):
 		_reload_t = 0.0
 		_reload_fast = fast
 		_check_t = 0.0
 		action.emit("reload", gun.busy_t)
 		Sfx.play("crossbow_clack")
+	else:
+		gun.external_mag = false
+	_sync_weight()
+
+
+## Build a Magazine from an inventory mag item.
+static func magazine_from_item(mi: Dictionary) -> Magazine:
+	var d := ItemDefs.of(mi["id"])
+	var m := Magazine.new(d["cap"])
+	var ammo: String = mi.get("ammo", TacAmmoDefs.grades(d["cal"])[0])
+	for i in int(mi.get("rounds", 0)):
+		if not m.push(ammo):
+			break
+	return m
+
+
+## Swap in the fullest compatible spare mag (rig, pockets, backpack order).
+## The old mag goes back where the new one was, or first fit. fast = old mag dropped.
+## Returns {ok, msg}. Pure logic: headless-testable.
+static func swap_mag(inv: Inventory, gun: Gun, gun_uid: int, fast: bool) -> Dictionary:
+	var cal: String = gun.def["cal"]
+	var cands := inv.spare_mags(cal).filter(func(it): return int((it as Dictionary)["rounds"]) > 0)
+	if cands.is_empty():
+		return {"ok": false, "msg": "No %s magazine" % cal}
+	var new_item: Dictionary = cands[0]
+	var new_uid: int = new_item["uid"]
+	var new_loc: Dictionary = (inv.loc.get(new_uid, {}) as Dictionary).duplicate()
+	var new_rot: int = new_item["rot"]
+	# snapshot the outgoing mag before installing the new one
+	var old_uid := inv.mag_in_gun(gun_uid)
+	var old_rounds := gun.mag.count() + (1 if gun.chamber != "" else 0)
+	var old_ammo := gun.mag.top() if gun.mag.count() > 0 else gun.chamber
+	# install the new mag
+	gun.mag = magazine_from_item(new_item)
+	gun.chamber = ""
+	if gun.def["action"] == "detachable" and gun.mag.count() > 0:
+		gun.chamber = gun.mag.pop()
+	inv.to_gun(new_uid, gun_uid)
+	# retire the old mag
+	if old_uid != -1:
+		if fast:
+			inv.remove(old_uid)  # dropped, gone
+		else:
+			var old_item: Dictionary = inv.items[old_uid]
+			old_item["rounds"] = old_rounds
+			if old_ammo != "":
+				old_item["ammo"] = old_ammo
+			inv.from_gun(old_uid)
+			var placed := false
+			if not new_loc.is_empty() and str(new_loc.get("c", "")) != Inventory.GUN_HOME:
+				placed = inv.place(old_uid, str(new_loc["c"]), int(new_loc["x"]), int(new_loc["y"]), new_rot)
+			if not placed:
+				inv.first_fit(old_item)
+	return {"ok": true, "msg": ""}
+
+
+## Tube guns: take one shell from the first loose-ammo stack into a pouch Gun reloads from.
+## Returns {ok, msg}. Pure logic: headless-testable.
+static func feed_shell(inv: Inventory, gun: Gun, fast: bool) -> Dictionary:
+	var cal: String = gun.def["cal"]
+	var stacks := inv.ammo_stacks(cal)
+	if stacks.is_empty():
+		return {"ok": false, "msg": "No %s shells" % cal}
+	var st: Dictionary = stacks[0]
+	st["count"] = int(st["count"]) - 1
+	if int(st["count"]) <= 0:
+		inv.remove(int(st["uid"]))
+	gun.spares.clear()
+	var pouch := Magazine.new(1)
+	pouch.push(TacAmmoDefs.grades(cal)[0])
+	gun.spares.append(pouch)
+	return {"ok": true, "msg": ""}
+
+
+## Bench: switch the ammo grade and refill the inserted mag plus every spare mag item.
+func cycle_ammo_grade() -> void:
+	if gun == null:
+		return
+	gun.ammo_pick = TacAmmoDefs.next_grade(gun.ammo_pick)
+	var grade := gun.ammo_pick
+	gun.mag.fill(grade)
+	if gun.def["action"] == "detachable":
+		gun.chamber = grade
+	elif gun.def["action"] == "tube":
+		gun.chamber = ""
+	for uid in inv.items:
+		var it: Dictionary = inv.items[uid]
+		var d := ItemDefs.of(it["id"])
+		if d["kind"] == "mag" and d["cal"] == gun.def["cal"]:
+			it["ammo"] = grade
+			it["rounds"] = d["cap"]
+	_sync_weight()
 
 
 func _apply_view(_delta: float) -> void:

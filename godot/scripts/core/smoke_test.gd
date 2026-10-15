@@ -283,7 +283,6 @@ static func _run_only(g) -> void:
 				SmokeUnitOrders.run(g)
 			"burrow":
 				SmokeBurrow.run(g)
->>>>>>> branchfiles/godot/scripts/core/smoke_test.gd
 			"pausemenu":
 				SmokePauseMenu.run(g)
 	print("[smoke] %s: %d failure(s)" % ["OK" if _fails == 0 else "FAILED", _fails])

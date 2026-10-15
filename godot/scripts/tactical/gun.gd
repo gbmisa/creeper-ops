@@ -18,6 +18,8 @@ var busy_t := 0.0
 var fire_cd := 0.0
 var ammo_pick := ""  # grade loaded by refill()
 var _fast := false
+var external_mag := false  # set by PlayerWeapons: it already swapped the mag via the
+							# inventory, so reload() only runs the timer and _finish_reload skips its own swap
 
 
 func _init(weapon_id: String) -> void:
@@ -160,7 +162,7 @@ func inspect() -> String:
 
 ## Start a reload. fast = drop the old mag (gone). False if it can't start.
 func reload(fast: bool = false) -> bool:
-	if busy() or needs_cycle or spares.is_empty():
+	if busy() or needs_cycle or (spares.is_empty() and not external_mag):
 		return false
 	match def["action"]:
 		"enbloc":
@@ -195,6 +197,10 @@ func _finish() -> void:
 
 
 func _finish_reload() -> void:
+	if external_mag:
+		# PlayerWeapons already installed the new mag / fed the shell.
+		external_mag = false
+		return
 	match def["action"]:
 		"enbloc":
 			mag = spares.pop_front()

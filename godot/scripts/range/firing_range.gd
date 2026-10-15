@@ -18,6 +18,12 @@ func _ready() -> void:
 	Keybinds.persist = false
 	args = RangeArgs.parse()
 	process_priority = 100  # runs after the player / weapons, so end_frame() clears input last
+	if args.has("range-test-logic"):
+		var tl := RangeTest.new()
+		RangeTestLogic.run(tl)
+		print("[range] LOGIC: %d passed, %d failed" % [tl.passed, tl.failed])
+		get_tree().quit(1 if tl.failed > 0 else 0)
+		return
 	if args.has("range-test"):
 		var t := RangeTest.new()
 		add_child(t)
