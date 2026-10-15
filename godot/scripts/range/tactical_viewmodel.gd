@@ -32,6 +32,8 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	w.action.connect(_on_action)
 	arms = FpArms.new()
 	add_child(arms)
+	if w.gun != null:
+		_on_switched(w.gun)  # F20: select_slot in PlayerWeapons.setup fired before we connected
 
 
 func _on_switched(g: Gun) -> void:

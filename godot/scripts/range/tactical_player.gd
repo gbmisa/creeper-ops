@@ -153,7 +153,7 @@ func _physics_process(delta: float) -> void:
 		dir.y = float(input.frame.held("t_back")) - float(input.frame.held("t_forward"))
 		dir.x = float(input.frame.held("t_right")) - float(input.frame.held("t_left"))
 	var want_sprint: bool = enabled and input.frame.held("t_sprint") and dir.y < 0.0 and not crouching \
-		and ads_amt < 0.1 and not _exhausted and is_on_floor()
+		and ads_amt < 0.1 and not _exhausted and (is_on_floor() or sprinting)  # F23: keep take-off sprint speed through the air
 	sprinting = want_sprint
 	if sprinting:
 		leg_stamina = maxf(0.0, leg_stamina - TacticalConfig.LEG_STAMINA_DRAIN * delta)
