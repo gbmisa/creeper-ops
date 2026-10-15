@@ -4,6 +4,25 @@
 Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) (new Stage 25 row). Run: [RUN.md](RUN.md). Opus long-horizon plan: [docs/tasks/ART3_OPUS_plan.md](docs/tasks/ART3_OPUS_plan.md).
 Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHub branches; **Opus** orchestrates, merges and does the visuals. Opus → Muse notes go in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md); the latest note covers A4/A5 merge order and the new glbs.
 
+## 2026-10-14 night: FB-E part 1 + gun feedback F32-F44 (READ FIRST, Gregory: "fix these")
+- **FB-E part 1 done**: worktree `../fb-e`, branch `art/fb-e-free-models` (4ea30f4, pushed, NOT merged into integ). Free models for scarh, saiga12, sks, sr25 (MK14), m4a1 (carry handle) + 10 attachments; licenses `art/free_src/LICENSES.md`; sheets `docs/art/free/`. Rails re-measured to receiver top on replaced guns. Part 2 (utility + props) not started.
+- **Gregory played fb-e** (`godot --path ../fb-e/godot`) and logged F32-F44 in `docs/playtests/feedback_2026-10-14.md`: ADS sights off/sideways on scarh, m4a1 (no irons), saiga, p90 (+ sound echo), sks, vector, sr25 (rail blocks sight, canted), mosin (sideways); pkm/mp5/vector models bad; **Mosin bolt action + animation (new feature)**; **hip fire broken in skirmish (F44)**.
+- **Diagnosis**: kept guns fail too, so ADS is systemic: F28 eye position (approved P4) + per-gun `sight`/roll data in `art/gen/mounts.json`. Opus's sheet review used side views and missed it (F43): **every gun verdict needs an ADS shot at screen centre**. Hook: `godot --path . res://scenes/firing_range.tscn -- --weapon=ID --ads [--fit=reddot] --wait=1.5 --shot=/abs.png` under xvfb-run (opengl3). ADS on integ is already broken for m4a1/scarh/ak47.
+- **Gregory said "fix these" (2026-10-14)**: Opus does them in fb-e (or a new worktree off it) with Sonnet agents; Gregory tells Muse that fb-e has more pushes. Order: (1) F44 hip fire in skirmish + P4 eye position + per-gun sight/roll data, then an ADS sheet of every gun that Opus judges; (2) Mosin bolt action + animation (write a brief); (3) P90 echo; (4) models: pkm, mp5, vector, sks, saiga12, acog3x, compensator, flashhider → hand modelling or Sketchfab CC-BY (needs his API key).
+- **Open question to Gregory**: m4a1: keep the old model + hand-model a flat-top (recommended), or the free carry-handle one (re-pose arms, code to hide the handle under optics)? Opus-rejected on fb-e: saiga12, sks, acog3x (revert before any merge unless he wants them kept; he said the SKS "looks good as a gun").
+
+## 2026-10-14 late: briefs FB-A..E
+- Pushed on `integ/2026-10-09`: briefs `docs/tasks/FB_A..E_*.md` + MUSE_QUEUE Wave 3 (fb6b7c7), and the M4A1 hand-posed arms + glb (d272c0a).
+- **Next: start FB-E** (`FB_E_free_models.md`): make worktree `../fb-e` on new branch `art/fb-e-free-models` from integ, then a Sonnet `feature-dev` agent (guns + attachments first, utility + props as a second agent). Opus judges the sheets; leftovers = Opus hand modelling.
+- FB-A..D are Muse's, after `feat/mp1` merges. Ragdoll brief drops the bot's gun as a prop (Gregory may prefer it stays in the hand).
+
+## 2026-10-14 evening: guns, arms, Tarkov handling (Opus)
+- **Arms:** Gregory hand-poses in `art/arms_guns.blend` (Ranger arms rig + all game guns; M4A1 under `ViewEye`; cameras `GameView` and `GameView_ADS`). Working rig: IK `lowerarm_*` → `IK_hand_*`, pole `IK_elbow_*`. **Never touch his hand or finger pose unless he asks.**
+- **In the game (integ, UNCOMMITTED):** the M4A1 uses hand-posed arms (`WeaponDefs` `arms_pose`, `TacticalViewmodel._add_posed_arms`; glb `godot/assets/models/operative/arms_m4a1.glb`, 39 MB, not for git). Other guns still use IK `FpArms`. The glb holds an old stretched export: re-export from his saved pose when he says so.
+- **Approved (CHANGES.md on integ):** P3 Tarkov recoil and P4 ADS eye position (eye about 0.3 m in front of the butt, not behind it). Spec: https://github.com/JuanFNQ/TRP `TRP/docs/spec/weapon-handling.md` (Apache-2.0, measured). Next: Opus writes the brief. P5 (ADS arms pose) waits for P4.
+- **Feedback F27-F31** (docs/playtests/feedback_2026-10-14.md): the M4 has no iron sights; the red dot is sideways and floating; the holo sight is solid; the Hunyuan models were never reviewed by Opus.
+- **Sights:** replace with free models via the Blender MCP (addon updated to v1.8; Sketchfab and Poly Pizza need API keys in the MCP N-panel). Gregory likes the 6 original guns (Quaternius/TabascoFriday); the 5 Hunyuan guns are bad.
+
 ## 2026-10-09 local edits (Opus, not yet pushed to GitHub)
 - **CW3 deactivate** (Z, action id still `supply`): `Structure.active` (was `supply_on`) works on any structure but the Node. Off means it requests no packets (`PacketRequests.need`) and the manager tick skips firing, mining, collector field, income and behaviours. Smoke checks are in `smoke_group_select.gd`.
 - **Pause menu**: Muse's `feat/pause-menu` applied locally, then moved into `ui/pause_menu.gd` (`PauseMenu`). **Esc** opens it in both modes; in command mode Esc first cancels a tool or selection. Space is still a quick pause. Smoke: all pass.
