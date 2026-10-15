@@ -56,7 +56,7 @@ const ROWS := {
 	"m4a1": {"tier": 2, "unlock": 10, "role": "Low recoil, most attachment slots: the upgrade over the AK", "slots": ["sight","muzzle","under","mag"], "name": "M4A1", "class": "assault rifle", "cal": "556x45", "mag": 30, "rpm": 800.0, "modes": ["semi", "auto"], "ergo": 62.0,
 		"conv": 6.1, "cam_share": 0.3, "angle": 88.0, "kg": 3.2, "up": 0.5, "side": 0.3, "moa": 2.0, "action": "detachable", "cycle": 0.0, "reload": 2.6, "reload_fast": 1.8,
 		"spares": 3, "zeros": [50.0, 100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0000, -0.1130, -0.950), "hip_pos": Vector3(0.16, -0.18, -0.58), "grip_r": Vector3(0.042,-0.030,0.240), "grip_l": Vector3(0.0,0.04,-0.10), "mag_l": Vector3(0.0,-0.12,-0.04), "butt": -0.03,
-		"model": "m4a1", "model_fallback": "ak47", "inv_w": 4, "inv_h": 2, "scope": 1.0},
+		"model": "m4a1", "arms_pose": "arms_m4a1", "model_fallback": "ak47", "inv_w": 4, "inv_h": 2, "scope": 1.0},
 	"scarh": {"tier": 3, "unlock": 25, "role": "7.62 NATO penetration, heavier, slower ADS", "slots": ["sight","muzzle","under","mag"], "name": "SCAR-H", "class": "assault rifle", "cal": "762x51", "mag": 20, "rpm": 600.0, "modes": ["semi", "auto"], "ergo": 45.0,
 		"conv": 4.6, "cam_share": 0.35, "angle": 86.0, "kg": 4.4, "up": 0.85, "side": 0.45, "moa": 1.8, "action": "detachable", "cycle": 0.0, "reload": 3.2, "reload_fast": 2.3,
 		"spares": 3, "zeros": [50.0, 100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0000, -0.1130, -0.950), "hip_pos": Vector3(0.16, -0.18, -0.58), "grip_r": Vector3(0.042,-0.030,0.240), "grip_l": Vector3(0.0,0.04,-0.10), "mag_l": Vector3(0.0,-0.12,-0.04), "butt": -0.03,
