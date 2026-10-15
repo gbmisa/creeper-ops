@@ -7,6 +7,7 @@ const REACH := 2.2
 const COUNT := 2
 
 var house: KillHouse
+var session: RangeSession
 var player: TacticalPlayer
 var weapons: PlayerWeapons
 var bal: Ballistics
@@ -14,12 +15,13 @@ var log: RangeHitLog
 var bots: Array[ScavBot] = []
 
 
-func setup(p: TacticalPlayer, w: PlayerWeapons, b: Ballistics, l: RangeHitLog) -> void:
-	player = p
+func setup(s: RangeSession, w: PlayerWeapons, b: Ballistics, l: RangeHitLog) -> void:
+	session = s
+	player = s.local.node if s.local != null else null
 	weapons = w
 	bal = b
 	log = l
-	BotNoise.reset()
+	session.noise.reset()
 	house = KillHouse.new()
 	add_child(house)
 	house.build()
@@ -43,7 +45,7 @@ func spawn_scavs() -> void:
 	bots.clear()
 	for i in COUNT:
 		var bot := ScavBot.new()
-		bot.setup(player, bal, house, "Scav %d" % (i + 1), i * 3)
+		bot.setup(session, bal, house, "Scav %d" % (i + 1), i * 3)
 		add_child(bot)
 		bot.global_position = house.spawns[i] + Vector3(0, 0.1, 0)
 		bot.state_changed.connect(_on_state)
