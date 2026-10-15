@@ -76,7 +76,7 @@ const ROWS := {
 		"model": "sr25", "model_fallback": "garand", "inv_w": 5, "inv_h": 2, "scope": 1.0},
 	"mosin": {"tier": 1, "unlock": 6, "role": "Cheap bolt sniper, iron sights, strong round", "slots": ["sight","muzzle"], "name": "Mosin-Nagant", "class": "bolt-action", "cal": "762x54r", "mag": 5, "rpm": 50.0, "modes": ["semi"], "ergo": 38.0,
 		"conv": 6, "cam_share": 0.5, "angle": 90.0, "kg": 4.0, "up": 3.2, "side": 0.9, "moa": 1.6, "action": "detachable", "cycle": 1.3, "reload": 3.8, "reload_fast": 2.8,
-		"spares": 4, "zeros": [100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0000, -0.0970, -0.860), "hip_pos": Vector3(0.16, -0.18, -0.72), "grip_r": Vector3(0.042,-0.040,0.340), "grip_l": Vector3(0.0,0.0,-0.15), "mag_l": Vector3(0.0,-0.03,0.05), "butt": 0.30,
+		"spares": 4, "zeros": [100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0000, -0.0970, -0.860), "hip_pos": Vector3(0.16, -0.18, -0.72), "grip_r": Vector3(0.042,-0.040,0.340), "grip_l": Vector3(0.0,0.0,-0.15), "mag_l": Vector3(0.0,-0.03,0.05), "butt": 0.30, "bolt_knob": Vector3(0.0241, 0.0644, 0.1985),
 		"model": "mosin", "model_fallback": "sniper", "inv_w": 5, "inv_h": 2, "scope": 1.0},
 	"pkm": {"tier": 3, "unlock": 28, "role": "100-round belt, suppression, very heavy, slow reload", "slots": ["sight","muzzle"], "name": "PKM", "class": "lmg", "cal": "762x54r", "mag": 100, "rpm": 650.0, "modes": ["auto"], "ergo": 25.0,
 		"conv": 5.0, "cam_share": 0.3, "angle": 85.0, "kg": 8.4, "up": 0.9, "side": 0.6, "moa": 3.8, "action": "detachable", "cycle": 0.0, "reload": 7.0, "reload_fast": 5.5,

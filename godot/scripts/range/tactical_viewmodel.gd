@@ -18,6 +18,7 @@ var _kick_v := 0.0
 var _bob_t := 0.0
 var _check := 0.0
 var _cycle_clip := ""
+var bolt: BoltCycle  # procedural bolt-action cycle (Mosin), null for other guns
 var _posed := false  # held gun uses hand-posed arms (WeaponDefs arms_pose) instead of the IK arms
 const HIP_BUTT := 0.1  # how far the butt sits behind the eye at the hip
 const HIP_MIN_Z := 0.3  # pistols: held out at least this far
@@ -59,6 +60,8 @@ func _on_switched(g: Gun) -> void:
 	half_len = mi.get_aabb().size.z * 0.5
 	flash = MuzzleFlash.new(model, Vector3(0, 0.01, -half_len - 0.03))
 	_cycle_clip = "FireWBullet" if anim.has_animation("FireWBullet") else ""
+	bolt = BoltCycle.make(glb, _def)
+	arms.bolt = bolt
 	rig = AttachmentRig.new()
 	model.add_child(rig)
 	rig.build(g, half_len)
@@ -104,6 +107,8 @@ func _on_action(kind: String, secs: float) -> void:
 		"cycle":
 			if _cycle_clip != "" and not anim.is_playing():
 				_play(_cycle_clip, secs / 0.65, 0.35)
+			elif bolt != null:
+				bolt.start(secs)
 		"check":
 			_check = secs
 
@@ -142,6 +147,9 @@ func _process(delta: float) -> void:
 		var rest := weapons.recoil.barrel - weapons.recoil.offset
 		rot += Vector3(deg_to_rad(rest.x * TacticalConfig.RECOIL_T_VM_PITCH), deg_to_rad(rest.y * TacticalConfig.RECOIL_T_VM_YAW),
 			deg_to_rad(-rest.y * TacticalConfig.RECOIL_T_VM_ROLL))
+	if bolt != null:
+		bolt.update(delta)
+		rot.z += bolt.roll()
 	var d := weapons.draw_t / PlayerWeapons.DRAW_TIME
 	pos.y -= d * 0.3
 	rot.x -= d * 0.6
