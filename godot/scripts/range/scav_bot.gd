@@ -36,6 +36,7 @@ var nav: NavigationAgent3D
 var mesh: BotMesh
 var flash: MuzzleFlash
 var hurt_t := 0.0
+var stagger_t := 0.0  # flashbang: stands still, no shooting while > 0
 var has_cover := false
 var cover_pos := Vector3.ZERO
 var patrol_i := 0
@@ -131,6 +132,9 @@ func on_hit(res: Dictionary) -> void:
 func think(dt: float, over := {}) -> void:
 	if body.dead or _dying:
 		return
+	if stagger_t > 0.0:  # flashed: disoriented, no decisions or actions
+		stagger_t -= dt
+		return
 	body.tick(dt)
 	if body.dead:
 		_die()
@@ -160,6 +164,20 @@ func think(dt: float, over := {}) -> void:
 	_act()
 
 
+## Flashbang: blinded and staggered for `dur` seconds.
+func stagger(dur: float) -> void:
+	stagger_t = maxf(stagger_t, dur)
+
+
+## Frag nearby: run away from `pos` (UTIL track reaction; the brain keeps its state).
+func flee_from(pos: Vector3) -> void:
+	var away := global_position - pos
+	away.y = 0.0
+	if away.length() < 0.1:
+		away = Vector3(1, 0, 0)
+	_go(global_position + away.normalized() * 10.0)
+
+
 func _sense(dt: float) -> void:
 	var target := session.nearest_player(global_position) if session != null else null
 	var player := target.node if target != null else null
@@ -171,7 +189,8 @@ func _sense(dt: float) -> void:
 	var head := player.eye_pos()
 	var chest := player.global_position + Vector3(0, 0.85 if player.crouching else 1.3, 0)
 	var still := player.horizontal_speed() < 0.3 or player.crouching
-	percept.update(dt, eye(), -global_basis.z, get_world_3d().direct_space_state, [head, chest], still, rng, player.spot_mult)
+	var smoke: Array = session.util.smokes if session != null else []
+	percept.update(dt, eye(), -global_basis.z, get_world_3d().direct_space_state, [head, chest], still, rng, player.spot_mult, smoke)
 
 
 func _facts() -> Dictionary:

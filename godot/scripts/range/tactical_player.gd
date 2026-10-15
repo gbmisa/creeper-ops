@@ -28,6 +28,7 @@ var carried_kg := 0.0
 var move_mult := 1.0  # body health slows (fractured legs)
 var ads_amt := 0.0  # set by PlayerWeapons
 var spot_mult := 1.0  # bots notice this player from range x this (laser lit); set by PlayerWeapons
+var grapple_pull := Vector3.ZERO  # set by UtilSystem while reeling: overrides velocity (no gravity)
 var recoil_off := Vector2.ZERO  # deg, x = pitch up, y = yaw
 var sway_off := Vector2.ZERO
 var body := BodyHealth.new()  # zones the bots shoot at
@@ -174,7 +175,10 @@ func _physics_process(delta: float) -> void:
 		hv = Vector2(velocity.x, velocity.z).move_toward(hv, accel * delta)
 	velocity.x = hv.x
 	velocity.z = hv.y
-	velocity.y -= TacticalConfig.GRAVITY * delta
+	if grapple_pull != Vector3.ZERO:
+		velocity = grapple_pull  # reeling: the hook owns motion, momentum kept on release
+	else:
+		velocity.y -= TacticalConfig.GRAVITY * delta
 	if _jump and is_on_floor() and not crouching:
 		velocity.y = JUMP_V
 		Sfx.play("jump")

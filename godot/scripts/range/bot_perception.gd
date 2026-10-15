@@ -29,11 +29,21 @@ static func in_view(eye: Vector3, fwd: Vector3, point: Vector3, max_range := RAN
 	return rad_to_deg(fwd.angle_to(to)) <= FOV_DEG * 0.5
 
 
-## True when any ray from `from` to a point reaches it without touching world geometry.
-static func los(space: PhysicsDirectSpaceState3D, from: Vector3, points: Array) -> bool:
+## True when any ray from `from` to a point reaches it without touching world geometry
+## or a smoke volume.
+static func los(space: PhysicsDirectSpaceState3D, from: Vector3, points: Array, smoke: Array = []) -> bool:
 	for p in points:
+		if _smoked(from, p, smoke):
+			continue
 		var q := PhysicsRayQueryParameters3D.create(from, p, TacticalConfig.LAYER_WORLD)
 		if space.intersect_ray(q).is_empty():
+			return true
+	return false
+
+
+static func _smoked(a: Vector3, b: Vector3, smoke: Array) -> bool:
+	for s in smoke:
+		if s.blocks(a, b):
 			return true
 	return false
 
@@ -44,13 +54,13 @@ static func reaction_delay(dist: float, still: bool, roll: float) -> float:
 	return d * (STILL_MULT if still else 1.0)
 
 
-func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceState3D, pts: Array, still: bool, rng: RandomNumberGenerator, spot_mult := 1.0) -> void:
+func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceState3D, pts: Array, still: bool, rng: RandomNumberGenerator, spot_mult := 1.0, smoke: Array = []) -> void:
 	seeing = false
 	for p in pts:
 		if in_view(eye, fwd, p, range_m * spot_mult):
 			seeing = true
 			break
-	seeing = seeing and los(space, eye, pts)
+	seeing = seeing and los(space, eye, pts, smoke)
 	if seeing:
 		if not aware and react_left < 0.0:
 			react_left = reaction_delay(eye.distance_to(pts[1] if pts.size() > 1 else pts[0]), still, rng.randf())

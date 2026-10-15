@@ -16,6 +16,7 @@ var bots: RangeBots
 var world_items: WorldItems
 var inv_ui: InventoryUI
 var skirmish: SkirmishGame   # set when the Skirmish map is selected (RangeMaps)
+var utils: UtilSystem
 
 
 func _ready() -> void:
@@ -117,6 +118,9 @@ func _build() -> void:
 	else:
 		add_child(bots)
 		bots.setup(session, weapons, bal, hit_log)
+	utils = UtilSystem.new()
+	add_child(utils)
+	utils.setup(player, weapons, session, bal, func(): return bots.bots)
 	player.god = args.has("god")
 	if args.has("bots") and not is_skirmish:
 		bots.spawn_scavs()
