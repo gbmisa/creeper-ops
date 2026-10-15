@@ -17,6 +17,7 @@ var progress := 0.0
 var over := false
 var won := false
 var end_screen: SkirmishEnd
+var cheats: RangeCheats  # set by FiringRange; null in tests
 var _label: Label
 
 
@@ -175,5 +176,5 @@ func finish(win: bool) -> void:
 	for b in bots:
 		if is_instance_valid(b):
 			b.set_physics_process(false)
-	end_screen = SkirmishEnd.new(win, time_s, kills, bots.size())
+	end_screen = SkirmishEnd.new(win, time_s, kills, bots.size(), cheats != null and cheats.cheats_used)
 	add_child(end_screen)

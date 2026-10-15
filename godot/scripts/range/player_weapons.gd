@@ -30,6 +30,7 @@ var arm_stamina := 1.0
 var holding_breath := false
 var recoil := RecoilModel.new()
 var rng := RandomNumberGenerator.new()
+var cheats: RangeCheats  # set by FiringRange; null in tests that don't need it
 var draw_t := 0.0
 var mag_text := ""
 var mag_text_t := 0.0
@@ -274,9 +275,9 @@ static func fov_for(ads: float, scope: float) -> float:
 	return lerpf(irons, narrow, (ads - SCOPE_AT) / (1.0 - SCOPE_AT))
 
 
-## The gun in hand has no recoil or sway (the Tempest; later also the cheat toggle).
+## The gun in hand has no recoil or sway (the Tempest; also the no_recoil cheat toggle).
 func no_recoil() -> bool:
-	return gun != null and gun.def.get("no_recoil", false)
+	return (gun != null and gun.def.get("no_recoil", false)) or (cheats != null and cheats.is_on("no_recoil"))
 
 
 func scoped() -> bool:

@@ -16,6 +16,8 @@ var world_items: WorldItems
 var inv_ui: InventoryUI
 var tempest_fx: TempestFx
 var skirmish: SkirmishGame   # set when the Skirmish map is selected (RangeMaps)
+var cheats: RangeCheats
+var cheat_menu: CheatMenu
 
 
 func _ready() -> void:
@@ -104,6 +106,7 @@ func _build() -> void:
 	bots = RangeBots.new()
 	if is_skirmish:
 		skirmish.start(player, weapons, bal, hit_log, hud)
+		skirmish.cheats = cheats
 		bots.bots = skirmish.bots
 		if RangeLoadout.saved.is_empty():
 			weapons.give("m1911")   # fallback only when no kit was deployed
@@ -116,6 +119,13 @@ func _build() -> void:
 	tempest_fx = TempestFx.new()
 	add_child(tempest_fx)
 	tempest_fx.setup(weapons, bal, func(): return bots.bots)
+	cheats = RangeCheats.new()
+	add_child(cheats)
+	cheats.setup(self)
+	weapons.cheats = cheats
+	cheat_menu = CheatMenu.new()
+	add_child(cheat_menu)
+	cheat_menu.setup(cheats)
 	menu = RangeMenu.new()
 	add_child(menu)
 	menu.resumed.connect(func(): player.enabled = true)
@@ -130,8 +140,13 @@ func _process(_dt: float) -> void:
 		return
 	if input.act_hidden("secret_tempest") and player.enabled and not weapons.ui_open:
 		Tempest.toggle(weapons, world_items)
+	if input.act_hidden("cheat_menu") and not weapons.ui_open:
+		cheat_menu.toggle()
+	cheats.apply_frame(_dt)
 	if input.was_pressed(KEY_ESCAPE) and not (skirmish != null and skirmish.over):
-		if inv_ui != null and inv_ui.is_open:
+		if cheat_menu.visible:
+			cheat_menu.toggle()
+		elif inv_ui != null and inv_ui.is_open:
 			inv_ui.close()
 		elif menu.visible:
 			menu.close()

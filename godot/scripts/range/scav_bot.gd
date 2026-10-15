@@ -66,8 +66,8 @@ func setup(p: TacticalPlayer, b: Ballistics, house: Node3D, label: String, start
 	bal = b
 	kind = bot_kind
 	def = BotDefs.of(kind)
-	covers = house.covers
-	patrol = route if not route.is_empty() else house.patrol
+	covers = house.covers if house != null else []
+	patrol = route if not route.is_empty() else (house.patrol if house != null else [Vector3.ZERO])
 	if def["overwatch"]:
 		covers = []
 	percept.range_m = def["sight"]

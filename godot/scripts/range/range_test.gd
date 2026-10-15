@@ -39,6 +39,7 @@ func run() -> void:
 	RangeTestSound.run(self)
 	await RangeTestAttach.run(self)
 	await RangeTestTempest.run(self)
+	await RangeTestCheats.run(self)
 	if failed == 0:
 		print("[range] OK ", passed)
 	else:
