@@ -3,11 +3,11 @@ class_name StarterLoadout
 
 
 static func fill(inv: Inventory) -> void:
-	var rig := ItemDefs.make("rig_chest")
+	var rig := inv.make("rig_chest")
 	inv.place(rig, "rig")
 	for id in ["ak47", "m1911"]:
-		var gun := ItemDefs.make(id)
+		var gun := inv.make(id)
 		(gun["gun"] as Gun).spares.clear()
 		inv.add(gun)
 	for id in ["mag_ak47", "mag_ak47", "mag_ak47", "mag_m1911", "mag_m1911"]:
-		inv.add(ItemDefs.make(id))
+		inv.add(inv.make(id))

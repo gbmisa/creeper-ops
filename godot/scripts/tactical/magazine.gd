@@ -51,3 +51,14 @@ func estimate() -> String:
 		if f >= row[0]:
 			return row[1]
 	return "Almost empty"
+
+
+## Plain-data snapshot (MULTIPLAYER.md rule 6).
+func to_dict() -> Dictionary:
+	return {"cap": cap, "rounds": rounds.duplicate()}
+
+
+static func from_dict(d: Dictionary) -> Magazine:
+	var m := Magazine.new(int(d.get("cap", 30)))
+	m.rounds = (d.get("rounds", []) as Array).duplicate()
+	return m

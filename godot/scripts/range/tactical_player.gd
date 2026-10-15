@@ -16,6 +16,7 @@ signal died
 signal respawned
 
 var input: InputState
+var session: RangeSession
 var enabled := true
 var yaw := 0.0
 var pitch := 0.0
@@ -122,18 +123,18 @@ func _process(delta: float) -> void:
 		head.rotation.z = lerpf(head.rotation.z, 0.9, minf(1.0, delta * 3.0))
 	if not enabled:
 		return
-	if input.act("t_jump"):
+	if input.frame.act("t_jump"):
 		_jump = true
-	if input.act("t_crouch"):
+	if input.frame.act("t_crouch"):
 		crouching = not crouching
-	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if input.frame.captured:
 		var k := cam.fov / BASE_FOV
-		yaw -= input.mouse_delta.x * SENS * k
-		pitch = clampf(pitch - input.mouse_delta.y * SENS * k, -1.5, 1.5)
+		yaw -= input.frame.mouse_delta.x * SENS * k
+		pitch = clampf(pitch - input.frame.mouse_delta.y * SENS * k, -1.5, 1.5)
 	var lean_t := 0.0
-	if input.held("t_lean_left"):
+	if input.frame.held("t_lean_left"):
 		lean_t -= 1.0
-	if input.held("t_lean_right"):
+	if input.frame.held("t_lean_right"):
 		lean_t += 1.0
 	lean = move_toward(lean, lean_t, delta * 6.0)
 	_eye = lerpf(_eye, EYE_CROUCH if crouching else EYE_STAND, minf(1.0, delta * 10.0))
@@ -149,9 +150,9 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	var dir := Vector2.ZERO
 	if enabled:
-		dir.y = float(input.held("t_back")) - float(input.held("t_forward"))
-		dir.x = float(input.held("t_right")) - float(input.held("t_left"))
-	var want_sprint: bool = enabled and input.held("t_sprint") and dir.y < 0.0 and not crouching \
+		dir.y = float(input.frame.held("t_back")) - float(input.frame.held("t_forward"))
+		dir.x = float(input.frame.held("t_right")) - float(input.frame.held("t_left"))
+	var want_sprint: bool = enabled and input.frame.held("t_sprint") and dir.y < 0.0 and not crouching \
 		and ads_amt < 0.1 and not _exhausted and is_on_floor()
 	sprinting = want_sprint
 	if sprinting:
@@ -187,7 +188,8 @@ func _physics_process(delta: float) -> void:
 		_step_t = 1.7
 		if is_on_floor() and hv.length() > 0.5:
 			Sfx.play("step")
-			BotNoise.emit(global_position, BotNoise.step_radius(sprinting, crouching), "step", self)
+			if session != null:
+				session.noise.emit(global_position, BotNoise.step_radius(sprinting, crouching), "step", self)
 
 
 func horizontal_speed() -> float:

@@ -2,10 +2,10 @@ class_name RangeTestBotMesh
 ## Enemy body checks for `--range-test`: every roster kind builds a skeleton body, its locomotion clip follows speed,
 ## the hands land on the gun's grips, and death plays the death clip.
 
-static func run(t: RangeTest, house: Node3D, player: TacticalPlayer) -> void:
+static func run(t: RangeTest, session: RangeSession, house: Node3D, player: TacticalPlayer) -> void:
 	RangeTestRoster.t = t
 	for kind in BotDefs.ROWS:
-		var b := RangeTestRoster.make(house, player, kind, Vector3(0, 0.1, 0))
+		var b := RangeTestRoster.make(session, house, player, kind, Vector3(0, 0.1, 0))
 		await t.get_tree().process_frame
 		var m: BotMesh = b.mesh
 		t.check("%s builds a skeleton body" % kind, m.body.skel != null and m.body.skel.get_bone_count() == 65)

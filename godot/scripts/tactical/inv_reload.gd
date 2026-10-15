@@ -18,9 +18,9 @@ static func mag_from_item(it: Dictionary, min_cap: int = 0) -> Magazine:
 	return m
 
 
-static func item_from_mag(gun_id: String, m: Magazine, fallback_ammo: String) -> Dictionary:
+func item_from_mag(gun_id: String, m: Magazine, fallback_ammo: String) -> Dictionary:
 	var id := "clip_garand" if gun_id == "garand" else "mag_" + gun_id
-	return ItemDefs.make(id, {"rounds": m.count(), "ammo": m.top() if m.count() > 0 else fallback_ammo})
+	return inv.make(id, {"rounds": m.count(), "ammo": m.top() if m.count() > 0 else fallback_ammo})
 
 
 ## "ok", "none" (no magazine / round found) or "no" (the gun can't reload now).
@@ -61,7 +61,7 @@ func _begin_tube(gi: Dictionary, g: Gun, fast: bool) -> String:
 	g.spares.append(pouch)
 	if not g.reload(fast):
 		g.spares.clear()
-		inv.add(ItemDefs.make(round_id, {"count": 1}))
+		inv.add(inv.make(round_id, {"count": 1}))
 		return "no"
 	gi["staged"] = {"round": round_id}
 	return "ok"
@@ -94,7 +94,7 @@ func cancel(gi: Dictionary) -> void:
 	g.busy_t = 0.0
 	g.busy_kind = ""
 	if staged.has("round"):
-		inv.add(ItemDefs.make(staged["round"], {"count": 1}))
+		inv.add(inv.make(staged["round"], {"count": 1}))
 	elif not g.spares.is_empty():
 		var back := item_from_mag(g.def["id"], g.spares[0], g.ammo_pick)
 		var from: Dictionary = staged["from"]

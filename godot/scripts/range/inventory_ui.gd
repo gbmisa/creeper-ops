@@ -24,7 +24,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer, wi: WorldItems) -> void:
 
 
 func _process(_dt: float) -> void:
-	if player.input.act("inventory") and (is_open or player.enabled):
+	if player.input.frame.act("inventory") and (is_open or player.enabled):
 		if is_open:
 			close()
 		else:
@@ -54,7 +54,7 @@ func refresh_ground() -> void:
 	var near := world.nearby(player.eye_pos())
 	for it in inv.ground.duplicate():
 		if not near.has(it):
-			inv.remove(it)
+			inv.request_remove(it)
 	for it in near:
 		if it["loc"] != "ground":
 			it["loc"] = ""
@@ -68,7 +68,7 @@ func _put_ground(inv: Inventory, it: Dictionary, rot: int) -> bool:
 	for y in gs.y:
 		for x in gs.x:
 			if inv.fits("ground", it, x, y, rot):
-				return inv.place(it, "ground", x, y, rot)
+				return inv.request_place(it, "ground", x, y, rot)["ok"]
 	return false
 
 
@@ -87,7 +87,7 @@ func _on_drop(it: Dictionary, target: Dictionary, origin: Dictionary) -> void:
 	else:
 		_into_grid(it, target)
 	if it["loc"] == "" and not it.has("world") and ItemDefs.def_of(it)["kind"] == "attach":  # a part pulled off a gun that found no place
-		if not inv.add(it):
+		if not inv.request_add(it)["ok"]:
 			world.drop_front(it)
 	_settle()
 
@@ -99,11 +99,11 @@ func _fit(att: Dictionary, host: Dictionary) -> void:
 	if not r["ok"]:
 		weapons.message.emit(r["why"])
 		if att["loc"] == "":
-			inv.add(att)
+			inv.request_add(att)
 		return
 	if att.has("world"):
 		world.release(att)
-	if not r["old"].is_empty() and not inv.add(r["old"]):
+	if not r["old"].is_empty() and not inv.request_add(r["old"])["ok"]:
 		world.drop_front(r["old"])
 	weapons.message.emit("Fitted %s" % ItemDefs.def_of(att)["name"])
 
@@ -113,14 +113,14 @@ func _on_unfit(gun_item: Dictionary, slot: String, drag: bool) -> void:
 	if r.is_empty():
 		return
 	for it in r["spill"]:
-		if not weapons.inv.add(it):
+		if not weapons.inv.request_add(it)["ok"]:
 			world.drop_front(it)
 	if drag:
 		view.drag = r["item"]
 		view.drag_rot = 0
 		view.origin = {}
 		view.grab = Vector2(InventoryView.C, InventoryView.C) * 0.5
-	elif not weapons.inv.add(r["item"]):
+	elif not weapons.inv.request_add(r["item"])["ok"]:
 		world.drop_front(r["item"])
 	_settle()
 
@@ -136,7 +136,7 @@ func _into_grid(it: Dictionary, t: Dictionary) -> void:
 					world.release(it)
 				return
 	var from_ground: bool = it["loc"] == "ground"
-	if inv.move(it, t):
+	if inv.request_move(it, t)["ok"]:
 		_snd(it, "pick" if from_ground and t["loc"] != "ground" else "move")
 		if t["loc"] != "ground" and it.has("world"):
 			world.release(it)
@@ -150,17 +150,17 @@ func _into_slot(it: Dictionary, t: Dictionary, origin: Dictionary) -> void:
 	_snd(it, "move")
 	var occ = inv.equipped(slot)
 	if occ == null:
-		if inv.move(it, t) and it.has("world"):
+		if inv.request_move(it, t)["ok"] and it.has("world"):
 			world.release(it)
 		return
-	inv.remove(it)
-	inv.remove(occ)
-	inv.place(it, slot, 0, 0, 0)
+	inv.request_remove(it)
+	inv.request_remove(occ)
+	inv.request_place(it, slot, 0, 0, 0)
 	if it.has("world"):
 		world.release(it)
-	if origin["loc"] != "ground" and inv.move(occ, origin):
+	if origin["loc"] != "ground" and inv.request_move(occ, origin)["ok"]:
 		return
-	if not inv.add(occ):
+	if not inv.request_add(occ)["ok"]:
 		world.drop_front(occ)
 
 
@@ -168,7 +168,7 @@ func _to_world(it: Dictionary) -> void:
 	if it["loc"] == "ground":
 		return
 	_snd(it, "drop")
-	weapons.inv.remove(it)
+	weapons.inv.request_remove(it)
 	world.drop_front(it)
 
 
@@ -183,7 +183,7 @@ func quick_move(it: Dictionary) -> void:
 	else:
 		var from: String = it["loc"]
 		var to := inv.first_fit(it, from)
-		if to.is_empty() or not inv.move(it, to):
+		if to.is_empty() or not inv.request_move(it, to)["ok"]:
 			_to_world(it)
 		else:
 			_snd(it, "move")
@@ -199,7 +199,7 @@ func _settle() -> void:
 	var inv := weapons.inv
 	for it in inv.ground.duplicate():
 		if not it.has("world"):
-			inv.remove(it)
+			inv.request_remove(it)
 			world.drop_front(it)
 	weapons.sync()
 	refresh_ground()
