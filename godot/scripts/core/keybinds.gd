@@ -103,6 +103,12 @@ const DEFAULTS := {
 	"drop": ["Tactical", "Drop the gun in hand", [KEY_G]],
 }
 
+## Hidden chords (physical keycode | modifier mask): never listed, never rebindable, never in the cfg file.
+const HIDDEN := {
+	"secret_tempest": [KEY_P | KEY_MASK_CTRL | KEY_MASK_ALT],
+	"cheat_menu": [KEY_KP_5 | KEY_MASK_CTRL],
+}
+
 static var _map := {}  # id -> Array[int] (current keys)
 static var _loaded := false
 static var persist := true  # tests turn this off so they never touch the player's file

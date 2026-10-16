@@ -57,13 +57,13 @@ const ROWS := {
 
 static func of(id: String) -> Dictionary:
 	var d := DEFAULTS.duplicate()
-	d.merge(ROWS[id], true)
+	d.merge(ROWS[id] if ROWS.has(id) else SecretArms.AMMO[id], true)
 	d["id"] = id
 	return d
 
 
 static func grades(cal: String) -> Array:
-	return CALIBERS[cal]
+	return CALIBERS[cal] if CALIBERS.has(cal) else SecretArms.CALIBERS[cal]
 
 
 ## Next grade in the caliber's list (wraps), for the bench.

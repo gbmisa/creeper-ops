@@ -22,6 +22,8 @@ var session: RangeSession
 const HAND_SLOTS := ["primary", "secondary", "holster"]  # keys 1 / 2 / 3
 
 var inv := Inventory.new()
+var tempest_prev := {}  # the sidearm the Tempest displaced (Tempest.toggle puts it back)
+var cheats: RangeCheats  # set by the scene; null in tests that don't need it
 var reloader := InvReload.new(inv)
 var gun: Gun
 var gun_item := {}
@@ -206,7 +208,8 @@ func _shoot(res: Dictionary) -> void:
 	var origin := player.eye_pos() + basis.z * -0.3
 	for d in gun.shot_dirs(player.view_basis(recoil.barrel), res["ammo"], ads_amt > 0.8, rng):
 		bal.spawn(origin, d, res["ammo"], [], gun.stat("vel"))
-	recoil.shoot(gun.eff_def(), rng, player.body.arm_loss("recoil"))
+	if not no_recoil():
+		recoil.shoot(gun.eff_def(), rng, player.body.arm_loss("recoil"))
 	since_shot = 0.0
 	if session != null:
 		session.noise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
@@ -271,7 +274,7 @@ func start_reload(fast: bool) -> void:
 func _apply_view(_delta: float) -> void:
 	var tired := arm_stamina < 0.12
 	var sw := RecoilModel.sway(_t, gun.def, holding_breath, tired)
-	player.sway_off = sw * ads_amt * player.body.arm_loss("sway")
+	player.sway_off = Vector2.ZERO if no_recoil() else sw * ads_amt * player.body.arm_loss("sway")
 	player.cam.fov = fov_for(ads_amt, gun.stat("scope"))
 
 
@@ -285,3 +288,8 @@ static func fov_for(ads: float, scope: float) -> float:
 
 func scoped() -> bool:
 	return gun != null and gun.stat("scope") > 1.0 and ads_amt > SCOPE_AT
+
+
+## The gun in hand has no recoil or sway (the Tempest; also the no_recoil cheat toggle).
+func no_recoil() -> bool:
+	return (gun != null and gun.def.get("no_recoil", false)) or (cheats != null and cheats.is_on("no_recoil"))

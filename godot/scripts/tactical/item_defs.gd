@@ -44,7 +44,7 @@ const ARMOR_SIZE := {"vest2": [3, 3, 1.5], "plate4": [3, 3, 6.0], "steel6": [2, 
 
 
 static func has(id: String) -> bool:
-	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id) or AttachmentDefs.has(id)
+	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or SecretArms.has_weapon(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id) or AttachmentDefs.has(id)
 
 
 static func of(id: String) -> Dictionary:
@@ -55,7 +55,7 @@ static func of(id: String) -> Dictionary:
 			d["cal"] = WeaponDefs.of(d["gun"])["cal"]
 			d["cap"] = WeaponDefs.of(d["gun"])["mag"]
 		return d
-	if WeaponDefs.ROWS.has(id):
+	if WeaponDefs.ROWS.has(id) or SecretArms.has_weapon(id):
 		var w := WeaponDefs.of(id)
 		return {"id": id, "name": w["name"], "kind": "gun", "w": w["inv_w"], "h": w["inv_h"], "kg": w["kg"],
 			"pistol": w["class"] == "pistol", "cal": w["cal"]}

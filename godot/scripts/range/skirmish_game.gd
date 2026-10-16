@@ -7,6 +7,7 @@ const REACH := 2.2
 
 var layout: SkirmishLayout
 var bots: Array[ScavBot] = []
+var cheats: RangeCheats  # set by the scene; null in tests
 var player: TacticalPlayer
 var weapons: PlayerWeapons
 var bal: Ballistics
@@ -174,5 +175,5 @@ func finish(win: bool) -> void:
 	for b in bots:
 		if is_instance_valid(b):
 			b.set_physics_process(false)
-	end_screen = SkirmishEnd.new(win, time_s, kills, bots.size(), session)
+	end_screen = SkirmishEnd.new(win, time_s, kills, bots.size(), session, cheats != null and cheats.cheats_used)
 	add_child(end_screen)

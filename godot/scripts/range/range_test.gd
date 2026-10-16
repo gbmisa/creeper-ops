@@ -73,6 +73,8 @@ func run() -> void:
 	await RangeTestAnim.garand(self)
 	await RangeTestFire.run(self)
 	await RangeTestFbc.run(self)
+	await RangeTestTempest.run(self)
+	await RangeTestCheats.run(self)
 	if failed == 0:
 		print("[range] OK ", passed)
 	else:
