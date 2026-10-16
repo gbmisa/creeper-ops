@@ -53,6 +53,7 @@ func run() -> void:
 	RangeTestRangeReload.run(self)
 	RangeTestAmmo2.run(self)
 	RangeTestF90.run(self)
+	RangeTestF127.run(self)
 	await RangeTestF92.run(self)
 	RangeTestF93.run(self)
 	RangeTestNoAmmo.run(self)

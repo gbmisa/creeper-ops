@@ -29,10 +29,18 @@ static func _mesh(mi: MeshInstance3D) -> int:
 	return n
 
 
+## F124: one clipped copy per source material, reused every time the gun is drawn again (a fresh copy per switch cost
+## tens of ms in the renderer). Nothing edits a viewmodel material after this, so sharing the copy is safe.
+static var _cache := {}
+
+
 static func _clip(m: Material) -> Material:
+	if _cache.has(m):
+		return _cache[m]
 	var d := m.duplicate() as BaseMaterial3D
 	d.use_z_clip_scale = true
 	d.z_clip_scale = TacticalConfig.VM_Z_CLIP
+	_cache[m] = d
 	return d
 
 

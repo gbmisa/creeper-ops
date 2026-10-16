@@ -63,3 +63,9 @@ Anything here changes (or already changed) behaviour that was working and that G
 - **Why:** F112 asked for rebinding; it silently doesn't stick. MouseSettings/DisplaySettings/SafeZone already use
   their own `--range-test` check, so they do save.
 - **Touches:** user://keybinds.cfg gets written by the on-foot game (same file command mode writes).
+
+## P15 (F127) tube reload with a different 12ga grade in the pockets
+- Today: M870 tube holding grade A only takes grade A from the inventory; carrying only grade B shows "No 12ga rounds" (tube can't mix grades).
+- Proposed: let R unload/swap the tube, or pick the carried grade when the tube is empty (already works). Needs your ruling.
+- Why: only path found where a Skirmish tube reload says "out of ammo" with shells carried; plain refills conserve shells (new test f127).
+- Touches: InvReload._begin_tube, Gun.reload rules, HUD message.
