@@ -30,11 +30,12 @@ static func _fire(b: ScavBot, point: Vector3) -> String:
 		return "busy:" + b.gun.busy_kind
 	if b.cd > 0.0:
 		return "cd"
-	# F5: only fire with a clear line from the muzzle to the target. The ray runs on LAYER_WORLD,
-	# so the bot's own body (LAYER_BODY) never blocks it; cover, walls and props do.
+	# F5: only fire with a clear line to the target. The ray runs on LAYER_WORLD, so the bot's own body
+	# (LAYER_BODY) never blocks it; cover, walls and props do. F84: it starts at the eye, not the muzzle
+	# (0.4 m out): a bot pressed against a wall has its muzzle inside or past it, and a ray that starts
+	# inside a solid never hits it, so the shot went through concrete.
 	var space := b.get_world_3d().direct_space_state
-	var muzzle := b.eye() + (point - b.eye()).normalized() * 0.4
-	if not BotPerception.los(space, muzzle, [point]):
+	if not BotPerception.los(space, b.eye(), [point]):
 		# BOT-P0: sight accepts head OR chest, so a target hiding behind half cover is shot in the head.
 		var head := _visible_head(b, point, space)
 		if head == Vector3.INF:
@@ -96,8 +97,7 @@ static func _visible_head(b: ScavBot, point: Vector3, space: PhysicsDirectSpaceS
 	var head: Vector3 = target.node.eye_pos()
 	if head.distance_to(point) > 1.5:
 		return Vector3.INF
-	var muzzle := b.eye() + (head - b.eye()).normalized() * 0.4
-	return head if BotPerception.los(space, muzzle, [head]) else Vector3.INF
+	return head if BotPerception.los(space, b.eye(), [head]) else Vector3.INF
 
 
 static func facts(b: ScavBot) -> Dictionary:

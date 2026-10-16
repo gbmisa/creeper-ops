@@ -35,6 +35,7 @@ func run() -> void:
 	await RangeTestBots.run(self)
 	await RangeTestFbb.run(self)
 	await RangeTestNoFire.run(self)
+	await RangeTestWallHug.run(self)
 	await RangeTestBody.run(self)
 	await RangeTestDeploy.run(self)
 	await RangeTestKit.run(self)

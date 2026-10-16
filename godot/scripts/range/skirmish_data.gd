@@ -6,7 +6,7 @@ const SPAWN := Vector3(0, 0.05, 54.0)
 const RACK_POS := Vector3(-5.0, 0, 59.2)
 const EXTRACT := Vector3(0, 0, -52.0)
 const EXTRACT_R := 4.0
-const EXTRACT_TIME := 8.0
+const EXTRACT_TIME := 2.0
 const WALL_H := 4.0
 
 const BRICK := Color(0.55, 0.3, 0.24)

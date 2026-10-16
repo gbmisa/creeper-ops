@@ -121,5 +121,5 @@ func _process(delta: float) -> void:
 	_prompt_lbl.text = weapons.prompt
 	_msg_t = maxf(0.0, _msg_t - delta)
 	_msg_lbl.visible = _msg_t > 0.0
-	_leg.value = player.leg_stamina * 100.0
-	_arm.value = weapons.arm_stamina * 100.0
+	_leg.value = player.leg_stamina
+	_arm.value = weapons.arm_stamina
