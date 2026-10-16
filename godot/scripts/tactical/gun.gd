@@ -24,7 +24,7 @@ var zoom_hi := true  # variable sight (LPVO): at its top zoom
 func _init(weapon_id: String) -> void:
 	id = weapon_id
 	def = WeaponDefs.of(weapon_id)
-	mode = def["modes"][0]
+	mode = "auto" if "auto" in def["modes"] else def["modes"][0]  # Gregory 2026-10-16: start on auto where the gun has it
 	ammo_pick = TacAmmoDefs.grades(def["cal"])[0]
 	zero_idx = 0
 	for slot in def.get("fit", {}):
@@ -291,7 +291,7 @@ static func from_dict(d: Dictionary) -> Gun:
 	for m in d.get("spares", []):
 		g.spares.append(Magazine.from_dict(m as Dictionary))
 	g.chamber = str(d.get("chamber", ""))
-	g.mode = str(d.get("mode", "semi"))
+	g.mode = str(d.get("mode", g.mode))
 	g.needs_cycle = bool(d.get("needs_cycle", false))
 	g.zero_idx = int(d.get("zero_idx", 0))
 	g.busy_kind = str(d.get("busy_kind", ""))
