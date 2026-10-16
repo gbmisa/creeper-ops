@@ -26,6 +26,11 @@ static func run(t: RangeTest) -> void:
 	t.add_child(w2)
 	w2.setup(player, input, t.bal, rack, session)
 	t.check("skirmish start: loads the saved kit (same items)", _ids(w2.inv) == ids)
+	t.check("map load: a NEW session still carries the kit", _ids(Inventory.from_dict(RangeSession.new(5).saved_kit)) == ids)
+	session.set_local_recoil(true)
+	t.check("map load: recoil mode survives a NEW session", RangeSession.new(8).add_player(1, true).recoil_mode)
+	session.set_local_recoil(false)
+	t.check("map load: recoil mode defaults to Classic", not RangeSession.new(9).add_player(1, true).recoil_mode)
 	var game := SkirmishGame.new()
 	t.add_child(game)
 	game.build_world()
@@ -34,6 +39,7 @@ static func run(t: RangeTest) -> void:
 	weapons.inv.add(loot)
 	game.finish(true)
 	t.check("extract: keeps the carried-out kit, loot included", _ids(Inventory.from_dict(session.saved_kit)).has("med_ifak") and _ids(Inventory.from_dict(session.saved_kit)).size() == ids.size() + 1)
+	t.check("extract: a NEW session carries kit + loot", _ids(Inventory.from_dict(RangeSession.new(6).saved_kit)).has("med_ifak"))
 	game.end_screen.queue_free()
 	var g2 := SkirmishGame.new()
 	t.add_child(g2)
@@ -41,6 +47,7 @@ static func run(t: RangeTest) -> void:
 	g2.start(player, weapons, t.bal, log, t, session)
 	g2.finish(false)
 	t.check("KIA: clears the saved kit (default kit next)", session.saved_kit.is_empty())
+	t.check("KIA: a NEW session has the default kit", RangeSession.new(7).saved_kit.is_empty())
 	g2.end_screen.queue_free()
 	player.enabled = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
