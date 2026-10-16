@@ -15,6 +15,8 @@ var half_len := 0.3
 var _def := {}
 var _kick := 0.0
 var _kick_v := 0.0
+var _shake := Vector3.ZERO  # FB-H: visual-only random shake (Tarkov 0.16-style); model rotation only,
+var _shake_v := Vector3.ZERO  # never aim-affecting — it never touches RecoilModel or aim_basis.
 var _bob_t := 0.0
 var _check := 0.0
 var _cycle_clip := ""
@@ -88,6 +90,10 @@ func _on_shot(res: Dictionary, g: Gun) -> void:
 	_kick_v += 0.4 + g.stat("up") * 0.2
 	if weapons.recoil.tarkov:
 		_kick_v += TacticalConfig.RECOIL_T_VM_KICK * (1.0 + g.stat("up"))
+		# FB-H: visual-only shake. Random rotational impulse on the MODEL only — it never reaches
+		# RecoilModel, aim_basis, or the bullets, so aim-affecting and non-aim-affecting stay separate.
+		_shake_v += Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) \
+			* deg_to_rad(TacticalConfig.RECOIL_T_SHAKE_DEG)
 	if g.stat("flash") > 0.5:
 		flash.flash(Color(1.0, 0.8, 0.45), 0.07 + 0.02 * float(g.def["kg"]), 0.05, 2.0)
 	if _cycle_clip != "":
@@ -143,6 +149,9 @@ func _process(delta: float) -> void:
 	_kick += _kick_v * delta
 	pos.z += _kick * (1.0 - a * 0.5)
 	rot.x += _kick * 6.0 * (1.0 - a * 0.5)
+	_shake_v -= (_shake * 400.0 + _shake_v * TacticalConfig.RECOIL_T_SHAKE_DECAY) * delta
+	_shake += _shake_v * delta
+	rot += _shake  # FB-H: visual-only; the model only
 	if weapons.recoil.tarkov:   # the gun follows the bore, which the camera only partly follows
 		var rest := weapons.recoil.barrel - weapons.recoil.offset
 		rot += Vector3(deg_to_rad(rest.x * TacticalConfig.RECOIL_T_VM_PITCH), deg_to_rad(rest.y * TacticalConfig.RECOIL_T_VM_YAW),

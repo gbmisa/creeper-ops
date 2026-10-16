@@ -60,6 +60,21 @@ const RECOIL_T_UP_MULT := 0.7
 const RECOIL_T_SIDE_MULT := 0.7
 const RECOIL_T_DRIFT := 0.35
 const RECOIL_T_OMEGA := 55.0
+# FB-H: two-channel Tarkov recoil. COMP_*: automatic recoil compensation ramps the per-shot impulse
+# 1.0 -> COMP_MIN over the first COMP_SHOTS shots (tuned approximation; BSG's constants unconfirmed).
+# CLIMB_*: a share of each camera impulse becomes permanent climb — the view stays displaced until the
+# player re-aims or switches weapons; capped at CLIMB_MAX deg. BURST_GAP: the burst counter resets after
+# this long without a shot, so tapping re-triggers the full first-shot kick. CAM_SNAP: default camera
+# return rate when a def lacks cam_snap. SHAKE_*: visual-only viewmodel shake (tactical_viewmodel.gd),
+# never aim-affecting.
+const RECOIL_T_COMP_MIN := 0.45
+const RECOIL_T_COMP_SHOTS := 5.0
+const RECOIL_T_BURST_GAP := 0.3
+const RECOIL_T_CLIMB_FRAC := 0.35
+const RECOIL_T_CLIMB_MAX := 6.0
+const RECOIL_T_CAM_SNAP := 8.0
+const RECOIL_T_SHAKE_DEG := 0.35
+const RECOIL_T_SHAKE_DECAY := 12.0
 const RECOIL_T_VM_PITCH := 3.5
 const RECOIL_T_VM_YAW := 2.0
 const RECOIL_T_VM_ROLL := 0.8

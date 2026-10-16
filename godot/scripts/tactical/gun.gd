@@ -90,9 +90,11 @@ func toggle_zoom() -> void:
 
 
 ## The def with every fitted stat applied, plus ads_pos on the fitted sight's line. For recoil, ADS and the viewmodel.
+## cam_up / disp are attachment-scaled like up / side (no current attachment mods reference them — no-op
+## today); conv / cam_snap stay base-def (RecoilModel.update reads them from the base def, as before).
 func eff_def() -> Dictionary:
 	var d := def.duplicate()
-	for k in ["up", "side", "moa", "reload", "reload_fast", "mag", "scope", "ads_mult", "hip", "noise", "flash", "vel"]:
+	for k in ["up", "side", "moa", "reload", "reload_fast", "mag", "scope", "ads_mult", "hip", "noise", "flash", "vel", "cam_up", "disp"]:
 		d[k] = stat(k)
 	d["ads_pos"] = AttachmentMounts.ads_pos(def, fit.get("sight", ""))
 	return d

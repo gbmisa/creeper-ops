@@ -83,6 +83,7 @@ func select_slot(slot: String) -> void:
 	draw_t = DRAW_TIME
 	_check_t = 0.0
 	mag_text = ""
+	recoil.reset()  # FB-H: permanent camera climb must not leak between guns
 	switched.emit(gun)
 
 
