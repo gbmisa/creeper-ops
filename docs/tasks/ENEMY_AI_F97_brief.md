@@ -79,3 +79,15 @@ Files under ~250 lines (`scav_bot.gd` is 329: move logic out, don't grow it). `c
 ## Report (under 300 words, in `docs/tasks/ENEMY_AI_F97_progress.md`, updated per phase)
 Per phase: commit, what each bot kind now does in a fight, every behaviour change (side effects included), tests
 added/changed, suite summary line, anything you had to touch from the Must-not-change list and why, open questions.
+
+## F114 addition (Gregory 2026-10-16): reaction depends on where the bot expects you
+"They should expect to see me peek the same corner twice, but if I flank and go to another corner, they should not
+be able to laser beam me. They must have some kind of reaction time. That is slower than a decent gamer."
+- Today (`bot_perception.gd`): REACT 0.35-1.0 s, and ALERT_REACT_MULT 0.35 makes any alert bot react in
+  0.12-0.35 s wherever the player appears (F87). That is the "laser beam".
+- Rule: each bot keeps an expected spot (where it last saw / is watching, e.g. the corner the player peeked).
+  Player appears within ~2 m / ~10 deg of it: fast reaction (keep today's alert value; holding an angle).
+  Anywhere else (flank, new corner, behind): full reaction, floor ~0.45 s (slower than a decent gamer ~0.25 s),
+  scaled up with angle off the bot's aim, plus an aim-settle time before shots are accurate (first shots spread
+  wider while it swings). Tunables in a def table. Don't change bots' damage, hearing or difficulty otherwise.
+- Test: same corner twice -> second peek gets the fast reaction; new corner -> >= floor.
