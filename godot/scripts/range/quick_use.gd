@@ -3,6 +3,7 @@ extends Node
 ## Quick-use items (meds) on keys 4.. (`t_slot_4` + n, ItemDefs.QUICK order) or a click on their QuickBar card.
 ## Using one keeps the hands busy for its `use` seconds (no firing or aiming), then takes the item out of the
 ## inventory and applies it. Death cancels; an item dropped mid-use is simply not applied.
+## A med with a "res" HP pool (IFAK) is reusable: each use spends the HP it restores; it is removed at 0.
 
 var weapons: PlayerWeapons
 var player: TacticalPlayer
@@ -41,6 +42,8 @@ func start(id: String) -> String:
 	var d := ItemDefs.of(id)
 	if not d.has("heal") and d.get("stop_bleed", false) and player.body.bleeds.is_empty():
 		return "Not bleeding"
+	if d.has("heal") and player.body.full_health() and player.body.bleeds.is_empty():
+		return "Full health"
 	if weapons.gun != null and weapons.gun.busy_kind == "reload":
 		return "Reloading"
 	using = id
@@ -93,11 +96,19 @@ func _finish() -> void:
 	var it := _find(id)
 	if it.is_empty():
 		return
-	weapons.inv.remove(it)
 	var d := ItemDefs.of(id)
-	if d.has("heal"):
-		player.body.heal(float(d["heal"]))
-	elif d.get("stop_bleed", false):
-		player.body.stop_bleeds()
+	var msg := "Used %s" % d["name"]
+	if it.has("res"):
+		it["res"] = float(it["res"]) - player.body.heal(float(d["heal"]), float(it["res"]))
+		if float(it["res"]) < 1.0:
+			weapons.inv.remove(it)
+		else:
+			msg += " (%d HP left)" % int(it["res"])
+	else:
+		weapons.inv.remove(it)
+		if d.has("heal"):
+			player.body.heal(float(d["heal"]))
+		elif d.get("stop_bleed", false):
+			player.body.stop_bleeds()
 	RangeAudio.event({"kind": "inventory", "item": "med", "ev": "drop", "local": true})
-	weapons.message.emit("Used %s" % d["name"])
+	weapons.message.emit(msg)

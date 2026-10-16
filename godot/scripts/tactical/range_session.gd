@@ -19,6 +19,8 @@ var saved_kit: Dictionary:
 		return _carried
 	set(v):
 		_carried = v
+## The kit the player walked into Skirmish with ({} = starter kit); Restart reloads it (static, like _carried).
+static var _walked_in := {}
 var _seed_counter := 0
 
 
@@ -73,3 +75,13 @@ func clear_kit() -> void:
 	saved_kit = {}
 
 
+
+
+## Skirmish start: remember what the player walked in with.
+func mark_walk_in() -> void:
+	_walked_in = saved_kit.duplicate(true)
+
+
+## Skirmish Restart: carry the walk-in kit again (KIA cleared it, extract replaced it with the carried-out kit).
+func restore_walk_in() -> void:
+	saved_kit = _walked_in.duplicate(true)

@@ -10,6 +10,7 @@ func map_id() -> String:
 
 func _build() -> void:
 	_begin()
+	session.mark_walk_in()
 	skirmish = SkirmishGame.new()
 	add_child(skirmish)
 	skirmish.build_world()

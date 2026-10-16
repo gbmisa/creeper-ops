@@ -31,7 +31,8 @@ const ROWS := {
 	"pack_big": {"name": "Large backpack", "kind": "backpack", "w": 4, "h": 4, "kg": 1.6, "grid": [5, 6]},
 	# Meds (QuickUse): use = seconds with the hands busy; heal = fraction of each living zone's max HP
 	# (BodyHealth.heal also stops every bleed); stop_bleed = the bandage's only effect. Blacked zones stay down.
-	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4, "use": 3.0, "heal": 0.6, "short": "IFAK", "glyph": "IF"},
+	# res = HP pool (Tarkov-style): each use spends the HP it restores; the kit is used up when the pool hits 0.
+	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4, "use": 3.0, "heal": 0.6, "res": 300.0, "short": "IFAK", "glyph": "IF"},
 	"med_bandage": {"name": "Bandage", "kind": "med", "w": 1, "h": 1, "kg": 0.05, "use": 2.0, "stop_bleed": true, "short": "Bandage", "glyph": "BA"},
 }
 ## Quick-use bar order: card n is bound to t_slot_(4 + n).
@@ -67,7 +68,7 @@ static func of(id: String) -> Dictionary:
 		return {"id": id, "name": a["name"], "kind": "attach", "w": a["w"], "h": a["h"], "kg": a["kg"], "slot": a["slot"]}
 	var r := ArmorDefs.of(id)
 	var s: Array = ARMOR_SIZE[id]
-	return {"id": id, "name": r["name"], "kind": "armor", "w": s[0], "h": s[1], "kg": s[2]}
+	return {"id": id, "name": r["name"], "kind": "armor", "w": s[0], "h": s[1], "kg": s[2], "helmet": r["zones"] == ["head"]}
 
 
 ## A fresh item instance. opts: count (ammo), rounds + ammo (mags), rot, gun (a Gun).
@@ -86,6 +87,9 @@ static func make(id: String, opts: Dictionary, ids: IdSource) -> Dictionary:
 			it["gun"] = opts.get("gun", Gun.new(id))
 		"rig", "backpack":
 			it["items"] = []
+		"med":
+			if d.has("res"):
+				it["res"] = float(opts.get("res", d["res"]))
 	return it
 
 

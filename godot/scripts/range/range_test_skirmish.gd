@@ -79,7 +79,10 @@ static func run(t: RangeTest, session: RangeSession, player: TacticalPlayer) -> 
 	var ifaks := q.count("med_ifak")
 	t.check("quick use: IFAK starts, hands busy", q.start("med_ifak") == "" and weapons.hands_busy)
 	q._process(float(ItemDefs.of("med_ifak")["use"]) + 0.1)
-	t.check("quick use: IFAK heals and is used up", player.body.total_frac() > before and q.count("med_ifak") == ifaks - 1 and not weapons.hands_busy)
+	t.check("quick use: IFAK heals, spends its HP pool and is kept", player.body.total_frac() > before
+		and q.count("med_ifak") == ifaks and float(q._find("med_ifak")["res"]) < float(ItemDefs.of("med_ifak")["res"]) and not weapons.hands_busy)
+	player.body.reset()
+	t.check("quick use: IFAK refused at full health", q.start("med_ifak") == "Full health")
 	q.queue_free()
 	var mag := {}
 	for it in weapons.inv.all_items():

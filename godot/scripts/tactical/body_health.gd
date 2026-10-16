@@ -120,14 +120,27 @@ func hit(zone: String, dmg: float, info: Dictionary = {}) -> Dictionary:
 	return res
 
 
-## Field medical: stops bleeds and restores `frac` of each living zone's max HP (blacked-out zones stay down).
-func heal(frac: float) -> void:
+## Field medical: stops bleeds and restores `frac` of each living zone's max HP (blacked-out zones stay down),
+## spending at most `budget` HP in all. Returns the HP restored.
+func heal(frac: float, budget := INF) -> float:
 	if dead:
-		return
+		return 0.0
 	bleeds.clear()
+	var used := 0.0
 	for z in ZONES:
 		if hp[z] > 0.0:
-			hp[z] = minf(MAX[z], hp[z] + MAX[z] * frac)
+			var add := minf(minf(MAX[z] - hp[z], MAX[z] * frac), budget - used)
+			hp[z] += add
+			used += add
+	return used
+
+
+## Every living zone at max HP (blacked-out zones can't be healed, so they don't count).
+func full_health() -> bool:
+	for z in ZONES:
+		if hp[z] > 0.0 and hp[z] < MAX[z]:
+			return false
+	return true
 
 
 ## Bandage: stops every bleed, heals nothing.

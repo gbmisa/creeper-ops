@@ -3,7 +3,7 @@ extends RefCounted
 ## Tarkov-style inventory: equipment slots + grids (pockets, equipped rig, equipped backpack, transient ground).
 ## Items are dicts from ItemDefs.make(); placement is stored on the item (loc, x, y, rot). Pure logic, no UI.
 
-const SLOTS := ["primary", "secondary", "holster", "armor", "rig", "backpack"]
+const SLOTS := ["primary", "secondary", "holster", "helmet", "armor", "rig", "backpack"]
 const GRIDS := ["rig_g", "pockets", "pack_g"]  # grid locs (a worn rig / backpack's own grid), first_fit order after the slots
 const BAG_OF := {"rig_g": "rig", "pack_g": "backpack"}
 const GROUND_SIZE := Vector2i(10, 14)
@@ -73,6 +73,10 @@ func accepts_slot(slot: String, item: Dictionary) -> bool:
 			return d["kind"] == "gun" and not d["pistol"]
 		"holster":
 			return d["kind"] == "gun" and d["pistol"]
+		"helmet":
+			return d["kind"] == "armor" and d.get("helmet", false)
+		"armor":
+			return d["kind"] == "armor" and not d.get("helmet", false)
 		_:
 			return d["kind"] == slot
 
