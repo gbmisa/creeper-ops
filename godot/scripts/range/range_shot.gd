@@ -1,6 +1,7 @@
 class_name RangeShot
 extends Node
-## Screenshot / debug hook: --shot=path [--weapon=id] [--fit=a,b] [--zoom=lo] [--ads] [--look=x,y,z] [--fire=N] [--bolt=0..1 (with --fire=1: shoot after that share of the bolt cycle)] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] [--fps-report] (reload mid-way shot).
+## Screenshot / debug hook: --shot=path [--weapon=id] [--fit=a,b] [--zoom=lo] [--ads] [--look=x,y,z] [--fire=N] [--bolt=0..1 (with --fire=1: shoot after that share of the bolt cycle)] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] [--empty (chamber + mag emptied first)]
+## [--strip=t1,t2,.. (with --reload: one shot per time into the reload, saved as <shot>_NN.png)] [--fps-report] (reload mid-way shot).
 ## Gives the weapon, optionally fires N shots, waits, saves the viewport, quits.
 
 
@@ -70,6 +71,14 @@ func run(app: FiringRange) -> void:
 		w.trigger_down = false
 		var gap: float = float(a["bolt"]) * w.gun.def["cycle"] if a.has("bolt") else 60.0 / w.gun.def["rpm"] + 0.1 + w.gun.def["cycle"]
 		await app.get_tree().create_timer(gap).timeout
+	if a.has("empty") and w.gun != null:
+		while w.gun.mag.count() > 0:
+			w.gun.mag.pop()
+		w.gun.chamber = ""
+	if a.has("strip") and a.has("reload") and a.has("shot"):
+		await _strip(app, str(a["strip"]).split(","), str(a["shot"]), a.has("fast"))
+		app.get_tree().quit()
+		return
 	if a.has("reload"):
 		w.start_reload(a.has("fast"))
 		await app.get_tree().create_timer(float(a.get("reload", 0.5)) if str(a["reload"]) != "true" else 0.4).timeout
@@ -85,3 +94,21 @@ func run(app: FiringRange) -> void:
 		app.get_viewport().get_texture().get_image().save_png(str(a["shot"]))
 		print("[range] shot saved ", a["shot"])
 	app.get_tree().quit()
+
+
+## FB-R: frames through one reload, at the given game seconds after it starts. Time runs at 1/20 so slow
+## (software GL) frames still land within a few ms of each requested time.
+func _strip(app: FiringRange, times: PackedStringArray, path: String, fast: bool) -> void:
+	Engine.time_scale = 0.05
+	app.weapons.start_reload(fast)
+	var t := 0.0
+	print("[range] reload secs ", app.weapons.gun.busy_t)
+	for i in times.size():
+		while t < float(times[i]):
+			await app.get_tree().process_frame
+			t += app.get_process_delta_time()
+		await RenderingServer.frame_post_draw
+		var out := path.get_basename() + "_%02d.png" % i
+		app.get_viewport().get_texture().get_image().save_png(out)
+		print("[range] shot saved ", out.get_file(), " at ", snappedf(t, 0.01))
+	Engine.time_scale = 1.0
