@@ -12,7 +12,7 @@
 
 **Must-not-change:** none touched. **Open:** none.
 
-## Phase B — cover scoring + reservation (commit TBD)
+## Phase B — cover scoring + reservation (commit `c7d24790`)
 
 **What each kind does now:** every kind picks smarter cover. Marksmen still hold overwatch (no markers); breachers still rush (never take cover); everyone else now scores markers instead of taking the nearest hidden one, and two bots never stack on the same spot.
 
