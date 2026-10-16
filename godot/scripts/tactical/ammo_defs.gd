@@ -1,7 +1,7 @@
 class_name TacAmmoDefs
 ## Ammo grades. dmg/pen scale with v/v0 in flight. pellets > 1: dmg is per pellet.
 
-const DEFAULTS := {"frag": 0.0, "lbleed": 0.15, "hbleed": 0.05, "pellets": 1, "acc": 1.0, "malf": 0.002}
+const DEFAULTS := {"frag": 0.0, "lbleed": 0.15, "hbleed": 0.05, "pellets": 1, "acc": 1.0}
 
 ## cal -> default grade id order (first is the default load)
 const CALIBERS := {

@@ -34,10 +34,6 @@ const ARM_FRACTURE_SWAY := 1.0
 const ARMOR_RICOCHET_GLANCE_DEG := 25.0
 
 # Gun handling
-const HIP_CONE_DEG := 4.0
-const MALF_BASE := 0.05
-const WEAR_PER_SHOT := 0.0004
-const FIX_TIME := {"misfire": 1.0, "feed": 1.8, "jam": 2.5}
 const CHAMBER_TIME := 0.4
 const ADS_TIME_SLOW := 0.45
 const ADS_TIME_FAST := 0.15
@@ -46,24 +42,7 @@ const EXACT_COUNT_MAX_CAP := 8
 ## [min fraction (inclusive), text], checked top to bottom
 const MAG_WORDS := [[1.0, "Full"], [0.75, "Almost full"], [0.4, "About half"], [0.16, "Less than half"], [0.001, "Almost empty"]]
 
-# Recoil / sway
-const RECOIL_CAP_SHOTS := 10.0
-const RECOIL_RATE_LOW := 2.0
-const RECOIL_RATE_HIGH := 6.0
-# Tarkov-style recoil (RecoilModel.tarkov): per-shot impulse = up x UP_MULT along the gun's `angle`, side drift is
-# low-passed noise; OMEGA = critically damped rise (~60 ms); VM_* = viewmodel follows the bore (visual only).
-# Model refs (TRP spec, TRP/docs/spec/weapon-handling.md "Recoil", Apache-2.0): spring shape
-# (force -> Velocity, ReturnSpeed pull, Damping), stable/plateau from ~shot 5 (TRP RecoilStableIndexShot = 5
-# for the AKM), camera follows a share of the weapon's climb, angle 90 = straight up (TRP AKM 80..90).
-# Magnitudes below are this game's tuning, not TRP's measured values.
-const RECOIL_T_UP_MULT := 0.7
-const RECOIL_T_SIDE_MULT := 0.7
-const RECOIL_T_DRIFT := 0.35
-const RECOIL_T_OMEGA := 55.0
-const RECOIL_T_VM_PITCH := 3.5
-const RECOIL_T_VM_YAW := 2.0
-const RECOIL_T_VM_ROLL := 0.8
-const RECOIL_T_VM_KICK := 0.3
+# Recoil / sway. The recoil model's numbers live in tactical/recoil_defs.gd (TacRecoilDefs, Tarkov via TRP).
 const SWAY_BASE_DEG := 0.12
 const SWAY_HOLD_MULT := 0.05
 const SWAY_TIRED_MULT := 2.5
@@ -89,4 +68,16 @@ const BOLT_HAND_BLEND := 0.12  # share of the cycle the right hand takes to leav
 # ADS (AdsPose): metres from the eye to the rear sight point at full ADS, per sight kind. Starting values are the
 # per-kind medians of the pre-FB-H eye-to-rear-sight distances; Opus tunes them from reference frames.
 const ADS_RELIEF := {"pistol": 0.25, "pistol_optic": 0.193, "notch": 0.160, "aperture": 0.08, "optic": 0.286, "scope": 0.295}
+const ADS_EYE_CLEAR := 0.03  # F58: iron-sight eye keeps this from all gun geometry (eye_clear.py writes relief_min)
 const VM_Z_CLIP := 0.3  # z_clip_scale on every viewmodel material, so the gun never clips the near plane
+
+# Ragdoll (FB-A: enemy death; local cosmetic, no multiplayer sync)
+const DEATH_IMPULSE := 250.0  # N·s on the hit bone for a killing shot, scaled by bullet damage
+const DEATH_IMPULSE_REF_DMG := 57.0  # reference rifle-round damage for the scaling
+const RAGDOLL_SLEEP := 4.0  # s after death before ragdoll bones freeze (0 = never)
+const RAGDOLL_LIMIT := 0.35  # F77: ragdoll joint ranges (swing/twist/hinge) as a fraction of the anatomical table
+const RAGDOLL_LIN_DAMP := 1.0  # per-second linear damping of ragdoll bones (was 0.4)
+const RAGDOLL_ANG_DAMP := 4.0  # per-second angular damping of ragdoll bones (was 1.2)
+const RAGDOLL_NUDGE := 25.0  # N·s topple nudge on a bleed-out death (no kill impulse)
+const DEAD_GUN_MASS := 3.0  # kg, the dropped gun's rigid body
+const DEAD_GUN_TOSS := 1.5  # upward impulse (N·s) on the dropped gun

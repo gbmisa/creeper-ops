@@ -25,6 +25,13 @@ func _ready() -> void:
 		RangeMaps.pending = str(args["map"])
 	process_priority = 100  # runs after the player / weapons, so end_frame() clears input last
 	if args.has("range-test"):
+		var broken := RangeTestLoadCheck.broken()
+		for path in broken:
+			print("[range] FAIL script compiles: ", path)
+		if not broken.is_empty():
+			print("[range] FAILED ", broken.size(), " script(s) do not compile")
+			get_tree().quit(1)
+			return
 		var t := RangeTest.new()
 		add_child(t)
 		await t.run()
@@ -102,9 +109,14 @@ func _build() -> void:
 	inv_ui = InventoryUI.new()
 	add_child(inv_ui)
 	inv_ui.setup(weapons, player, world_items)
+	if not is_skirmish:
+		var bench := RangeWorkbench.new()  # F11: weapon customization station
+		add_child(bench)
+		bench.setup(weapons, player, inv_ui)
 	var hud := RangeHud.new()
 	add_child(hud)
 	hud.setup(weapons, player)
+	hud.process_mode = Node.PROCESS_MODE_ALWAYS   # F19: HUD stays live while the pause menu freezes the world
 	var body_hud := RangeBodyHud.new()
 	hud.add_child(body_hud)
 	body_hud.setup(player)

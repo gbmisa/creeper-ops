@@ -1,6 +1,7 @@
 class_name LookKestrel
 ## Outpost Kestrel dressing for Skirmish: facades, checkpoint gate + barrier arm at the spawn, radar mast, motor pool paint,
-## perimeter stencils, wall signs, props and foliage. Visual only: no colliders, nothing on a bot route.
+## perimeter stencils, wall signs, props and foliage. Visual only, except the guard-hut collider (see gate_collider):
+## nothing else collides, nothing sits on a bot route.
 const STENCIL := Color(0.78, 0.76, 0.66, 0.72)
 const WALL_H := 4.0
 
@@ -19,8 +20,27 @@ static func build(parent: Node3D) -> void:
 	_perimeter(n)
 	_wall_signs(n)
 	_covers(parent, n)
-	LookProps.build(n, LookPropDefs.SKIRMISH, true)
+	LookProps.build(n, LookPropDefs.SKIRMISH, true, true)
 	LookScatter.skirmish(n)
+
+
+## F25: collision for the guard hut beside the checkpoint lane. The hut itself is built visual-only in
+## _gate (skipped when headless), so this runs separately from SkirmishLayout.build and always applies.
+## Simple box matching the hut body: 2.2 x 2.6 x 2.2 at (8.0, 1.3, 47.0).
+static func gate_collider(parent: Node3D) -> void:
+	var sb := StaticBody3D.new()
+	sb.name = "GuardHut"
+	sb.collision_layer = TacticalConfig.LAYER_WORLD
+	sb.collision_mask = 0
+	var cs := CollisionShape3D.new()
+	var b := BoxShape3D.new()
+	b.size = Vector3(2.2, 2.6, 2.2)
+	cs.shape = b
+	sb.add_child(cs)
+	sb.position = Vector3(8.0, 1.3, 47.0)
+	sb.set_meta("mat", "plywood")
+	sb.set_meta("thick", 0.15)
+	parent.add_child(sb)
 
 
 ## Checkpoint: two posts and an overhead beam at z 47, barrier arm raised beside the booth, guard hut, stripes.
@@ -120,7 +140,7 @@ static func _wall_signs(n: Node3D) -> void:
 	LookSigns.stencil(n, "BLOCK B", Vector3(26.5, 2.0, 10.2), 0.0, 0.5, c)
 	LookSigns.stencil(n, "BLOCK B", Vector3(26.5, 2.0, -0.2), 180.0, 0.5, c)
 	LookSigns.stencil(n, "ADMIN", Vector3(-22.0, 3.45, -0.82), 0.0, 0.45, c)
-	LookSigns.stencil(n, "WH-1", Vector3(28.0, 2.9, -25.8), 0.0, 0.6, c)
+	# F26: the "WH-1" stencil in the ammo+meds room (warehouse) was removed per playtest feedback.
 	for cv in SkirmishData.COVER:
 		if cv[0] == "barrier":
 			var k := 1 + int(absf(cv[1] + cv[2])) % 9

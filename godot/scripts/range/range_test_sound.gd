@@ -45,6 +45,16 @@ static func run(t: RangeTest) -> void:
 	t.check("sound: suppressed shots differ from unsuppressed", SoundDefs.gun_event("ak47", "shot") != SoundDefs.gun_event("ak47", "shot_suppressed"))
 	t.check("sound: .44 and 12 ga have their own reports", SoundDefs.gun_event("revolver", "shot") != SoundDefs.gun_event("m1911", "shot") and SoundDefs.gun_event("shotgun", "shot") != SoundDefs.gun_event("sniper", "shot"))
 
+	var pings := 0
+	for g in WeaponDefs.ROWS:
+		for ev in ["mag_out", "mag_in", "action", "dry", "mode"]:
+			if SoundDefs.gun_event(g, ev, WeaponDefs.of(g)["cal"], WeaponDefs.of(g)["class"]) == "garand_ping":
+				pings += 1
+	t.check("sound: garand_ping is never a reload/mechanical sound; only the Garand pings on the last shot", pings == 0 and SoundDefs.PING_GUNS == ["garand"] and not "revolver" in SoundDefs.PING_GUNS)
+	var tp: AudioStream = RangeAudio.stream(SoundDefs.PROFILES["smg57"]["tail"])
+	var gp: AudioStream = RangeAudio.stream("garand_ping")
+	t.check("sound: P90 tail is one report (no baked burst); Garand ping is short", tp != null and tp.get_length() < 0.15 and gp != null and gp.get_length() < 0.3)
+
 
 static func _need(bad: Array, stem: String, label: String) -> void:
 	if stem == "" or RangeAudio.stream(stem) == null:

@@ -1,6 +1,6 @@
 class_name SkirmishGame
 extends Node3D
-## Skirmish rules: spawns the roster, objective HUD, extract timer (stand in the zone 8 s), loot crates, EXTRACTED / KIA.
+## Skirmish rules: spawns the roster, objective HUD, extract timer (stand in the zone EXTRACT_TIME), loot crates, EXTRACTED / KIA.
 ## `tick_extract` and `loot` are plain functions so the range test can drive them.
 
 const REACH := 2.2

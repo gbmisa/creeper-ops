@@ -8,6 +8,9 @@ const RANGE := 120.0
 const REACT_MIN := 0.35
 const REACT_MAX := 1.0
 const STILL_MULT := 1.4
+const ALERT_TIME := 30.0       # F87: seconds a heard gunshot keeps a bot alert
+const ALERT_REACT_MULT := 0.35 # alert bots react this much faster (sight delay and first shot)
+const ALERT_AIM_HEAD := 1.5    # alert bots start the aim warm-up this many seconds in
 
 var range_m := RANGE   # per bot (BotDefs sight)
 var seeing := false       # raw cone + LOS this frame
@@ -19,6 +22,8 @@ var last_known := Vector3.ZERO
 var has_last := false
 var noise_pos := Vector3.ZERO
 var noise_new := false
+var shot_new := false     # the latest noise was a gunshot (cleared with noise_new)
+var alert_t := 0.0
 
 
 static func in_view(eye: Vector3, fwd: Vector3, point: Vector3, max_range := RANGE) -> bool:
@@ -45,6 +50,7 @@ static func reaction_delay(dist: float, still: bool, roll: float) -> float:
 
 
 func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceState3D, pts: Array, still: bool, rng: RandomNumberGenerator, spot_mult := 1.0) -> void:
+	alert_t = maxf(0.0, alert_t - dt)
 	seeing = false
 	for p in pts:
 		if in_view(eye, fwd, p, range_m * spot_mult):
@@ -54,6 +60,8 @@ func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceStat
 	if seeing:
 		if not aware and react_left < 0.0:
 			react_left = reaction_delay(eye.distance_to(pts[1] if pts.size() > 1 else pts[0]), still, rng.randf())
+			if alerted():
+				react_left *= ALERT_REACT_MULT
 		if not aware:
 			react_left -= dt
 			if react_left <= 0.0:
@@ -81,6 +89,16 @@ func alert(from: Vector3) -> void:
 	since_seen = 0.0
 
 
-func hear(pos: Vector3) -> void:
+## F87: a gunshot also makes the bot alert and marks the shot as the player's last known spot.
+func hear(pos: Vector3, shot := false) -> void:
 	noise_pos = pos
 	noise_new = true
+	if shot:
+		shot_new = true
+		alert_t = ALERT_TIME
+		last_known = pos
+		has_last = true
+
+
+func alerted() -> bool:
+	return alert_t > 0.0

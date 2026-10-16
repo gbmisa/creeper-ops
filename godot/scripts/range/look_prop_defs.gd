@@ -25,3 +25,13 @@ const RANGE := [
 	["generator", 17.5, 8.0, 180, 1.0], ["drum", 18.2, 6.0, 0, 1.0], ["drum", 18.2, 5.0, 0, 1.0], ["pallets", 17.5, 3.0, 0, 1.0],
 ["lightmast", 11.0, 9.0, 0, 1.0], ["lightmast", -11.0, 9.0, 0, 1.0],
 ]
+## F25: simple collision for the skirmish cover props (FB-B). Only the brief-named props get bodies;
+## radar / wreck / generator / lightmast / camonet stay visual-only. box size is full extents (m), scaled by
+## the def's scale entry; the shape sits on the ground (bottom at y=0).
+const COLLISION := {
+	"sandbags": {"kind": "box", "size": Vector3(1.6, 1.0, 0.6), "mat": "dirt_berm", "thick": 0.8},
+	"jersey": {"kind": "box", "size": Vector3(2.0, 0.85, 0.55), "mat": "concrete", "thick": 0.5},
+	"drum": {"kind": "cyl", "radius": 0.3, "height": 0.9, "mat": "sheet_metal", "thick": 0.1},
+	"pallets": {"kind": "box", "size": Vector3(1.2, 1.1, 1.0), "mat": "wood_plank", "thick": 0.3},
+	"fueltank": {"kind": "cyl", "radius": 1.0, "height": 2.4, "mat": "sheet_metal", "thick": 0.15},
+}
