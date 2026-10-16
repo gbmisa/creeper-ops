@@ -38,6 +38,7 @@ func run() -> void:
 	await RangeTestDeploy.run(self)
 	await RangeTestKit.run(self)
 	await RangeTestPause.run(self)
+	RangeTestPause.map_switch(self)
 	RangeTestAmmo.run(self)
 	RangeTestReloadRace.run(self)
 	RangeTestReloadRace.second_r(self)
