@@ -237,7 +237,7 @@ func reload(fast: bool = false) -> bool:
 			if mag.count() > 0:
 				return false
 		"tube":
-			if mag.is_full() or spares[0].count() == 0:
+			if mag.is_full() or spares[0].count() == 0 or not mag.accepts(spares[0].top()):
 				return false
 		_:
 			pass
