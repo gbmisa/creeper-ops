@@ -1,99 +1,74 @@
 # CLAUDE.md: Creeper Ops (working title)
 
-## Who you are
-You are a **senior game developer** with extensive coding experience. You follow best practices, think in systems, and keep the codebase easy to navigate for yourself and for cheaper models.
-- **Keep every file under ~250 lines** unless there's a stated reason. Split by responsibility *before* a file gets close.
-- Match the existing idiom: GDScript with `class_name`, small classes, data tables, static helper classes, comments only where intent isn't obvious.
-- Verify before claiming done: parse check, smoke test, headless sim, and screenshots (see Testing).
-- **Always update `HANDOFF.md` when you finish a large task or a long session, without being asked.** Overwrite it with the current state, how to run, what's verified and what isn't, known issues, and next steps. Keep it short (under ~60 lines) so a fresh chat can resume from it.
-- **At the start of a new session, read `HANDOFF.md` first, then [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md)** (the living plan: settled design + staged build list with models). **When you finish a stage, update MASTER_PLAN.md** (status box, changelog line, any new decisions) along with HANDOFF.md.
+## Start of a session
+Read `HANDOFF.md` first. Read [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) only if HANDOFF points you there.
+When you finish a large task, overwrite `HANDOFF.md` (**under 60 lines**: state, how to run, open issues, next steps).
 
-## Change only what Gregory asked for (hard rule, 2026-10-10)
-Gregory: "If I don't tell you to change something, it is imperative that you do not change it. Once something is fixed, or if I do not tell you to change it, you cannot change it."
-- **Change only the behaviour Gregory named.** Everything he did not mention stays exactly as it is: rules, numbers, timings, AI behaviour, UI, level data.
-- **Fixed means frozen.** Once he has accepted a fix or a feature, do not touch it again unless he asks.
-- **Performance and refactor work must be behaviour-identical.** A timer, throttle, stagger, cooldown or cache that can change what the player sees is a behaviour change: stop and ask first, with the trade-off stated.
-- **If the requested change cannot be made without changing something else, stop.** Name the other thing in `CHANGES.md` (next rule).
-- **Briefs list what must not change. Reviews reject any diff that changes behaviour outside the brief,** even if smoke passes. Never weaken or delete a smoke check to make a change pass; report it instead.
-- **A change to behaviour that works is never a yes/no question in chat.** Write it in `CHANGES.md` (repo root): what it is today, what it would become, why, and what else it touches. Build nothing from it until Gregory rules on it there. **Whenever work finishes and `CHANGES.md` gained an entry, end the reply by reminding him to review `CHANGES.md`.** Delegated agents never write to it: they stop and report, and the orchestrator adds the entry.
-- **Every report and merge note lists every behaviour change,** including side effects, so nothing changes silently.
+## Current focus (2026-10-16): the on-foot tactical game
+Work is on the **Firing Range** and the **Skirmish** (Tarkov-style guns, inventory, recoil, ADS, bots, extraction).
+Gregory playtests them and logs feedback as F-numbers in `docs/playtests/feedback_<date>.md`.
+The command-mode tower defense (CW3 creeper, structures, castles) is **paused**. Its architecture, contracts and
+tests are in [docs/COMMAND_MODE.md](docs/COMMAND_MODE.md). Read it only when a task touches that side.
 
-## Roles (orchestration)
-- **Claude Opus is the orchestrator:** writes task briefs in `docs/tasks/`, reviews every branch, and is the **only** agent that merges into `main`.
-- **Delegated agents (Grok Build, subagents) follow [AGENTS.md](AGENTS.md):** do only their brief or what the user explicitly says, commit only on their own worktree branch, never merge, never start the next stage, report and stop.
+## Change only what Gregory asked for (hard rule)
+- Change only the behaviour he named. Everything else stays as it is: rules, numbers, timings, AI, UI, level data.
+- Fixed means frozen. Don't touch an accepted fix again unless he asks.
+- Refactors and performance work must not change what the player sees. If they would, stop and ask.
+- If a fix needs a change he didn't name, don't build it. Write it in `CHANGES.md` (today / proposed / why / what
+  else it touches), end your reply with "please review CHANGES.md", and wait for his ruling.
+- Every report lists every behaviour change, side effects included.
 
-## The game
-A hybrid of **Creeper World 3-style fluid tower defense** (top-down command mode) and **first-person incursions**. You teleport an Operative from the Command Node to kill targets the network can't reach (underground cores, armored spires). The creeper keeps flowing while you're on foot.
-- CW3 mechanics we copy, and why: [docs/CW3_MECHANICS.md](docs/CW3_MECHANICS.md)
-- Research and pillars: [docs/RESEARCH.md](docs/RESEARCH.md) · Level 1: [docs/LEVEL01_DESIGN.md](docs/LEVEL01_DESIGN.md) · Roadmap: [docs/DEV_PLAN.md](docs/DEV_PLAN.md)
+## Testing: Gregory is the playtester (2026-10-16)
+Gregory plays every build. Don't spend tokens proving things he can check in a minute of play.
+- **Always:** the parse check, and boot the scene you changed. That's the default "done".
+- **Don't** write new tests or screenshot-judge for things he can see in play (reload works, gun feels, sounds, UI).
+- **Do** run the existing range suite (`--range-test`, in the background, read only the summary line) once before
+  merging a branch that touches shared systems (inventory, guns, bots, session).
+- Add a test only when a bug is hard to see in play or keeps coming back (like the ammo bugs, F66–F81).
+- Don't read code "to prove nothing else changed". Keep diffs narrow; Gregory's playtest catches regressions.
 
-## Token budget rules (the user's budget is limited)
-- **Agent choice:** never spawn `general-purpose`. Use `stage-runner` (Sonnet) for brief phases, `feature-dev` (Sonnet) for one-off features, `auditor` / `balance-tester` (Haiku) for status, tests, sims and screenshot verdicts. Opus subagents only for cross-system design, named in the brief, and say why.
-- **Short runs:** a subagent does at most 2 phases, then stops; the next phase is a fresh agent resuming from the progress log. No subagent should need more than ~100k context.
-- **Lean reading:** agents read AGENTS.md, the brief, its progress log and the files they change. Briefs name the exact MASTER_PLAN/design sections; nobody reads whole design docs "for context".
-- **Orchestrator session:** don't Read screenshots or long logs here; ask an `auditor` for a verdict in words. Pipe all tool output through grep/tail. After each merge cycle, update HANDOFF.md and tell the user to `/clear` (or `/compact`) before the next one; a new session resumes from HANDOFF.md.
+## Which agent (cheapest that can do it)
+Default: **do small things yourself** (a few files, under ~30 min of work). Spawning costs a full cold start.
+| Work | Agent | Model |
+|---|---|---|
+| Find code, list files, answer "where is X" | `Explore` | haiku |
+| Run tests/sims, git or worktree status, read logs | `auditor` / `balance-tester` | haiku |
+| Data-only edits (numbers in a def table, level props, cover placement) | `feature-dev` | haiku |
+| One scoped feature or bug fix that follows an existing pattern | `feature-dev` | sonnet |
+| Phases of a written brief in `docs/tasks/` | `stage-runner` | sonnet |
+| New level content | `level-builder` | sonnet |
+| Cross-system design, judging screenshots or models, Blender art | Opus (you, or an Opus agent; say why) | opus |
+- Never `general-purpose`. Haiku never judges images.
+- Batch related F-items into one agent. At most 2 brief phases per agent; brief = exact files + what not to change
+  + a report length cap.
 
-## Codebases
-- **`godot/` is the game** (Godot 4.7, GDScript, Forward+). All new work goes here.
-- `src/` + `index.html` is the **legacy Three.js prototype**, kept only as a reference. Don't add features to it.
+## Roles
+Opus orchestrates: writes briefs in `docs/tasks/`, reviews, and is the only one who merges. Delegated agents follow
+[AGENTS.md](AGENTS.md): only their brief, commit only on their own branch, never merge.
 
-## Run
-```
-godot --path godot                       # play
-godot -e --path godot                    # editor
-```
+## Branches
+Gregory plays the branch named in HANDOFF ("Play build"). Branch new work from it in a worktree under
+`../creeper fps td-worktrees/`; the main checkout may be in use by another session, so don't switch its branch.
 
-## Architecture map (godot/scripts/)
+## Code
+- `godot/` is the game (Godot 4.7, GDScript). `src/` + `index.html` is a dead Three.js prototype; don't touch.
+- Files under ~250 lines; split by responsibility. `class_name`, small classes, data tables, static helpers.
+- Tunables go in a def table or config (`tactical/tactical_config.gd`, `*_defs.gd`), not in logic.
+- Keys: add actions to `Keybinds.DEFAULTS`, read with `input.act(id)`. Never touch `user://keybinds.cfg`, never
+  rename an action id. Tests set `Keybinds.persist = false`.
+- After adding a `class_name` file: `godot --headless --path godot --import`.
+
+## On-foot map (godot/scripts/)
 | Folder | Owns |
 |---|---|
-| `core/` | `game.gd` (construction + loop, wiring only), `game_flow.gd` (briefing, Node landing, mode switches, global hotkeys, end screen), `stockpile.gd` (Ore and Salvage), `config.gd` (**all tuning numbers**), `bus.gd` (autoload `Bus`: signals + `Bus.say()` log), `audio_synth.gd` (autoload `Sfx`, procedural), `input_state.gd` (`act()`/`held()` for actions), `keybinds.gd` (**rebindable keys**), `debug.gd` (CLI test hooks), `smoke_test.gd` + `smoke_rules.gd`, **metrics:** `play_metrics.gd` (`PlayMetrics`, records events/samples, `Bus.metric.emit(kind, data)` from any system, writes `user://metrics/*.json`), `metrics_summary.gd`, `metrics_report.gd` (`--metrics-report`) |
-| `world/` | `grid.gd` (heightfield, zones, materials, faction gates, `step_ok` for every walker, `smooth_y`, `raycast`), `terrain_edit.gd` (**the only way to change terrain at runtime**), `terrain_chunks.gd` (16x16-cell terrain meshes, rebuilds dirty chunks), `world.gd` (a playable space: terrain, creeper, env, effects, targets/interactables/updaters/markers), `terrain_mesh.gd`, `world_look.gd` (env, lights, cave ceiling), `props.gd`, `bar.gd` (billboard bars), `effects.gd`, `noise2d.gd`, `grid_roofs.gd` (Operative-only roof layer over castle interiors) |
-| `sim/` | `creeper_sim.gd` (CPU fluid automaton + shared interface, `CreeperSim.create()`), `creeper_gpu.gd` (same rule as a compute shader, `shaders/creeper_flow.glsl`; CPU copy of `depth` for gameplay), `creeper_mesh.gd` (GPU-displaced surface) |
-| `command/` | `structure_defs.gd` (**data + tooltips + the 4 build tabs**), `structure.gd`, `structure_meshes.gd`, `structure_manager.gd` (lifecycle, damage, tick), `structure_upkeep.gd` (creeper contact, construction, bars), `placement.gd` (place/move/land rules), `network.gd` (Dijkstra from every sender), `packets.gd` (**CW3 dispatcher**), `packet_requests.gd` (what a structure still needs, request rates), `economy.gd`, `collector_field.gd`, `mover.gd` (lift/fly/land), `weapon_logic.gd`, `structure_behaviors.gd`, `orbital.gd` (Lance), `upgrades.gd` (**Forge/Aether**, static, multipliers read by economy/packets/weapons/mover), `command_mode.gd` (entry: tools, selection, camera loop), `command_input.gd` (hotkeys and pointer), `command_select.gd` (train, recycle, move, box select), `command_hover.gd` (ghost and range preview), `drag_build.gd` (**drag a tool: Collector/Relay chains at max link, rows of others**), `terp.gd` + `terp_paint.gd` (Terp Earth), `command_overlay.gd`, `command_camera.gd` |
-| `units/` | `unit_defs.gd`, `unit.gd`, `unit_manager.gd` (spawn, orders, movement), `unit_supply.gd` (combat + go-home-to-resupply), `pathfind.gd`, `unit_meshes.gd` |
-| `fps/` | `fps_mode.gd`, `weapon_models.gd` (viewmodels), `operative_upgrades.gd` + `advanced_weapons.gd` + `demo_charge.gd` (Armoury), `operative_deploy.gd` (Totem deploy, drop pod, recall cooldown, death and respawn), `player_controller.gd`, `operative_weapons.gd`, `rocket_launcher.gd`, `cave_hazards.gd`, `cave_mites.gd` |
-| `level/` | `level01.gd` / `cave01.gd` (**pure data + shaping helpers**), `surface_hazards.gd`, `pressure.gd` (**difficulty 0..1 over mission time**), **hives:** `hives.gd` (state), `hive_spawning.gd` (class `SporeNests`, spawns), `hive_parts.gd`, `hive_site.gd`, `hive_shape.gd`, `hive_meshes.gd`; **enemies:** `raider_defs.gd` (**the roster**), `raiders.gd` + `raider_field.gd` (movement, shared flow field), `raider_shots.gd` (Spitter/Lancer), `raider_burrow.gd` (Burrower, Warden aura), `raider_groups.gd` (mixed groups), `enemy_mortar*.gd` (mortars + Spotter), `level_ramps.gd` (stairs), `hazard_meshes.gd`, **castles:** `castle_shape.gd` + `spire_shape.gd` (terrain, at level build), `stronghold.gd` (`Strongholds`: states, capture/siege), `stronghold_rules.gd`, `castle_raids.gd` (reprisals, sieges, nest buff), `stronghold_hooks.gd` (targets/prey/markers), `stronghold_meshes.gd`, `spire_pump.gd`, **flyers:** `flyer_defs.gd`, `flyers.gd`, `flyer_ai.gd`, `flyer_launch.gd` (Roost), `flyer_meshes.gd`; **Castles 2.0:** `castle_defs.gd` (**castle tunables**), `castle_shape2.gd`, `castle_stairs.gd`, `castle_keep_shape.gd`, `castle_interior_meshes.gd`, `castle_stages.gd` (gate → bailey → keep), `stronghold_tick.gd`, `castle_engines.gd` + `castle_engine_meshes.gd` (trebuchets), `castle_perks.gd`, `castle_vaults.gd` |
-| `ui/` | `hud.gd` (root), `armoury_menu.gd`, `top_bar.gd` (production/demand), `build_menu.gd` (4 tabs), `info_panel.gd`, `objectives.gd`, `markers.gd`, `fps_hud.gd`, `keybind_menu.gd` (Controls screen, F10), `ui_kit.gd` |
-| `shaders/` | `terrain.gdshader` (**all ground overlays**: rings, plans, mortar `shells`), `terrain_look.gdshaderinc` (grass/rock/stone/Blight), `noise.gdshaderinc` (shared noise + bump), `creeper.gdshader`, `dusk_sky.gdshader` |
+| `range/` | Scenes: `tactical_scene.gd` (shared base: args, tests, Esc, build steps), `firing_range.gd` (`firing_range.tscn`), `skirmish_scene.gd` (`skirmish.tscn`); `range_maps.gd` (map ids → scenes, `RangeMaps.go`); player (`tactical_player.gd`, `player_weapons.gd`, `fp_body.gd`, `fp_arms.gd`), viewmodel/reload anims (`tactical_viewmodel.gd`, `reload_*.gd`), HUD/menus (`range_hud.gd`, `range_menu.gd`, `inventory_ui.gd`), bots (`bot_*.gd`, `scav_bot.gd`), Skirmish (`skirmish_game/data/layout/kit/end.gd`), look (`look_*.gd`), tests (`range_test_*.gd`) |
+| `tactical/` | Rules with no scene: guns, mags, ammo, inventory, reloads (`inv_reload.gd`, `range_reload.gd`), recoil (`recoil_*.gd`), ballistics/penetration, body health, session (`range_session.gd`), defs tables |
+| `fps/` | The Operative inside command mode (older FPS layer) |
 
-**Key contracts**
-- Both the surface and the cave are `World`s. Both simulate every frame; only the active one is visible (`World.set_active`).
-- **CW3 economy: energy IS packets.** A packet launches from the nearest sender (the Command Node or an Outpost) whenever a structure requests one and the shared bank has ≥ 1 energy. There is **no global launch cap**. A flying Node does not stop launches while another sender is ready. Each built Outpost adds `Config.OUTPOST_STORAGE` to that bank, produces nothing, and costs `Config.OUTPOST_ORE` when placed. A Miner on an ore vein ships return packets back along `route()` reversed; they credit the Stockpile on arrival even if the Miner is already gone. With no route it stores up to `Config.MINER_BUFFER`, then stops. Repairing a held castle's wall spends Salvage (`Config.WALL_REPAIR_HP` HP each) and rebuilds a breach. Each structure requests at `Config.REQ_BUILD / REQ_AMMO / REQ_UNIT`. Weapons add *transit headroom* so long supply lines stay fed. Only `relays: true` structures pass packets on. Drop pods (Beacon) and the Lance are paid up front.
-- **Collector fields are squares** (7x7, `CollectorField.field_cells`), drawn as grid tiles by the terrain shader. The Node starts with 0 energy. Packets have no priority: requesters are served round robin, ammo and builds alike.
-- **Forge/Aether:** read stats through `WeaponLogic.fire_interval/range_cells`, `Packets.speed()`, `Upgrades.mult()`; never `def.range` directly.
-- **Build tool stays armed** after placing (CW3); right-click/Esc cancels. Drag-box selects units, else movable weapons (`CommandMode.group`; orders apply to all). The Operative can build too (`OperativeBuild`, B). Unfinished collectors/relays extend placement range so chains can be laid out at once. They pass no packets on until finished: an unfinished piece is fed only if something connected is in range, and anything in a sender's own range (Node, Outpost, castle keep) is fed directly by the closest sender (`Network.rebuild`).
-- **Castle keeps** (`CastleKeeps`, structure id `keep`, not buildable): a held castle gets a free packet sender + relay (link 10) beside its spire; it returns after a beaten siege and is removed when the castle falls.
-- **Flying Node** (`Network._hold_flying_node`): while the Command Node flies, everything it reached from its lift-off cell stays connected and its links follow it. While connected it is a packet sender and launches from where it hovers (routes via `_hold_link`), unless a grounded sender already reaches a structure. It still produces no energy.
-- **Raider reachability** (`RaiderField.reachable`, walking areas relabelled on `invalidate`): raiders only target prey they can walk to within striking height; prey up a cliff is ignored, never pressed into.
-- **Movable:** every def with `movable: true` (weapons, titans, the Node; never the Nullifier) lifts, flies and lands via `mover.gd`. No firing in flight (a connected flying Node still sends packets). The Node produces nothing while flying.
-- **Ground visuals are shader tints, never quads.** Collector field, ghost footprint, range rings and network cover are uniforms on `terrain.gdshader`, set through `CommandOverlay`/`CollectorField`. **Terrain is CW3 terraces:** whole levels 0..10 (levels round heights at the end of `build()`), flat tops, steep walls via `Grid.terrace()` (same formula in `creeper.gdshader`). The creeper is drawn at a per-cell *display level* (`creeper_mesh.gd`) that runs flat into cliffs and dips under shorelines; fragments below the terrain are discarded, so it can't clip. **Never add decorative height noise inside the map.**
-- **Creeper rules follow [docs/CREEPER_SPEC.md](docs/CREEPER_SPEC.md) (CW3, Stage 17).** Sim: 30 ticks/s, each east/south edge exchanges `FLOW_RATE` (0.04) × head difference, clamped to 0.04 × the giving cell's depth; films under `CREEPER_DRY` evaporate. Emitters **raise their cell up to** `amount` every `interval` from `start` (`CreeperSim.raise`). **Contact** (`StructureUpkeep`): depth only decides *wet* (`MIN_DEPTH`). The Node and weapons lose max HP / `wet_time` per second (def key, else `WET_TIME` 12 s) whatever the depth; an unfinished one loses build progress (`s.lost`) at that rate and requests nothing; a charging Nullifier takes none. Everything else dies on contact, built or not. Dry built structures heal over `HEAL_TIME`. Weapon removal is `CreeperStrike` (cannon `hits` over a disk; mortar/Bertha every wet cell in the disk). A `roams` weapon (Thor) fires from its magazine off-network and in flight. Nothing can be placed on creeper deeper than `MIN_DEPTH`. Full weapons never request ammo; transit headroom applies only while a weapon is firing (`s.firing`).
-- **Nests escalate with mission time** (`Config.NEST_*`, `RAIDER_TIERS`): faster spawns, bigger caps, higher raider tiers. Raid start and tier unlocks come from the level's `RAID_SCHEDULE` (fallback `Config.NEST_RAID_DELAY` and `RAIDER_TIER_TIMES`). Raiders step at most one terrace up or down; they do not climb cliffs. Beams are surface-to-air: they burn flying enemies (spore volleys now, flyers later), not ground raiders. Snipers are the anti-raider weapon; mortar splash only nicks them (`MORTAR_RAIDER_DMG`). Aether comes from objectives, nests and held **castles**.
-- **Castles** (`Strongholds`, level rows in `CASTLES`): walls, gates, spire and plateau are terrain cut by `CastleShape` before `snapshot_base`. State per castle is a plain dict (`state()` / `load_state()`); Nodes live in `views`. hostile → (crown nest dies) capturing → (Operative on the spire top `CAPTURE_TIME`) held → (raiders in courtyard) siege → (`RETAKE_TIME`) hostile. Gates are faction gates; drawbridges are `Grid.deck` cells (owner-only, `ALL` once the winch dies). Walkers stand with `Grid.stand_y(..., faction)`, not `smooth_y`. Spires are `Mat.SPIRE` (indestructible) and may exceed `MAX_LEVEL` up to `SPIRE_MAX_LEVEL`. **Creeper ignores gates and decks.** Raiders with `mission: "castle"` follow `Raiders.castle_field`. **Turrets** (`CastleTurrets` data/buy, `CastleTurretFire` tick/models) sit on `c.sockets`, cost Salvage (Castle tab or E), and block a retake while any stands. **Raids** (`CastleRaids`, state in `c.raid`): a capture starts a reprisal countdown, held castles draw recurring sieges, and both scale with the level's `CASTLE_RULES` aggression and the number held. Hostile castles speed up nearby nests (`nest.rate`).
-- **Blight zones** (`Grid.Zone.BLIGHT`): nothing can be built or parked there. Units and the Operative can enter. Objective actions are **Operative-only**.
-- **Deployment** (`OperativeDeploy`): a Totem (structure id `beacon`) deploys the Operative free and instant while the teleporter is ready. `@drop` costs `DROP_BASE` + 1 energy per `DROP_PER_CELLS` from the nearest Totem, capped at `DROP_MAX`, then a visible pod for `DROP_TIME`. Recall costs no energy; within `TOTEM_FREE_RADIUS` of a Totem it does not cool the teleporter down, otherwise the cooldown is `RECALL_COOLDOWN_MULT` × (walk path ÷ `WALK`), or straight-line × `RECALL_NO_PATH_MULT` if there is no path. At 0 HP the Operative is down until respawn (`RESPAWN_ENERGY` + `RESPAWN_SALVAGE`, `RESPAWN_TIME`, both costs × `RESPAWN_GROWTH` each further death). The timer waits while that cost can't be paid. `drop_blocked(cell)` is the Shield Dome hook.
-- **Units are not self-sufficient:** each shot or spray costs 1 ammo; when dry or hurt they walk to the nearest built barracks with stock (`Unit.depot`; `Unit.home` is only the population cap) and draw from its packet-fed stock. Cap is `Config.UNITS_PER_BARRACKS`. Structures are solid to units (`Pathfind.find(..., solid)` with `world.occupied`).
-- Agent dictionaries: shootable targets `{ node, oy, radius, alive(), on_hit(dmg, point) }`; prey/enemies `{ node, oy?, radius, alive(), hit(dmg) }`; interactables `{ pos, radius, prompt(), use() }`; markers `{ pos, label (String or Callable), color, visible(), minor? }`.
-- **Terrain changes at runtime go through `TerrainEdit.apply/raise` only.** It skips occupied and Spire cells, then `World.terrain_changed` updates the height texture, terrain chunks, creeper sim (GPU height upload), props, and emits `Bus.terrain_changed` (raider field and unit paths re-plan). Walkers test steps with `Grid.step_ok(..., climb, drop, faction)`: a gate cell is a `GATE_H` wall for everyone but its owning faction. `grid.base_height` is the level as built (mortars never dig below it).
-- **Creeper sim:** create with `CreeperSim.create(grid)` (GPU when a rendering device exists, CPU when headless or `--cpu-sim`). Change creeper only through `add` / `remove` / `set_depth`, never by writing `depth[...]`: on the GPU sim, `depth` is a CPU copy refreshed every few ticks. Keep `_flow()`, `CreeperMesh._build_surface()` and `creeper_flow.glsl` in step.
-- Grid: 1 terrain level = 1 creeper depth unit = `Config.LEVEL_H` m. Cell = `Config.CELL` m. `grid.idx(x,z) = z*w + x`. Use `grid.smooth_y()` / `cell_ground()` for anything standing on the ground.
-
-## Conventions
-- **Keys:** never test raw keycodes for game actions. Add an action to `Keybinds.DEFAULTS` and read it with `input.act(id)` / `input.held(id)` / `Keybinds.matches(id, k)`; show it with `Keybinds.short(id)`. Only Esc is fixed. **The player's binds live in `user://keybinds.cfg` (`~/.local/share/godot/app_userdata/Creeper Ops/`) and must survive every update:** never delete or overwrite that file, never rename an action id (renaming drops the player's bind), and tests set `Keybinds.persist = false`. When changing defaults, check that file first and keep the player's choices.
-- New tunables go in `config.gd`, a def table, or the level file. Never hard-code them in logic.
-- New structure: add a row to `structure_defs.gd` DEFS and its tab in MENU, a case in `structure_meshes.gd`, and (if it acts) `weapon_logic.gd` or `structure_behaviors.gd`.
-- New unit: `unit_defs.gd` (+ ORDER/KEYS) and `unit_meshes.gd`. New level: copy `level01.gd` / `cave01.gd`.
-- `game.gd` stays a wiring file. Rules belong in a subsystem.
-- After adding a new `class_name` file, run `godot --headless --path godot --import` once so the class cache knows it.
-
-## Testing (run from `godot/`)
-1. Parse: `godot --headless --path . --import 2>&1 | grep -A1 "SCRIPT ERROR"` (should print nothing). `tools/check.sh` checks per file.
-2. Mechanics: `godot --headless --path . -- --smoke --quit=0.1 | grep smoke` (all PASS).
-3. Sim report: `godot --headless --path . -- --demo --units --sim=900 --quit=0.1 | grep "\[sim\]"`. Also `--demo=slow` (real packet builds), `--autostart` (undefended).
-4. GPU sim (needs the real display, not headless or Xvfb): `godot --path . --rendering-driver vulkan -- --gpu-parity` (must print `parity PASS`) and `-- --perf-sim=512` (ms per tick, CPU vs GPU).
-5. Screenshots (needs GL, so use Xvfb; Xvfb runs the CPU sim):
-   `xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --rendering-driver opengl3 --resolution 1600x900 -- --demo --sim=120 --select=cannon --shot=/abs/out.png`
-   Other hooks: `--landing --hover=x,z --tool=T --surface --spire --cave --killcore --look=x,z --fast --nocapture`. See `debug.gd`.
-
-## Saved design direction (NOT implemented yet; don't build until asked)
-From level 3 onward, levels should be **hard and evolving**: time-gated objectives, enemy **reinforcements** so turtling fails, and **dynamic** creeper spawn rate and reinforcement speed that force strategy changes mid-level. Not meant to be beaten first try. A 40-minute loss is acceptable. Details: DEV_PLAN.md, Phase 3.
+## Run and check (from `godot/`)
+```
+godot --path . res://scenes/firing_range.tscn            # range   (tools/range.sh)
+godot --path . res://scenes/skirmish.tscn                # skirmish
+godot --headless --path . --import 2>&1 | grep -A1 "SCRIPT ERROR"      # parse: prints nothing
+godot --headless --path . res://scenes/firing_range.tscn -- --range-test | tail -3   # range suite
+```

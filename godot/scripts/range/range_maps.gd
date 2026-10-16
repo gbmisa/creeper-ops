@@ -1,10 +1,10 @@
 class_name RangeMaps
-## Which map the firing_range scene builds: "range" (default) or "skirmish". Per-session instance
+## Which on-foot map is loaded: "range" (firing_range.tscn) or "skirmish" (skirmish.tscn, F82). Per-session instance
 ## (MULTIPLAYER.md rule 1); all map switches go through `go()` so a server can broadcast them
-## (rule 6). `pending` is the bootstrap: menus outside any session set it, FiringRange consumes
-## it once at load into the session's `selected`. It is navigation state, not per-player state.
+## (rule 6). `pending` is the map being loaded; each scene sets it to its own id at load (look/env read it).
+## It is navigation state, not per-player state.
 
-const SCENE := "res://scenes/firing_range.tscn"
+const SCENES := { "range": "res://scenes/firing_range.tscn", "skirmish": "res://scenes/skirmish.tscn" }
 
 ## Maps where the player's reloads never run dry (so reload animations can be watched).
 const INFINITE_AMMO := ["range"]
@@ -21,7 +21,7 @@ static func go(map: String) -> void:
 	var sfx := tree.root.get_node_or_null("Sfx") if tree != null else null
 	if sfx != null:
 		sfx.silence_beds()  # the command game's wind / creeper beds would keep looping in the range
-	Engine.get_main_loop().call_deferred("change_scene_to_file", SCENE)
+	Engine.get_main_loop().call_deferred("change_scene_to_file", SCENES.get(map, SCENES["range"]))
 
 
 ## In-session map change (MP-2: the server broadcasts this instead).
