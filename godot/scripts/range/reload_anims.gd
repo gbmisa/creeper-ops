@@ -205,4 +205,35 @@ const WRIST_OFF := 0.03
 
 
 static func rig(def: Dictionary) -> Dictionary:
-	return ReloadRigs.RIGS.get(str(def.get("model", "")), {})
+	var key := str(def.get("model", ""))
+	var r: Dictionary = ReloadRigs.RIGS.get(key, {})
+	var o: Dictionary = _hand_edits().get(key, {})
+	if r.is_empty() or o.is_empty():
+		return r
+	r = r.duplicate(true)
+	var hands: Dictionary = r.get("hands", {})
+	for a in o:  # F102: left-hand points posed by Gregory in art/reload_hands/reload_hands.blend
+		var e: Dictionary = o[a]
+		r[{"mag": "hold", "charge": "charge"}.get(a, a + "_hand")] = _vec(e["p"])
+		hands[a] = {"f": _vec(e["f"]), "n": _vec(e["n"])}
+	r["hands"] = hands
+	return r
+
+
+static var _edits = null
+
+
+## art/gen/reload_hands.json ({gun model: {anchor: {p, f, n}}}, written by export_hands.py); {} when absent.
+static func _hand_edits() -> Dictionary:
+	if _edits == null:
+		_edits = {}
+		var path := ProjectSettings.globalize_path("res://").path_join("../art/gen/reload_hands.json")
+		if FileAccess.file_exists(path):
+			var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+			if parsed is Dictionary:
+				_edits = parsed
+	return _edits
+
+
+static func _vec(a: Array) -> Vector3:
+	return Vector3(a[0], a[1], a[2])
