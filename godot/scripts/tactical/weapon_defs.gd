@@ -5,7 +5,7 @@ class_name WeaponDefs
 ## cheek 0.30 m forward of the plate, pistols keep an arm's-length hold) and eye (optional: the ADS eye-to-butt distance
 ## instead of butt, so the eye stays behind a rear sight near the stock; bots keep butt) are viewmodel data (range/).
 ## ads_pos.y is minus the iron sight line (gun space; art/gen/mounts.json ads_y holds the same value).
-## While aiming the camera near plane is TacticalViewmodel.ADS_NEAR, small enough not to clip the visible stock.
+## While aiming, the viewmodel materials use z-clip scale (TacticalConfig.VM_Z_CLIP), so nothing clips the near plane (FB-H).
 
 ## Rack order: the original six, then the new lines (tier ascending within a line). RACK_ROWS groups them for the rack.
 const ORDER := ["m1911", "p90", "ak47", "shotgun", "garand", "sniper",
