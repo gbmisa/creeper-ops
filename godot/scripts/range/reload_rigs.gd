@@ -4,7 +4,8 @@ class_name ReloadRigs
 ## P90: the top mag's front edge, so "rock" lifts its rear); `hold` = where the left hand holds the mag (seated);
 ## `charge` = the handle / slide grip point; `stop_hand` = support palm with the thumb on the slide stop;
 ## `bone` + `travel` = the bone that racks and how far (rearward is +Z). Static-mesh guns (no Magazine bone):
-## `mag_box` = the region cut out as the Mag node, `mag_body` = [centre, size, rot] box added inside the grip,
+## `mag_box` = the region cut out as the Mag node, `mag_body` = [centre, size, rot] box added inside the grip
+## (`well_plug` = the same, dark, left in the gun to close the cut hole),
 ## `bolt_box` = the region cut out as the slide (moved by `travel`). No bone and no bolt_box: only the hand racks.
 ## `hands` overrides ReloadAnims.HANDS frames for this gun. `pose_shift` = [gp, gr] added to every reload pose of the
 ## plan (not the rest pose), so one gun can sit differently from the others sharing its plan.
@@ -59,6 +60,7 @@ const RIGS := {
 			"lock": {"f": Vector3(0.0, 0.3, -1.0), "n": Vector3(1.0, 0.0, 0.0)}}},
 	"scarh": {"plan": "ar",  # single mesh: the straight 20-rounder cut by region (well bottom y -0.065); catch above the well
 		"mag_box": AABB(Vector3(-0.04, -0.16, -0.03), Vector3(0.08, 0.16, 0.092)),
+		"well_plug": [Vector3(0.0, -0.04, 0.016), Vector3(0.05, 0.03, 0.085), Vector3.ZERO],  # F103: closes the empty well
 		"pivot": Vector3(0.0, -0.065, -0.022), "hold": Vector3(0.0, -0.125, 0.02),
 		"slip": [Vector3(0.0, -0.035, 0.0), Vector3.ZERO],
 		"near": [Vector3(0.0, -0.07, -0.01), Vector3(0.1, 0.0, 0.0)],
@@ -93,8 +95,8 @@ const RIGS := {
 		"travel": Vector3(0.0, 0.0, 0.09),
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},
 	"sks": {"plan": "rifle",  # stand-in model: detachable box mag cut by region, rocked about its front lip
-		"mag_box": AABB(Vector3(-0.02, -0.16, -0.025), Vector3(0.04, 0.20, 0.104)),  # body up to y 0.034 + base plate; guard starts z 0.081
-		"pivot": Vector3(0.0, 0.0, -0.0225), "hold": Vector3(0.0, -0.10, 0.025),
+		"mag_box": AABB(Vector3(-0.02, -0.16, -0.025), Vector3(0.04, 0.11, 0.104)),  # F105: top at the band (y -0.05), the housing above stays; guard starts z 0.081
+		"pivot": Vector3(0.0, -0.05, -0.0225), "hold": Vector3(0.0, -0.10, 0.025),  # F105: pivot on the new mag top
 		"rock": [Vector3.ZERO, Vector3(0.30, 0.0, 0.0)],
 		"slip": [Vector3(0.0, -0.04, -0.02), Vector3(0.40, 0.0, 0.0)],
 		"near": [Vector3(0.0, -0.06, -0.03), Vector3(0.40, 0.0, 0.0)],

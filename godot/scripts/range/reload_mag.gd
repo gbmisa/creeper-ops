@@ -19,6 +19,8 @@ static func split(glb: Node, rig: Dictionary = {}) -> MeshInstance3D:
 		var m := cut_box(glb, rig["mag_box"], "Mag")
 		if m != null and rig.has("mag_body"):
 			_add_body(glb, m, rig["mag_body"])
+		if m != null and rig.has("well_plug"):
+			_add_plug(glb, m.get_parent() as Node3D, rig["well_plug"])
 		return m
 	for node in glb.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
@@ -85,6 +87,21 @@ static func _add_body(glb: Node, mag: MeshInstance3D, body: Array) -> void:
 	b.mesh = box
 	b.transform = to_gun(mag, glb).affine_inverse() * Transform3D(Basis.from_euler(body[2]), body[0])
 	mag.add_child(b)
+
+
+## F103: a dark box that stays in the gun and closes the hole the cut leaves in the well (the glb has no inner faces).
+static func _add_plug(glb: Node, parent: Node3D, body: Array) -> void:
+	var box := BoxMesh.new()
+	box.size = body[1]
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.03, 0.03, 0.03)
+	mat.roughness = 1.0
+	box.material = mat
+	var b := MeshInstance3D.new()
+	b.name = "WellPlug"
+	b.mesh = box
+	b.transform = to_gun(parent, glb).affine_inverse() * Transform3D(Basis.from_euler(body[2]), body[0])
+	parent.add_child(b)
 
 
 static func _cut(mi: MeshInstance3D, select: Callable) -> MeshInstance3D:
