@@ -18,7 +18,9 @@ static func threat_pos(b: ScavBot) -> Vector3:
 
 
 ## Best-scoring marker for this bot, or NO_COVER. Does not claim; claim separately.
-static func pick(b: ScavBot) -> Vector3:
+## The optional squad enforces the phase C rules: ~4 m spacing between moving squad members
+## and the 12° line-of-fire rule seen from the contact.
+static func pick(b: ScavBot, squad: BotSquad = null) -> Vector3:
 	if b.covers.is_empty() or b.session == null or not b.is_inside_tree():
 		return NO_COVER
 	var space := b.get_world_3d().direct_space_state
@@ -26,20 +28,22 @@ static func pick(b: ScavBot) -> Vector3:
 	var best := NO_COVER
 	var best_score := -INF
 	for m in b.covers:
-		var s := score(b, m, threat, space)
+		var s := score(b, m, threat, space, squad)
 		if s > best_score:
 			best_score = s
 			best = m
 	return best
 
 
-static func score(b: ScavBot, marker: Vector3, threat: Vector3, space: PhysicsDirectSpaceState3D) -> float:
+static func score(b: ScavBot, marker: Vector3, threat: Vector3, space: PhysicsDirectSpaceState3D, squad: BotSquad = null) -> float:
 	if _reserved_by_ally(b.session, marker, b):
 		return -INF
 	if _flanked(b.session, marker, threat):
 		return -INF
 	if BotPerception.los(space, marker + Vector3(0, CROUCH_EYE, 0), [threat]):
 		return -INF  # visible from the contact: not cover
+	if squad != null and _squad_blocks(b, marker, squad):
+		return -INF  # spacing or line-of-fire rule
 	var s := 0.0
 	if BotPerception.los(space, marker + Vector3(0, STAND_EYE, 0), [threat]):
 		s += BotTacticsDefs.COVER_W_PEEK
@@ -53,6 +57,25 @@ static func score(b: ScavBot, marker: Vector3, threat: Vector3, space: PhysicsDi
 	if BotPerception.los(space, threat, [mid]):
 		s -= BotTacticsDefs.COVER_W_EXPOSED
 	return s
+
+
+## True when a squad rule rejects this marker: within SPACING of another living member
+## (or its move target), or inside MIN_ANGLE_SEP of a member's line of fire seen from the contact.
+static func _squad_blocks(b: ScavBot, marker: Vector3, squad: BotSquad) -> bool:
+	var cpos := b.percept.contact.pos
+	for o in squad.living():
+		if o == b:
+			continue
+		var ob := o as ScavBot
+		if Vector2(marker.x - ob.global_position.x, marker.z - ob.global_position.z).length() < BotTacticsDefs.SPACING:
+			return true
+		if ob._has_target and Vector2(marker.x - ob._target.x, marker.z - ob._target.z).length() < BotTacticsDefs.SPACING:
+			return true
+		var a := Vector2(ob.global_position.x - cpos.x, ob.global_position.z - cpos.z)
+		var cc := Vector2(marker.x - cpos.x, marker.z - cpos.z)
+		if a.length() > 0.01 and cc.length() > 0.01 and absf(rad_to_deg(a.angle_to(cc))) < BotTacticsDefs.MIN_ANGLE_SEP:
+			return true
+	return false
 
 
 ## Claim a marker for a bot (releases its old claim first). Stores the threat it was picked against.
@@ -105,7 +128,7 @@ static func _flanked(session: RangeSession, marker: Vector3, threat: Vector3) ->
 	var cc := Vector2(threat.x - marker.x, threat.z - marker.z)
 	if a.length() < 0.01 or cc.length() < 0.01:
 		return false
-	return rad_to_deg(a.angle_to(cc)) > BotTacticsDefs.COVER_FLANK_ANGLE
+	return absf(rad_to_deg(a.angle_to(cc))) > BotTacticsDefs.COVER_FLANK_ANGLE
 
 
 ## Drop claims whose holder is gone.

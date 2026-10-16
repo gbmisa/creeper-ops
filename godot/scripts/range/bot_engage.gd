@@ -16,12 +16,28 @@ static func engage(b: ScavBot) -> void:
 			return
 		b.reloc_t = 0.0
 		b._has_target = false
-	elif b._flat(p.last_known - b.global_position).length() < d["hold"]:
+	elif b.squad_role == BotSquad.ROLE_HOLD and b._flat(p.last_known - b.global_position).length() < d["hold"]:
 		b._has_target = false
 	else:
-		b._go(p.last_known)
+		_advance(b)
 	if b.eye().distance_to(p.last_known) <= d["fire"]:
 		b._shoot_at(p.last_known)
+
+
+## F97 phase C: squad-role movement. FLANK arcs wide around the contact, ADVANCE takes the next
+## scored cover toward it (bounded, not a full rush), HOLD falls back to last-known.
+static func _advance(b: ScavBot) -> void:
+	var role: String = b.squad_role
+	var pos := BotCover.NO_COVER
+	if role == BotSquad.ROLE_FLANK:
+		pos = BotSquad.flank_cover(b)
+	elif role == BotSquad.ROLE_ADVANCE and not b.def["overwatch"]:
+		pos = BotSquad.next_cover_toward(b)
+	if pos == BotCover.NO_COVER:
+		pos = b.percept.last_known
+	if b.covers.has(pos):
+		BotCover.claim(b.session, b, pos, BotCover.threat_pos(b))
+	b._go(pos)
 
 
 ## Marksman: move to the next overwatch spot and stay quiet until there.

@@ -53,6 +53,7 @@ func spawn_scavs() -> void:
 		bots.append(bot)
 	bots[0].ally = bots[1]
 	bots[1].ally = bots[0]
+	session.bots = bots.duplicate()
 	log.add("Scavs spawned in the kill house")
 
 

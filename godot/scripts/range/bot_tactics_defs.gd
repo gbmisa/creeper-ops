@@ -21,6 +21,11 @@ const COVER_W_DIST := 1.0      # penalty per metre of travel to the marker
 const COVER_W_BAND := 2.0      # penalty per metre the marker's threat-range is off the kind's hold band
 const COVER_W_EXPOSED := 40.0  # penalty when the path to the marker is visible to the threat
 const COVER_FLANK_ANGLE := 60.0  # degrees: a claimed marker is flanked when the threat moved this far
+# --- Phase C: squad planner ---
+const SQUAD_RADIUS := 25.0     # m: bots this close (or ally/leader-linked) form a squad
+const REPLAN_MOVE := 10.0      # m the contact must move to force a re-plan
+const RIFLEMAN_PUSH_DIST := 40.0  # rifleman advances past this contact distance, else holds
+const FLANK_ANGLE := 65.0      # degrees off the direct line for a flank arc
 const PUSH_CAP := 0.5        # at most this fraction of a squad pushes (ADVANCE + FLANK)
 const FLANK_CAP := 1         # at most this many FLANK roles per squad
 const REPLAN_TIME := 3.0     # s between squad re-plans (events re-plan immediately)

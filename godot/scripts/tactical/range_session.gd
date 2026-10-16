@@ -13,6 +13,9 @@ var noise := BotNoise.new()
 var maps := RangeMaps.new()
 ## F97: cover reservations, marker -> {"bot": claimer, "threat": threat pos}. Per-session, no statics.
 var cover_claims := {}
+## F97 phase C: all live enemy bots (spawners keep this current), and the current squad plans.
+var bots: Array = []
+var squads: Array = []
 ## Carried kit between maps. Backed by a static so it survives the new RangeSession a map load builds
 ## (same idea as RangeMaps.pending); the session API stays the same.
 static var _carried := {}

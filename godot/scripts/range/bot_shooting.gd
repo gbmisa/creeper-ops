@@ -120,10 +120,11 @@ static func facts(b: ScavBot) -> Dictionary:
 
 
 ## F97 phase B: scored cover pick + per-session reservation (replaces nearest-hidden).
+## Phase C: the pick also enforces squad spacing and the line-of-fire rule.
 static func find_cover(b: ScavBot) -> void:
 	b.cover_t = COVER_CHECK
 	b.has_cover = false
-	var pos := BotCover.pick(b)
+	var pos := BotCover.pick(b, b.squad)
 	if pos != BotCover.NO_COVER:
 		b.cover_pos = pos
 		b.has_cover = true

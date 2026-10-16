@@ -46,6 +46,8 @@ var cd := 0.0
 var react_t := 0.0   # F18: rolled per engagement; the bot will not fire at a seen target before sight_t passes this
 var cover_t := 0.0
 var shot_cover := false  # F88: current TakeCover was entered from a heard shot
+var squad: BotSquad  # F97 phase C: this bot's squad plan (shared with its members)
+var squad_role := BotSquad.ROLE_HOLD  # this bot's current role in the plan
 var _dying := false
 var _go_age := 0.0
 var stuck_win := 0.0  # F91 (BotUnstick): time in the current progress window
@@ -163,6 +165,9 @@ func think(dt: float, over := {}) -> void:
 		winding = false
 		mesh.glint(false)
 	_sense(dt)
+	if squad != null and (percept.shot_new or percept.noise_new):
+		squad.invalidate()  # F97 phase C: new info re-plans the squad now
+	_squad_tick(dt)
 	var f := _facts()
 	f.merge(over, true)
 	var from := brain.state
@@ -200,6 +205,13 @@ func _facts() -> Dictionary:
 	return BotShooting.facts(self)
 
 
+## F97 phase C: resolve this bot's squad, re-plan on the timer/events, read its role.
+func _squad_tick(dt: float) -> void:
+	if session == null:
+		return
+	BotSquad.tick_bot(session, self, dt)
+
+
 func _find_cover() -> void:
 	BotShooting.find_cover(self)
 
@@ -230,7 +242,7 @@ func _enter(s: String) -> void:
 		BotBrain.HOLD:
 			# F97: defensive post = best scored cover (no live threat: the contact is forgotten).
 			# No markers (e.g. overwatch): hold position.
-			var post := BotCover.pick(self)
+			var post := BotCover.pick(self, squad)
 			if post != BotCover.NO_COVER:
 				_go(post)
 				BotCover.claim(session, self, post, BotCover.threat_pos(self))
