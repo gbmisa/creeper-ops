@@ -130,3 +130,20 @@ snaps back at the start of an empty reload.
 - Builder notes for the judge: MP5 lock-up of the handle has no hand twist (no handle part); P90 mag is low
   contrast and the left hand covers part of it from the eye; glock / 1911 support hand still large.
 - Verified: parse clean, range OK 720 / 0 FAIL, smoke 0 FAIL.
+
+## Builder pass A3 (2026-10-16, Opus, Windows build): glock18 / mp5 / p90 to >= 8, then scarh / sr25 / saiga12 / sks
+- Judge rounds 2-3 (SCORES.md): glock18 9/9/8, mp5 8/8/7 (empty: structural, the cocking handle sits far forward on top),
+  p90 8/8/8; m1911 re-checked after the shared pistol change, no regression.
+- Timeline: rig `pose_shift` [gp, gr] added to every non-rest pose of a plan (one gun can sit differently); hand anchors
+  other than mag / charge / grip read the rig's `<name>_hand` point (pouch, stop, slap, lock, press).
+- Pistol plan: `tip` phase (mag tip in the well before the push); `ready` 24-26 % (no return snap). Glock: longer hidden
+  mag body (~9 cm shows), palm-up hand under the base plate, slide travel 6 cm, stop hand under the trigger guard.
+- MP5: HK charge pose side-on, `lock` hand point (+2 cm into the notch), slap wound up 8 cm left of the handle; idle
+  `grip_l` moved onto the vertical foregrip (mounts.json point; Gregory: "not grabbing the vertical grip").
+- P90: reload pose +4 cm, fast `slip` held longer, side-on charge pose.
+- New `ar` plan (straight mag, button drop, bolt-catch press on empty) for scarh / sr25 (m4a1 later). saiga12 / sks use the
+  AK `rifle` plan; their right-side `charge` points are estimates. Mags cut by region: boxes sized from a mesh-part probe
+  (the mags reach up into the receiver: SKS y 0.034, Saiga y 0.055 and +-0.114 wide, SR-25 y 0.056).
+- RangeTestReload covers scarh / sr25 / saiga12 / sks. Verified: parse clean, range OK 840, smoke 0 FAIL.
+- Next (judge round 1 for the rifles): the empty-only tail on all four (forearms toward the camera, anchors on top of the
+  receiver, no press / pull travel) and the swing-in (>= 0.3 s); saiga12 / sks fast drop not seen falling.

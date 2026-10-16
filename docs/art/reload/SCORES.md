@@ -53,3 +53,56 @@ shows the HUD text "Glock 18 put away" (range_shot adding the spare mag?); not a
 | p90 | plain | 1 | 8 | 2 | 1 | 1 | 2 | 2 | Passes, barely. The rear lift, the pull off backward and the new mag shown below the gun read. Minor: (a) At `lay`/`seat` 1.8-2.05 the left palm covers the whole mag, so it is never seen seated. Move the hand anchor to the rear end of the mag (about 6 cm back) so the front half shows. (b) The gun sits low and the bottom-right weapon panel overlaps the butt. Raise the reload pose about 4 cm. |
 | p90 | fast | 1 | 7 | 2 | 1 | 1 | 2 | 1 | (a) The drop at 0.4-0.57 s is one small slab leaving the right edge. Slow the first 0.1 s (slip) so it shows under the gun for two frames. (b) A P90 mag must be lifted off the rails before it can fall: show the rear lift (`rock`) clearly before `drop`, as in plain. (c) Plain (a), (b). |
 | p90 | empty | 1 | 6 | 2 | 1 | 1 | 1 | 1 | (a) `reach` 2.18 -> 2.32: the gun swings from flat side-on to end-on in about 0.14 s, which is a snap. Give it at least 0.3 s with smoothstep. (b) `pull`/`release` 2.4-2.46: the hand on the left-side handle moves about 1 cm. Show the handle hand pulling back about 6-8 cm over 2-3 frames, then letting go, with the gun still yawed enough that the left side shows. (c) Plain (a), (b). |
+
+Round 2 for glock18 / mp5 / p90 (2026-10-16, judged on the uncommitted round-1 fixes; Opus judge subagent, Windows build).
+Inputs: the 9 regenerated sheets (zoomed crops) plus judge strips: MP5 empty 0-0.62 and 1.85-2.42 s, Glock empty 1.5-2.28, Glock plain
+1.05-1.9, P90 empty 2.05-2.6. Reference: EFT Glock 17/18, MP5 (plain + HK-slap empty) and P90 reloads from memory (no web tool), TRP timing.
+MP5 vertical grip (Gregory): the idle left hand is now at the foregrip, palm on its left side; fingers open (frozen finger poses).
+Regression: Glock returns to idle snap (0.1-0.2 s) in all three reloads. Harness: "Glock 18 put away" HUD text still shows to ~1.7 s.
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| glock18 | plain | 2 | 9 | 2 | 2 | 2 | 1 | 2 | Passes. Return snaps: `ready` 1.54/1.66 still the seat pose, idle by 1.78. Start the return ~1.45 s, ease over >= 0.35 s. |
+| glock18 | fast | 2 | 9 | 2 | 2 | 2 | 1 | 2 | Passes. Same return snap (`ready` 1.07 reload pose, 1.18 idle): start ~0.95 s. |
+| glock18 | empty | 2 | 7 | 2 | 2 | 1 | 1 | 1 | (a) `regrip` 1.61 -> `ready` 2.06: support hand covers the slide's left side, the 6 cm release (`release` 1.72 -> `settle` 1.83) is hidden; palm under the trigger guard, >= 3 cm below the slide. (b) Return snap: start ~1.9 s, ease 0.35 s. (c) Locked slide doesn't read 0.2-1.5 s: roll ~15 deg so the ejection-port side faces the camera. |
+| mp5 | plain | 2 | 8 | 2 | 1 | 1 | 2 | 2 | Passes. Stock strut still a black rod to the right edge 0.33-2.15 s: another 8-10 deg less yaw. Dark mag low contrast. |
+| mp5 | fast | 2 | 8 | 2 | 1 | 1 | 2 | 2 | Passes. Drop reads at 0.34 / 0.78. Same strut and contrast notes. |
+| mp5 | empty | 2 | 6 | 2 | 1 | 1 | 1 | 1 | (a) `cock` 0.35 -> `lock` 0.44: no hand motion against the gun; hand + handle back ~5 cm (0.27->0.35), then up 2 cm into the notch (0.35->0.44). (b) Charge pose not side-on (0.35-0.62, 2.01-2.18 seen from behind-left): yaw 30-40 deg more, as in `rock`/`out`. (c) Slap 2.01-2.18: forearm bottom-left to top-centre (~25% of view); wind-up ~6 cm lower, from the left side, strike >= 6 cm over 2 frames (now ~3 cm). |
+| p90 | plain | 2 | 8 | 2 | 1 | 1 | 2 | 2 | Passes. Pose higher; butt only touches the panel edge. Round-1 (a) not done: palm covers the whole mag at `lay`/`seat` 1.85-2.04. |
+| p90 | fast | 2 | 8 | 2 | 1 | 1 | 2 | 2 | Passes (up from 7). Rear lift reads `rock` 0.25 -> `slip` 0.38, mag under the gun at 0.63. Minor: hold `slip` ~0.05 s longer. |
+| p90 | empty | 2 | 7 | 2 | 1 | 1 | 2 | 1 | (a) `pull`/`release` 2.29-2.44: hand travels 1-2 cm; pull hand + handle back 6-8 cm over 2.29-2.38. (b) Charge pose nearly end-on (~20 deg yaw): yaw 25-30 deg more 2.2-2.44. (c) Plain (a). Swing into `reach` now eased (~0.25 s). |
+
+Round 3 for glock18 / mp5 / p90 (2026-10-16, final round; same judge). Inputs: 6 re-rendered sheets + strips (MP5 cock 0.2-0.6, slap 1.9-2.32,
+P90 pull 2.2-2.55, Glock slide 1.45-1.95). Unchanged since round 2: glock18 fast 9, mp5 fast 8, p90 plain 8 (scores stand).
+MP5 empty verdict: mostly structural (the cocking handle sits far forward on top, so the left arm crosses the view; dark mag = material).
+Realistic ceiling ~8 with another pose pass; stopping at 7 is defensible. No regressions; the Glock return snap is fixed.
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| glock18 | plain | 3 | 9 | 2 | 2 | 2 | 2 | 1 | Passes. Return eases (1.54 moving, 1.71 half, 1.88 idle). Minor: full cant by 0.17 s is brisk. |
+| glock18 | empty | 3 | 8 | 2 | 2 | 1 | 2 | 1 | Passes. Locked slide reads 1.45-1.66, palm under the guard, slide closes `release` 1.66 -> 1.74, return eases. Minor: delay the regrip ~0.1 s (palm rises over the left side as the slide drops). |
+| mp5 | plain | 3 | 8 | 2 | 1 | 1 | 2 | 2 | Stands. Strut still a black rod to the right edge; the 8 deg barely shows. |
+| mp5 | empty | 3 | 7 | 2 | 1 | 1 | 1 | 2 | Up from 6: charge side-on, hand back 3-4 cm then up at `lock`, slap winds up and strikes 6-8 cm. Open: (a) 2.02-2.20 forearm bottom-left to top-centre (~25%): gun ~8 cm lower, left side rolled up 15-20 deg in `reach_s`/`slap`. (b) `regrip` 2.14 -> 2.32 ~30 deg yaw in 0.15 s: stretch to 0.3 s. (c) yaw-in 0.20 -> 0.31 brisk. |
+| p90 | fast | 3 | 8 | 2 | 1 | 1 | 2 | 2 | Stands; the held `slip` shows the mag under the gun at 0.63. |
+| p90 | empty | 3 | 8 | 2 | 1 | 2 | 2 | 1 | Passes (up from 7): side-on charge, flank + handle read 2.2-2.55. Open: hand moves 1-2 cm `pull` 2.30 -> `release` 2.45; a 5-6 cm pull earns criterion 5. |
+
+Round 1 for scarh / sr25 / saiga12 / sks (2026-10-16; Opus judge subagent, Windows build). New "ar" plan (SCAR-H, SR-25), AK "rifle"
+plan (Saiga-12, SKS stand-in); mags region-cut from single meshes; per-gun pose shift. Strips: saiga12 empty 2.2-2.9, sks empty 1.95-2.65,
+sr25 empty 1.9-2.5. Reference: EFT Mk17, M4, AK-74, Saiga-12, SKS (from memory).
+Shared faults: (1) the empty-only tail (catch / rack): forearms swing toward the camera (30-40 % of the view), the anchor sits on top of the
+receiver, the press / pull has no travel; (2) every swing-in is side-on by 0.15-0.29 s (want >= 0.3 s smoothstep).
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| scarh | plain | 1 | 8 | 2 | 1 | 2 | 1 | 2 | Passes. Palm covers the seated mag `hold`/`ready` 2.31-2.60 (anchor 4 cm lower); swing-in done by 0.29 s (>= 0.35); `show` 1.45 no mag on screen. |
+| scarh | fast | 1 | 8 | 2 | 1 | 2 | 1 | 2 | Passes. Drop reads (`slip` 0.21, `drop` 0.42). Swing-in side-on by 0.21; mag rises before the hand at `show` 1.04; palm covers the seat. |
+| scarh | empty | 1 | 5 | 1 | 1 | 1 | 1 | 1 | (a) `reach` 2.39 / `regrip` 2.63 hand on top of the upper: catch point ~5 cm lower, left side of the lower above the rear of the well. (b) Press has no motion: in ~1.5 cm over 0.1 s + ~1 deg gun bump. (c) `ready` 2.86-3.10 forearms fill the bottom 40 %: elbows down/out, stay in the mag-change pose until the return. |
+| sr25 | plain | 1 | 8 | 2 | 1 | 2 | 1 | 2 | Passes. Same swing-in (0.25 s) and palm-over-seat (`hold` 2.02-2.28) notes. |
+| sr25 | fast | 1 | 8 | 2 | 1 | 2 | 1 | 2 | Passes; drop very readable 0.29 / 0.43. Gun ~60 deg side-on by 0.15 s: >= 0.3 s, drop the mag partway through the swing. |
+| sr25 | empty | 1 | 5 | 1 | 1 | 1 | 1 | 1 | (a) `reach` 2.02 right spot, then 2.14-2.38 slides onto the top of the upper: hold the 2.02 point. (b) Press has no motion (as scarh b). (c) `regrip` 2.50-2.69 forearms balloon (left ~35 %). |
+| saiga12 | plain | 1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: rock out, hook, rock back read. Drum fills the bottom-left at `show` 1.74 (6 cm further out); black on black; swing-in by 0.29 s. |
+| saiga12 | fast | 1 | 7 | 2 | 1 | 1 | 1 | 2 | (a) Drum never seen falling free (held at 0.50, gone at 0.67): release ~0.42, fall under the gun 0.42-0.62. (b) Swing-in by 0.17 s: >= 0.3. (c) Plain drum note at `show` 1.17. |
+| saiga12 | empty | 1 | 6 | 1 | 2 | 1 | 1 | 1 | (a) `reach`/`pull` 2.6-2.8 hand under the receiver ahead of the guard: AK handle is right side, rear of the receiver (~5 cm up, 8 cm back). (b) `pull` 2.70 no travel: 7-8 cm back over 2-3 frames. (c) Forearms balloon 2.5-2.9 s (left ~30 %). |
+| sks | plain | 1 | 8 | 2 | 2 | 2 | 1 | 1 | Passes: brass shows, mag reads. Straight AR-style well on this model: AK rock reads oddly (tone down to <= 8 deg). Swing-in by 0.25 s. |
+| sks | fast | 1 | 7 | 2 | 1 | 2 | 1 | 1 | (a) `drop` 0.46 is a stow (hand keeps the mag), gone at 0.61: release ~0.35, fall 0.35-0.55. (b) Swing-in side-on by 0.15 s. (c) Plain rock note. |
+| sks | empty | 1 | 6 | 1 | 2 | 1 | 1 | 1 | (a) `pull` 2.35 -> `regrip` 2.45 hand moves ~1 cm on top of the receiver at the rear sight (no handle there): 6-8 cm along the side. (b) `seat` 1.95 -> `reach` 2.15 ~25 deg yaw + roll in 0.2 s: >= 0.35. (c) Forearms balloon 2.25-2.65 s. |
