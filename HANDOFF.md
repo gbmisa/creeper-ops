@@ -1,17 +1,29 @@
 # Handoff: 2026-10-16 evening (Linux, Opus; branch play/f98-f107, NOT pushed)
 
 **Play build:** `play/f98-f107` (worktree `../creeper fps td-worktrees/f98-f107`) = `feat/fb-reload` d3b08d6
-+ fix/kit-persist + the fixes below + F115-F119/F97. Range suite **OK 1201**, Skirmish boots with 0 script errors, parse clean.
++ fix/kit-persist + the fixes below + F115-F119/F97 + Muse RANGE5. Range suite **OK 1348**, Skirmish boots with 0 script errors, parse clean.
 Run: `cd "<repo>-worktrees/f98-f107/godot" && godot --path .` (or `res://scenes/skirmish.tscn`).
 Feedback: `docs/playtests/feedback_2026-10-16.md` F98-F114. Rulings: CHANGES.md end (P10 B, P13 A+B).
 
 ## Start here (next session)
-1. Gregory plays play/f98-f107 again. Log notes as F120+ in docs/playtests/feedback_2026-10-16.md.
-2. SKS (F105b): he wants an EARLIER SKS than the current one, with a detachable mag. Only candidate in git: ART-2
-   Hunyuan sks.glb (ccf6817; concept art/gen/sks.png = classic wood SKS). Asked if that's it; awaiting answer.
-3. F118 footstep loudness: tune by his ear (BotSteps WALK_DB/SPRINT_DB/HEAR_R).
-4. Push play/f98-f107? (still unanswered). Muse note: scav_bot.gd grew to 373 lines in F97 (brief said don't grow).
-5. Older open: F102 reload_hands.blend export, F104 P90 mag path (bullpup, reload_rigs.gd offsets).
+1. PAUSED by Gregory after the Windows playtest build. Ask for playtester + his notes (F120+ in feedback_2026-10-16.md).
+2. Windows build: `tools/export_windows.sh <out>` (templates 4.7.2 installed; exe starts in Firing Range via
+   run/main_scene.template; art/gen json copied to res://export_data). Last: builds/2026-10-16/CreeperOps.zip.
+3. Agent fixing ~1900 SCRIPT ERROR lines (bot_cover freed instances, Muse F97) on fix/bot-cover-errors
+   (../bot-cover-errors): check its commit, suite >= 1348, merge into play. Errors are log-only.
+4. Push play/f98-f107 + move main to it (repo now PUBLIC; cousin got old main). Gregory not yet asked/answered.
+5. Docs-only merge of origin/feat/deactivate-pause-menu (feedback notes, CLAUDE.md refresh) was denied by
+   permission check: ask Gregory. Local feat/enemy-ai has F114 brief commit 2bdae05 not merged.
+6. SKS (F105b): he wants an earlier SKS; old note says "Garand good / SKS bad" about ART-2 Hunyuan. Ask him.
+7. Pause-menu "Deploy to Skirmish" only goes to the compound map, not skirmish_large.
+
+## 2026-10-16 evening (Opus): Muse RANGE5 merged, range OK 1348
+- merge/r5-a: r5-med (18 meds, status effects; no fractures/splint) + r5-util (grapple, grenades, binocs). Keys:
+  med_quick_1..4 = F5 F6 7 0, t_util_1/2 = I O. New meds don't set hands_busy.
+- merge/r5-b: cheat menu Ctrl+KP5, Tempest hidden (Ctrl+Alt+P); second map `skirmish_large` (main menu button,
+  --map=skirmish_large; own files, navmesh climb 0.5 on that map only). Current Skirmish unchanged.
+- Not merged (superseded or paused WIP): fb-h-recoil, fb-g-reddots, range-inventory, r5-viewfix, mp1, r5-artfix,
+  r5-look3, f46/f48/f50 WIP, 8 command-mode branches, claude/game-design-automation (docs).
 
 ## 2026-10-16 late (Opus): F115-F119 + Muse F97 merged, range OK 1201, Skirmish 0 script errors
 - eba63b0 F119 red dot/holo glb shifted onto the reticle (AttachmentDefs glb_off; window measured by raycast).
