@@ -191,9 +191,13 @@ func camera_rot() -> Vector3:
 	return (_prev[2] as Vector3).lerp(_cur[2], clampf(_acc / TacRecoilDefs.STEP, 0.0, 1.0))
 
 
-## The view's extra turn from recoil (deg, game terms): camera kick + following the muzzle.
+## The view's extra turn from recoil (deg, game terms): camera kick + following the muzzle. Playtest 2026-10-16:
+## its pitch never climbs past the muzzle's recoil pitch (hip wander excluded), so the gun never tilts
+## muzzle-down in the view ("the gun tilts down") and the sights stay where the bullets go.
 func view_offset() -> Vector2:
-	return offset + follow.value
+	var v := offset + follow.value
+	v.x = minf(v.x, barrel.x + rot.offset.x)
+	return v
 
 
 ## Breathing sway in degrees. hold = breath held; tired = arm stamina empty.
