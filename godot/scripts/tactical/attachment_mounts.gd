@@ -12,6 +12,8 @@ static func _override(gun_id: String, key: String):
 	if not _loaded:
 		_loaded = true
 		var path := ProjectSettings.globalize_path("res://").path_join("../art/gen/mounts.json")
+		if not FileAccess.file_exists(path):  # exported build: copy made by tools/export_windows.sh
+			path = "res://export_data/mounts.json"
 		if FileAccess.file_exists(path):
 			var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
 			if parsed is Dictionary:

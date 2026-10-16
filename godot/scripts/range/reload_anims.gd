@@ -228,6 +228,8 @@ static func _hand_edits() -> Dictionary:
 	if _edits == null:
 		_edits = {}
 		var path := ProjectSettings.globalize_path("res://").path_join("../art/gen/reload_hands.json")
+		if not FileAccess.file_exists(path):  # exported build: copy made by tools/export_windows.sh
+			path = "res://export_data/reload_hands.json"
 		if FileAccess.file_exists(path):
 			var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
 			if parsed is Dictionary:

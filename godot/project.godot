@@ -6,6 +6,7 @@ config_version=5
 config/name="Creeper Ops"
 config/description="Creeper World 3-style fluid tower defense with first-person Operative incursions."
 run/main_scene="res://scenes/main.tscn"
+run/main_scene.template="res://scenes/firing_range.tscn"
 config/features=PackedStringArray("4.7")
 boot_splash/bg_color=Color(0.04, 0.05, 0.08, 1)
 
