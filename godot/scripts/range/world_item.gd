@@ -40,6 +40,14 @@ func setup(it: Dictionary) -> WorldItem:
 		m.material_override = RangeLayout.colour(KIND_COLOUR[d["kind"]])
 		m.position.y = size.y * 0.5
 		add_child(m)
+		var l := Label3D.new()  # F7: labelled placeholder box (FB-E models replace these later)
+		l.text = ItemDefs.label(item)
+		l.font_size = 32
+		l.pixel_size = 0.0025
+		l.outline_size = 6
+		l.modulate = Color(0.9, 0.95, 0.9)
+		l.position = Vector3(0, size.y + 0.09, 0)
+		add_child(l)
 	var cs := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = size

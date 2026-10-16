@@ -29,6 +29,7 @@ var move_mult := 1.0  # body health slows (fractured legs)
 var ads_amt := 0.0  # set by PlayerWeapons
 var spot_mult := 1.0  # bots notice this player from range x this (laser lit); set by PlayerWeapons
 var recoil_off := Vector2.ZERO  # deg, x = pitch up, y = yaw
+var recoil_roll := 0.0          # deg, the camera's recoil roll (weapon curve)
 var sway_off := Vector2.ZERO
 var body := BodyHealth.new()  # zones the bots shoot at
 var label_name := "You"
@@ -141,7 +142,7 @@ func _process(delta: float) -> void:
 	rotation.y = yaw
 	head.position = Vector3(lean * TacticalConfig.LEAN_OFFSET, _eye, 0)
 	head.rotation = Vector3(pitch + deg_to_rad(recoil_off.x + sway_off.x), deg_to_rad(recoil_off.y + sway_off.y),
-		-lean * deg_to_rad(TacticalConfig.LEAN_ROLL_DEG))
+		-lean * deg_to_rad(TacticalConfig.LEAN_ROLL_DEG) + deg_to_rad(recoil_roll))
 	var h := 1.2 if crouching else 1.8
 	(_shape.shape as CapsuleShape3D).height = h
 	_shape.position.y = h * 0.5
@@ -153,7 +154,7 @@ func _physics_process(delta: float) -> void:
 		dir.y = float(input.frame.held("t_back")) - float(input.frame.held("t_forward"))
 		dir.x = float(input.frame.held("t_right")) - float(input.frame.held("t_left"))
 	var want_sprint: bool = enabled and input.frame.held("t_sprint") and dir.y < 0.0 and not crouching \
-		and ads_amt < 0.1 and not _exhausted and is_on_floor()
+		and ads_amt < 0.1 and not _exhausted and (is_on_floor() or sprinting)  # F23: keep take-off sprint speed through the air
 	sprinting = want_sprint
 	if sprinting:
 		leg_stamina = maxf(0.0, leg_stamina - TacticalConfig.LEG_STAMINA_DRAIN * delta)
@@ -190,6 +191,20 @@ func _physics_process(delta: float) -> void:
 			Sfx.play("step")
 			if session != null:
 				session.noise.emit(global_position, BotNoise.step_radius(sprinting, crouching), "step", self)
+
+
+## The view without its recoil (the hip dot ray at rest), turned by `extra` deg (x pitch up, y yaw left):
+## bullets leave along view_basis(barrel). Built from yaw / pitch so it never lags a frame behind the head.
+func view_basis(extra: Vector2) -> Basis:
+	var roll := -lean * deg_to_rad(TacticalConfig.LEAN_ROLL_DEG)
+	var e := Vector3(pitch + deg_to_rad(sway_off.x + extra.x), deg_to_rad(sway_off.y + extra.y), roll)
+	return Basis(Vector3.UP, yaw) * Basis.from_euler(e) * cam.basis
+
+
+## Turns the view by `d` deg (recoil: the muzzle's settled residual, as in Tarkov the aim stays changed).
+func turn_view(d: Vector2) -> void:
+	pitch = clampf(pitch + deg_to_rad(d.x), -1.5, 1.5)
+	yaw += deg_to_rad(d.y)
 
 
 func horizontal_speed() -> float:

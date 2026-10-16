@@ -5,6 +5,8 @@ extends RefCounted
 ## cancel() undoes a half-done reload. Gun itself is unchanged. Shotgun tubes consume one loose round per reload.
 
 var inv: Inventory
+## Range map (F69): every call is handed to RangeReload; the inventory is not touched.
+var infinite := false
 
 
 func _init(i: Inventory) -> void:
@@ -25,6 +27,8 @@ func item_from_mag(gun_id: String, m: Magazine, fallback_ammo: String) -> Dictio
 
 ## "ok", "none" (no magazine / round found) or "no" (the gun can't reload now).
 func begin(gi: Dictionary, fast: bool) -> String:
+	if infinite:
+		return RangeReload.begin(gi, fast)
 	var g: Gun = gi["gun"]
 	if gi.has("staged"):
 		return "ok" if g.reload(fast) else "no"
@@ -52,7 +56,7 @@ func begin(gi: Dictionary, fast: bool) -> String:
 func _begin_tube(gi: Dictionary, g: Gun, fast: bool) -> String:
 	if g.busy() or g.needs_cycle or g.mag.is_full():
 		return "no"
-	var round_id := inv.take_round(g.def["cal"])
+	var round_id := inv.take_round(g.def["cal"], g.mag.top())
 	if round_id == "":
 		return "none"
 	var pouch := Magazine.new(1)
@@ -70,6 +74,9 @@ func _begin_tube(gi: Dictionary, g: Gun, fast: bool) -> String:
 ## Reload finished: the old mag (kept by Gun unless fast) goes back where the new one came from.
 ## Returns an item that did not fit anywhere (the caller drops it), or {}.
 func finish(gi: Dictionary) -> Dictionary:
+	if infinite:
+		RangeReload.finish(gi)
+		return {}
 	var g: Gun = gi["gun"]
 	var staged: Dictionary = gi.get("staged", {})
 	gi.erase("staged")
@@ -86,6 +93,9 @@ func finish(gi: Dictionary) -> Dictionary:
 
 ## Abort (gun dropped or unequipped mid-reload): nothing is lost.
 func cancel(gi: Dictionary) -> void:
+	if infinite:
+		RangeReload.cancel(gi)
+		return
 	var g: Gun = gi["gun"]
 	var staged: Dictionary = gi.get("staged", {})
 	if staged.is_empty():

@@ -2,7 +2,8 @@ class_name BotBrain
 extends RefCounted
 ## Scav state machine. `next()` is a pure function of (state, facts), so it can be scripted in tests.
 ## Facts: aware, seeing, noise, since_seen, hp (0..1), hurt, reloading, arrived, cover (a cover spot exists),
-## outgunned, ally_engaged, ally_flank, has_last, t (seconds in this state).
+## outgunned, ally_engaged, ally_flank, has_last, shot (a gunshot was just heard), shot_cover (this TakeCover
+## came from a heard shot, not from a fight), t (seconds in this state).
 
 const PATROL := "Patrol"
 const INVESTIGATE := "Investigate"
@@ -52,6 +53,8 @@ static func next(s: String, f: Dictionary) -> String:
 		PATROL, INVESTIGATE, SEARCH:
 			if aware:
 				return ENGAGE
+			if f.get("shot", false) and f.get("cover", false) and s != SEARCH:  # F87: under fire, get to cover first
+				return COVER
 			if f.get("noise", false) and s != INVESTIGATE:
 				return INVESTIGATE
 			if f.get("ally_engaged", false) and f.get("has_last", false):
@@ -69,6 +72,8 @@ static func next(s: String, f: Dictionary) -> String:
 					return FLANK
 				return SUPPRESS if f.get("ally_flank", false) else SEARCH
 		COVER:
+			if f.get("shot_cover", false) and aware:  # F88: running to cover from a shot, then sees the player: fight
+				return ENGAGE
 			if f.get("arrived", false):
 				if f.get("hp", 1.0) < HEAL_BELOW and not f.get("seeing", false):
 					return HEAL

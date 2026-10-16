@@ -43,7 +43,9 @@ var _target := Vector3.ZERO
 var _has_target := false
 var burst := 0
 var cd := 0.0
+var react_t := 0.0   # F18: rolled per engagement; the bot will not fire at a seen target before sight_t passes this
 var cover_t := 0.0
+var shot_cover := false  # F88: current TakeCover was entered from a heard shot
 var _dying := false
 var _go_age := 0.0
 
@@ -109,11 +111,18 @@ func eye() -> Vector3:
 	return global_position + Vector3(0, EYE, 0)
 
 
-func _on_noise(pos: Vector3, radius: float, _kind: String, src: Object) -> void:
+func _on_noise(pos: Vector3, radius: float, kind: String, src: Object) -> void:
 	if body.dead or src is ScavBot or not is_inside_tree():
 		return
 	if global_position.distance_to(pos) <= radius:
-		percept.hear(pos)
+		var shot := kind == "shot"
+		percept.hear(pos, shot)
+		if shot and not percept.seeing:  # F87: snap round to the shot so the view cone checks it now
+			var d := _flat(pos - global_position)
+			if d.length() > 0.05:
+				rotation.y = atan2(-d.x, -d.z)
+			if cover_t <= 0.0:
+				_find_cover()
 
 
 ## Called by RangeFeedback with the Ballistics.body_hit dictionary.
@@ -125,7 +134,10 @@ func on_hit(res: Dictionary) -> void:
 		var target := session.nearest_player(global_position) if session != null else null
 		percept.alert(target.node.global_position if target != null and target.node != null else res.get("origin", global_position))
 	if body.dead:
-		_die()
+		# Killing shot: throw the ragdoll along the bullet's travel direction, scaled by damage.
+		var dir: Vector3 = (res["pos"] as Vector3) - (res["origin"] as Vector3)
+		var scale := clampf(float(res.get("dmg", TacticalConfig.DEATH_IMPULSE_REF_DMG)) / TacticalConfig.DEATH_IMPULSE_REF_DMG, 0.25, 2.0)
+		_die(dir.normalized() * TacticalConfig.DEATH_IMPULSE * scale, str(res.get("zone", "")))
 
 
 func think(dt: float, over := {}) -> void:
@@ -150,10 +162,14 @@ func think(dt: float, over := {}) -> void:
 	f.merge(over, true)
 	var from := brain.state
 	var to := brain.update(dt, f)
+	if to == "" and percept.noise_new and brain.state in [BotBrain.INVESTIGATE, BotBrain.SEARCH]:
+		_go(percept.noise_pos)  # F87: a newer sound re-routes the bot
 	percept.noise_new = false
+	percept.shot_new = false
 	if to != "":
 		if from == BotBrain.HEAL and to == BotBrain.SEARCH:
 			body.heal(0.4)
+		shot_cover = to == BotBrain.COVER and from in [BotBrain.PATROL, BotBrain.INVESTIGATE]
 		_enter(to)
 		print("[bot] ", label_name, " ", from, " -> ", to)
 		state_changed.emit(self, from, to)
@@ -186,6 +202,12 @@ func _enter(s: String) -> void:
 	match s:
 		BotBrain.PATROL:
 			_go(patrol[patrol_i])
+		BotBrain.ENGAGE:
+			# F18: reaction delay before the first aimed shot of this engagement.
+			var rc: Array = def.get("react", [0.5, 1.0])
+			react_t = rng.randf_range(float(rc[0]), float(rc[1]))
+			if percept.alerted():
+				react_t *= BotPerception.ALERT_REACT_MULT
 		BotBrain.INVESTIGATE:
 			_go(percept.noise_pos)
 		BotBrain.COVER:
@@ -207,12 +229,10 @@ func _act() -> void:
 	if gun.mag.count() == 0 and gun.chamber == "" and not gun.busy():
 		if not gun.reload(false):
 			gun.refill()
-	elif s not in [BotBrain.ENGAGE, BotBrain.SUPPRESS] and gun.mag.count() < 10 and not gun.busy():
+	elif s not in [BotBrain.ENGAGE, BotBrain.SUPPRESS] and gun.mag.count() < 10 and not gun.mag.is_full() and not gun.busy():
 		gun.reload(false)
 	if gun.needs_cycle and not gun.busy():
 		gun.release()
-	if gun.malf != "" and not gun.busy():
-		gun.inspect()
 	match s:
 		BotBrain.PATROL:
 			BotEngage.patrol(self)
@@ -242,7 +262,10 @@ func _arrived() -> bool:
 		return true
 	# the navmesh needs a few frames to sync after bake: only trust "finished" once a path exists (or 1.5 s passed)
 	var routed := nav != null and (nav.get_current_navigation_path().size() > 1 or _go_age > 1.5)
-	return routed and nav.is_navigation_finished() and _flat(global_position - nav.get_final_position()).length() < 1.0
+	# F88: "finished" is judged in 3D and the navmesh sits 0.5 m up, so a bot at a path's end (target inside an
+	# obstacle) never finished; being within 1 m of the path's end on the ground counts too.
+	var at_end := nav != null and nav.get_current_navigation_path().size() > 1
+	return routed and (nav.is_navigation_finished() or at_end) and _flat(global_position - nav.get_final_position()).length() < 1.0
 
 
 func _flat(v: Vector3) -> Vector3:
@@ -250,10 +273,16 @@ func _flat(v: Vector3) -> Vector3:
 
 
 func _move(dt: float) -> void:
+	# A dead bot no longer drives its CharacterBody3D (its collision layer is 0, so move_and_slide
+	# would sink the corpse through the floor); the ragdoll simulates in place instead. walk() is
+	# still called so the ragdoll sleep timer ticks.
+	if _dying:
+		mesh.walk(dt, 0.0)
+		return
 	BotMotion.move(self, dt)
 
 
-func _die() -> void:
+func _die(impulse := Vector3.ZERO, zone := "") -> void:
 	if _dying:
 		return
 	_dying = true
@@ -261,7 +290,7 @@ func _die() -> void:
 		(rig[z] as CollisionObject3D).collision_layer = 0
 	collision_layer = 0
 	var tw := create_tween()
-	mesh.die()
+	mesh.die(impulse, zone)
 	tw.tween_interval(8.5)
 	tw.tween_callback(queue_free)
 	died.emit(self)
