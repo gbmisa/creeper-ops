@@ -69,7 +69,7 @@ func _ceiling_light(x: float, ceil_y: float, z: float) -> void:
 	var l := OmniLight3D.new()
 	l.position = Vector3(x, ceil_y - 0.35, z)
 	l.omni_range = 11.0
-	l.light_energy = 1.2
+	l.light_energy = 2.2
 	l.light_color = Color(1.0, 0.85, 0.65)
 	l.shadow_enabled = false
 	add_child(l)
