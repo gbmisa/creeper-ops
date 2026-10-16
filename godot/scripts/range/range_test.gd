@@ -39,6 +39,7 @@ func run() -> void:
 	await RangeTestHearing.run(self)
 	RangeTestHearing.brain_checks(self)
 	await RangeTestContact.run(self)
+	await RangeTestCover.run(self)
 	await RangeTestBody.run(self)
 	await RangeTestDeploy.run(self)
 	await RangeTestKit.run(self)

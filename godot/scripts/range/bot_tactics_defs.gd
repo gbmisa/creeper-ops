@@ -16,6 +16,11 @@ const SIGHT_ERR_MAX := 25.0    # m cap on lost-sight error
 
 
 # --- Phase B: cover scoring + reservation ---
+const COVER_W_PEEK := 30.0     # bonus when the marker can peek the threat at stand eye
+const COVER_W_DIST := 1.0      # penalty per metre of travel to the marker
+const COVER_W_BAND := 2.0      # penalty per metre the marker's threat-range is off the kind's hold band
+const COVER_W_EXPOSED := 40.0  # penalty when the path to the marker is visible to the threat
+const COVER_FLANK_ANGLE := 60.0  # degrees: a claimed marker is flanked when the threat moved this far
 const PUSH_CAP := 0.5        # at most this fraction of a squad pushes (ADVANCE + FLANK)
 const FLANK_CAP := 1         # at most this many FLANK roles per squad
 const REPLAN_TIME := 3.0     # s between squad re-plans (events re-plan immediately)

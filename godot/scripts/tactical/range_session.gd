@@ -11,6 +11,8 @@ var seed := 0
 var events := TacEvents.new()
 var noise := BotNoise.new()
 var maps := RangeMaps.new()
+## F97: cover reservations, marker -> {"bot": claimer, "threat": threat pos}. Per-session, no statics.
+var cover_claims := {}
 ## Carried kit between maps. Backed by a static so it survives the new RangeSession a map load builds
 ## (same idea as RangeMaps.pending); the session API stays the same.
 static var _carried := {}

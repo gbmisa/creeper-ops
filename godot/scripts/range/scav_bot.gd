@@ -228,17 +228,12 @@ func _enter(s: String) -> void:
 		BotBrain.SEARCH:
 			_go(percept.last_known)
 		BotBrain.HOLD:
-			# F97: defensive post = nearest cover marker (no threat direction: the contact is
-			# forgotten). Phase B replaces this with scored cover. No markers: hold position.
-			var post := Vector3.INF
-			var bd := 1.0e9
-			for c in covers:
-				var dd := _flat(c - global_position).length()
-				if dd < bd:
-					bd = dd
-					post = c
-			if post != Vector3.INF:
+			# F97: defensive post = best scored cover (no live threat: the contact is forgotten).
+			# No markers (e.g. overwatch): hold position.
+			var post := BotCover.pick(self)
+			if post != BotCover.NO_COVER:
 				_go(post)
+				BotCover.claim(session, self, post, BotCover.threat_pos(self))
 			else:
 				_has_target = false
 	mesh.scale.y = 0.8 if s == BotBrain.HEAL else 1.0
@@ -309,6 +304,7 @@ func _die(impulse := Vector3.ZERO, zone := "") -> void:
 	if _dying:
 		return
 	_dying = true
+	BotCover.release(session, self)  # F97: free the cover reservation
 	for z in rig:
 		(rig[z] as CollisionObject3D).collision_layer = 0
 	collision_layer = 0

@@ -119,16 +119,12 @@ static func facts(b: ScavBot) -> Dictionary:
 		"forgotten": p.contact.forgotten, "calm": p.contact.age >= BotTacticsDefs.CALM_PERIOD}
 
 
-## Nearest cover marker whose spot (crouched eye) cannot be seen from the last known player position.
+## F97 phase B: scored cover pick + per-session reservation (replaces nearest-hidden).
 static func find_cover(b: ScavBot) -> void:
 	b.cover_t = COVER_CHECK
 	b.has_cover = false
-	var threat := b.percept.last_known + Vector3(0, 1.4, 0)
-	var space := b.get_world_3d().direct_space_state
-	var best := 1.0e9
-	for c in b.covers:
-		var d := b.global_position.distance_to(c)
-		if d < best and not BotPerception.los(space, c + Vector3(0, 0.9, 0), [threat]):
-			best = d
-			b.cover_pos = c
-			b.has_cover = true
+	var pos := BotCover.pick(b)
+	if pos != BotCover.NO_COVER:
+		b.cover_pos = pos
+		b.has_cover = true
+		BotCover.claim(b.session, b, pos, BotCover.threat_pos(b))
