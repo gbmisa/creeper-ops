@@ -44,6 +44,7 @@ func run() -> void:
 	RangeTestSound.run(self)
 	await RangeTestAttach.run(self)
 	await RangeTestFire.run(self)
+	await RangeTestFbc.run(self)
 	if failed == 0:
 		print("[range] OK ", passed)
 	else:
