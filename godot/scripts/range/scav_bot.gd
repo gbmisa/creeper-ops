@@ -48,6 +48,11 @@ var cover_t := 0.0
 var shot_cover := false  # F88: current TakeCover was entered from a heard shot
 var _dying := false
 var _go_age := 0.0
+var stuck_win := 0.0  # F91 (BotUnstick): time in the current progress window
+var stuck_from := Vector3.ZERO
+var stuck_count := 0
+var unstick_t := 0.0
+var unstick_dir := Vector3.ZERO
 
 
 func _init() -> void:
