@@ -115,16 +115,17 @@ func _process(delta: float) -> void:
 		return
 	var before := gun.busy_kind
 	gun.update(delta)
-	draw_t = maxf(0.0, draw_t - delta)
-	_reload_t += delta
-	_ads(delta)
-	_trigger()
-	_commands()
+	# Finish before this frame's input: an R on the finishing frame must not restart on the stale old (empty) mag.
 	if before != "" and gun.busy_kind == "" and before == "reload":
 		_gun_snd("mag_in")
 		var left := reloader.finish(gun_item)
 		if not left.is_empty():
 			item_dropped.emit(left)
+	draw_t = maxf(0.0, draw_t - delta)
+	_reload_t += delta
+	_ads(delta)
+	_trigger()
+	_commands()
 	PlayerRecoil.tick(self, delta)
 	_apply_view(delta)
 	mag_text_t = maxf(0.0, mag_text_t - delta)
