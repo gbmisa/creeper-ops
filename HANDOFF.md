@@ -1,19 +1,24 @@
 # Handoff: 2026-10-16 evening (Linux, Opus; branch play/f98-f107, NOT pushed)
 
 **Play build:** `play/f98-f107` (worktree `../creeper fps td-worktrees/f98-f107`) = `feat/fb-reload` d3b08d6
-+ fix/kit-persist + the fixes below. Range suite **OK 1130**, Skirmish boots with 0 script errors, parse clean.
++ fix/kit-persist + the fixes below + F115-F119/F97. Range suite **OK 1201**, Skirmish boots with 0 script errors, parse clean.
 Run: `cd "<repo>-worktrees/f98-f107/godot" && godot --path .` (or `res://scenes/skirmish.tscn`).
 Feedback: `docs/playtests/feedback_2026-10-16.md` F98-F114. Rulings: CHANGES.md end (P10 B, P13 A+B).
 
-## Start here (next session): ask Gregory, then work the list
-1. Did he play play/f98-f107? Log new notes as F115+ in the feedback file (same table).
-2. Push play/f98-f107 to GitHub? (asked, not answered yet)
-3. F97 squad AI + F114 reaction rule: Muse (brief `feat/enemy-ai` docs/tasks/ENEMY_AI_F97_brief.md, commit
-   2bdae05, NOT pushed) or a Claude agent? Push the brief either way.
-4. F110 sound: by ear, are the muffle numbers right (1000 Hz low-pass, -5 dB, reverb wet 0.15 in `SoundDefs`)?
-5. F102: has he edited `art/reload_hands/reload_hands.blend` and exported? If so, render reload strips and judge.
-6. F105 part 2: name for the current "SKS" model, and go-ahead for a real SKS (fixed 10-rd, stripper clip).
-7. Then build: F104 P90 mag path (bullpup plan, `reload_rigs.gd` p90 offsets go through the receiver).
+## Start here (next session)
+1. Gregory plays play/f98-f107 again. Log notes as F120+ in docs/playtests/feedback_2026-10-16.md.
+2. SKS (F105b): he wants an EARLIER SKS than the current one, with a detachable mag. Only candidate in git: ART-2
+   Hunyuan sks.glb (ccf6817; concept art/gen/sks.png = classic wood SKS). Asked if that's it; awaiting answer.
+3. F118 footstep loudness: tune by his ear (BotSteps WALK_DB/SPRINT_DB/HEAR_R).
+4. Push play/f98-f107? (still unanswered). Muse note: scav_bot.gd grew to 373 lines in F97 (brief said don't grow).
+5. Older open: F102 reload_hands.blend export, F104 P90 mag path (bullpup, reload_rigs.gd offsets).
+
+## 2026-10-16 late (Opus): F115-F119 + Muse F97 merged, range OK 1201, Skirmish 0 script errors
+- eba63b0 F119 red dot/holo glb shifted onto the reticle (AttachmentDefs glb_off; window measured by raycast).
+- 5689da5 F116 range ammo bench refills only (no ammo cycling). bcd2dea F118 bot steps louder/further.
+- be72f16 merged origin/feat/enemy-ai (F97 phases A-D: contact memory, cover reservation, squad, combat).
+- 735e2b2 F115 RangeInfoPanel at the workbench (guns + wall materials); rack/wall labels removed; distance
+  boards one billboarded sign per line, alternating sides.
 
 ## Changelog for this build (what Gregory should notice)
 - Kit you set up in the range carries into Skirmish (kit-persist; F98 not reproducible on top of it, test added).
