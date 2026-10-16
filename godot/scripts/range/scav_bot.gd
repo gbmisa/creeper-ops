@@ -215,7 +215,7 @@ func _act() -> void:
 	if gun.mag.count() == 0 and gun.chamber == "" and not gun.busy():
 		if not gun.reload(false):
 			gun.refill()
-	elif s not in [BotBrain.ENGAGE, BotBrain.SUPPRESS] and gun.mag.count() < 10 and not gun.busy():
+	elif s not in [BotBrain.ENGAGE, BotBrain.SUPPRESS] and gun.mag.count() < 10 and not gun.mag.is_full() and not gun.busy():
 		gun.reload(false)
 	if gun.needs_cycle and not gun.busy():
 		gun.release()
