@@ -21,6 +21,7 @@ var _bob_t := 0.0
 var _check := 0.0
 var _cycle_clip := ""
 var bolt: BoltCycle  # procedural bolt-action cycle (Mosin), null for other guns
+var reload_tl: ReloadTimeline  # FB-R: procedural reload (ReloadAnims), null = the glb's Reload clip as before
 var _posed := false  # held gun uses hand-posed arms (WeaponDefs arms_pose) instead of the IK arms
 const HIP_BUTT := 0.1  # how far the butt sits behind the eye at the hip
 const HIP_MIN_Z := 0.3  # pistols: held out at least this far
@@ -68,6 +69,8 @@ func _on_switched(g: Gun) -> void:
 	_cycle_clip = "FireWBullet" if anim.has_animation("FireWBullet") else ""
 	bolt = BoltCycle.make(glb, _def)
 	arms.bolt = bolt
+	reload_tl = ReloadTimeline.make(glb, _def)
+	arms.reload_tl = reload_tl
 	rig = AttachmentRig.new()
 	model.add_child(rig)
 	rig.build(g, half_len)
@@ -118,8 +121,14 @@ func _on_shot(res: Dictionary, g: Gun) -> void:
 func _on_action(kind: String, secs: float) -> void:
 	match kind:
 		"reload":
-			_play("Reload", secs)
-			arms.reload(secs)
+			if reload_tl != null:
+				if anim.is_playing():  # a fire clip mid-way: finish it so the bones start from rest
+					anim.seek(anim.current_animation_length, true)
+					anim.stop()
+				reload_tl.start(secs, _gun.chamber == "", weapons._reload_fast)
+			else:
+				_play("Reload", secs)
+				arms.reload(secs)
 		"fix":
 			_play("Slide" if anim.has_animation("Slide") else "Reload", secs)
 		"cycle":
@@ -173,6 +182,12 @@ func _process(delta: float) -> void:
 		_check -= delta
 		pos += Vector3(-0.08, 0.02, 0.05)
 		rot += Vector3(0.15, 0.3, 1.1)
+	if reload_tl != null and reload_tl.playing():
+		if _gun.busy_kind != "reload":  # finished or cancelled by the logic
+			reload_tl.stop()
+		reload_tl.update(delta)
+		pos += reload_tl.gun_pos
+		rot += reload_tl.gun_rot
 	_base_pos = _base_pos.lerp(pos, minf(1.0, delta * 20.0))
 	_base_rot = _base_rot.lerp(rot, minf(1.0, delta * 20.0))
 	model.position = _base_pos
