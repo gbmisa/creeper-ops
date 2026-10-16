@@ -81,3 +81,13 @@ const RAGDOLL_ANG_DAMP := 4.0  # per-second angular damping of ragdoll bones (wa
 const RAGDOLL_NUDGE := 25.0  # N·s topple nudge on a bleed-out death (no kill impulse)
 const DEAD_GUN_MASS := 3.0  # kg, the dropped gun's rigid body
 const DEAD_GUN_TOSS := 1.5  # upward impulse (N·s) on the dropped gun
+
+# Skirmish deploy (F90)
+const SKIRMISH_SPARE_MAGS := 2  # full spare mags per carried gun at spawn (tube guns: tubes of loose shells)
+const END_CLICK_GRACE := 1.0  # F92: s the EXTRACTED / KIA buttons ignore clicks after the screen shows
+
+# Bot unsticking (F91, BotUnstick)
+const BOT_STUCK_WINDOW := 0.6  # s per progress check while a bot wants to move
+const BOT_STUCK_DIST := 0.25  # m: less ground than this in one window = stuck
+const BOT_UNSTICK_TIME := 0.5  # s of sidestep + plain waypoint steering after a stuck window
+const BOT_STUCK_GIVE_UP := 3  # stuck windows in a row before the bot drops its move target
