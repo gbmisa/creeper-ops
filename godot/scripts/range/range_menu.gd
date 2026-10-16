@@ -34,7 +34,7 @@ func setup(s: RangeSession) -> void:
 	_rec = UiKit.button("", func(): pass)
 	_rec.pressed.connect(func():
 		if session.local != null:
-			session.local.recoil_mode = not session.local.recoil_mode
+			session.set_local_recoil(not session.local.recoil_mode)
 			# the weapons read the flag at setup; live toggle applies on next select
 		_refresh_recoil_text())
 	_rec.text = _recoil_text()
