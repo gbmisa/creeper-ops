@@ -85,3 +85,8 @@ const BOLT_TRAVEL := 0.09  # m the bolt and handle slide back (+Z gun space)
 const BOLT_SPLIT := [0.2, 0.3, 0.3, 0.2]  # share of the cycle time: handle up, back, forward, handle down
 const BOLT_ROLL_DEG := 10.0  # gun rolls toward the working hand at the peak of the stroke
 const BOLT_HAND_BLEND := 0.12  # share of the cycle the right hand takes to leave / return to the grip
+
+# ADS (AdsPose): metres from the eye to the rear sight point at full ADS, per sight kind. Starting values are the
+# per-kind medians of the pre-FB-H eye-to-rear-sight distances; Opus tunes them from reference frames.
+const ADS_RELIEF := {"pistol": 0.138, "pistol_optic": 0.193, "notch": 0.160, "aperture": 0.1465, "optic": 0.286, "scope": 0.295}
+const VM_Z_CLIP := 0.3  # z_clip_scale on every viewmodel material, so the gun never clips the near plane
