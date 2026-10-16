@@ -55,3 +55,11 @@ Anything here changes (or already changed) behaviour that was working and that G
 | P13 | Player headshots (F108: "too punishing ... towards the player. They're fine against the enemies.") | Head = 35 HP for player and bots; one 7.62/.45 hit (57-72 dmg) kills. Since BOT-P0, a bot whose chest view is blocked aims at the head, so a player behind half cover is mostly hit there. Worn helmets stop nothing on the player (P12) | **A** do P12 (worn helmet/armor protect the player like bots), **B** player-only head damage x0.5 from bots (`TacticalConfig`), so one rifle head hit leaves you alive and the 2nd kills; **C** bots get extra spread when aiming at the head. Recommended: A + B. Bots' own head damage unchanged either way | Player survival, Skirmish difficulty (Gregory: "very difficult, which is good") |
 
 **Rulings 2026-10-16 (Gregory):** P13 -> **A + B** (P12 worn helmet/armor protect the player like bots, plus bots' head damage on the player x0.5). P10 -> **B** (a blacked leg slows to x0.6, same rule for bots and player).
+
+## P14 (2026-10-16, proposed, Opus): keybinds rebound in the on-foot game are never saved
+- **Today:** `TacticalScene._ready` sets `Keybinds.persist = false` for every range/Skirmish session (since before F82),
+  so the F112 Controls menu rebinds keys for that session only; after a restart they are back to defaults.
+- **Proposed:** set `persist = false` only when `--range-test` is passed.
+- **Why:** F112 asked for rebinding; it silently doesn't stick. MouseSettings/DisplaySettings/SafeZone already use
+  their own `--range-test` check, so they do save.
+- **Touches:** user://keybinds.cfg gets written by the on-foot game (same file command mode writes).
