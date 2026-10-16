@@ -1,6 +1,6 @@
 # Handoff: 2026-10-16 (branch feat/fb-reload, main checkout; two Opus sessions share it)
 
-**Play build:** `feat/fb-reload` (pushed up to `194f425`; local is ahead: `a0b68d6` + merge `bfd4aad`, not pushed).
+**Play build:** `feat/fb-reload` (pushed, up to date with GitHub).
 Run: `godot --path godot` -> level select -> Firing Range / Skirmish (Skirmish is its own scene since F82:
 `godot --path godot res://scenes/skirmish.tscn`). Windows machine: Godot 4.7.2 via winget, Blender 5.2.2 portable,
 Blender MCP registered (user scope). After pulling new `class_name` files: `godot --headless --path godot --import`.
@@ -33,7 +33,7 @@ cover and back on MAP-2, net move 0.6 m (not stuck; check measures net distance;
 Not verified: Gregory's play of any of this; bots over a full match on MAP-2; GPU perf with the new map.
 
 ## Next
-1. Push `feat/fb-reload` (a0b68d6 + bfd4aad) when the user says so.
+1. (done) feat/fb-reload pushed incl. a0b68d6, bfd4aad, 41dad3e.
 2. Reloads: review the WIP sheets, judge round 2 for the 4 rifles' empty + fast, then commit. Then sniper (AXMC, bones),
    M4A1 (`ar` plan; ask Gregory about hiding his posed arms during reloads), then tube / en-bloc / revolver plans.
 3. Gregory rules on CHANGES P10 / P11 and plays Skirmish (MAP-2, F90-F93).
