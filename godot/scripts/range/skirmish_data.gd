@@ -90,6 +90,22 @@ const COVER := [
 	["container", 22, -14, 6.0, 2.4, 2.6], ["barrier", 40, -20, 3.0, 0.6, 1.1], ["crate", 52, -20, 1.2, 1.2, 1.2],
 	["wall", 34, -6, 4.0, 0.4, 1.2], ["barrier", 40, -46, 3.0, 0.6, 1.1], ["wall", 48, -42, 0.4, 4.0, 1.2],
 	["crate", 14, -36, 1.2, 1.2, 1.2],
+	# F100: more cover at the spawn and on every lane, densest on the way from the spawn to the barracks (first building right)
+	["crate", 8, 48, 1.2, 1.2, 1.2], ["barrier", -9, 49, 3.0, 0.6, 1.8], ["barrier", 10, 53, 3.0, 0.6, 1.1],
+	["crate", -14, 52, 1.4, 1.4, 1.4], ["barrier", 20, 47, 3.0, 0.6, 1.8], ["crate", 25, 41, 1.2, 1.2, 1.2],
+	["wall", 21, 30, 4.0, 0.4, 1.8], ["crate", 24, 35, 1.4, 1.4, 1.4], ["barrier", 34, 24, 3.0, 0.6, 1.8],
+	["crate", 15, 29, 1.2, 1.2, 1.2], ["wall", 16, 15, 3.0, 0.4, 1.2], ["crate", 25, 13, 1.2, 1.2, 1.2],
+	["barrier", 32, 14, 3.0, 0.6, 1.1], ["crate", 9, 33, 1.2, 1.2, 1.2], ["crate", -5, 40, 1.2, 1.2, 1.2],
+	["barrier", 6, 20, 3.0, 0.6, 1.1], ["crate", -16, 31, 1.2, 1.2, 1.2], ["barrier", -28, 48, 3.0, 0.6, 1.1],
+	["crate", -47, 47, 1.2, 1.2, 1.2], ["barrier", 44, 46, 3.0, 0.6, 1.1], ["crate", 49, 32, 1.2, 1.2, 1.2],
+	["barrier", 42, 6, 3.0, 0.6, 1.1], ["crate", 52, 4, 1.2, 1.2, 1.2], ["barrier", 43, -22, 3.0, 0.6, 1.1],
+	["crate", 8, -8, 1.2, 1.2, 1.2], ["barrier", 12, -22, 3.0, 0.6, 1.1],
+	# F109: three distinct defensible positions reached from the spawn (left, centre, right), each with cover to fall back to
+	["wall", -34, 48, 5.0, 0.4, 1.8], ["wall", -36.5, 50.5, 0.4, 4.0, 1.8], ["crate", -31, 52, 1.2, 1.2, 1.2],
+	["barrier", -34, 43, 3.0, 0.6, 1.1], ["crate", -24, 38, 1.2, 1.2, 1.2],
+	["wall", 4, 37, 0.4, 4.0, 1.8], ["wall", -4, 36, 0.4, 3.0, 1.8], ["barrier", 0, 30, 3.0, 0.6, 1.8],
+	["wall", 38, 48, 5.0, 0.4, 1.8], ["wall", 40.5, 45.5, 0.4, 4.0, 1.8], ["crate", 33, 45, 1.2, 1.2, 1.2],
+	["barrier", 46, 38, 3.0, 0.6, 1.1], ["crate", 40, 31, 1.2, 1.2, 1.2],
 ]
 const COVER_STYLE := {
 	"barrier": ["concrete", Color(0.55, 0.55, 0.52)], "crate": ["wood_plank", WOOD], "truck": ["sheet_metal", Color(0.28, 0.34, 0.26)],

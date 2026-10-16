@@ -49,6 +49,11 @@ func _building(d: Dictionary, id: String) -> void:
 	_ceiling_light(r.get_center().x, h, r.get_center().y)
 	if d["floors"] == 2:
 		_ceiling_light(r.get_center().x, h * 2.0, r.get_center().y)
+	if id == "hotel":   # F101: the big hotel rooms stayed black at the walls; spread extra fixtures over both floors
+		for fx in [0.2, 0.8]:
+			for fz in [0.25, 0.75]:
+				for cy in [h, h * 2.0]:
+					_ceiling_light(r.position.x + r.size.x * fx, cy, r.position.y + r.size.y * fz)
 
 
 ## F26: ceiling light fixture (emissive mesh + OmniLight3D, shadows off) for a building interior.
@@ -69,7 +74,7 @@ func _ceiling_light(x: float, ceil_y: float, z: float) -> void:
 	var l := OmniLight3D.new()
 	l.position = Vector3(x, ceil_y - 0.35, z)
 	l.omni_range = 11.0
-	l.light_energy = 1.2
+	l.light_energy = 2.2
 	l.light_color = Color(1.0, 0.85, 0.65)
 	l.shadow_enabled = false
 	add_child(l)
