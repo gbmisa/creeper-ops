@@ -65,6 +65,13 @@ const AK := {
 	"curves": [[2, 1, 1.0, 1.0, 0.5], [1, 1, 1.0, 0.001, 0.0005], [0, 2, 1.0, 0.25, 0.125]],
 }
 
+## Per-gun rows over the scaled AK row (data). glock18 (playtest 2026-10-16, "tune the fully auto Glock 18 back to
+## how it was"): fitted to the classic model's auto curve (up 2.4, ergo 88: climb 1.78 / 2.96 / 3.75 .. 5.3 deg
+## at shots 2 / 3 / 4 .. 15, back to 1.8 deg 0.25 s after release), aimed muzzle and hip view weighted equally.
+const GUN_ROWS := {
+	"glock18": {"force_up": 165.0, "convergence": 3.2, "damping": 0.78, "stable_shot": 3},
+}
+
 ## Tuning-panel overrides by gun id (phase 2 writes here); merged over the scaled row.
 static var overrides := {}
 
@@ -82,6 +89,8 @@ static func row(id: String) -> Dictionary:
 		r["force_back"] = AK["force_back"] * up
 		r["dispersion"] = AK["dispersion"] * side
 		r["groups"][0]["angle"] = AK["groups"][0]["angle"] * side
+	if GUN_ROWS.has(id):
+		r.merge(GUN_ROWS[id], true)
 	if overrides.has(id):
 		r.merge(overrides[id], true)
 	return r
