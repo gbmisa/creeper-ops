@@ -38,9 +38,27 @@ static func sync(w: PlayerWeapons) -> void:
 
 
 ## Ammo bench: after the gun's grade changed, every carried mag of its caliber is refilled with it.
+## Tube guns have no mags: their loose shells are topped up instead (F22).
 static func refill_mags(w: PlayerWeapons) -> void:
 	w.gun.spares.clear()
+	if w.gun.def["action"] == "tube":
+		_refill_tube(w)
+		return
 	for it in w.inv.all_items():
 		if it["id"] in ItemDefs.ROWS and ItemDefs.ROWS[it["id"]]["kind"] == "mag" and ItemDefs.of(it["id"])["cal"] == w.gun.def["cal"]:
 			it["rounds"] = maxi(ItemDefs.of(it["id"])["cap"], int(w.gun.stat("mag")))
 			it["ammo"] = w.gun.ammo_pick
+
+
+## Tube guns feed loose rounds: top every carried stack of the caliber up to STACK_MAX,
+## or add one full stack of the current grade when the player carries none.
+static func _refill_tube(w: PlayerWeapons) -> void:
+	var cal: String = w.gun.def["cal"]
+	var maxc: int = int(ItemDefs.STACK_MAX[cal])
+	var have := false
+	for it in w.inv.all_items():
+		if it["id"] in TacAmmoDefs.ROWS and TacAmmoDefs.ROWS[it["id"]]["cal"] == cal:
+			it["count"] = maxc
+			have = true
+	if not have:
+		w.inv.add(w.inv.make(w.gun.ammo_pick, {"count": maxc}))

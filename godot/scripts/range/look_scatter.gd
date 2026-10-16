@@ -16,9 +16,54 @@ static func skirmish(parent: Node3D) -> void:
 	parent.add_child(n)
 	_far_ground(n, "skirmish", 0.0)
 	var H: float = SK["half"]
+	_scatter_ground(n, rng, H)
+	var trees := _tree_xforms(rng)
+	_trees(n, trees, rng)
+
+
+## Tufts + leaves. Extracted so tree_colliders() can replay the identical rng sequence and land the
+## trunk colliders exactly on the visual trees.
+static func _scatter_ground(n: Node3D, rng: RandomNumberGenerator, H: float) -> void:
 	var pts := _points(rng, SK["tufts"], Rect2(-H + 1, -H + 1, H * 2 - 2, H * 2 - 2), 0.0, true)
 	_multi(n, _tuft_mesh(), pts, rng, [SK["grass"], SK["grass2"]], 0.7, 1.4, 60.0)
 	_multi(n, _leaf_mesh(), _points(rng, SK["leaves"], Rect2(-H + 1, -H + 1, H * 2 - 2, H * 2 - 2), 0.01, false), rng, SK["leaf"], 0.8, 1.5, 45.0, true)
+
+
+## F25: trunk-only collision for the skirmish trees (FB-B). Rebuilds the same seeded transforms as
+## skirmish() and adds a cylinder per trunk on LAYER_WORLD. Runs even when headless; the visuals stay
+## skipped there. Branches and leaf clumps do not collide.
+static func tree_colliders(parent: Node3D) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1950
+	var H: float = SK["half"]
+	# Replay the exact rng sequence skirmish() uses before the trees, so the trunks land exactly
+	# on the visual trees. The dummy node is freed immediately.
+	var dummy := Node3D.new()
+	_scatter_ground(dummy, rng, H)
+	dummy.free()
+	var root := Node3D.new()
+	root.name = "TreeTrunks"
+	parent.add_child(root)
+	for xf in _tree_xforms(rng):
+		var s: float = xf.basis.get_scale().x
+		var sb := StaticBody3D.new()
+		sb.collision_layer = TacticalConfig.LAYER_WORLD
+		sb.collision_mask = 0
+		var cs := CollisionShape3D.new()
+		var cyl := CylinderShape3D.new()
+		cyl.radius = 0.28 * s
+		cyl.height = 5.5 * s
+		cs.shape = cyl
+		sb.add_child(cs)
+		sb.position = xf.origin + Vector3(0, 2.75 * s, 0)
+		sb.set_meta("mat", "wood_plank")
+		sb.set_meta("thick", 0.5)
+		root.add_child(sb)
+
+
+## The skirmish tree placements (shared by the visuals and the trunk colliders).
+static func _tree_xforms(rng: RandomNumberGenerator) -> Array:
+	var H: float = SK["half"]
 	var trees := []
 	for i in SK["trees"]:   # ring outside the wall, plus a few inside the corners
 		var a := rng.randf() * TAU
@@ -27,7 +72,7 @@ static func skirmish(parent: Node3D) -> void:
 		trees.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(0.8, 1.5)), Vector3(clampf(p.x, -H - 40, H + 40), -0.5, clampf(p.z, -H - 40, H + 40))))
 	for c in [Vector2(-56, 56), Vector2(56, 56), Vector2(56, -2), Vector2(-56, 4)]:
 		trees.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * 0.9), Vector3(c.x, 0, c.y)))
-	_trees(n, trees, rng)
+	return trees
 
 
 ## Range: tufts along both sides and on the berm tops, far ground plane. Lanes themselves stay bare.

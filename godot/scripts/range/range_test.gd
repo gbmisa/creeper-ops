@@ -33,9 +33,11 @@ func run() -> void:
 	await _wall_checks()
 	await RangeTestTargets.run(self)
 	await RangeTestBots.run(self)
+	await RangeTestFbb.run(self)
 	await RangeTestBody.run(self)
 	await RangeTestDeploy.run(self)
 	await RangeTestKit.run(self)
+	await RangeTestPause.run(self)
 	RangeTestAmmo.run(self)
 	RangeTestMp1.run(self)
 	RangeTestGuns.run(self)
@@ -45,6 +47,7 @@ func run() -> void:
 	await RangeTestAttach.run(self)
 	await RangeTestRecoilWire.player(self)
 	await RangeTestFire.run(self)
+	await RangeTestFbc.run(self)
 	if failed == 0:
 		print("[range] OK ", passed)
 	else:

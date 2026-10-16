@@ -12,7 +12,11 @@ static func run(t: RangeTest) -> void:
 	g.durability = 1.0
 	g.ammo_pick = TacAmmoDefs.grades(def["cal"])[0]
 	var rng := RandomNumberGenerator.new()
-	g.fire(rng)
+	# the ammo grade has a random malfunction chance: a click is legal game behaviour, so clear it and fire again
+	for _i in 40:
+		if g.fire(rng)["fired"]:
+			break
+		g.malf = ""
 	t.check("bolt: mosin fire sets needs_cycle", g.needs_cycle)
 	g.fire_cd = 0.0
 	g.release()
