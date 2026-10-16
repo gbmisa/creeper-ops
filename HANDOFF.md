@@ -15,6 +15,15 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - `Bus` autoload dropped (unused here). Own `user://` dir ("Tactical Ops"): old keybinds.cfg rebinds don't carry over.
 - CHANGES.md keeps M1-M9, P2-P11; creeper entries stayed in creeper-ops.
 
+## Bot crouch + peek lean (0c0e864, merged into feat/fb-reload; branch feat/bot-pose)
+- `range/bot_pose.gd` (BotPose): crouch in cover (TakeCover/Heal once there; Heal's 0.8 squash gone), crouch-walk
+  in Investigate/Search/Flank (x0.55), crouch-fire standing still > 25 m; in TakeCover face the threat, lean out the
+  side that sees it (0.3 s checks) and shoot (`BotEngage.peek`, react delay rolled on cover entry). Eye (sight + shot
+  origin) and hitboxes follow the pose; BotBody plays crouch clips, rolls the spine, cants the gun 12 deg.
+  Tunables `TacticalConfig.BOT_*`. Probe: leaned head bone +0.32 m vs hitbox +0.35 m; crouched head 1.10 vs 1.107.
+- Range suite 1114 pass / 0 fail (38 SCRIPT ERRORs: the known `ReloadTimeline 'lock'` spam, fixed by the WIP below).
+- **CHANGES P12** (hold cover longer while peeking; today cover lasts 1.5 s) waits for Gregory. Not pushed.
+
 ## Not yet ported from creeper-ops (do this before more on-foot work there)
 - Session B's **uncommitted reload WIP** (`reload_anims.gd`, `reload_rigs.gd`, `reload_timeline.gd`) is still in the
   creeper-ops main checkout. Once committed there: `git -C "../creeper ops" format-patch -1 <sha> --stdout | git am`.
