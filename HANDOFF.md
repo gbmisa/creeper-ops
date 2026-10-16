@@ -1,40 +1,40 @@
-# Handoff: 2026-10-16 (branch feat/fb-reload, main checkout; two Opus sessions share it)
+# Handoff: 2026-10-16 evening (Linux, Opus; branch play/f98-f107, NOT pushed)
 
-**Play build:** `feat/fb-reload` (pushed, up to date with GitHub).
-Run: `godot --path godot` -> level select -> Firing Range / Skirmish (Skirmish is its own scene since F82:
-`godot --path godot res://scenes/skirmish.tscn`). Windows machine: Godot 4.7.2 via winget, Blender 5.2.2 portable,
-Blender MCP registered (user scope). After pulling new `class_name` files: `godot --headless --path godot --import`.
+**Play build:** `play/f98-f107` (worktree `../creeper fps td-worktrees/f98-f107`) = `feat/fb-reload` d3b08d6
++ fix/kit-persist + everything below. Range suite **OK 1130**, Skirmish boots with 0 script errors, parse clean.
+Run: `cd "<repo>-worktrees/f98-f107/godot" && godot --path .` (or `res://scenes/skirmish.tscn`).
+Feedback: `docs/playtests/feedback_2026-10-16.md` F98-F113. Rulings: CHANGES.md P10 B, P13 A+B (end of file).
 
-## Session A (Skirmish gameplay; committed a0b68d6)
-- **P9 arm loss APPROVED + built** (player and bots): `TacticalConfig.ARM_LOSS`, `BodyHealth.arms_down/arm_loss`.
-- Meds crate -> IFAK + bandage into the inventory; quick-use keys 4/5 (`QuickUse`, `QuickBar`).
-- Skirmish MAP-2 layout (`docs/tasks/SKIRMISH_MAP2.md`): CQC old town west, open east, cover kind `container`.
-- CHANGES.md: **P10** (bots ignore leg damage) waits for Gregory. **P11 ruled: no fractures at all** -> removed
-  everywhere (session B): no fracture roll, no x0.6 leg slow, no arm sway; `BodyHealth.move_mult()` returns 1.0.
-- Known: kill-house navmesh doorway check can fail (pre-existing); barracks north door split by the inner wall.
+## Merged into play/f98-f107 (each on its own fix/ branch)
+- F98 deploy kit: not reproducible with kit-persist; new deploy test with a custom kit (fix/f98-audio).
+- F99 AK red dot/holo sat 17-21 mm low: ADS pose used eff_def (optic height counted twice). ADS test now checks
+  the visible reticle (fix/f99-reddot).
+- F100/F109 MAP-2 cover: +25 pieces, plus 3 L-shaped strongpoints (left/centre/right). F101 brighter Skirmish
+  (ambient, fill, hotel ceiling lights) (fix/f100-map). Pathing checked only in the west by the tests.
+- F106 reload seat click at the timeline's mag_in mark; F107 bot footsteps (`bot_steps.gd`, sound only).
+- F110 indoor/outdoor sound: `range_space.gd`, zones per scene (reset on load), one per Skirmish building;
+  split spaces = low-pass 1000 Hz, -5 dB (untuned, by ear next) (fix/f110-sound).
+- F112 Controls button in the Esc menu -> existing KeybindMenu (fix/f112-rebind).
+- P12 worn helmet/armor protect the player; P13 B player head dmg x0.5 from bots; P10 B blacked leg x0.6 for
+  player and bots (fix/p13-damage).
+- F103 SCAR-H `well_plug` (dark box closing the cut well); F105 SKS mag_box top lowered to the band, pivot moved
+  (fix/f103-f105-mags).
+- F102 tooling (fix/f102-hands): `art/reload_hands/reload_hands.blend` lines up the 9 reload guns with a hand
+  marker per anchor (Y arrow = fingers, Z = palm). Gregory moves them, runs the `export_hands.py` text block ->
+  `art/gen/reload_hands.json`, which `ReloadAnims.rig` reads over ReloadRigs (no code edit). Rebuild the file:
+  `blender -b --python art/reload_hands/build_hands.py` (after `godot -s ../art/reload_hands/dump_anchors.gd`).
+  The "mag" marker is posed with the mag seated; it moves with the mag in play.
 
-## Session B (reloads + F89-F93 + merges)
-- **F89-F93** (`fix/f89-f93`, pushed, merged into fb-reload): spare mags on deploy (F90), `BotUnstick` (F91, safety
-  net; no real snag reproduced), death screen bottom-left + 1 s click grace (F92), spawn/lane cover (F93), P9 written.
-- **Merge `bfd4aad`** of `origin/feat/skirmish-scene` (F82 + CLAUDE.md refresh): `firing_range.gd` conflict resolved
-  by taking F82's `TacticalScene` split; `a0b68d6`'s QuickUse/QuickBar wiring moved into `TacticalScene._add_hud`.
-- **FB-R reloads** (brief `docs/tasks/FB_R_reload_anims.md`, log `FB_R_progress.md`, scores `docs/art/reload/SCORES.md`):
-  judged >= 8: ak47, m1911, glock18, p90 (all), mp5 plain/fast (empty 7: structural), scarh/sr25/saiga12/sks plain
-  (+ scarh/sr25 fast). Below 8: the 4 rifles' empty reloads (5-6), saiga12/sks fast (7).
-- **Uncommitted WIP** (`reload_anims.gd`, `reload_rigs.gd`, `reload_timeline.gd`): empty-tail fix for the 4 rifles
-  (charge phases skip `pose_shift`, AR press = catch +1.5 cm in + hold, SKS/Saiga charge points from a mesh probe,
-  swing-in >= 0.35 s on rifle/ar plans) + `HANDS["lock"]` default (fixes the `_anchor 'lock'` SCRIPT ERROR spam).
-  Sheets rendered in the session scratchpad, **not yet reviewed or judged**; commit after a judge round.
-- Tools (scratchpad, not in git): `sheet.py` (frame strips -> labelled sheet, 3 renders in parallel max, never while
-  the headless suite runs: it hangs), `grid.py` + tall ortho (mag coordinates), `mag_probe.gd` / side probes.
-
-## Verified (merged tree incl. WIP)
-Parse clean; `--range-test` 1113 pass / 1 fail; smoke 0 FAIL. The fail is `a shot at spawn ... (F88)`: Scav 5 runs to
-cover and back on MAP-2, net move 0.6 m (not stuck; check measures net distance; left as is, report-don't-loosen).
-Not verified: Gregory's play of any of this; bots over a full match on MAP-2; GPU perf with the new map.
+## Open
+- F104 P90 mag path through the receiver (bullpup plan, reload_rigs p90 offsets): not started.
+- F105 part 2: add a real SKS (fixed 10-round, stripper clip) as a new gun; current gun keeps its model (needs a
+  name: it is not an SKS). Model + en-bloc/stripper plan.
+- F108 done via P12+P13; F111 via P10. F97 squad AI brief is Muse's (`feat/enemy-ai`).
+- `reload_timeline.gd:196` SCRIPT ERROR spam ('lock' anchor, MP5) in the suite: pre-existing; the Windows
+  session's uncommitted WIP had a `HANDS["lock"]` default. Not fixed here.
+- Windows session WIP (rifle empty reloads) touches reload_anims/rigs/timeline: expect conflicts with F102/F103/F105.
+- Main checkout HANDOFF.md is stale (old 10-08 file); this one is current.
 
 ## Next
-1. (done) feat/fb-reload pushed incl. a0b68d6, bfd4aad, 41dad3e.
-2. Reloads: review the WIP sheets, judge round 2 for the 4 rifles' empty + fast, then commit. Then sniper (AXMC, bones),
-   M4A1 (`ar` plan; ask Gregory about hiding his posed arms during reloads), then tube / en-bloc / revolver plans.
-3. Gregory rules on CHANGES P10 (only option B left: blacked legs slow) and plays Skirmish (MAP-2, F90-F93).
+1. Gregory plays play/f98-f107 (sound by ear, map positions, rebind page, helmets), fixes hands in Blender.
+2. Push play/f98-f107 when he OKs; F104, real SKS.
