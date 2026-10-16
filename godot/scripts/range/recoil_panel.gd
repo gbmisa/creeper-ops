@@ -94,15 +94,20 @@ func _slider(name: String, value: float, lo: float, hi: float, step: float, on_c
 	sl.value = value
 	sl.custom_minimum_size = Vector2(200, 20)
 	line.add_child(sl)
-	var val := UiKit.label(_fmt(value), 13)
-	line.add_child(val)
+	var box := SpinBox.new()   # typed value, kept in step with the slider
+	box.min_value = lo
+	box.max_value = hi
+	box.step = step
+	box.value = value
+	box.select_all_on_focus = true
+	box.custom_minimum_size = Vector2(90, 0)
+	line.add_child(box)
 	sl.value_changed.connect(func(v):
-		val.text = _fmt(v)
+		box.set_value_no_signal(v)
 		on_change.call(v))
-
-
-static func _fmt(v: float) -> String:
-	return ("%.3f" % v).rstrip("0").rstrip(".") if v != 0.0 else "0"
+	box.value_changed.connect(func(v):
+		sl.set_value_no_signal(v)
+		on_change.call(v))
 
 
 static func _row_value(r: Dictionary, key: String) -> float:

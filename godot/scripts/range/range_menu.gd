@@ -40,6 +40,7 @@ func setup(s: RangeSession) -> void:
 	controls = KeybindMenu.new()
 	add_child(controls)
 	_col.add_child(UiKit.button("Controls", func(): controls.open()))
+	_add_sensitivity()
 	_col.add_child(UiKit.button("Quit", func(): get_tree().quit()))
 
 
@@ -62,3 +63,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			and event.keycode == KEY_ESCAPE:
 		close()
 		get_viewport().set_input_as_handled()
+
+
+## Mouse sensitivity: typed number (MouseSettings, x0.2 .. x3, saved). Enter or clicking away applies it.
+func _add_sensitivity() -> void:
+	var line := HBoxContainer.new()
+	line.add_child(UiKit.label("Mouse sensitivity", 14))
+	var box := SpinBox.new()
+	box.min_value = MouseSettings.MIN
+	box.max_value = MouseSettings.MAX
+	box.step = 0.01
+	box.value = MouseSettings.mult()
+	box.suffix = "x"
+	box.select_all_on_focus = true
+	box.custom_minimum_size = Vector2(100, 0)
+	box.value_changed.connect(func(v: float): MouseSettings.set_mult(v))
+	line.add_child(box)
+	_col.add_child(line)

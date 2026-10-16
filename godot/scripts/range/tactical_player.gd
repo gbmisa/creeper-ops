@@ -199,7 +199,7 @@ func _process(delta: float) -> void:
 	if input.frame.act("t_crouch"):
 		crouching = not crouching
 	if input.frame.captured:
-		var k := cam.fov / BASE_FOV
+		var k := cam.fov / BASE_FOV * MouseSettings.mult()  # sensitivity slider (Esc menu)
 		yaw -= input.frame.mouse_delta.x * SENS * k
 		pitch = clampf(pitch - input.frame.mouse_delta.y * SENS * k, -1.5, 1.5)
 	var lean_t := 0.0
