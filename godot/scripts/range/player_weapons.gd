@@ -51,6 +51,7 @@ func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack, s: Ran
 	bal = b
 	rack = r
 	session = s
+	reloader.infinite = session != null and session.maps.selected in RangeMaps.INFINITE_AMMO
 	rng.seed = s.next_seed()
 	if s.saved_kit.is_empty():
 		StarterLoadout.fill(inv)

@@ -5,6 +5,8 @@ extends RefCounted
 ## cancel() undoes a half-done reload. Gun itself is unchanged. Shotgun tubes consume one loose round per reload.
 
 var inv: Inventory
+## Range map: reloads never run dry. The incoming mag/round is made fresh and full, the inventory is not touched.
+var infinite := false
 
 
 func _init(i: Inventory) -> void:
@@ -33,6 +35,8 @@ func begin(gi: Dictionary, fast: bool) -> String:
 		return _begin_tube(gi, g, fast)
 	if g.busy() or g.needs_cycle or (action == "enbloc" and g.mag.count() > 0):
 		return "no"
+	if infinite:
+		return _begin_free(gi, g, fast)
 	var mags := inv.find_mags(g.def["id"])
 	if mags.is_empty():
 		return "none"
@@ -49,10 +53,24 @@ func begin(gi: Dictionary, fast: bool) -> String:
 	return "ok"
 
 
+## Infinite ammo: a full mag of the gun's loaded grade; nothing leaves or enters the inventory.
+func _begin_free(gi: Dictionary, g: Gun, fast: bool) -> String:
+	var it := inv.make("clip_garand" if g.def["id"] == "garand" else "mag_" + g.def["id"])
+	it["rounds"] = maxi(int(ItemDefs.def_of(it)["cap"]), int(g.stat("mag")))
+	it["ammo"] = g.ammo_pick
+	g.spares.clear()
+	g.spares.append(mag_from_item(it, int(g.stat("mag"))))
+	if not g.reload(fast):
+		g.spares.clear()
+		return "no"
+	gi["staged"] = {"free": true}
+	return "ok"
+
+
 func _begin_tube(gi: Dictionary, g: Gun, fast: bool) -> String:
 	if g.busy() or g.needs_cycle or g.mag.is_full():
 		return "no"
-	var round_id := inv.take_round(g.def["cal"])
+	var round_id := g.ammo_pick if infinite else inv.take_round(g.def["cal"])
 	if round_id == "":
 		return "none"
 	var pouch := Magazine.new(1)
@@ -61,9 +79,10 @@ func _begin_tube(gi: Dictionary, g: Gun, fast: bool) -> String:
 	g.spares.append(pouch)
 	if not g.reload(fast):
 		g.spares.clear()
-		inv.add(inv.make(round_id, {"count": 1}))
+		if not infinite:
+			inv.add(inv.make(round_id, {"count": 1}))
 		return "no"
-	gi["staged"] = {"round": round_id}
+	gi["staged"] = {"round": round_id, "free": infinite}
 	return "ok"
 
 
@@ -74,7 +93,7 @@ func finish(gi: Dictionary) -> Dictionary:
 	var staged: Dictionary = gi.get("staged", {})
 	gi.erase("staged")
 	var leftover := {}
-	if g.def["action"] == "detachable" and not g.spares.is_empty():
+	if g.def["action"] == "detachable" and not g.spares.is_empty() and not staged.get("free", false):
 		var old := item_from_mag(g.def["id"], g.spares[0], g.ammo_pick)
 		var from: Dictionary = staged.get("from", {})
 		if from.is_empty() or not inv.move(old, from):
@@ -93,7 +112,9 @@ func cancel(gi: Dictionary) -> void:
 	gi.erase("staged")
 	g.busy_t = 0.0
 	g.busy_kind = ""
-	if staged.has("round"):
+	if staged.get("free", false):
+		pass  # range ammo: nothing was taken
+	elif staged.has("round"):
 		inv.add(inv.make(staged["round"], {"count": 1}))
 	elif not g.spares.is_empty():
 		var back := item_from_mag(g.def["id"], g.spares[0], g.ammo_pick)

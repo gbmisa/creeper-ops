@@ -6,6 +6,9 @@ class_name RangeMaps
 
 const SCENE := "res://scenes/firing_range.tscn"
 
+## Maps where the player's reloads never run dry (so reload animations can be watched).
+const INFINITE_AMMO := ["range"]
+
 static var pending := "range"
 
 var selected := "range"
