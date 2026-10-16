@@ -28,6 +28,7 @@ var _impulse := 0.01
 var _peak_x := 0.01
 var _path_on := false
 var _side := Side.NONE
+var _moved := 0.0           # how far `current` moved in the last step (deg)
 
 
 func _init(row: Dictionary) -> void:
@@ -105,8 +106,26 @@ func step(dt: float, rng: RandomNumberGenerator) -> void:
 		var k := clampf(1.0 - remaining, 0.01, 1.0) * 0.01
 		current.x += (_rest.x - current.x) * k
 		current.z += (_rest.y - current.z) * k
+	_moved = (current - _prev).length()
 	_prev = current
 	_pending = false
+
+
+## FB-I (Gregory's hip rule, not in TRP): once the return path has ended and the muzzle has come to a stop
+## near its settle point, hand that residual to the view and start again from rest, so the camera keeps the
+## slightly changed aim (as in Tarkov) and the barrel is back on the view. Returns the residual (deg, these
+## axes) or zero. The settle point is cleared with it, so nothing pulls the muzzle away again.
+func take_settled() -> Vector3:
+	if auto_fire_on or _path_on or _pending or current == Vector3.ZERO or _moved > TacRecoilDefs.SETTLE_EPS:
+		return Vector3.ZERO
+	var r := current
+	current = Vector3.ZERO
+	velocity = Vector3.ZERO
+	_prev = Vector3.ZERO
+	_rest = Vector2.ZERO
+	_peak_x = 0.01
+	_moved = 0.0
+	return r
 
 
 func _return_path(rng: RandomNumberGenerator) -> void:

@@ -27,7 +27,6 @@ static func run(t: RangeTest) -> void:
 		for f in want[slot][1]:
 			w.inv.request_fit(it, w.inv.make(f))
 	w.inv.add(w.inv.make("mag_mp5"))
-	session.set_local_recoil(true)
 	var before := _sig(w.inv)
 	t.check("kit: built 3 guns with fitted parts", before.has("primary:mp5:reddot,suppressor") and before.has("secondary:m4a1:compensator") and before.has("holster:glock18:flashhider"))
 	session.save_kit(w.inv)
@@ -37,7 +36,6 @@ static func run(t: RangeTest) -> void:
 	s2.add_player(1, true)
 	w2.setup(player, input, t.bal, rack, s2)
 	t.check("kit: skirmish session has every gun, fit, mag and the pack", _sig(w2.inv) == before)
-	t.check("kit: recoil toggle carried into the skirmish session", w2.recoil.tarkov)
 	var game := SkirmishGame.new()
 	t.add_child(game)
 	game.build_world()
@@ -52,8 +50,6 @@ static func run(t: RangeTest) -> void:
 	s3.add_player(1, true)
 	w3.setup(player, input, t.bal, rack, s3)
 	t.check("kit: back in the range after extract, the same kit and fits", _sig(w3.inv) == before)
-	t.check("kit: recoil toggle still carried after the round trip", w3.recoil.tarkov)
-	s3.set_local_recoil(false)
 	s3.clear_kit()
 	game.queue_free()
 	player.enabled = true

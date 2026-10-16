@@ -283,13 +283,12 @@ func _finish_reload() -> void:
 				chamber = mag.pop()
 
 
-## Direction(s) for the shot just fired: zero elevation, MOA deviation, hip cone, pellets.
-func shot_dirs(aim: Basis, ammo_id: String, ads: bool, rng: RandomNumberGenerator) -> Array[Vector3]:
+## Direction(s) for the shot just fired: zero elevation, MOA deviation, pellets. `aim` is the barrel's basis
+## (hip inaccuracy is the recoil model's hip wander, FB-I: there is no hip cone). `ads` is kept for callers.
+func shot_dirs(aim: Basis, ammo_id: String, _ads: bool, rng: RandomNumberGenerator) -> Array[Vector3]:
 	var a := TacAmmoDefs.of(ammo_id)
 	var out: Array[Vector3] = []
 	var base_dev := deg_to_rad(def["moa"] / 60.0 * a["acc"])
-	if not ads:
-		base_dev += deg_to_rad(TacticalConfig.HIP_CONE_DEG * stat("hip"))
 	var elev := Ballistics.zero_angle(ammo_id, zero_dist())
 	var centre := aim * Vector3(0, 0, -1).rotated(Vector3.RIGHT, elev)
 	var shot_off := _disc(rng, base_dev)

@@ -13,6 +13,7 @@ static func run(t: RangeTest) -> void:
 	_hip_rest(t)
 	_determinism(t)
 	_every_gun(t)
+	RangeTestRecoilWire.run(t)
 	if OS.get_cmdline_user_args().has("--recoil-probe"):
 		probe()
 

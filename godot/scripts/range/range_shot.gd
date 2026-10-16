@@ -1,6 +1,6 @@
 class_name RangeShot
 extends Node
-## Screenshot / debug hook: --shot=path [--weapon=id] [--fit=a,b] [--zoom=lo] [--ads] [--look=x,y,z] [--fire=N] [--bolt=0..1 (with --fire=1: shoot after that share of the bolt cycle)] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] [--fps-report] (reload mid-way shot).
+## Screenshot / debug hook: --shot=path [--weapon=id] [--fit=a,b] [--zoom=lo] [--ads] [--look=x,y,z] [--fire=N] [--burst=N (held auto)] [--bolt=0..1 (with --fire=1: shoot after that share of the bolt cycle)] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] [--fps-report] (reload mid-way shot).
 ## Gives the weapon, optionally fires N shots, waits, saves the viewport, quits.
 
 
@@ -64,6 +64,11 @@ func run(app: FiringRange) -> void:
 	app.bal.impact.connect(func(i): impacts.append(i))
 	await app.get_tree().create_timer(0.8).timeout
 	var shots := int(a.get("fire", 0))
+	if a.has("burst"):   # FB-I: hold the trigger in auto through N shots; the picture is taken mid-burst (use --wait=0)
+		if (w.gun.def["modes"] as Array).has("auto"):
+			w.gun.mode = "auto"
+		w.trigger_down = true
+		await app.get_tree().create_timer((int(a["burst"]) - 0.5) * 60.0 / w.gun.def["rpm"]).timeout
 	for i in shots:
 		w.trigger_down = true
 		await app.get_tree().create_timer(0.08).timeout

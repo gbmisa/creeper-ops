@@ -34,7 +34,6 @@ const ARM_FRACTURE_SWAY := 1.0
 const ARMOR_RICOCHET_GLANCE_DEG := 25.0
 
 # Gun handling
-const HIP_CONE_DEG := 4.0
 const MALF_BASE := 0.05
 const WEAR_PER_SHOT := 0.0004
 const FIX_TIME := {"misfire": 1.0, "feed": 1.8, "jam": 2.5}
@@ -46,12 +45,7 @@ const EXACT_COUNT_MAX_CAP := 8
 ## [min fraction (inclusive), text], checked top to bottom
 const MAG_WORDS := [[1.0, "Full"], [0.75, "Almost full"], [0.4, "About half"], [0.16, "Less than half"], [0.001, "Almost empty"]]
 
-# Recoil / sway. The recoil model's numbers live in tactical/recoil_defs.gd (TacRecoilDefs, Tarkov via TRP);
-# RECOIL_T_VM_* = viewmodel follows the bore (visual only, until FB-I phase 2 rewires the viewmodel).
-const RECOIL_T_VM_PITCH := 3.5
-const RECOIL_T_VM_YAW := 2.0
-const RECOIL_T_VM_ROLL := 0.8
-const RECOIL_T_VM_KICK := 0.3
+# Recoil / sway. The recoil model's numbers live in tactical/recoil_defs.gd (TacRecoilDefs, Tarkov via TRP).
 const SWAY_BASE_DEG := 0.12
 const SWAY_HOLD_MULT := 0.05
 const SWAY_TIRED_MULT := 2.5
