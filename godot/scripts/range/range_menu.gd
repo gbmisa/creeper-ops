@@ -8,6 +8,7 @@ signal deploy_requested
 
 var session: RangeSession
 var _col: VBoxContainer
+var controls: KeybindMenu   # F112: rebinding page (same screen as command mode's F10 menu)
 
 
 func _init() -> void:
@@ -36,6 +37,9 @@ func setup(s: RangeSession) -> void:
 		_col.add_child(UiKit.button("Back to Firing Range", func(): session.maps.go("range")))
 	else:
 		_col.add_child(UiKit.button("Deploy to Skirmish", func(): deploy_requested.emit()))
+	controls = KeybindMenu.new()
+	add_child(controls)
+	_col.add_child(UiKit.button("Controls", func(): controls.open()))
 	_col.add_child(UiKit.button("Quit", func(): get_tree().quit()))
 
 
