@@ -91,3 +91,8 @@ const BOLT_HAND_BLEND := 0.12  # share of the cycle the right hand takes to leav
 const ADS_RELIEF := {"pistol": 0.25, "pistol_optic": 0.193, "notch": 0.160, "aperture": 0.08, "optic": 0.286, "scope": 0.295}
 const ADS_EYE_CLEAR := 0.03  # F58: iron-sight eye keeps this from all gun geometry (eye_clear.py writes relief_min)
 const VM_Z_CLIP := 0.3  # z_clip_scale on every viewmodel material, so the gun never clips the near plane
+
+# Ragdoll (FB-A: enemy death; local cosmetic, no multiplayer sync)
+const DEATH_IMPULSE := 250.0  # N·s on the hit bone for a killing shot, scaled by bullet damage
+const DEATH_IMPULSE_REF_DMG := 57.0  # reference rifle-round damage for the scaling
+const RAGDOLL_SLEEP := 4.0  # s after death before ragdoll bones freeze (0 = never)
