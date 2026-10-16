@@ -30,6 +30,8 @@ func _init(weapon_id: String) -> void:
 	mode = def["modes"][0]
 	ammo_pick = TacAmmoDefs.grades(def["cal"])[0]
 	zero_idx = 0
+	for slot in def.get("fit", {}):
+		fit[slot] = def["fit"][slot]
 	refill()
 
 
