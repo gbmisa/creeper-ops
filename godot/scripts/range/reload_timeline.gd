@@ -13,6 +13,7 @@ var _rig := {}
 var _def := {}
 var _k := Transform3D.IDENTITY
 var _bone_rest := Transform3D.IDENTITY
+var _base := Transform3D.IDENTITY  # the Mag node seated (ReloadMag)
 var _phases: Array = []  # [{t0, t1, from: pose, to: pose, ease, mark}]
 var t := 0.0
 var len := 0.0
@@ -21,7 +22,9 @@ var _next := 0
 var gun_pos := Vector3.ZERO
 var gun_rot := Vector3.ZERO
 var mag_xf := Transform3D.IDENTITY
-var hand_l := Vector3.ZERO
+var hand_l := Vector3.ZERO  # left wrist target
+var hand_f := Vector3(0, 0, -1)  # left fingers / palm-facing directions (FpArms.solve)
+var hand_n := Vector3(0, 1, 0)
 var bolt := 0.0
 
 
@@ -36,6 +39,7 @@ static func make(glb: Node, def: Dictionary) -> ReloadTimeline:
 	var tl := ReloadTimeline.new()
 	tl.mag = m
 	tl.skel = m.get_parent() as Skeleton3D
+	tl._base = m.transform
 	tl._rig = r
 	tl._def = def
 	tl.bone = tl.skel.find_bone(str(r.get("bone", "")))
@@ -65,7 +69,7 @@ func start(secs: float, empty: bool, fast: bool) -> void:
 				steps.append([p, float(p["w"]) * extra])
 		steps.append([list[i], float(list[i]["w"]) * base])
 	_phases.clear()
-	var pose := {"gp": Vector3.ZERO, "gr": Vector3.ZERO, "mag": "seat", "hl": "grip", "bolt": 0.0}
+	var pose := {"gp": Vector3.ZERO, "gr": Vector3.ZERO, "mag": "seat", "hl": "grip", "bolt": float(plan.get("empty_bolt", 0.0)) if empty else 0.0}
 	var at := 0.0
 	for s in steps:
 		var to := pose.duplicate()
@@ -124,7 +128,11 @@ func _sample() -> void:
 	var pv: Vector3 = _rig["pivot"]
 	var q := Quaternion.from_euler(m0[1]).slerp(Quaternion.from_euler(m1[1]), u)
 	mag_xf = Transform3D(Basis(q), pv + (m0[0] as Vector3).lerp(m1[0], u)) * Transform3D(Basis.IDENTITY, -pv)
-	hand_l = _anchor(a["hl"]).lerp(_anchor(b["hl"]), u)
+	var h0 := _anchor(a["hl"])
+	var h1 := _anchor(b["hl"])
+	hand_l = (h0[0] as Vector3).lerp(h1[0], u)
+	hand_f = (h0[1] as Vector3).lerp(h1[1], u).normalized()
+	hand_n = (h0[2] as Vector3).lerp(h1[2], u).normalized()
 	_apply()
 
 
@@ -133,7 +141,10 @@ func _put_rest() -> void:
 	gun_rot = Vector3.ZERO
 	bolt = 0.0
 	mag_xf = Transform3D.IDENTITY
-	hand_l = _def["grip_l"]
+	var h := _anchor("grip")
+	hand_l = h[0]
+	hand_f = h[1]
+	hand_n = h[2]
 	_apply()
 
 
@@ -141,17 +152,28 @@ func _mag_off(state: String) -> Array:
 	return [Vector3.ZERO, Vector3.ZERO] if state == "seat" else _rig[state]
 
 
-func _anchor(name: String) -> Vector3:
+## [wrist target, finger dir, palm dir] for a left-hand anchor (gun-model space).
+func _anchor(name: String) -> Array:
+	var p: Vector3
 	match name:
-		"mag": return mag_xf * (_rig["hold"] as Vector3)
-		"pouch": return _rig["pouch_hand"]
-		"charge": return (_rig["charge"] as Vector3) + (_rig["travel"] as Vector3) * bolt
-	return _def["grip_l"]
+		"mag": p = mag_xf * (_rig["hold"] as Vector3)
+		"pouch": p = _rig["pouch_hand"]
+		"charge": p = (_rig["charge"] as Vector3) + (_rig["travel"] as Vector3) * bolt
+		_:
+			var pistol: bool = _def["class"] == "pistol"
+			return [_def["grip_l"], Vector3(0, 0, -1), Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)]
+	var hd: Dictionary = ReloadAnims.HANDS[name]
+	var f: Vector3 = (hd["f"] as Vector3).normalized()
+	var n: Vector3 = (hd["n"] as Vector3).normalized()
+	if name == "mag":
+		f = mag_xf.basis * f
+		n = mag_xf.basis * n
+	return [p - f * ReloadAnims.WRIST_BACK - n * ReloadAnims.WRIST_OFF, f, n]
 
 
 ## Gun-model offsets onto the Mag node and the charging bone (both in skeleton space).
 func _apply() -> void:
-	mag.transform = _k.affine_inverse() * mag_xf * _k
+	mag.transform = _k.affine_inverse() * mag_xf * _k * _base
 	if bone >= 0:
 		var tb := Transform3D(Basis.IDENTITY, (_rig["travel"] as Vector3) * bolt)
 		skel.set_bone_global_pose(bone, _k.affine_inverse() * tb * _k * _bone_rest)

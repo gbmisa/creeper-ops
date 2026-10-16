@@ -24,7 +24,7 @@ Design:
 - Guns without a ReloadAnims entry keep today's clip + mag_l lerp exactly.
 
 Steps:
-- [x] code (parse clean)  - [ ] range check  - [ ] frame sheets + verdict  - [ ] parse / range / smoke  - [x] WIP commit
+- [x] code  - [x] range check  - [x] frame sheets + verdict  - [x] parse / range / smoke  - [x] commit
 
 ## Handover (2026-10-15, session stopped by Gregory: the main instance takes this over)
 Done, parse clean, NOT verified by range test / smoke / pictures:
@@ -49,3 +49,33 @@ Still to do for phase 1: the M1911 pass, a range check (RangeTestReload: mag bac
 timeline lasts `secs`, the gun's AABB is unchanged by the split), sheets in `docs/art/reload/` + verdict against
 the EFT AKM / M1911 reloads (TRP timing), the full parse / range / smoke run.
 Behaviour changes so far: AK47 and M1911 reloads only (procedural instead of the glb Reload clip). Nothing else.
+
+## Phase 1 finished (2026-10-15, second Opus session; resumed from the handover, kept the WIP design)
+Fixes to the WIP:
+- Mag node was invisible / misplaced: the importer leaves the mesh in gun-model space, so a skinned vertex renders
+  at bone rest * bind pose, not the identity. `ReloadMag` now puts `Mag` at that pose; the timeline composes on it.
+- M1911 split failed: its 0.5/0.5 weights are stored as 0.49999 -> `MIN_W` 0.45. A surface that is all mag is kept
+  as one degenerate triangle so surface indices and the gun AABB stay the glb's (AABB check caught it).
+- Left hand had a fixed handguard frame: `ReloadAnims.HANDS` gives each anchor finger / palm directions (mag turns
+  with the Mag node), anchors are palm centres, wrist = palm - f*WRIST_BACK - n*WRIST_OFF. FpArms takes them.
+- AK charge: overhand rack (left hand over the receiver to the right-side handle), gun rolled left.
+- M1911 empty: the left-hand slide rack put a huge hand over the camera (pistol rear faces the eye). Replaced with
+  a slide lock: `empty_bolt` 1.0 holds the slide back the whole empty reload, support hand regrips, slide drops
+  (`charged`). Slide verts are 0.5 Slide, so bone travel 0.06 shows 3 cm. Pistol pose moved forward/up/left.
+- `RangeTestReload` (new, registered in range_test.gd): per ak47 / m1911 x plain / fast / empty: timeline exists,
+  gun AABB unchanged, length = logic secs, mag leaves >= 8 cm, left wrist reachable every frame, marks, mag
+  seated + bolt home + both hands on grips at the end. Range OK 612, smoke OK 0 failures, parse clean.
+Sheets (8 frames each, labelled with phase + game time): `docs/art/reload/{ak47,m1911}_{plain,fast,empty}.jpg`.
+Verdict (Opus, against EFT's AKM / M1911 reloads as I know them and the TRP AKM timing: mag out 0.24, in 0.75):
+hands on gun/mag every frame PASS; no camera/body clipping PASS (AK rack arm crosses the upper left, as EFT's
+over-the-top rack does); mag visibly leaves and arrives PASS (AK mag model is short, reads small); pose readable
+PASS; timing = secs PASS (checked). Weak spots: the AK mag well hides behind the right hand at seat; the pistol
+fast-drop mag leaves frame in ~2 frames; no slide lock on the last shot (fire visuals frozen) so the 1911 slide
+snaps back at the start of an empty reload.
+
+## M1911-style follow-ups / open (for the orchestrator)
+- Slide lock on the last shot would need a fire-visual change (out of brief).
+- M4A1 posed arms (`arms_pose`): proposal, NOT built, ask Gregory: keep his posed arms for idle/fire, and during a
+  reload hide them and show the IK arms (FpArms) driven by the timeline, cross-fading at start/end. His glb and
+  hand poses stay untouched. Alternative: keep posed right arm, IK only the left arm (needs his rig's bone names).
+- vector / pkm: timeline data only in phase 2; mag split after fix/fb-i lands.

@@ -103,10 +103,16 @@ func update(gun: Node3D, delta: float) -> void:
 		var t := 1.0 - _reload / _reload_len
 		mag_w = smoothstep(0.0, 0.2, t) * (1.0 - smoothstep(0.8, 1.0, t))
 	var left_t: Vector3 = (_def["grip_l"] as Vector3).lerp(_def["mag_l"], mag_w)
+	var left_n := Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)
+	var left_f := fwd
 	if reload_tl != null:
 		mag_w = 0.0
-		left_t = reload_tl.hand_l if reload_tl.playing() else _def["grip_l"]
-	var left_n := Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)
+		if reload_tl.playing():
+			left_t = reload_tl.hand_l
+			left_f = reload_tl.hand_f
+			left_n = reload_tl.hand_n
+		else:
+			left_t = _def["grip_l"]
 	var grip_r: Vector3 = _def["grip_r"]
 	if bolt != null:
 		grip_r = bolt.hand_r(grip_r)
@@ -114,7 +120,7 @@ func update(gun: Node3D, delta: float) -> void:
 	var pos_l := gt * left_t
 	_lean_in(pos_r, pos_l)
 	solve("r", pos_r, gt.basis * fwd, gt.basis * Vector3(-1, 0, 0), 1.0)
-	solve("l", pos_l, gt.basis * fwd, gt.basis * left_n, 1.0 - mag_w * 0.7)
+	solve("l", pos_l, gt.basis * left_f, gt.basis * left_n, 1.0 - mag_w * 0.7)
 
 
 ## Long guns put a hand beyond arm's reach: the shoulders lean toward the farther target (max MAX_LEAN).
