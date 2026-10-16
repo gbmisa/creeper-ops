@@ -44,6 +44,9 @@ const COVER := [
 	["truck", -10, 6, 2.5, 6.5, 2.5], ["truck", 6, -30, 2.5, 6.5, 2.5], ["car", 16, 36, 1.9, 4.4, 1.5],
 	["car", -40, 40, 1.9, 4.4, 1.5], ["car", 48, -30, 1.9, 4.4, 1.5],
 	["wall", 30, -18, 5.0, 0.4, 1.2], ["wall", -26, 10, 5.0, 0.4, 1.2], ["wall", 40, 14, 0.4, 5.0, 1.2],
+	# F93: standing-height cover at the spawn (gap for the loot crate at 0, 50) and along the three early lanes
+	["barrier", -2.5, 51.5, 3.0, 0.6, 1.8], ["barrier", 2.5, 51.5, 3.0, 0.6, 1.8],
+	["truck", -12, 42, 2.5, 6.5, 2.5], ["wall", 12, 41, 4.0, 0.4, 1.8], ["barrier", 0, 26, 3.0, 0.6, 1.8],
 ]
 const COVER_STYLE := {
 	"barrier": ["concrete", Color(0.55, 0.55, 0.52)], "crate": ["wood_plank", WOOD], "truck": ["sheet_metal", Color(0.28, 0.34, 0.26)],
