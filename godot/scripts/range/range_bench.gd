@@ -64,7 +64,7 @@ func _process(_dt: float) -> void:
 		return
 	if _near(AMMO_POS) and weapons.gun != null:
 		var next := TacAmmoDefs.next_grade(weapons.gun.ammo_pick)
-		var tube := weapons.gun.def["action"] == "tube"  # F22: UI says tube/shells, never magazine
+		var tube: bool = weapons.gun.def["action"] == "tube"  # F22: UI says tube/shells, never magazine
 		weapons.prompt = "%s: load %s and refill %s" % [Keybinds.short("t_use"), TacAmmoDefs.of(next)["name"], "shells" if tube else "mags"]
 		if player.enabled and player.input.act("t_use"):
 			weapons.reload_cancel()
