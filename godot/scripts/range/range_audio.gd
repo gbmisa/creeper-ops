@@ -4,7 +4,7 @@ class_name RangeAudio
 ## Random pitch per play, the shot's tail is delayed by distance, and inside an indoor zone it goes through a reverb bus.
 
 const POOL := 20
-const ROOM_BUS := "RangeRoom"
+const ROOM_BUS := SoundDefs.ROOM_BUS
 const PITCH_JIT := 0.04
 const SOUND_SPEED := 343.0
 
@@ -14,19 +14,14 @@ static var _p2: Array[AudioStreamPlayer] = []
 static var _n3 := 0
 static var _n2 := 0
 static var _cache := {}
-static var _zones: Array[AABB] = []
 
 
 static func add_zone(box: AABB) -> void:
-	if not _zones.has(box):
-		_zones.append(box)
+	RangeSpace.add(box)
 
 
 static func indoor(pos: Vector3) -> bool:
-	for z in _zones:
-		if z.has_point(pos):
-			return true
-	return false
+	return RangeSpace.zone_of(pos) >= 0
 
 
 static func stream(stem: String) -> AudioStream:
@@ -46,15 +41,7 @@ static func _setup() -> bool:
 	_root = Node.new()
 	_root.name = "RangeAudio"
 	tree.root.add_child(_root)
-	if AudioServer.get_bus_index(ROOM_BUS) < 0:
-		AudioServer.add_bus()
-		var i := AudioServer.bus_count - 1
-		AudioServer.set_bus_name(i, ROOM_BUS)
-		var rv := AudioEffectReverb.new()
-		rv.room_size = 0.55
-		rv.damping = 0.5
-		rv.wet = 0.3
-		AudioServer.add_bus_effect(i, rv)
+	RangeSpace.ensure_buses()
 	_p3.clear()
 	_p2.clear()
 	for k in POOL:
@@ -85,6 +72,10 @@ static func play(stem: String, pos: Variant = null, db := 0.0, bus := "Master", 
 		b.bus = bus
 		b.play()
 		return true
+	if bus == "Master":
+		var sp := RangeSpace.treat(_listener(), pos)
+		bus = sp["bus"]
+		db += sp["db"]
 	var a := _p3[_n3]
 	_n3 = (_n3 + 1) % _p3.size()
 	a.stream = s
@@ -100,13 +91,14 @@ static func play(stem: String, pos: Variant = null, db := 0.0, bus := "Master", 
 static func shot(gun_id: String, pos: Variant = null, suppressed := false, cal := "", cls := "") -> void:
 	var prof: Dictionary = SoundDefs.PROFILES[SoundDefs.profile_of(gun_id, cal, cls)]
 	var at: Vector3 = pos if pos != null else _listener()
-	var room := indoor(at)
-	var bus := ROOM_BUS if room else "Master"
-	var db: float = prof["db"] - (6.0 if suppressed else 0.0)
+	var sp := RangeSpace.treat(_listener(), at)
+	var room: bool = sp["room"]
+	var bus: String = sp["bus"]
+	var db: float = prof["db"] - (6.0 if suppressed else 0.0) + sp["db"]
 	play(prof["sup"] if suppressed else prof["shot"], pos, db, bus)
 	var dist := at.distance_to(_listener())
 	var delay := clampf(0.05 + dist / SOUND_SPEED, 0.05, 0.7)
-	var tail_db: float = prof["db"] - (14.0 if suppressed else 4.0) + (3.0 if room else 0.0) - minf(dist * 0.05, 8.0)
+	var tail_db: float = prof["db"] - (14.0 if suppressed else 4.0) + (3.0 if room else 0.0) + sp["db"] - minf(dist * 0.05, 8.0)
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return

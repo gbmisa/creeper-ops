@@ -60,6 +60,7 @@ func run() -> void:
 	RangeTestBolt.run(self)
 	RangeTestReload.run(self)
 	RangeTestSound.run(self)
+	RangeTestSound.space(self)
 	await RangeTestAttach.run(self)
 	await RangeTestRecoilWire.player(self)
 	await RangeTestRecoilEye.run(self)
