@@ -13,6 +13,7 @@ var _col: VBoxContainer
 func _init() -> void:
 	layer = 10
 	visible = false
+	process_mode = Node.PROCESS_MODE_ALWAYS   # F19: the menu must work while the tree is paused
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.5)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -41,9 +42,19 @@ func setup(s: RangeSession) -> void:
 func open() -> void:
 	visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	get_tree().paused = true   # F19: freeze bots, shots, ballistics, bleeding, timers
 
 
 func close() -> void:
 	visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	get_tree().paused = false   # F19: resume exactly where the world stopped
 	resumed.emit()
+
+
+## F19: firing_range._process is pausable, so Esc-to-close while paused is handled here.
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event is InputEventKey and event.pressed and not event.echo \
+			and event.keycode == KEY_ESCAPE:
+		close()
+		get_viewport().set_input_as_handled()

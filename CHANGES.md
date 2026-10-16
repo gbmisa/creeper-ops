@@ -22,6 +22,17 @@ Anything here changes (or already changed) behaviour that was working and that G
 | 14 | Test: "dry unit retreats past enemies" | Unit also had to survive | Only has to retreat without engaging | It failed at random | |
 | 15 | Test: "a safe engine is near the landing site" | An engine with no hive/castle tie within 40 cells | Any engine within 40 cells | The hive/castle ties were removed | |
 
+## In Muse's FB-A/B/C without being asked (found in the 2026-10-15 review, branch review/muse-fb-abc)
+
+| # | What changed | Before | Now | Brief said | Ruling |
+|---|---|---|---|---|---|
+| M1 | A dying bot's movement (FB-A) | Kept walking until removed | Stops moving the moment it starts dying (`scav_bot.gd` `_move`) | Ragdoll only; this fits it, but wasn't asked | |
+| M2 | Bot suppressing fire (FB-B) | Bots could fire at cover where they last saw you | The new line-of-sight check also blocks that (`bot_shooting.gd:20`) | Brief allowed suppressing fire at cover | |
+| M3 | Bot reaction time (FB-B) | One reaction delay | A second delay added on top of it | Not in the brief | |
+| M4 | Stamina while airborne (FB-C, F23) | No drain in the air | Stamina drains while airborne (`tactical_player.gd:158-161`) | Sprint-jump fix only | |
+| M5 | Shotgun ammo top-up at the range bench (FB-C, F22) | Bench gave the rounds asked for | Tops every stack of that caliber up to the stack maximum, writing counts directly | "Don't change ammo amounts" | |
+| M6 | Attachment recoil scaling (side effect of approved P3, Tarkov recoil) | A compensator multiplies kick by 0.80 | Tarkov's formula: x0.845 | Follows P3's Tarkov port | |
+
 ## Proposed (not built)
 
 | # | What would change | Today | Proposed | Why | Ruling |
