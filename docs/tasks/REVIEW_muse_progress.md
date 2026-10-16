@@ -31,3 +31,26 @@
     (8.0, 1.3, 47.0) duplicating `_gate` values; tree trunk 0.28/5.5 in logic; `tree_colliders` rebuilds the whole
     ground scatter into a throwaway node just to replay the rng (cheaper: split the rng streams).
   - `range_menu.gd:75` raw `KEY_ESCAPE` (Esc is the allowed fixed key; OK).
+
+## 3. FB-C range: merged ce338e2
+- Conflicts: `range_test.gd` (kept both runners); `range_truck.gd` (same call, kept HEAD); `tactical_viewmodel.gd` (kept
+  fix/fb-i `ViewmodelClip.apply(arms)` then FB-C F20 `_on_switched(w.gun)`); `range_session.gd` (kept fix/fb-i
+  `set_local_recoil`). F6 duplicated F55: FB-C's `RangeMaps.carried_kit` (range_maps static, writes in save_kit/clear_kit,
+  restore line in firing_range `_ready`) dropped in favour of frozen F55 static `_carried`; `range_test_fbc._f6` now reads the
+  fresh session's `saved_kit` (same two checks, now exercising F55). Not a behaviour change.
+- Tests: parse FAILS: `range_bench.gd:67` `var tube := weapons.gun.def["action"] == "tube"` cannot infer type (Muse's bug,
+  also on its branch: same Gun.def typing at 5005bc1). RangeBench does not compile, so the ammo bench / armour station are
+  dead and range-test skips its checks yet prints `[range] OK 678`. With a temporary `var tube: bool =` (not committed):
+  range-test 687 PASS 0 FAIL. Smoke 1264 PASS 0 FAIL.
+- Findings:
+  - bug: range_bench.gd:67 parse error above. Fix: `var tube: bool = ...`.
+  - bug (harness): range-test prints OK while a script fails to compile; make RangeTest fail on missing classes/script errors.
+  - brief gap: F8 (ammo world model) and F15 (meds box / r5-med check) not done and not reported. F20 test covers setup
+    only, not deploy and back-to-range transitions. No F7 test; F22 one-shell-at-a-time reload untested.
+  - out-of-brief: F23 (`tactical_player.gd:156`) airborne sprint also drains stamina and makes sprint-step noise while
+    airborne (brief: stamina unchanged). Fix: skip stamina drain while not on floor.
+  - out-of-brief: F22 `hand_gear._refill_tube` sets every carried stack of the caliber to STACK_MAX (all grades), writing
+    `it["count"]` directly (no inventory change signal). Brief: "don't change ammo amounts". Fix: go through Inventory API.
+  - F11 workbench only opens the inventory UI; fitting still works anywhere, and its F prompt can overlap the ammo bench
+    (POS 3.2 vs 5.0, both t_use). Gregory to judge.
+  - style: F10 vest and F11 bench sizes hard-coded (placeholders, OK).
