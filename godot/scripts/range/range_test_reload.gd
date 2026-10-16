@@ -1,7 +1,7 @@
 class_name RangeTestReload
 ## FB-R: procedural reloads (ReloadTimeline). Per gun with a ReloadAnims rig, plain / fast / empty: the timeline
 ## lasts the logic's reload time, the Mag node leaves the gun and comes back seated, the marks fire, the left wrist
-## stays on its target (within IK reach) every frame, and at the end both hands are on their grips and the bolt or
+## stays on its target (within IK reach) every frame, the bolt/slide starts home and the mag never teleports, and at the end both hands are on their grips and the bolt or
 ## slide is home. The split leaves the gun mesh's AABB as the glb had it.
 
 const IDS := ["ak47", "m1911"]
@@ -48,6 +48,9 @@ static func _one(t: RangeTest, id: String, label: String, fast: bool, empty: boo
 	tl.mark.connect(func(m: String): marks.append(m))
 	tl.start(secs, empty, fast)
 	t.check(n + ": lasts the logic's %.2f s (%.3f)" % [secs, tl.len], absf(tl.len - secs) < 0.001)
+	t.check(n + ": bolt / slide starts home, no pop (%.3f)" % tl.bolt, tl.bolt < 0.001)
+	var jump := 0.0  # largest one-frame step of the mag (a dropped or swapped mag must travel, not teleport)
+	var last := tl.mag_xf.origin
 	var far := 0.0
 	var err := 0.0
 	var steps := 0
@@ -55,11 +58,14 @@ static func _one(t: RangeTest, id: String, label: String, fast: bool, empty: boo
 		tl.update(STEP)
 		arms.update(gun, STEP)
 		far = maxf(far, (tl.mag_xf.origin).length())
+		jump = maxf(jump, tl.mag_xf.origin.distance_to(last))
+		last = tl.mag_xf.origin
 		if tl.playing():
 			err = maxf(err, arms.hand_pos("l").distance_to(arms.target["l"]))
 		steps += 1
 	arms.update(gun, STEP)
 	t.check(n + ": the mag leaves the gun (%.2f m)" % far, far >= 0.08)
+	t.check(n + ": the mag never teleports: < 10 cm a frame, a dropped one falls ~3-4 m/s (%.3f m)" % jump, jump < 0.10)
 	t.check(n + ": left wrist on its target every frame (worst %.3f m)" % err, err < 0.02)
 	var need := ["mag_out", "mag_in"] + (["charged"] if empty else [])
 	t.check(n + ": marks %s" % [marks], need.all(func(m): return m in marks))

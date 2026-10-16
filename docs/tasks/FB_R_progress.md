@@ -79,3 +79,26 @@ snaps back at the start of an empty reload.
   reload hide them and show the IK arms (FpArms) driven by the timeline, cross-fading at start/end. His glb and
   hand poses stay untouched. Alternative: keep posed right arm, IK only the left arm (needs his rig's bone names).
 - vector / pkm: timeline data only in phase 2; mag split after fix/fb-i lands.
+
+## Builder pass A2a (2026-10-15): round-1 judge notes, AK47 + M1911
+- AK mag "10 cm stub": NOT a split bug. Measured: all 20 `Magazine` verts move (1.0 weight), the mag object is ~20 cm
+  along its curve, ~11 cm of it below the well at idle (the glb's mag is short/sits deep). A longer 25 cm mag would
+  change the gun's idle look: left for the orchestrator. Readability fixes instead: hold point lower on the mag
+  (`hold` -0.115/-0.085) so most of it shows; new gun pose yaws the side to the camera.
+- AK pose (`RIFLE_POSE`): gp (-0.10, 0.10, -0.10), gr (0.15, 0.55, -0.85): muzzle left, rolled right, mag well
+  ~1/3 up the screen. Learned: roll alone turns the gun end-on; yaw is what shows the side.
+- AK rock: `pivot` = front lip (-0.002, -0.04, -0.062); new mag states rock / slip / near; phases rock -> out and
+  near -> hook (front lip in) -> seat (rock back).
+- Returns: every plan has a `hold` then `ready` 0.20-0.22 of secs (starts at ~0.78-0.80), smoothstep.
+- Drops: slip (slides out, ease out) then drop (ease in, falls): 2 sheet frames show it under the gun.
+- AK empty: underhand rack (EFT AK): palm on the receiver's right side at the handle, gun rolled right side up
+  (reach gr z +0.25), sleeve stays low. `charge_takes: "hold"`: an empty reload spends the hold phase on the
+  swing into the rack (total = secs still). Regrip phase puts the hand on the handguard before the return.
+- M1911 empty: `empty_lock` 0.12 s, slide eases back at reload start (no fire-visual change). Slide travel 0.12
+  (6 cm shown). `stop_hand` low on the frame (an anchor on the slide put the back of the hand over the gun);
+  gun stays canted through the slide drop, cant eases out over ready (0.4 s).
+- M1911 fast/plain: `hold` 3 cm forward (z 0.065).
+- RangeTestReload: + bolt/slide starts home (no pop), + mag never moves >10 cm in a 1/60 s frame.
+- Sheets regenerated (12-20 frames, labelled phase + time): `docs/art/reload/*.jpg`. Maker script was a scratch
+  python (strip + PIL join), not committed.
+- Verified: parse clean, range OK 624 / 0 FAIL, smoke 0 FAIL.
