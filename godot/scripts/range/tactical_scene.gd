@@ -19,6 +19,7 @@ var world_items: WorldItems
 var inv_ui: InventoryUI
 var quick: QuickUse
 var skirmish: SkirmishGame   # only on the Skirmish map
+var utils: UtilSystem  # RANGE5 UTIL: grapple, grenades, binoculars (both maps)
 
 
 ## Which RangeMaps id this scene is. Subclasses override.
@@ -142,6 +143,9 @@ func _add_hud() -> RangeHud:
 
 
 func _add_menu() -> void:
+	utils = UtilSystem.new()
+	add_child(utils)
+	utils.setup(player, weapons, session, bal, func(): return bots.bots)
 	player.god = args.has("god")
 	if args.has("bots") and skirmish == null:
 		bots.spawn_scavs()

@@ -10,10 +10,11 @@ signal use_requested(item: Dictionary)  # right-click a med item = use it
 
 const C := 36  # cell px
 const SLOT_CELLS := {"primary": Vector2i(5, 2), "secondary": Vector2i(5, 2), "holster": Vector2i(5, 1),
-	"helmet": Vector2i(2, 2), "armor": Vector2i(3, 3), "rig": Vector2i(3, 2), "backpack": Vector2i(4, 4)}
-const SLOT_TITLE := {"primary": "PRIMARY", "secondary": "SECONDARY", "holster": "HOLSTER", "helmet": "HELMET", "armor": "ARMOR", "rig": "RIG", "backpack": "BACKPACK"}
+	"helmet": Vector2i(2, 2), "armor": Vector2i(3, 3), "rig": Vector2i(3, 2), "backpack": Vector2i(4, 4), "utility1": Vector2i(2, 2), "utility2": Vector2i(2, 2)}
+const SLOT_TITLE := {"primary": "PRIMARY", "secondary": "SECONDARY", "holster": "HOLSTER", "helmet": "HELMET", "armor": "ARMOR", "rig": "RIG", "backpack": "BACKPACK", "utility1": "UTILITY 1", "utility2": "UTILITY 2"}
 const KIND_COL := {"gun": Color(0.32, 0.36, 0.42), "mag": Color(0.3, 0.3, 0.3), "ammo": Color(0.55, 0.42, 0.12), "armor": Color(0.25, 0.4, 0.28),
-	"rig": Color(0.45, 0.38, 0.22), "backpack": Color(0.35, 0.45, 0.3), "med": Color(0.6, 0.18, 0.18), "attach": Color(0.2, 0.42, 0.5)}
+	"rig": Color(0.45, 0.38, 0.22), "backpack": Color(0.35, 0.45, 0.3), "med": Color(0.6, 0.18, 0.18), "attach": Color(0.2, 0.42, 0.5),
+	"utility": Color(0.5, 0.32, 0.14)}
 const CHIP := 14.0
 
 var inv: Inventory
@@ -34,12 +35,15 @@ func regions() -> Array:
 	var y := 60.0
 	for s in Inventory.SLOTS:
 		var sz: Vector2i = SLOT_CELLS[s]
-		if s == "helmet":  # beside the armor slot (same row), so the column still fits a 900 px window
+		if s == "helmet" or s == "utility2":  # beside the armor / utility 1 slot (same row), so the column still fits a 900 px window
 			continue
 		out.append({"loc": s, "rect": Rect2(40, y + 18, sz.x * C, sz.y * C), "slot": true, "title": SLOT_TITLE[s]})
 		if s == "armor":
 			var hs: Vector2i = SLOT_CELLS["helmet"]
 			out.append({"loc": "helmet", "rect": Rect2(40 + sz.x * C + 12, y + 18, hs.x * C, hs.y * C), "slot": true, "title": SLOT_TITLE["helmet"]})
+		if s == "utility1":
+			var us: Vector2i = SLOT_CELLS["utility2"]
+			out.append({"loc": "utility2", "rect": Rect2(40 + sz.x * C + 12, y + 18, us.x * C, us.y * C), "slot": true, "title": SLOT_TITLE["utility2"]})
 		y += 18 + sz.y * C + 10
 	y = 60.0
 	for g in [["rig_g", "RIG"], ["pockets", "POCKETS"], ["pack_g", "BACKPACK"]]:

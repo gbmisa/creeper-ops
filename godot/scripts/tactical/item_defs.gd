@@ -71,6 +71,11 @@ const ROWS := {
 		"use": {"time": 4.0, "effect": "feed", "amount": 0.6, "dehydration": -0.2}},
 	"med_stim": {"name": "Combat stim", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
 		"use": {"time": 2.0, "effect": "stim", "dur": 20.0, "mult": 2.0}},
+	"util_grapple": {"name": "Grappling hook", "kind": "utility", "w": 2, "h": 2, "kg": 1.1},
+	"util_frag": {"name": "Frag grenade", "kind": "utility", "w": 1, "h": 1, "kg": 0.4},
+	"util_smoke": {"name": "Smoke grenade", "kind": "utility", "w": 1, "h": 1, "kg": 0.5},
+	"util_flash": {"name": "Flashbang", "kind": "utility", "w": 1, "h": 1, "kg": 0.3},
+	"util_binoculars": {"name": "Binoculars", "kind": "utility", "w": 2, "h": 1, "kg": 0.8},
 }
 ## Quick-use bar order: card n is bound to t_slot_(4 + n).
 const QUICK := ["med_ifak", "med_bandage"]

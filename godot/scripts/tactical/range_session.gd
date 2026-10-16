@@ -26,6 +26,7 @@ var saved_kit: Dictionary:
 		_carried = v
 ## The kit the player walked into Skirmish with ({} = starter kit); Restart reloads it (static, like _carried).
 static var _walked_in := {}
+var util := UtilState.new()  # thrown grenades, smoke volumes, grapple hooks (server-owned in MP-2)
 var _seed_counter := 0
 
 
