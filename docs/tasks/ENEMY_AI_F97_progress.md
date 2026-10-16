@@ -1,6 +1,6 @@
 # F97 progress: enemy squad tactics (`feat/enemy-ai`)
 
-## Phase A — contact memory + fuzzy hearing + forget/defend (commit TBD)
+## Phase A — contact memory + fuzzy hearing + forget/defend (commit `92fce9b9`)
 
 **What each kind does now:** unchanged in a straight fight; the difference is what they *remember*. A heard shot gives every kind a fuzzy contact (never the exact spot), losing sight grows the error instead of a perfect last-known, and bots that search too long give up to a defensive post instead of patrolling back.
 
