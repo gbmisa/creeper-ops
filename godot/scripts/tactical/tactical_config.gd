@@ -33,6 +33,10 @@ const ARM_LOSS := {
 	1: {"sway": 2.0, "reload": 1.25, "ads": 1.25, "recoil": 1.15, "breath": false},
 	2: {"sway": 3.5, "reload": 1.6, "ads": 1.5, "recoil": 1.3, "breath": false},
 }
+## P10: walk-speed multiplier while any leg is blacked out (0 HP). Player and bots; two blacked legs do not stack.
+const LEG_BLACKED_SPEED := 0.6
+## P13: damage multiplier on the player's head from bullets (bots' hits on the player only; bots' own heads unchanged).
+const PLAYER_HEAD_MULT := 0.5
 const ARMOR_RICOCHET_GLANCE_DEG := 25.0
 
 # Gun handling

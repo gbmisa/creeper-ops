@@ -13,6 +13,7 @@ var armor := {}  # zone -> {"id", "dur"}
 var bleeds: Array = []  # {"zone", "rate"}
 var dead := false
 var rng := RandomNumberGenerator.new()
+var head_mult := 1.0  # P13: the player sets TacticalConfig.PLAYER_HEAD_MULT; applied to bullets that get through
 
 
 func _init() -> void:
@@ -49,9 +50,10 @@ func total_frac() -> float:
 	return cur / mx
 
 
-## Walk speed multiplier from injuries. 1.0: nothing slows you since fractures were removed (CHANGES P10 is the
-## open question of whether leg damage should).
+## Walk speed multiplier from injuries (P10): a blacked-out leg slows you; two legs do not stack.
 func move_mult() -> float:
+	if hp["lleg"] <= 0.0 or hp["rleg"] <= 0.0:
+		return TacticalConfig.LEG_BLACKED_SPEED
 	return 1.0
 
 
@@ -98,6 +100,8 @@ func shoot(zone: String, shot: Dictionary) -> Dictionary:
 			info["bleed"] = "heavy"
 		elif rng.randf() < shot.get("lbleed", 0.15):
 			info["bleed"] = "light"
+	if zone == "head":
+		dmg *= head_mult
 	var res := hit(zone, dmg, info)
 	res["result"] = verdict
 	res["armor_dur"] = armor_left
