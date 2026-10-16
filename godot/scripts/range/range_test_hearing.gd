@@ -32,6 +32,7 @@ static func run(t: RangeTest) -> void:
 	t.check("hearing: a shot makes the bot alert", bot.percept.alerted())
 	bot.think(1.0 / 60.0)
 	t.check("hearing: alert bot takes cover from the shot (%s)" % bot.brain.state, bot.brain.state == BotBrain.COVER and bot.cover_pos.distance_to(stub.covers[0]) < 0.01)
+	t.check("hearing: the shot contact is fuzzy, not the exact spot", bot.percept.contact.pos.distance_to(Vector3(shot.x, 0.0, shot.z)) > 0.001)
 	var calm := BotPerception.new()
 	var alert := BotPerception.new()
 	alert.alert_t = 10.0
@@ -50,8 +51,12 @@ static func run(t: RangeTest) -> void:
 
 
 ## F88: a bot that took cover from a heard shot fights as soon as it is aware; a bot covering from a fight does not.
+## F97: a forgotten contact in Search goes to a defensive Hold, and a calm holding bot patrols again.
 static func brain_checks(t: RangeTest) -> void:
 	var f := {"aware": true, "seeing": true, "shot_cover": true, "arrived": false}
 	t.check("hearing: running to cover from a shot, aware -> Engage", BotBrain.next(BotBrain.COVER, f) == BotBrain.ENGAGE)
 	f["shot_cover"] = false
 	t.check("hearing: covering from a fight keeps running to cover", BotBrain.next(BotBrain.COVER, f) == BotBrain.COVER)
+	t.check("contact: forgotten in Search -> Hold", BotBrain.next(BotBrain.SEARCH, {"forgotten": true}) == BotBrain.HOLD)
+	t.check("contact: Hold, calm and arrived -> Patrol", BotBrain.next(BotBrain.HOLD, {"arrived": true, "calm": true}) == BotBrain.PATROL)
+	t.check("contact: Hold, aware -> Engage", BotBrain.next(BotBrain.HOLD, {"aware": true}) == BotBrain.ENGAGE)

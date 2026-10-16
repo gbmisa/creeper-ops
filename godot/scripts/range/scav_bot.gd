@@ -47,6 +47,9 @@ var cd := 0.0
 var react_t := 0.0   # F18: rolled per engagement; the bot will not fire at a seen target before sight_t passes this
 var cover_t := 0.0
 var shot_cover := false  # F88: current TakeCover was entered from a heard shot
+var squad: BotSquad  # F97 phase C: this bot's squad plan (shared with its members)
+var squad_role := BotSquad.ROLE_HOLD  # this bot's current role in the plan
+var combat := BotCombat.new()  # F97 phase D: the fight-from-cover loop state
 var _dying := false
 var _go_age := 0.0
 var stuck_win := 0.0  # F91 (BotUnstick): time in the current progress window
@@ -122,7 +125,7 @@ func _on_noise(pos: Vector3, radius: float, kind: String, src: Object) -> void:
 		return
 	if global_position.distance_to(pos) <= radius:
 		var shot := kind == "shot"
-		percept.hear(pos, shot)
+		percept.hear(pos, shot, global_position.distance_to(pos), rng)
 		if shot and not percept.seeing:  # F87: snap round to the shot so the view cone checks it now
 			var d := _flat(pos - global_position)
 			if d.length() > 0.05:
@@ -164,6 +167,9 @@ func think(dt: float, over := {}) -> void:
 		winding = false
 		mesh.glint(false)
 	_sense(dt)
+	if squad != null and (percept.shot_new or percept.noise_new):
+		squad.invalidate()  # F97 phase C: new info re-plans the squad now
+	_squad_tick(dt)
 	var f := _facts()
 	f.merge(over, true)
 	var from := brain.state
@@ -175,11 +181,13 @@ func think(dt: float, over := {}) -> void:
 	if to != "":
 		if from == BotBrain.HEAL and to == BotBrain.SEARCH:
 			body.heal(0.4)
-		shot_cover = to == BotBrain.COVER and from in [BotBrain.PATROL, BotBrain.INVESTIGATE]
+		shot_cover = to == BotBrain.COVER and from in [BotBrain.PATROL, BotBrain.INVESTIGATE, BotBrain.HOLD]
 		_enter(to)
 		print("[bot] ", label_name, " ", from, " -> ", to)
 		state_changed.emit(self, from, to)
-	_act()
+	if brain.state not in [BotBrain.ENGAGE, BotBrain.COVER]:
+		combat.active = false  # F97 phase D: the cover loop only runs in ENGAGE/COVER
+	_act(dt)
 
 
 func _sense(dt: float) -> void:
@@ -189,6 +197,7 @@ func _sense(dt: float) -> void:
 		percept.seeing = false
 		percept.aware = false
 		percept.since_seen = 99.0
+		percept.tick(dt)  # F97: the contact still ages with no player to sense
 		return
 	var head := player.eye_pos()
 	var chest := player.global_position + Vector3(0, 0.85 if player.crouching else 1.3, 0)
@@ -198,6 +207,13 @@ func _sense(dt: float) -> void:
 
 func _facts() -> Dictionary:
 	return BotShooting.facts(self)
+
+
+## F97 phase C: resolve this bot's squad, re-plan on the timer/events, read its role.
+func _squad_tick(dt: float) -> void:
+	if session == null:
+		return
+	BotSquad.tick_bot(session, self, dt)
 
 
 func _find_cover() -> void:
@@ -227,10 +243,30 @@ func _enter(s: String) -> void:
 			_go(percept.last_known + side)
 		BotBrain.SEARCH:
 			_go(percept.last_known)
+		BotBrain.HOLD:
+			# F97: defensive post = best scored cover (no live threat: the contact is forgotten).
+			# No markers (e.g. overwatch): hold position.
+			var post := BotCover.pick(self, squad)
+			if post != BotCover.NO_COVER:
+				_go(post)
+				BotCover.claim(session, self, post, BotCover.threat_pos(self))
+			else:
+				_has_target = false
 	mesh.scale.y = 0.8 if s == BotBrain.HEAL else 1.0
 
 
-func _act() -> void:
+func _at_cover() -> bool:
+	if not has_cover:
+		return false
+	return Vector2(global_position.x - cover_pos.x, global_position.z - cover_pos.z).length() < 1.5
+
+
+## F97 phase D: the cover loop runs when active, or when at cover with a live contact.
+func _in_combat() -> bool:
+	return combat.active or (has_cover and percept.contact.has() and _at_cover())
+
+
+func _act(dt: float) -> void:
 	var s := brain.state
 	if gun.mag.count() == 0 and gun.chamber == "" and not gun.busy():
 		if not gun.reload(false):
@@ -246,7 +282,13 @@ func _act() -> void:
 		BotBrain.PATROL:
 			BotEngage.patrol(self)
 		BotBrain.ENGAGE:
-			BotEngage.engage(self)
+			if _in_combat():
+				BotCombat.tick(self, dt)  # F97 phase D: fight from cover (peek/hide/reposition)
+			else:
+				BotEngage.engage(self)
+		BotBrain.COVER:
+			if _in_combat():
+				BotCombat.tick(self, dt)  # arrived at cover with a contact: fight from it
 		BotBrain.SUPPRESS:
 			if percept.has_last:
 				_shoot_at(percept.last_known + Vector3(rng.randf_range(-1.2, 1.2), 0.2, rng.randf_range(-1.2, 1.2)))
@@ -295,6 +337,7 @@ func _die(impulse := Vector3.ZERO, zone := "") -> void:
 	if _dying:
 		return
 	_dying = true
+	BotCover.release(session, self)  # F97: free the cover reservation
 	for z in rig:
 		(rig[z] as CollisionObject3D).collision_layer = 0
 	collision_layer = 0

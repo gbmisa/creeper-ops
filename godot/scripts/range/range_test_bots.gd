@@ -60,7 +60,8 @@ static func _pure() -> void:
 		[{"aware": true, "seeing": true, "hurt": true, "hp": 0.6, "cover": true}, 0.1, "TakeCover"],
 		[{"arrived": true, "hp": 0.4, "seeing": false}, 0.1, "Heal"],
 		[{"hp": 0.4}, 5.2, "Search"],
-		[{"arrived": true}, 4.5, "Patrol"],
+		[{"forgotten": true}, 0.1, "Hold"],  # F97: gave up the search -> defensive post, not patrol
+		[{"arrived": true, "calm": true}, 0.1, "Patrol"],
 		[{"ally_engaged": true, "has_last": true}, 0.1, "Flank"],
 		[{"aware": true, "seeing": true}, 0.1, "Engage"],
 		[{"seeing": false, "since_seen": 3.0, "ally_flank": true}, 0.1, "Suppress"],
@@ -146,8 +147,7 @@ static func _hearing() -> void:
 
 static func _cover_heal() -> void:
 	var b := _bot(Vector3(-9, 0, -8))
-	b.percept.last_known = house.to_global(Vector3(-14, 0, -4))
-	b.percept.has_last = true
+	b.percept.contact.sight(house.to_global(Vector3(-14, 0, -4)))  # F97: the threat is a contact now
 	b._find_cover()
 	var ok := b.has_cover and b.covers.has(b.cover_pos)
 	if ok:

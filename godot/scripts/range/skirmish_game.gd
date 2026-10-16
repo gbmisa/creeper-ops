@@ -74,6 +74,7 @@ func spawn_enemies() -> void:
 			bots[i].ally = bots[a]
 			if bots[a].ally == null:
 				bots[a].ally = bots[i]
+	session.bots = bots.duplicate()
 
 
 func _spawn(kind: String, pos: Vector3, route: Array[Vector3], idx: int) -> ScavBot:
