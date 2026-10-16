@@ -27,10 +27,6 @@ const FRAG_MIN_PEN := 20.0
 const FRAG_DMG_MULT := 1.5
 const LIGHT_BLEED_DPS := 0.8
 const HEAVY_BLEED_DPS := 2.4
-const FRACTURE_MIN_DMG := 25.0
-const FRACTURE_CHANCE := 0.35
-const LEG_FRACTURE_SPEED := 0.6
-const ARM_FRACTURE_SWAY := 1.0
 ## P9: penalties by the number of blacked-out arms (player and bots). Multipliers on aim sway, reload time,
 ## ADS raise time and recoil; `breath` false = no breath hold. Bots read sway as aim spread and ads as reaction time.
 const ARM_LOSS := {

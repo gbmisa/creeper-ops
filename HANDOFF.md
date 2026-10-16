@@ -9,7 +9,8 @@ Blender MCP registered (user scope). After pulling new `class_name` files: `godo
 - **P9 arm loss APPROVED + built** (player and bots): `TacticalConfig.ARM_LOSS`, `BodyHealth.arms_down/arm_loss`.
 - Meds crate -> IFAK + bandage into the inventory; quick-use keys 4/5 (`QuickUse`, `QuickBar`).
 - Skirmish MAP-2 layout (`docs/tasks/SKIRMISH_MAP2.md`): CQC old town west, open east, cover kind `container`.
-- CHANGES.md: new **P10** (bots ignore leg damage) and **P11** (arm fracture sway is dead code), waiting for Gregory.
+- CHANGES.md: **P10** (bots ignore leg damage) waits for Gregory. **P11 ruled: no fractures at all** -> removed
+  everywhere (session B): no fracture roll, no x0.6 leg slow, no arm sway; `BodyHealth.move_mult()` returns 1.0.
 - Known: kill-house navmesh doorway check can fail (pre-existing); barracks north door split by the inner wall.
 
 ## Session B (reloads + F89-F93 + merges)
@@ -36,4 +37,4 @@ Not verified: Gregory's play of any of this; bots over a full match on MAP-2; GP
 1. (done) feat/fb-reload pushed incl. a0b68d6, bfd4aad, 41dad3e.
 2. Reloads: review the WIP sheets, judge round 2 for the 4 rifles' empty + fast, then commit. Then sniper (AXMC, bones),
    M4A1 (`ar` plan; ask Gregory about hiding his posed arms during reloads), then tube / en-bloc / revolver plans.
-3. Gregory rules on CHANGES P10 / P11 and plays Skirmish (MAP-2, F90-F93).
+3. Gregory rules on CHANGES P10 (only option B left: blacked legs slow) and plays Skirmish (MAP-2, F90-F93).
