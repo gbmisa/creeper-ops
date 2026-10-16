@@ -207,7 +207,7 @@ func _process(delta: float) -> void:
 	model.rotation = _base_rot
 	if _room < 0.0 and a > 0.0:
 		_room = RecoilEyeRoom.room(model, _full)
-	var rx := recoil_xform(weapons.recoil, _room / maxf(a, 1e-3) if _room >= 0.0 else RecoilEyeRoom.FREE)
+	var rx := recoil_xform(weapons.recoil, a, _room / maxf(a, 1e-3) if _room >= 0.0 else RecoilEyeRoom.FREE)
 	if rx != Transform3D.IDENTITY:
 		model.transform = model.transform * rx
 	if not _posed:
@@ -216,10 +216,14 @@ func _process(delta: float) -> void:
 
 ## The recoil's turn and kick back in the gun's own frame (identity at rest, so the FB-H poses are untouched).
 ## `room`: the drawn kick back eases into it (RecoilEyeRoom; the room at full ADS over the ADS amount).
-static func recoil_xform(rm: RecoilModel, room := RecoilEyeRoom.FREE) -> Transform3D:
+static func recoil_xform(rm: RecoilModel, ads := 0.0, room := RecoilEyeRoom.FREE) -> Transform3D:
 	var w := rm.weapon_rot()
 	var rel := rm.barrel - rm.view_offset()   # the barrel angle the view did not take (deg)
-	var back := RecoilEyeRoom.soften(rm.weapon_pos().y, room)
+	var back := rm.weapon_pos().y
+	var cap: float = rm.row.get("draw_back_max", 0.0)   # per-gun picture cap (F73), halved at full ADS like the classic kick
+	if cap > 0.0:
+		back = RecoilEyeRoom.soften(back, cap * (1.0 - 0.5 * ads))
+	back = RecoilEyeRoom.soften(back, room)
 	if rel.length_squared() < 1e-12 and absf(w.y) < 1e-6 and absf(back) < 1e-7:
 		return Transform3D.IDENTITY
 	var piv: Vector3 = rm.row["pivot"]

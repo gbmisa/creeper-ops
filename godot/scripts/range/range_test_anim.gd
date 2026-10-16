@@ -40,6 +40,7 @@ static func _sustained(t: RangeTest, r: Dictionary, id: String, ads: bool, shots
 	var gap: float = 60.0 / float(w.gun.def["rpm"])
 	var worst := rest
 	var maxback := 0.0
+	var climb := []
 	var since := gap
 	var fired := 0
 	for i in int((shots * gap + 1.0) / STEP):
@@ -47,6 +48,7 @@ static func _sustained(t: RangeTest, r: Dictionary, id: String, ads: bool, shots
 			RangeTestAttach._fire(w)
 			fired += 1
 			since = 0.0
+			climb.append(snappedf(w.recoil.view_offset().length(), 0.01))
 		PlayerRecoil.tick(w, STEP)
 		vm._process(STEP)
 		since += STEP
@@ -54,6 +56,9 @@ static func _sustained(t: RangeTest, r: Dictionary, id: String, ads: bool, shots
 		maxback = maxf(maxback, absf(back))
 		worst = minf(worst, RangeTestRecoilEye._clear(vm, cam, tris))
 	w.trigger_held = false
+	print("[range] climb ", id, " ads=", ads, " ", climb)
+	if not ads:
+		t.check("anim: %s hip drawn kick back stays near the hands (max %.1f cm <= 5)" % [id, maxback * 100.0], maxback <= 0.05)
 	t.check("anim: %s %s %d-shot auto keeps the eye %.1f cm clear (rest %.1f, max back %.1f cm)"
 		% [id, "ADS" if ads else "hip", shots, worst * 100.0, rest * 100.0, maxback * 100.0],
 		worst >= TacticalConfig.ADS_EYE_CLEAR - 1e-4)
