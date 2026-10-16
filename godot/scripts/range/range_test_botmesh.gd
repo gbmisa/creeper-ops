@@ -25,6 +25,7 @@ static func run(t: RangeTest, session: RangeSession, house: Node3D, player: Tact
 		b.queue_free()
 	await _death_physics(t, session, house, player)
 	await sleep_pose(t, session, house, player)
+	await RangeTestRagdoll.run(t, session, house, player)
 
 
 ## Killing shot with a +X impulse: the pelvis is thrown +X, comes to rest low, and no bone ends
