@@ -5,7 +5,7 @@ class_name RecoilEyeRoom
 ## Only the picture: the recoil model, the bullets and the view are untouched.
 
 const NEAR := 0.08     # triangle search margin around the eye's kick-back path (> ADS_EYE_CLEAR)
-const MAX_BACK := 0.12 # search limit (m); a gun with more room than this is never limited
+const MAX_BACK := 0.40 # search limit (m); a gun with more room than this is never limited (F73: the Glock 18 kicks back 0.22 m)
 const FREE := 1.0e9    # "no limit"
 const STEP := 0.001    # search step (m)
 const KNEE := 0.6      # kick back below this share of the room is drawn unchanged
@@ -15,6 +15,7 @@ const KNEE := 0.6      # kick back below this share of the room is drawn unchang
 static func room(model: Node3D, pose: Transform3D) -> float:
 	var eye := pose.affine_inverse() * Vector3.ZERO   # the eye in model space
 	var tris := near_tris(model, eye)
+
 	if tris.is_empty():
 		return FREE
 	var clear := TacticalConfig.ADS_EYE_CLEAR

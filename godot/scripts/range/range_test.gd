@@ -54,6 +54,8 @@ func run() -> void:
 	await RangeTestAttach.run(self)
 	await RangeTestRecoilWire.player(self)
 	await RangeTestRecoilEye.run(self)
+	await RangeTestAnim.run(self)
+	await RangeTestAnim.garand(self)
 	await RangeTestFire.run(self)
 	await RangeTestFbc.run(self)
 	if failed == 0:

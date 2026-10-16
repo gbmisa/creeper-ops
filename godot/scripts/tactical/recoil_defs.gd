@@ -69,7 +69,9 @@ const AK := {
 ## how it was"): fitted to the classic model's auto curve (up 2.4, ergo 88: climb 1.78 / 2.96 / 3.75 .. 5.3 deg
 ## at shots 2 / 3 / 4 .. 15, back to 1.8 deg 0.25 s after release), aimed muzzle and hip view weighted equally.
 const GUN_ROWS := {
-	"glock18": {"force_up": 165.0, "convergence": 3.2, "damping": 0.78, "stable_shot": 3},
+	# draw_back_max: the drawn kick back (m, picture only) eases into this at the hip. 0.047 = the classic model's
+	# spring peak at 1100 rpm (F73); the AK-scaled position kick drew 8 cm at the first shots and up to 23 cm.
+	"glock18": {"force_up": 165.0, "convergence": 3.2, "damping": 0.78, "stable_shot": 3, "draw_back_max": 0.047},
 }
 
 ## Tuning-panel overrides by gun id (phase 2 writes here); merged over the scaled row.
