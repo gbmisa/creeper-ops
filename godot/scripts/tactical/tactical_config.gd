@@ -78,6 +78,9 @@ const VM_Z_CLIP := 0.3  # z_clip_scale on every viewmodel material, so the gun n
 const DEATH_IMPULSE := 250.0  # N·s on the hit bone for a killing shot, scaled by bullet damage
 const DEATH_IMPULSE_REF_DMG := 57.0  # reference rifle-round damage for the scaling
 const RAGDOLL_SLEEP := 4.0  # s after death before ragdoll bones freeze (0 = never)
+const RAGDOLL_LIMIT := 0.35  # F77: ragdoll joint ranges (swing/twist/hinge) as a fraction of the anatomical table
+const RAGDOLL_LIN_DAMP := 1.0  # per-second linear damping of ragdoll bones (was 0.4)
+const RAGDOLL_ANG_DAMP := 4.0  # per-second angular damping of ragdoll bones (was 1.2)
 const RAGDOLL_NUDGE := 25.0  # N·s topple nudge on a bleed-out death (no kill impulse)
 const DEAD_GUN_MASS := 3.0  # kg, the dropped gun's rigid body
 const DEAD_GUN_TOSS := 1.5  # upward impulse (N·s) on the dropped gun
