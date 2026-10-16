@@ -2,9 +2,9 @@ class_name RangeTestReload
 ## FB-R: procedural reloads (ReloadTimeline). Per gun with a ReloadAnims rig, plain / fast / empty: the timeline
 ## lasts the logic's reload time, the Mag node leaves the gun and comes back seated, the marks fire, the left wrist
 ## stays on its target (within IK reach) every frame, the bolt/slide starts home and the mag never teleports, and at the end both hands are on their grips and the bolt or
-## slide is home. The split leaves the gun mesh's AABB as the glb had it.
+## slide (bone or region-cut part) is home. The split leaves the gun mesh's AABB as the glb had it.
 
-const IDS := ["ak47", "m1911"]
+const IDS := ["ak47", "m1911", "glock18", "mp5", "p90"]
 const STEP := 1.0 / 60.0
 
 
@@ -44,6 +44,9 @@ static func _one(t: RangeTest, id: String, label: String, fast: bool, empty: boo
 	gun.position = TacticalViewmodel.base_pos(def, aabb0.size.z * 0.5, 0.0)
 	var seat := tl.mag.transform
 	var bone_rest := tl.skel.get_bone_global_pose(tl.bone) if tl.bone >= 0 else Transform3D.IDENTITY
+	var part_rest := tl.part.transform if tl.part != null else Transform3D.IDENTITY
+	if ReloadAnims.rig(def).has("bolt_box"):
+		t.check(n + ": slide cut out as its own part", tl.part != null)
 	var marks: Array[String] = []
 	tl.mark.connect(func(m: String): marks.append(m))
 	tl.start(secs, empty, fast)
@@ -72,6 +75,8 @@ static func _one(t: RangeTest, id: String, label: String, fast: bool, empty: boo
 	t.check(n + ": mag back seated", tl.mag.transform.is_equal_approx(seat))
 	if tl.bone >= 0:
 		t.check(n + ": bolt / slide home", tl.skel.get_bone_global_pose(tl.bone).origin.distance_to(bone_rest.origin) < 0.0001)
+	if tl.part != null:
+		t.check(n + ": slide part home", tl.part.transform.is_equal_approx(part_rest))
 	var gt := gun.global_transform
 	var dl: float = arms.target["l"].distance_to(gt * (def["grip_l"] as Vector3))
 	var dr: float = arms.target["r"].distance_to(gt * (def["grip_r"] as Vector3))

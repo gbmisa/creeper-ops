@@ -102,3 +102,31 @@ snaps back at the start of an empty reload.
 - Sheets regenerated (12-20 frames, labelled phase + time): `docs/art/reload/*.jpg`. Maker script was a scratch
   python (strip + PIL join), not committed.
 - Verified: parse clean, range OK 624 / 0 FAIL, smoke 0 FAIL.
+
+## Builder pass A2b (2026-10-15): AK47 empty round-2 fixes + glock18 / mp5 / p90
+- `ReloadRigs` (new, `scripts/range/reload_rigs.gd`): the per-gun RIGS table moved out of ReloadAnims (size).
+- AK47 empty: `charge_takes` is now {phase: share}; AK takes all of `hold` + 60% of `fetch`, so the swing into the
+  rack (`reach`) is 0.31 s smoothstep. Rack pose keeps the side-on yaw (gr (0.10, 0.85, 0.65): yaw up from 0.55,
+  right side rolled up ~37 deg). Bolt travel 0.075 -> 0.09; hand anchor 4 cm ahead of the handle so the handle
+  shows behind the fingers. Learned: with the muzzle yawed left the camera sees the LEFT side, so the right side can
+  never face the camera; muzzle-right or big rolls put the gun end-on / the stock across the view (tried, rejected).
+  The hand now reads as an overhand rack over the receiver top, travelling back ~9 cm over ~0.08 s, snapping home.
+- Mag split for static meshes (glock18, mp5 have no skeleton): `ReloadMag.cut_box(glb, AABB, name)` moves the
+  triangles wholly inside a gun-model-space region (rig `mag_box`) into a node beside the mesh (same transform);
+  the gun mesh keeps its full vertex arrays + custom_aabb, so AABB / origin / orientation are unchanged (range
+  check). Glock: the grip has no mag body, so `mag_box` takes the base plate and `mag_body` adds a box hidden
+  inside the grip (covered by the right hand at idle). Glock slide: `bolt_box` cut -> `ReloadTimeline.part`, moved by
+  `travel` (4 cm). glb files untouched; no Blender edit needed. P90 has a Magazine bone: the existing split works.
+- Timeline: `charge_pre` (empty-only phases before the mag change, sharing the charge time), rig `hands`
+  overrides, `phase()` for sheet labels, part support (no bone).
+- Plans: `hk` (MP5: paddle, slight rock; empty = HK slap: handle cocked back + locked first, slapped home at the
+  end; no handle part, the hand carries it), `bullpup` (P90: rear of the top mag lifted, pulled off backward; new
+  one laid on in front, pulled back + pressed down; empty = left hand pulls the side handle). Glock uses `pistol`
+  (slide lock on empty, slide released at the end).
+- `range_shot --strip` now adds a spare mag for the held gun (the range kit only has starter mags) and prints the
+  phase name. RangeTestReload covers glock18 / mp5 / p90 (+ slide part cut + home).
+- Sheets: `docs/art/reload/ak47_empty.jpg`, `{glock18,mp5,p90}_{plain,fast,empty}.jpg`. Maker scripts
+  (`~/fbr_tmp/sheet.sh`, `join.py`; zoom crops `zoom.sh`/`crop.py`) are scratch, not committed.
+- Builder notes for the judge: MP5 lock-up of the handle has no hand twist (no handle part); P90 mag is low
+  contrast and the left hand covers part of it from the eye; glock / 1911 support hand still large.
+- Verified: parse clean, range OK 720 / 0 FAIL, smoke 0 FAIL.

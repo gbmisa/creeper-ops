@@ -100,6 +100,12 @@ func run(app: FiringRange) -> void:
 ## (software GL) frames still land within a few ms of each requested time.
 func _strip(app: FiringRange, times: PackedStringArray, path: String, fast: bool) -> void:
 	Engine.time_scale = 0.05
+	var gid: String = app.weapons.gun.def["id"]
+	for id in ItemDefs.ROWS:  # a spare mag for this gun (the range kit only carries the starter guns' mags)
+		if ItemDefs.ROWS[id]["kind"] == "mag" and ItemDefs.ROWS[id].get("gun", "") == gid:
+			app.weapons.inv.add(app.weapons.inv.make(id))
+			break
+	app.weapons.refill_mags()
 	app.weapons.start_reload(fast)
 	var t := 0.0
 	print("[range] reload secs ", app.weapons.gun.busy_t)
@@ -110,5 +116,9 @@ func _strip(app: FiringRange, times: PackedStringArray, path: String, fast: bool
 		await RenderingServer.frame_post_draw
 		var out := path.get_basename() + "_%02d.png" % i
 		app.get_viewport().get_texture().get_image().save_png(out)
-		print("[range] shot saved ", out.get_file(), " at ", snappedf(t, 0.01))
+		var tl: ReloadTimeline = null
+		for c in app.player.cam.get_children():
+			if c is TacticalViewmodel:
+				tl = (c as TacticalViewmodel).reload_tl
+		print("[range] shot saved ", out.get_file(), " at ", snappedf(t, 0.01), " phase ", tl.phase() if tl != null else "-")
 	Engine.time_scale = 1.0
