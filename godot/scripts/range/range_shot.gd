@@ -5,7 +5,7 @@ extends Node
 ## Gives the weapon, optionally fires N shots, waits, saves the viewport, quits.
 
 
-func run(app: FiringRange) -> void:
+func run(app: TacticalScene) -> void:
 	var a := app.args
 	var w: PlayerWeapons = app.weapons
 	if a.has("weapon"):
@@ -103,7 +103,7 @@ func run(app: FiringRange) -> void:
 
 ## FB-R: frames through one reload, at the given game seconds after it starts. Time runs at 1/20 so slow
 ## (software GL) frames still land within a few ms of each requested time.
-func _strip(app: FiringRange, times: PackedStringArray, path: String, fast: bool) -> void:
+func _strip(app: TacticalScene, times: PackedStringArray, path: String, fast: bool) -> void:
 	Engine.time_scale = 0.05
 	var gid: String = app.weapons.gun.def["id"]
 	for id in ItemDefs.ROWS:  # a spare mag for this gun (the range kit only carries the starter guns' mags)
