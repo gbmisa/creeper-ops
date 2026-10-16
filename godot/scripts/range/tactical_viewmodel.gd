@@ -37,6 +37,8 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	arms = FpArms.new()
 	add_child(arms)
 	ViewmodelClip.apply(arms, "Arms")
+	if w.gun != null:
+		_on_switched(w.gun)  # F20: select_slot in PlayerWeapons.setup fired before we connected
 
 
 func _on_switched(g: Gun) -> void:
