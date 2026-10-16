@@ -39,7 +39,7 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var o := Vector2(ORIGIN.x, get_viewport_rect().size.y - (900.0 - ORIGIN.y))  # kept above the bottom edge at any window size
+	var o := Vector2(ORIGIN.x, get_parent_area_size().y - (900.0 - ORIGIN.y))  # above the bottom edge of the safe zone it fills
 	if player == null:
 		return
 	var size_v := get_viewport_rect().size

@@ -21,6 +21,9 @@ var _status_lbl: Label
 var _tunnel := ColorRect.new()
 
 
+var frame := SafeZone.new()   # edge HUD pieces live in the user-set safe zone (ultra-wide)
+
+
 func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	weapons = w
 	player = p
@@ -30,10 +33,11 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	_tunnel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_tunnel)
 	add_child(scope)
+	add_child(frame)
 	var right := UiKit.panel(Color(0.04, 0.05, 0.07, 0.6))
 	_pin(right, Vector2(1, 1), Vector2(1330, 700))
 	right.custom_minimum_size = Vector2(250, 0)
-	add_child(right)
+	frame.add_child(right)
 	var col := VBoxContainer.new()
 	right.add_child(col)
 	_gun_lbl = UiKit.label("", 20)
@@ -43,7 +47,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 		col.add_child(l)
 	var left := UiKit.panel(Color(0.04, 0.05, 0.07, 0.6))
 	_pin(left, Vector2(0, 1), Vector2(20, 790))
-	add_child(left)
+	frame.add_child(left)
 	var bars := VBoxContainer.new()
 	left.add_child(bars)
 	bars.add_child(UiKit.caption("LEG STAMINA"))
@@ -62,7 +66,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	_help.position = Vector2(8, 8)
 	var h := UiKit.label(_help_text(), 11, Color(1, 1, 1, 0.75))
 	_help.add_child(h)
-	add_child(_help)
+	frame.add_child(_help)
 	_dot = ColorRect.new()
 	_dot.size = Vector2(4, 4)
 	_dot.color = Color(1, 1, 1, 0.8)
@@ -72,7 +76,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	add_child(_dot)
 	_status_lbl = UiKit.label("", 13, Color(1.0, 0.62, 0.4))
 	_pin(_status_lbl, Vector2(0, 1), Vector2(20, 690))
-	add_child(_status_lbl)
+	frame.add_child(_status_lbl)
 	w.message.connect(say)
 	p.message.connect(say)
 

@@ -60,6 +60,8 @@ const MECH := {
 	"garand": {"mag_out": "rifle_mag_out", "mag_in": "smg_mag_in", "action": "rifle_charge"},
 	"belt": {"mag_out": "belt_open", "mag_in": "lmg_belt_in", "action": "belt_close"},
 }
+## Extra dB per mechanical sample on top of RangeAudio.gun's -2 (samples recorded at different levels).
+const MECH_DB := {"shotgun_pump": -10.0}  # F123: the pump was far louder than the shotgun's shot
 const GUN_MECH := {
 	"m1911": "pistol", "glock18": "pistol", "revolver": "revolver", "mp5": "smg", "p90": "smg", "vector": "smg",
 	"ak47": "rifle", "m4a1": "rifle", "scarh": "rifle", "sks": "semi_auto", "garand": "garand", "sr25": "rifle",

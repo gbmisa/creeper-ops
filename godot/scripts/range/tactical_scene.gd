@@ -32,6 +32,8 @@ func map_id() -> String:
 
 func _ready() -> void:
 	Keybinds.persist = false
+	print("[build] ", BugReport.build_id())   # so every log says which build it came from
+	DisplaySettings.apply()
 	args = RangeArgs.parse()
 	if args.has("map"):
 		RangeMaps.pending = str(args["map"])
@@ -133,7 +135,7 @@ func _add_hud() -> RangeHud:
 	hud.setup(weapons, player)
 	hud.process_mode = Node.PROCESS_MODE_ALWAYS   # F19: HUD stays live while the pause menu freezes the world
 	var body_hud := RangeBodyHud.new()
-	hud.add_child(body_hud)
+	hud.frame.add_child(body_hud)
 	body_hud.setup(player)
 	quick = QuickUse.new()
 	add_child(quick)

@@ -64,6 +64,11 @@ func run(app: TacticalScene) -> void:
 	var impacts := []
 	app.bal.impact.connect(func(i): impacts.append(i))
 	await app.get_tree().create_timer(0.8).timeout
+	if a.has("menu"):  # --menu[=report]: Esc menu open (and the bug report panel) for the shot
+		app.menu.open()
+		if str(a["menu"]) == "report":
+			app.menu._panel.visible = false
+			app.menu.report.open()
 	var shots := int(a.get("fire", 0))
 	if a.has("burst"):   # FB-I: hold the trigger in auto through N shots; the picture is taken mid-burst (use --wait=0)
 		if (w.gun.def["modes"] as Array).has("auto"):

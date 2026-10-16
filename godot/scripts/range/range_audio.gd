@@ -107,7 +107,8 @@ static func shot(gun_id: String, pos: Variant = null, suppressed := false, cal :
 
 
 static func gun(gun_id: String, ev: String, pos: Variant = null, cal := "", cls := "") -> bool:
-	return play(SoundDefs.gun_event(gun_id, ev, cal, cls), pos, -2.0)
+	var sample := SoundDefs.gun_event(gun_id, ev, cal, cls)
+	return play(sample, pos, -2.0 + float(SoundDefs.MECH_DB.get(sample, 0.0)))
 
 
 static func attach(att_id: String, ev: String) -> bool:

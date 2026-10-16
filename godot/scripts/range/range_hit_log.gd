@@ -14,7 +14,9 @@ func _init() -> void:
 	var p := UiKit.panel(Color(0.04, 0.05, 0.07, 0.55))
 	p.position = Vector2(8, 330)
 	p.custom_minimum_size = Vector2(430, 0)
-	add_child(p)
+	var frame := SafeZone.new()   # hit log + target panel stay inside the HUD safe zone
+	add_child(frame)
+	frame.add_child(p)
 	_lbl = UiKit.label("HIT LOG", 13, Color(0.92, 0.92, 0.85))
 	p.add_child(_lbl)
 	_tgt_panel = UiKit.panel(Color(0.04, 0.05, 0.07, 0.7))
@@ -25,7 +27,7 @@ func _init() -> void:
 	_tgt_panel.offset_top = 20.0
 	_tgt_panel.custom_minimum_size = Vector2(250, 0)
 	_tgt_panel.visible = false
-	add_child(_tgt_panel)
+	frame.add_child(_tgt_panel)
 	_tgt = UiKit.label("", 18)
 	_tgt_panel.add_child(_tgt)
 	_refresh()
