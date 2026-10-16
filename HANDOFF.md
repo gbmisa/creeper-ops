@@ -22,7 +22,7 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
   origin) and hitboxes follow the pose; BotBody plays crouch clips, rolls the spine, cants the gun 12 deg.
   Tunables `TacticalConfig.BOT_*`. Probe: leaned head bone +0.32 m vs hitbox +0.35 m; crouched head 1.10 vs 1.107.
 - Range suite 1114 pass / 0 fail (38 SCRIPT ERRORs: the known `ReloadTimeline 'lock'` spam, fixed by the WIP below).
-- **CHANGES P12** (hold cover longer while peeking; today cover lasts 1.5 s) waits for Gregory. Not pushed.
+- **CHANGES P12** (hold cover longer while peeking; today cover lasts 1.5 s) waits for Gregory. Pushed.
 
 ## Not yet ported from creeper-ops (do this before more on-foot work there)
 - Session B's **uncommitted reload WIP** (`reload_anims.gd`, `reload_rigs.gd`, `reload_timeline.gd`) is still in the
