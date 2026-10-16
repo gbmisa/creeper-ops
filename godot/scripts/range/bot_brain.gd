@@ -2,7 +2,7 @@ class_name BotBrain
 extends RefCounted
 ## Scav state machine. `next()` is a pure function of (state, facts), so it can be scripted in tests.
 ## Facts: aware, seeing, noise, since_seen, hp (0..1), hurt, reloading, arrived, cover (a cover spot exists),
-## outgunned, ally_engaged, ally_flank, has_last, t (seconds in this state).
+## outgunned, ally_engaged, ally_flank, has_last, shot (a gunshot was just heard), t (seconds in this state).
 
 const PATROL := "Patrol"
 const INVESTIGATE := "Investigate"
@@ -52,6 +52,8 @@ static func next(s: String, f: Dictionary) -> String:
 		PATROL, INVESTIGATE, SEARCH:
 			if aware:
 				return ENGAGE
+			if f.get("shot", false) and f.get("cover", false) and s != SEARCH:  # F87: under fire, get to cover first
+				return COVER
 			if f.get("noise", false) and s != INVESTIGATE:
 				return INVESTIGATE
 			if f.get("ally_engaged", false) and f.get("has_last", false):

@@ -110,11 +110,18 @@ func eye() -> Vector3:
 	return global_position + Vector3(0, EYE, 0)
 
 
-func _on_noise(pos: Vector3, radius: float, _kind: String, src: Object) -> void:
+func _on_noise(pos: Vector3, radius: float, kind: String, src: Object) -> void:
 	if body.dead or src is ScavBot or not is_inside_tree():
 		return
 	if global_position.distance_to(pos) <= radius:
-		percept.hear(pos)
+		var shot := kind == "shot"
+		percept.hear(pos, shot)
+		if shot and not percept.seeing:  # F87: snap round to the shot so the view cone checks it now
+			var d := _flat(pos - global_position)
+			if d.length() > 0.05:
+				rotation.y = atan2(-d.x, -d.z)
+			if cover_t <= 0.0:
+				_find_cover()
 
 
 ## Called by RangeFeedback with the Ballistics.body_hit dictionary.
@@ -154,7 +161,10 @@ func think(dt: float, over := {}) -> void:
 	f.merge(over, true)
 	var from := brain.state
 	var to := brain.update(dt, f)
+	if to == "" and percept.noise_new and brain.state in [BotBrain.INVESTIGATE, BotBrain.SEARCH]:
+		_go(percept.noise_pos)  # F87: a newer sound re-routes the bot
 	percept.noise_new = false
+	percept.shot_new = false
 	if to != "":
 		if from == BotBrain.HEAL and to == BotBrain.SEARCH:
 			body.heal(0.4)
@@ -194,6 +204,8 @@ func _enter(s: String) -> void:
 			# F18: reaction delay before the first aimed shot of this engagement.
 			var rc: Array = def.get("react", [0.5, 1.0])
 			react_t = rng.randf_range(float(rc[0]), float(rc[1]))
+			if percept.alerted():
+				react_t *= BotPerception.ALERT_REACT_MULT
 		BotBrain.INVESTIGATE:
 			_go(percept.noise_pos)
 		BotBrain.COVER:
