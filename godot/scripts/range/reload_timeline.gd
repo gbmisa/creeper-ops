@@ -9,6 +9,9 @@ signal mark(name: String)  # phase marks (mag_out, mag_hide, mag_show, mag_in, c
 var mag: MeshInstance3D
 var skel: Skeleton3D
 var bone := -1
+var part: MeshInstance3D  # region-cut slide / bolt (static meshes), null if the rig has a bone or none
+var _part_base := Transform3D.IDENTITY
+var _part_k := Transform3D.IDENTITY
 var _rig := {}
 var _def := {}
 var _k := Transform3D.IDENTITY
@@ -34,22 +37,23 @@ static func make(glb: Node, def: Dictionary) -> ReloadTimeline:
 	var r := ReloadAnims.rig(def)
 	if r.is_empty() or def["action"] != "detachable":
 		return null
-	var m := ReloadMag.split(glb)
+	var m := ReloadMag.split(glb, r)
 	if m == null:
 		return null
 	var tl := ReloadTimeline.new()
 	tl.mag = m
-	tl.skel = m.get_parent() as Skeleton3D
+	tl.skel = m.get_parent() as Skeleton3D  # null for a static mesh cut by region
 	tl._base = m.transform
 	tl._rig = r
 	tl._def = def
-	tl.bone = tl.skel.find_bone(str(r.get("bone", "")))
-	var k := Transform3D.IDENTITY  # skeleton -> glb root (the gun-model node's child), then the flip
-	var n: Node = tl.skel
-	while n != glb:
-		k = (n as Node3D).transform * k
-		n = n.get_parent()
-	tl._k = glb.transform * k
+	if tl.skel != null:
+		tl.bone = tl.skel.find_bone(str(r.get("bone", "")))
+	tl._k = ReloadMag.to_gun(m.get_parent(), glb)
+	if r.has("bolt_box"):  # static mesh: the slide / bolt is cut out by region and moved as a node
+		tl.part = ReloadMag.cut_box(glb, r["bolt_box"], "Slide")
+		if tl.part != null:
+			tl._part_base = tl.part.transform
+			tl._part_k = ReloadMag.to_gun(tl.part.get_parent(), glb)
 	return tl
 
 
@@ -57,22 +61,34 @@ func playing() -> bool:
 	return t < len
 
 
+## Name of the phase at the current time ("" when not playing): labels for frame sheets.
+func phase() -> String:
+	for ph in _phases:
+		if t < float(ph["t1"]):
+			return ph["n"]
+	return ""
+
+
 ## secs: the logic's busy time (includes CHAMBER_TIME when empty). empty: chamber was empty at the start.
 func start(secs: float, empty: bool, fast: bool) -> void:
 	var plan: Dictionary = ReloadAnims.PLANS[_rig["plan"]]
 	var extra := TacticalConfig.CHAMBER_TIME if empty else 0.0
 	var base := maxf(secs - extra, 0.05)
-	var list: Array = (plan["fast"] if fast else plan["plain"]).duplicate()
+	var list: Array = []
 	var charge_t := extra
-	if empty:  # "charge_takes": that base phase's time goes to the charge instead (smoother swing into it)
-		for p in list.duplicate():
-			if p["n"] == plan.get("charge_takes", ""):
-				charge_t += float(p["w"]) * base
-				list.erase(p)
+	var takes: Dictionary = plan.get("charge_takes", {}) if empty else {}
+	for p in (plan["fast"] if fast else plan["plain"]):  # "charge_takes": shares of base phases given to the charge
+		var share := float(takes.get(p["n"], 0.0))
+		charge_t += share * float(p["w"]) * base
+		if share < 1.0:
+			list.append(p.merged({"w": float(p["w"]) * (1.0 - share)}, true))
 	var steps := []
+	if empty:
+		for p in plan.get("charge_pre", []):  # charge before the mag change (HK: lock the handle back first)
+			steps.append([p, float(p["w"]) * charge_t])
 	for i in list.size():
 		if empty and i == list.size() - 1:
-			for p in plan["charge"]:
+			for p in plan.get("charge", []):
 				steps.append([p, float(p["w"]) * charge_t])
 		steps.append([list[i], float(list[i]["w"]) * base])
 	_phases.clear()
@@ -83,7 +99,7 @@ func start(secs: float, empty: bool, fast: bool) -> void:
 		for key in pose:
 			if s[0].has(key):
 				to[key] = s[0][key]
-		_phases.append({"t0": at, "t1": at + float(s[1]), "from": pose, "to": to, "ease": s[0].get("ease", "io"), "mark": s[0].get("mark", "")})
+		_phases.append({"n": s[0]["n"], "t0": at, "t1": at + float(s[1]), "from": pose, "to": to, "ease": s[0].get("ease", "io"), "mark": s[0].get("mark", "")})
 		at += float(s[1])
 		pose = to
 	len = at
@@ -173,7 +189,7 @@ func _anchor(name: String) -> Array:
 		_:
 			var pistol: bool = _def["class"] == "pistol"
 			return [_def["grip_l"], Vector3(0, 0, -1), Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)]
-	var hd: Dictionary = ReloadAnims.HANDS[name]
+	var hd: Dictionary = _rig.get("hands", {}).get(name, ReloadAnims.HANDS[name])
 	var f: Vector3 = (hd["f"] as Vector3).normalized()
 	var n: Vector3 = (hd["n"] as Vector3).normalized()
 	if name == "mag":
@@ -182,9 +198,11 @@ func _anchor(name: String) -> Array:
 	return [p - f * ReloadAnims.WRIST_BACK - n * ReloadAnims.WRIST_OFF, f, n]
 
 
-## Gun-model offsets onto the Mag node and the charging bone (both in skeleton space).
+## Gun-model offsets onto the Mag node and the charging bone or part (each in its parent's space).
 func _apply() -> void:
 	mag.transform = _k.affine_inverse() * mag_xf * _k * _base
 	if bone >= 0:
 		var tb := Transform3D(Basis.IDENTITY, (_rig["travel"] as Vector3) * bolt)
 		skel.set_bone_global_pose(bone, _k.affine_inverse() * tb * _k * _bone_rest)
+	if part != null:
+		part.transform = _part_k.affine_inverse() * Transform3D(Basis.IDENTITY, (_rig["travel"] as Vector3) * bolt) * _part_k * _part_base
