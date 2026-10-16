@@ -58,7 +58,7 @@ func is_on(n: String) -> bool:
 
 func state_text(n: String) -> String:
 	if DEFS[n]["kind"] == "cycle" and n == "time_scale":
-		return "%gx" % TIME_SCALES[time_scale_idx]
+		return "%sx" % str(TIME_SCALES[time_scale_idx])
 	return "ON" if is_on(n) else "OFF"
 
 
