@@ -3,7 +3,7 @@ class_name BotMotion
 
 
 static func speed(b: ScavBot) -> float:
-	return base_speed(b) * b.def["speed"]
+	return base_speed(b) * b.def["speed"] * b.body.move_mult()
 
 
 static func base_speed(b: ScavBot) -> float:
