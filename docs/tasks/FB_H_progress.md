@@ -28,3 +28,17 @@
   eye-to-rear distances; Opus tunes in Phase 3. `VM_Z_CLIP` 0.3. `ViewmodelClip` (range/viewmodel_clip.gd) sets z-clip on duplicated
   materials (gun glb, rig parts, posed arms, FpArms "Arms" mesh). `ads_near()`/`ADS_NEAR` removed; cam.near stays 0.03.
 - Tests: `RangeTestAds` (range/range_test_ads.gd): 83 gun x sight setups within 0.02 deg (worst 0.0007), pure math, z-clip.
+
+## Phase 3 - Opus, 2026-10-15 (done)
+- Sheet: `docs/art/ads/ads_sheet_fbh.jpg` (all 16 guns, irons; P90 red dot). Every gun's sights sit at screen centre.
+- Reference: TRP `docs/spec/weapon-handling.md` ("The sights"): Tarkov puts the eye on the line through the rear and
+  front sight, aimed by the rear sight's bone; AKM aim plane 0.08 m. Same rule as ours. No usable reference images found.
+- Relief tuned: aperture 0.1465 -> 0.08 (real AR / Tarkov eye relief; ring now reads large with the post inside),
+  pistol 0.138 -> 0.25 (held further out; hands below the slide). notch, optics, scope unchanged.
+- PKM: rear point was the notch bottom of a solid block (blocked the view). Modelled a U-notch blade on the block,
+  tops level with the front post (0.1408): notch-and-post picture, no pitch.
+- Verdicts: good: m4a1, scarh, sks, saiga12, mp5, vector, p90, sr25, pkm, ak47, glock18, revolver, m1911.
+  OK by the rule: mosin (small post over a big receiver), garand + shotgun (no rear sight: look down the receiver).
+  Open: garand rear aperture (rigged model), mp5/vector blocky bodies, `--weapon` hook still shows "put away" text on
+  pistols (shot hook only).
+- Range 558 OK.

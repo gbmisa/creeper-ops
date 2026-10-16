@@ -47,6 +47,11 @@ SPECS = {
 		("box", (-0.0177, 0.0980, -0.304), (-0.0157, 0.1200, -0.296)),
 		("box", (-0.0057, 0.0980, -0.304), (-0.0037, 0.1200, -0.296)),
 	],
+	"pkm": [  # U-notch leaf on the solid rear-sight block, blade tops level with the front post tip (0.1408)
+		("box", (-0.0290, 0.1300, 0.2850), (-0.0050, 0.1375, 0.2890)),
+		("box", (-0.0290, 0.1300, 0.2850), (-0.0185, 0.1408, 0.2890)),
+		("box", (-0.0155, 0.1300, 0.2850), (-0.0050, 0.1408, 0.2890)),
+	],
 }
 # PKM: fold the carry handle down to the left so the sight line is clear (no new sights).
 FOLD = {"pkm": {"y_min": 0.125, "y_tip": 0.137, "z": (-0.105, 0.128), "hinge": (0.010, 0.120), "deg": 115.0}}
