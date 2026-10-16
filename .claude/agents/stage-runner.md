@@ -1,6 +1,6 @@
 ---
 name: stage-runner
-description: Runs 1-2 phases of a Creeper Ops brief (docs/tasks/*.md) in its worktree, commits each phase with smoke green, updates the progress log, then stops. Use for every delegated implementation phase instead of general-purpose.
+description: Runs 1-2 phases of a Tactical Ops brief (docs/tasks/*.md) in its worktree, commits each phase with smoke green, updates the progress log, then stops. Use for every delegated implementation phase instead of general-purpose.
 model: sonnet
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---

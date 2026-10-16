@@ -28,7 +28,7 @@ func _init(won: bool, time_s: float, kills: int, total: int, session: RangeSessi
 	col.add_child(UiKit.label("EXTRACTED" if won else "KIA", 34, Color(0.5, 1.0, 0.6) if won else Color(1.0, 0.4, 0.35)))
 	col.add_child(UiKit.label("Time %d:%02d   Kills %d / %d" % [int(time_s) / 60, int(time_s) % 60, kills, total], 18))
 	buttons = [UiKit.button("Restart", func(): session.maps.change(session.maps.selected)),
-		UiKit.button("Level select", func(): get_tree().change_scene_to_file("res://scenes/main.tscn")),
+		UiKit.button("Level select", func(): get_tree().change_scene_to_file(TitleMenu.SCENE)),
 		UiKit.button("Back to Firing Range", func(): session.maps.change("range"))]
 	for b in buttons:
 		b.disabled = true

@@ -1,17 +1,18 @@
-# CLAUDE.md: Creeper Ops (working title)
+# CLAUDE.md: Tactical Ops (working title)
 
 ## Start of a session
-Read `HANDOFF.md` first. Read [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) only if HANDOFF points you there.
+Read `HANDOFF.md` first.
 **After every completed task (not only large ones), update `HANDOFF.md` without being asked**, so the user can `/clear`
 at any point and a fresh session resumes from it (**under 60 lines**: state, branch, how to run, what's verified and
 what isn't, uncommitted work, open issues, next steps). Several sessions may share this checkout: rewrite your own
 section, keep the others' current. End the reply with "HANDOFF.md updated, safe to /clear."
 
-## Current focus (2026-10-16): the on-foot tactical game
-Work is on the **Firing Range** and the **Skirmish** (Tarkov-style guns, inventory, recoil, ADS, bots, extraction).
-Gregory playtests them and logs feedback as F-numbers in `docs/playtests/feedback_<date>.md`.
-The command-mode tower defense (CW3 creeper, structures, castles) is **paused**. Its architecture, contracts and
-tests are in [docs/COMMAND_MODE.md](docs/COMMAND_MODE.md). Read it only when a task touches that side.
+## What this project is (split out 2026-10-16)
+The on-foot tactical game: **Firing Range** and **Skirmish** (Tarkov-style guns, inventory, recoil, ADS, bots,
+extraction). Gregory playtests them and logs feedback as F-numbers in `docs/playtests/feedback_<date>.md`.
+The creeper tower-defense game is a **separate project** (`../creeper ops`, github gbmisa/creeper-ops). This repo
+was split from it with its history (`git filter-repo`), same paths, so on-foot commits made there before the split
+lands port over with `git format-patch` / `git am`.
 
 ## Change only what Gregory asked for (hard rule)
 - Change only the behaviour he named. Everything else stays as it is: rules, numbers, timings, AI, UI, level data.
@@ -39,7 +40,7 @@ Default: **do small things yourself** (a few files, under ~30 min of work). Spaw
 | Data-only edits (numbers in a def table, level props, cover placement) | `feature-dev` | haiku |
 | One scoped feature or bug fix that follows an existing pattern | `feature-dev` | sonnet |
 | Phases of a written brief in `docs/tasks/` | `stage-runner` | sonnet |
-| New level content | `level-builder` | sonnet |
+| New map content (Skirmish layout, range props) | `feature-dev` | sonnet |
 | Cross-system design, judging screenshots or models, Blender art | Opus (you, or an Opus agent; say why) | opus |
 - Never `general-purpose`. Haiku never judges images.
 - Batch related F-items into one agent. At most 2 brief phases per agent; brief = exact files + what not to change
@@ -51,10 +52,10 @@ Opus orchestrates: writes briefs in `docs/tasks/`, reviews, and is the only one 
 
 ## Branches
 Gregory plays the branch named in HANDOFF ("Play build"). Branch new work from it in a worktree under
-`../creeper fps td-worktrees/`; the main checkout may be in use by another session, so don't switch its branch.
+`../tactical ops-worktrees/`; the main checkout may be in use by another session, so don't switch its branch.
 
 ## Code
-- `godot/` is the game (Godot 4.7, GDScript). `src/` + `index.html` is a dead Three.js prototype; don't touch.
+- `godot/` is the game (Godot 4.7, GDScript). Main scene `scenes/title.tscn` (Range / Skirmish / Quit).
 - Files under ~250 lines; split by responsibility. `class_name`, small classes, data tables, static helpers.
 - Tunables go in a def table or config (`tactical/tactical_config.gd`, `*_defs.gd`), not in logic.
 - Keys: add actions to `Keybinds.DEFAULTS`, read with `input.act(id)`. Never touch `user://keybinds.cfg`, never
@@ -66,12 +67,14 @@ Gregory plays the branch named in HANDOFF ("Play build"). Branch new work from i
 |---|---|
 | `range/` | Scenes: `tactical_scene.gd` (shared base: args, tests, Esc, build steps), `firing_range.gd` (`firing_range.tscn`), `skirmish_scene.gd` (`skirmish.tscn`); `range_maps.gd` (map ids → scenes, `RangeMaps.go`); player (`tactical_player.gd`, `player_weapons.gd`, `fp_body.gd`, `fp_arms.gd`), viewmodel/reload anims (`tactical_viewmodel.gd`, `reload_*.gd`), HUD/menus (`range_hud.gd`, `range_menu.gd`, `inventory_ui.gd`), bots (`bot_*.gd`, `scav_bot.gd`), Skirmish (`skirmish_game/data/layout/kit/end.gd`), look (`look_*.gd`), tests (`range_test_*.gd`) |
 | `tactical/` | Rules with no scene: guns, mags, ammo, inventory, reloads (`inv_reload.gd`, `range_reload.gd`), recoil (`recoil_*.gd`), ballistics/penetration, body health, session (`range_session.gd`), defs tables |
-| `fps/` | The Operative inside command mode (older FPS layer) |
+| `core/`, `ui/`, `fps/` | Copies taken from the creeper game at the split: sound synth (`Sfx` autoload), input/keybinds, UI kit/theme, build card, muzzle flash. They are ours now; the creeper copies drift independently |
 
 ## Run and check (from `godot/`)
 ```
+godot --path .                                           # title: Range / Skirmish
 godot --path . res://scenes/firing_range.tscn            # range   (tools/range.sh)
 godot --path . res://scenes/skirmish.tscn                # skirmish
 godot --headless --path . --import 2>&1 | grep -A1 "SCRIPT ERROR"      # parse: prints nothing
 godot --headless --path . res://scenes/firing_range.tscn -- --range-test | tail -3   # range suite
 ```
+On this Windows machine, Git Bash has no `godot` on PATH: use `godot_console.exe` from `%LOCALAPPDATA%/Microsoft/WinGet/Links/`.

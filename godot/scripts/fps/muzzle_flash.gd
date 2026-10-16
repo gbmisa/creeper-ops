@@ -18,7 +18,7 @@ func _init(parent: Node3D, at: Vector3) -> void:
 	sm.rings = 6
 	_mesh = MeshInstance3D.new()
 	_mesh.mesh = sm
-	_mesh.material_override = Effects.glow_mat(Color.WHITE, 0.9)
+	_mesh.material_override = _glow_mat(Color.WHITE, 0.9)
 	_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_mesh.position = at
 	_mesh.visible = false
@@ -56,3 +56,14 @@ func update(dt: float) -> void:
 		var k := _t / _life
 		_mesh.scale = Vector3.ONE * _size * (1.4 - 0.7 * k)
 		_light.light_energy *= 0.8 + 0.2 * k
+
+
+## Additive unshaded glow (was Effects.glow_mat in the command game).
+static func _glow_mat(color: Color, alpha := 1.0) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_color = Color(color, alpha)
+	if alpha < 1.0:
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	return m

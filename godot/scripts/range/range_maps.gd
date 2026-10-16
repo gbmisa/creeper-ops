@@ -20,7 +20,7 @@ static func go(map: String) -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	var sfx := tree.root.get_node_or_null("Sfx") if tree != null else null
 	if sfx != null:
-		sfx.silence_beds()  # the command game's wind / creeper beds would keep looping in the range
+		sfx.silence_beds()  # stop looping beds before the scene changes
 	Engine.get_main_loop().call_deferred("change_scene_to_file", SCENES.get(map, SCENES["range"]))
 
 
