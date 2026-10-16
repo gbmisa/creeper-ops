@@ -125,8 +125,8 @@ func _make_pbone(bone: String) -> void:
 	# Corpses are unshootable and untouchable: nothing collides with them, they rest on the world.
 	pb.collision_layer = 0
 	pb.collision_mask = TacticalConfig.LAYER_WORLD
-	pb.linear_damp = 0.4
-	pb.angular_damp = 1.2
+	pb.linear_damp = TacticalConfig.RAGDOLL_LIN_DAMP
+	pb.angular_damp = TacticalConfig.RAGDOLL_ANG_DAMP
 	pb.can_sleep = true
 	var radius: float = spec[1]
 	var cs := CollisionShape3D.new()
@@ -150,15 +150,15 @@ func _make_pbone(bone: String) -> void:
 	pb.joint_type = jt
 	var jp: Dictionary = spec[3]
 	if jt == PhysicalBone3D.JOINT_TYPE_CONE:
-		pb.set("joint_constraints/swing_span", jp["swing"])
-		pb.set("joint_constraints/twist_span", jp["twist"])
+		pb.set("joint_constraints/swing_span", jp["swing"] * TacticalConfig.RAGDOLL_LIMIT)
+		pb.set("joint_constraints/twist_span", jp["twist"] * TacticalConfig.RAGDOLL_LIMIT)
 	elif jt == PhysicalBone3D.JOINT_TYPE_HINGE:
 		# The hinge rotates about the joint's Z; rotate the joint frame so hinge-Z == bone-X,
 		# the anatomical flexion axis (verified: HingeJoint3D is Z-axis in Godot 4).
 		pb.set("joint_rotation", Vector3(0, PI * 0.5, 0))
 		pb.set("joint_constraints/angular_limit_enabled", true)
-		pb.set("joint_constraints/angular_limit_lower", jp["lower"])
-		pb.set("joint_constraints/angular_limit_upper", jp["upper"])
+		pb.set("joint_constraints/angular_limit_lower", jp["lower"] * TacticalConfig.RAGDOLL_LIMIT)
+		pb.set("joint_constraints/angular_limit_upper", jp["upper"] * TacticalConfig.RAGDOLL_LIMIT)
 	sim.add_child(pb)
 	_pbones[bone] = pb
 
