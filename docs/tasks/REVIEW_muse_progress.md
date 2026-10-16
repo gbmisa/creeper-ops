@@ -47,7 +47,7 @@
   - bug (harness): range-test prints OK while a script fails to compile; make RangeTest fail on missing classes/script errors.
   - brief gap: F8 (ammo world model) and F15 (meds box / r5-med check) not done and not reported. F20 test covers setup
     only, not deploy and back-to-range transitions. No F7 test; F22 one-shell-at-a-time reload untested.
-  - out-of-brief: F23 (`tactical_player.gd:156`) airborne sprint also drains stamina and makes sprint-step noise while
+  - out-of-brief: F23 (`tactical_player.gd:156`) airborne sprint also drains stamina (lines 158-161) while
     airborne (brief: stamina unchanged). Fix: skip stamina drain while not on floor.
   - out-of-brief: F22 `hand_gear._refill_tube` sets every carried stack of the caliber to STACK_MAX (all grades), writing
     `it["count"]` directly (no inventory change signal). Brief: "don't change ammo amounts". Fix: go through Inventory API.
