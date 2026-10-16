@@ -82,7 +82,7 @@ func _help_text() -> String:
 		[k.call(["t_crouch"]), "Crouch"], [k.call(["t_lean_left", "t_lean_right"]), "Lean"], [k.call(["t_jump"]), "Jump"],
 		[k.call(["t_use"]), "Use (rack, benches, items)"], ["1-3", "Primary / secondary / holster"],
 		[k.call(["inventory"]), "Inventory"], [k.call(["drop"]), "Drop gun"], [k.call(["t_reload"]), "Reload (x2 fast)"],
-		[k.call(["t_fire_mode"]), "Fire mode"], [k.call(["t_mag_check"]), "Check mag"], [k.call(["t_inspect"]), "Inspect / fix"],
+		[k.call(["t_fire_mode"]), "Fire mode"], [k.call(["t_mag_check"]), "Check mag"],
 		[k.call(["t_zero_up", "t_zero_down"]), "Zero up/down"], [k.call(["t_crosshair"]), "Hip dot"], [k.call(["t_help"]), "Help"]]
 	var out := "LMB Fire   RMB Aim   Esc Menu\n"
 	for r in rows:
@@ -111,9 +111,7 @@ func _process(delta: float) -> void:
 		_gun_lbl.text = "%s  [%s]" % [g.def["name"], g.mode.to_upper()]
 		_ammo_lbl.text = "%s   Zero %d m" % [TacAmmoDefs.of(g.loaded_ammo() if g.loaded_ammo() != "" else g.ammo_pick)["name"], int(g.zero_dist())]
 		var s := ""
-		if g.malf != "" and g.malf_known:
-			s = "MALFUNCTION"
-		elif g.busy():
+		if g.busy():
 			s = g.busy_kind.capitalize() + "..."
 		elif weapons.mag_text != "":
 			s = "Mag: " + weapons.mag_text

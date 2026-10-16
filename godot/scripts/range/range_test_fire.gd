@@ -21,8 +21,6 @@ static func run(t: RangeTest) -> void:
 			for n in ROUNDS:
 				var before := g.mag.count() + (1 if g.chamber != "" else 0)
 				g.fire_cd = 0.0
-				g.durability = 1.0
-				g.malf = ""
 				if g.needs_cycle:  # the bolt / pump / tube cycle the game runs on release
 					g.release()
 					g.update(10.0)
@@ -33,20 +31,11 @@ static func run(t: RangeTest) -> void:
 				w._trigger()
 				w.trigger_down = true
 				w._trigger()
-				for retry in 6:  # a random ammo malfunction is a gun outcome, not a dead trigger: pull again
-					if g.malf == "":
-						break
-					g.malf = ""
-					g.fire_cd = 0.0
-					w.trigger_down = false
-					w._trigger()
-					w.trigger_down = true
-					w._trigger()
 				if g.mag.count() + (1 if g.chamber != "" else 0) < before:
 					shots += 1
 				w.trigger_down = false
 				w._trigger()
-			t.check("fire: %s %s fires %d of %d through the player path" % [id, "ADS" if ads else "hip", shots, ROUNDS], shots == ROUNDS, "fired %d, malf=%s chamber=%s mag=%d" % [shots, g.malf, g.chamber, g.mag.count()])
+			t.check("fire: %s %s fires %d of %d through the player path" % [id, "ADS" if ads else "hip", shots, ROUNDS], shots == ROUNDS, "fired %d, chamber=%s mag=%d" % [shots, g.chamber, g.mag.count()])
 	w.trigger_ads = false
 	w.trigger_down = false
 

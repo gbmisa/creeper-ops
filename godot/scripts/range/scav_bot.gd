@@ -219,8 +219,6 @@ func _act() -> void:
 		gun.reload(false)
 	if gun.needs_cycle and not gun.busy():
 		gun.release()
-	if gun.malf != "" and not gun.busy():
-		gun.inspect()
 	match s:
 		BotBrain.PATROL:
 			BotEngage.patrol(self)

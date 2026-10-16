@@ -34,9 +34,6 @@ const ARM_FRACTURE_SWAY := 1.0
 const ARMOR_RICOCHET_GLANCE_DEG := 25.0
 
 # Gun handling
-const MALF_BASE := 0.05
-const WEAR_PER_SHOT := 0.0004
-const FIX_TIME := {"misfire": 1.0, "feed": 1.8, "jam": 2.5}
 const CHAMBER_TIME := 0.4
 const ADS_TIME_SLOW := 0.45
 const ADS_TIME_FAST := 0.15

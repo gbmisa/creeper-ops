@@ -137,8 +137,6 @@ func _on_action(kind: String, secs: float) -> void:
 			else:
 				_play("Reload", secs)
 				arms.reload(secs)
-		"fix":
-			_play("Slide" if anim.has_animation("Slide") else "Reload", secs)
 		"cycle":
 			if _cycle_clip != "" and not anim.is_playing():
 				_play(_cycle_clip, secs / 0.65, 0.35)

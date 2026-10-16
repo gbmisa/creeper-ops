@@ -180,8 +180,6 @@ static func _settle(r: Dictionary, ads: bool) -> void:
 
 static func _fire(w: PlayerWeapons) -> bool:
 	w.gun.fire_cd = 0.0
-	w.gun.durability = 1.0
-	w.gun.malf = ""
 	w.gun.needs_cycle = false
 	var res := w.gun.fire(w.rng)
 	if res["fired"]:

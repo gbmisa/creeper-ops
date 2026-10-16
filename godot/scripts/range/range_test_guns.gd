@@ -32,7 +32,6 @@ static func _each_gun(t: RangeTest) -> void:
 		if d["action"] != "tube":
 			t.check("%s: mag item matches gun (cap, caliber)" % id, mag_ok)
 		var g := Gun.new(id)
-		g.durability = 1.0
 		g.ammo_pick = TacAmmoDefs.grades(d["cal"])[0]
 		var r := g.fire(rng)
 		t.check("%s: fires" % id, r["fired"] and r["ammo"] != "")

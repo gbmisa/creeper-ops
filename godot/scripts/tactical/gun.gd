@@ -1,7 +1,7 @@
 class_name Gun
 extends RefCounted
-## Runtime weapon state: magazines + chamber, fire modes, bolt/pump cycle, reloads, zero, wear
-## and malfunctions. Pure logic; call update(dt) every frame. The caller plays animations.
+## Runtime weapon state: magazines + chamber, fire modes, bolt/pump cycle, reloads, zero.
+## Guns never jam or wear (Gregory 2026-10-16). Pure logic; call update(dt) every frame. The caller plays animations.
 
 var id := ""
 var def: Dictionary
@@ -10,11 +10,8 @@ var spares: Array[Magazine] = []  # detachable / en-bloc: spare mags. tube: one 
 var chamber := ""
 var mode := "semi"
 var needs_cycle := false
-var durability := 1.0
-var malf := ""  # "", "misfire", "feed", "jam"
-var malf_known := false
 var zero_idx := 0
-var busy_kind := ""  # "cycle", "reload", "fix"
+var busy_kind := ""  # "cycle", "reload"
 var busy_t := 0.0
 var fire_cd := 0.0
 var ammo_pick := ""  # grade loaded by refill()
@@ -53,12 +50,9 @@ func refill() -> void:
 		if def["action"] == "detachable":
 			chamber = mag.pop()
 	needs_cycle = false
-	malf = ""
-	malf_known = false
 	busy_kind = ""
 	busy_t = 0.0
 	fire_cd = 0.0
-	durability = 1.0
 
 
 ## A stat with the fitted attachments applied (player side; bots fit nothing, so they read the base). Names
@@ -168,19 +162,11 @@ func fire(rng: RandomNumberGenerator) -> Dictionary:
 	if busy() or fire_cd > 0.0:
 		res["reason"] = "busy"
 		return res
-	if malf != "":
-		res["reason"] = "click"
-		return res
 	var ammo := loaded_ammo()
 	if ammo == "":
 		res["reason"] = "empty"
 		return res
 	var a := TacAmmoDefs.of(ammo)
-	if rng.randf() < TacticalConfig.MALF_BASE * (1.0 - durability) + a["malf"]:
-		force_malf(["misfire", "feed", "jam"][rng.randi() % 3])
-		res["reason"] = "click"
-		return res
-	durability = maxf(0.0, durability - TacticalConfig.WEAR_PER_SHOT)
 	fire_cd = 60.0 / def["rpm"]
 	res["fired"] = true
 	res["ammo"] = ammo
@@ -209,25 +195,6 @@ func release() -> void:
 		busy_t = def["cycle"]
 
 
-func force_malf(kind: String) -> void:
-	malf = kind
-	malf_known = false
-
-
-## First press reveals the malfunction, the second starts the fix. Returns the state text.
-func inspect() -> String:
-	if busy():
-		return "busy"
-	if malf == "":
-		return "ok"
-	if not malf_known:
-		malf_known = true
-		return malf
-	busy_kind = "fix"
-	busy_t = TacticalConfig.FIX_TIME[malf]
-	return "fixing"
-
-
 ## Start a reload. fast = drop the old mag (gone). False if it can't start.
 func reload(fast: bool = false) -> bool:
 	if busy() or needs_cycle or spares.is_empty():
@@ -253,9 +220,6 @@ func _finish() -> void:
 	var kind := busy_kind
 	busy_kind = ""
 	match kind:
-		"fix":
-			malf = ""
-			malf_known = false
 		"cycle":
 			needs_cycle = false
 			if def["action"] == "tube" or def["cycle"] > 0.0:
@@ -314,8 +278,7 @@ func to_dict() -> Dictionary:
 		sp.append(m.to_dict())
 	return {
 		"id": id, "mag": mag.to_dict(), "spares": sp, "chamber": chamber, "mode": mode,
-		"needs_cycle": needs_cycle, "durability": durability, "malf": malf,
-		"malf_known": malf_known, "zero_idx": zero_idx, "busy_kind": busy_kind,
+		"needs_cycle": needs_cycle, "zero_idx": zero_idx, "busy_kind": busy_kind,
 		"busy_t": busy_t, "fire_cd": fire_cd, "ammo_pick": ammo_pick,
 		"fit": fit.duplicate(), "fit_ver": fit_ver, "zoom_hi": zoom_hi,
 	}
@@ -330,9 +293,6 @@ static func from_dict(d: Dictionary) -> Gun:
 	g.chamber = str(d.get("chamber", ""))
 	g.mode = str(d.get("mode", "semi"))
 	g.needs_cycle = bool(d.get("needs_cycle", false))
-	g.durability = float(d.get("durability", 1.0))
-	g.malf = str(d.get("malf", ""))
-	g.malf_known = bool(d.get("malf_known", false))
 	g.zero_idx = int(d.get("zero_idx", 0))
 	g.busy_kind = str(d.get("busy_kind", ""))
 	g.busy_t = float(d.get("busy_t", 0.0))

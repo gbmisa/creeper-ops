@@ -6,7 +6,6 @@ static func run(t: RangeTest) -> void:
 	_mags_and_reloads(t)
 	_actions(t)
 	_body(t)
-	_malfunction(t)
 	_recoil(t)
 	RangeTestInv.run(t)
 	RangeTestRecoil.run(t)
@@ -71,7 +70,6 @@ static func _actions(t: RangeTest) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var s := Gun.new("sniper")
-	s.durability = 1.0
 	var r1 := s.fire(rng)
 	var r2 := s.fire(rng)
 	t.check("bolt needs a cycle before the next shot", r1["fired"] and not r2["fired"] and r2["reason"] == "cycle")
@@ -127,18 +125,6 @@ static func _body(t: RangeTest) -> void:
 	fr.hit("rleg", 30.0, {"fracture": true})
 	t.check("leg fracture slows", fr.move_mult() < 1.0)
 
-
-static func _malfunction(t: RangeTest) -> void:
-	var rng := RandomNumberGenerator.new()
-	var g := Gun.new("ak47")
-	g.force_malf("jam")
-	t.check("malfunction blocks fire", not g.fire(rng)["fired"])
-	t.check("inspect names the malfunction", g.inspect() == "jam")
-	t.check("still blocked after inspect", not g.fire(rng)["fired"])
-	t.check("second inspect starts the fix", g.inspect() == "fixing" and g.busy())
-	g.update(3.0)
-	g.fire_cd = 0.0
-	t.check("fires again after the fix", g.fire(rng)["fired"])
 
 
 static func _recoil(t: RangeTest) -> void:

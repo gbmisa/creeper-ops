@@ -3,8 +3,8 @@ class_name InventoryIO
 
 
 static func gun_to_dict(g: Gun) -> Dictionary:
-	return {"id": g.def["id"], "mag": g.mag.rounds.duplicate(), "chamber": g.chamber, "mode": g.mode, "durability": g.durability,
-		"malf": g.malf, "malf_known": g.malf_known, "zero_idx": g.zero_idx, "ammo_pick": g.ammo_pick, "needs_cycle": g.needs_cycle,
+	return {"id": g.def["id"], "mag": g.mag.rounds.duplicate(), "chamber": g.chamber, "mode": g.mode,
+		"zero_idx": g.zero_idx, "ammo_pick": g.ammo_pick, "needs_cycle": g.needs_cycle,
 		"fit": g.fit.duplicate(), "zoom_hi": g.zoom_hi}
 
 
@@ -17,9 +17,6 @@ static func gun_from_dict(d: Dictionary) -> Gun:
 	g.mag.normalize()
 	g.chamber = d["chamber"]
 	g.mode = d["mode"]
-	g.durability = d["durability"]
-	g.malf = d["malf"]
-	g.malf_known = d["malf_known"]
 	g.zero_idx = d["zero_idx"]
 	g.ammo_pick = d["ammo_pick"]
 	g.needs_cycle = d["needs_cycle"]
