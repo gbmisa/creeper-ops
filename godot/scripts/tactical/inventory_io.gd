@@ -14,6 +14,7 @@ static func gun_from_dict(d: Dictionary) -> Gun:
 	g.mag.rounds.clear()
 	for r in d["mag"]:
 		g.mag.rounds.append(str(r))
+	g.mag.normalize()
 	g.chamber = d["chamber"]
 	g.mode = d["mode"]
 	g.durability = d["durability"]

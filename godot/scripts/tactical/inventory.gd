@@ -270,11 +270,13 @@ func find_mags(gun_id: String) -> Array:
 	return out
 
 
-## One loose round of the caliber (any grade) from the grids, or "" if none. Used by tube reloads.
-func take_round(cal: String) -> String:
+## One loose round of the caliber from the grids, or "" if none. Used by tube reloads.
+## `only` (F79): the tube already holds this type, so only that type is taken ("" = any).
+func take_round(cal: String, only: String = "") -> String:
 	for g in GRIDS:
 		for it in grid_items(g):
-			if it["id"] in TacAmmoDefs.ROWS and TacAmmoDefs.ROWS[it["id"]]["cal"] == cal:
+			if it["id"] in TacAmmoDefs.ROWS and TacAmmoDefs.ROWS[it["id"]]["cal"] == cal \
+				and (only == "" or it["id"] == only):
 				var id: String = it["id"]
 				it["count"] = int(it["count"]) - 1
 				if int(it["count"]) <= 0:
