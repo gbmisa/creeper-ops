@@ -207,7 +207,7 @@ func _shoot(res: Dictionary) -> void:
 		session.events.shot_fired.emit(res, gun)
 	RangeAudio.event({"kind": "shot", "item": gun.id, "local": true, "cal": gun.def["cal"], "cls": gun.def["class"],
 		"suppressed": gun.stat("noise") < 0.9})
-	if res["ping"]:
+	if res["ping"] and gun.id in SoundDefs.PING_GUNS:
 		RangeAudio.event({"kind": "sample", "item": "garand_ping", "local": true, "db": -4.0})
 	shot.emit(res, gun)
 
