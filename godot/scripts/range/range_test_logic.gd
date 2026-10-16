@@ -122,8 +122,14 @@ static func _body(t: RangeTest) -> void:
 	lb.tick(2.0)
 	t.check("light bleed ticks 0.8 HP/s", is_equal_approx(lb.hp["rleg"], 60.0 - 1.6))
 	var fr := BodyHealth.new()
-	fr.hit("rleg", 30.0, {"fracture": true})
-	t.check("leg fracture slows", fr.move_mult() < 1.0)
+	var big := fr.hit("rleg", 60.0, {"fracture": true})  # even a forced "fracture" does nothing (Gregory: no fractures)
+	t.check("no fractures: a big leg hit never slows or reports a fracture", fr.move_mult() == 1.0 and not big.has("fracture"))
+	var arm := BodyHealth.new()
+	var whole := arm.arm_loss("reload") == 1.0 and arm.can_hold_breath()
+	arm.hp["larm"] = 0.0   # set directly: a big hit would spill into the other arm too
+	var one := arm.arms_down() == 1 and arm.arm_loss("sway") == 2.0 and not arm.can_hold_breath()
+	arm.hp["rarm"] = 0.0
+	t.check("P9: blacked arms scale handling (1 arm, then 2)", whole and one and arm.arm_loss("reload") == 1.6)
 
 
 

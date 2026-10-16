@@ -201,8 +201,8 @@ func view_offset() -> Vector2:
 
 
 ## Breathing sway in degrees. hold = breath held; tired = arm stamina empty.
-static func sway(t: float, def: Dictionary, hold: bool, tired: bool, arm_fracture: float = 0.0) -> Vector2:
-	var amp: float = TacticalConfig.SWAY_BASE_DEG * def["kg"] / (def["ergo"] / 100.0 + 0.3) + arm_fracture * TacticalConfig.SWAY_BASE_DEG
+static func sway(t: float, def: Dictionary, hold: bool, tired: bool) -> Vector2:
+	var amp: float = TacticalConfig.SWAY_BASE_DEG * def["kg"] / (def["ergo"] / 100.0 + 0.3)
 	if hold:
 		amp *= TacticalConfig.SWAY_HOLD_MULT
 	if tired:

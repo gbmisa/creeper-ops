@@ -9,7 +9,7 @@ const COVER_CHECK := 0.4
 static func aim_spread_deg(b: ScavBot, dist: float) -> float:
 	var df := b.def
 	var warm := b.percept.sight_t + (BotPerception.ALERT_AIM_HEAD if b.percept.alerted() else 0.0)
-	return BotBrain.aim_error(warm) * float(df["aim_mult"]) \
+	return BotBrain.aim_error(warm) * float(df["aim_mult"]) * b.body.arm_loss("sway") \
 		* (1.0 + maxf(1.0, float(df["aim_far"])) * clampf(dist / 50.0, 0.0, 1.0))
 
 
@@ -45,7 +45,7 @@ static func _fire(b: ScavBot, point: Vector3) -> String:
 		dist = b.eye().distance_to(point)
 	# F18: reaction delay before the first aimed shot after spotting. Only gates aimed fire at a
 	# seen target; suppressing fire at last-known (not seeing) still goes out.
-	if b.percept.seeing and b.percept.sight_t < b.react_t:
+	if b.percept.seeing and b.percept.sight_t < b.react_t * b.body.arm_loss("ads"):
 		return "react"
 	var df := b.def
 	var wu: float = df["windup"]

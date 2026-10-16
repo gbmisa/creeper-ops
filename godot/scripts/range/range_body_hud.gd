@@ -50,6 +50,12 @@ func _draw() -> void:
 		draw_rect(Rect2(ORIGIN + r.position, r.size), col)
 		if player.body.armor.has(z):
 			draw_rect(Rect2(ORIGIN + r.position, r.size), Color(0.7, 0.8, 1.0, 0.8), false, 1.5)
+	var down := player.body.arms_down()
+	if down > 0:   # P9: the arm penalty beside the figure (the HUD takes no mouse, so no hover tooltip)
+		var p: Dictionary = TacticalConfig.ARM_LOSS[down]
+		var txt := "%s: sway x%s, reload x%s, ADS x%s, recoil x%s, no breath hold" % [
+			"ARM DOWN" if down == 1 else "BOTH ARMS DOWN", p["sway"], p["reload"], p["ads"], p["recoil"]]
+		draw_string(ThemeDB.fallback_font, ORIGIN + Vector2(56, -80), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1.0, 0.45, 0.35))
 	for b in player.body.bleeds:
 		var r2: Rect2 = SHAPES[b["zone"]]
 		draw_circle(ORIGIN + r2.get_center(), 3.0, Color(0.85, 0.0, 0.0))

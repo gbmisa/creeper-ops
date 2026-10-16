@@ -17,6 +17,7 @@ var hit_log: RangeHitLog
 var bots: RangeBots
 var world_items: WorldItems
 var inv_ui: InventoryUI
+var quick: QuickUse
 var skirmish: SkirmishGame   # only on the Skirmish map
 
 
@@ -129,6 +130,12 @@ func _add_hud() -> RangeHud:
 	var body_hud := RangeBodyHud.new()
 	hud.add_child(body_hud)
 	body_hud.setup(player)
+	quick = QuickUse.new()
+	add_child(quick)
+	quick.setup(weapons, player)
+	var bar := QuickBar.new()
+	hud.add_child(bar)
+	bar.setup(quick)
 	bots = RangeBots.new()
 	return hud
 

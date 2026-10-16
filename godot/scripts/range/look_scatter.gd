@@ -70,7 +70,7 @@ static func _tree_xforms(rng: RandomNumberGenerator) -> Array:
 		var r := rng.randf_range(H + 6.0, H + 40.0)
 		var p := Vector3(cos(a), 0, sin(a)) * r
 		trees.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(0.8, 1.5)), Vector3(clampf(p.x, -H - 40, H + 40), -0.5, clampf(p.z, -H - 40, H + 40))))
-	for c in [Vector2(-56, 56), Vector2(56, 56), Vector2(56, -2), Vector2(-56, 4)]:
+	for c in [Vector2(-56, 56), Vector2(56, 56), Vector2(56, -2), Vector2(-54, 16)]:   # MAP-2: (-56, 4) is inside the storehouse now
 		trees.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * 0.9), Vector3(c.x, 0, c.y)))
 	return trees
 

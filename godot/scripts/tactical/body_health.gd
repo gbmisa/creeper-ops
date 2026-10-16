@@ -1,6 +1,6 @@
 class_name BodyHealth
 extends RefCounted
-## Zone health, armor, blackout spill, bleeds, fractures, death. No scene dependencies.
+## Zone health, armor, blackout spill, bleeds, death. No scene dependencies. No fractures (Gregory 2026-10-16).
 
 const ZONES := ["head", "thorax", "stomach", "larm", "rarm", "lleg", "rleg"]
 const MAX := {"head": 35.0, "thorax": 85.0, "stomach": 70.0, "larm": 60.0, "rarm": 60.0, "lleg": 65.0, "rleg": 65.0}
@@ -11,7 +11,6 @@ const LIMBS := ["larm", "rarm", "lleg", "rleg"]
 var hp := {}
 var armor := {}  # zone -> {"id", "dur"}
 var bleeds: Array = []  # {"zone", "rate"}
-var fractured := {}
 var dead := false
 var rng := RandomNumberGenerator.new()
 
@@ -24,7 +23,6 @@ func reset() -> void:
 	for z in ZONES:
 		hp[z] = MAX[z]
 	bleeds.clear()
-	fractured.clear()
 	dead = false
 
 
@@ -51,12 +49,26 @@ func total_frac() -> float:
 	return cur / mx
 
 
+## Walk speed multiplier from injuries. 1.0: nothing slows you since fractures were removed (CHANGES P10 is the
+## open question of whether leg damage should).
 func move_mult() -> float:
-	return TacticalConfig.LEG_FRACTURE_SPEED if (fractured.has("lleg") or fractured.has("rleg")) else 1.0
+	return 1.0
 
 
-func sway_add() -> float:
-	return TacticalConfig.ARM_FRACTURE_SWAY if (fractured.has("larm") or fractured.has("rarm")) else 0.0
+## P9: how many arms are blacked out (0 HP), 0..2.
+func arms_down() -> int:
+	return int(hp["larm"] <= 0.0) + int(hp["rarm"] <= 0.0)
+
+
+## P9: the arm-loss multiplier for "sway", "reload", "ads" or "recoil" (1.0 with both arms working).
+func arm_loss(stat: String) -> float:
+	var n := arms_down()
+	return 1.0 if n == 0 else float(TacticalConfig.ARM_LOSS[n][stat])
+
+
+func can_hold_breath() -> bool:
+	var n := arms_down()
+	return n == 0 or bool(TacticalConfig.ARM_LOSS[n]["breath"])
 
 
 ## A bullet reaching `zone`: armor first, then frag / bleeds, then hit(). shot: dmg, pen,
@@ -92,9 +104,9 @@ func shoot(zone: String, shot: Dictionary) -> Dictionary:
 	return res
 
 
-## Direct damage. info: bleed ("light"/"heavy"), fracture (bool to force). Returns what happened.
+## Direct damage. info: bleed ("light"/"heavy"). Returns what happened.
 func hit(zone: String, dmg: float, info: Dictionary = {}) -> Dictionary:
-	var res := {"zone": zone, "dmg": dmg, "blacked": false, "spill": {}, "killed": false, "fracture": false}
+	var res := {"zone": zone, "dmg": dmg, "blacked": false, "spill": {}, "killed": false}
 	if dead:
 		return res
 	var was: float = hp[zone]
@@ -104,11 +116,6 @@ func hit(zone: String, dmg: float, info: Dictionary = {}) -> Dictionary:
 	if bleed != "" and hp[zone] > 0.0:
 		var rate: float = TacticalConfig.HEAVY_BLEED_DPS if bleed == "heavy" else TacticalConfig.LIGHT_BLEED_DPS
 		bleeds.append({"zone": zone, "rate": rate})
-	if zone in LIMBS and not fractured.has(zone):
-		var frac: bool = info.get("fracture", dmg > TacticalConfig.FRACTURE_MIN_DMG and rng.randf() < TacticalConfig.FRACTURE_CHANCE)
-		if frac:
-			fractured[zone] = true
-			res["fracture"] = true
 	res["killed"] = _check_death()
 	return res
 
@@ -121,6 +128,11 @@ func heal(frac: float) -> void:
 	for z in ZONES:
 		if hp[z] > 0.0:
 			hp[z] = minf(MAX[z], hp[z] + MAX[z] * frac)
+
+
+## Bandage: stops every bleed, heals nothing.
+func stop_bleeds() -> void:
+	bleeds.clear()
 
 
 func tick(dt: float) -> void:
@@ -158,7 +170,6 @@ func to_dict() -> Dictionary:
 		"hp": hp.duplicate(),
 		"armor": armor.duplicate(true),
 		"bleeds": bleeds.duplicate(true),
-		"fractured": fractured.duplicate(),
 		"dead": dead,
 	}
 
@@ -171,6 +182,5 @@ static func from_dict(d: Dictionary) -> BodyHealth:
 			b.hp[z] = MAX[z]
 	b.armor = (d.get("armor", {}) as Dictionary).duplicate(true)
 	b.bleeds = (d.get("bleeds", []) as Array).duplicate(true)
-	b.fractured = (d.get("fractured", {}) as Dictionary).duplicate()
 	b.dead = bool(d.get("dead", false))
 	return b
