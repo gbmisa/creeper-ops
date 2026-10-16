@@ -139,8 +139,8 @@ func _lean_in(pos_r: Vector3, pos_l: Vector3) -> void:
 		position = ROOT_POS + (position - ROOT_POS).limit_length(MAX_LEAN)
 
 
-## World-space wrist target + finger direction + palm normal.
-func solve(side: String, pos_w: Vector3, f_w: Vector3, n_w: Vector3, grip: float) -> void:
+## World-space wrist target + finger direction + palm normal. pole_w: world elbow direction (default: POLE).
+func solve(side: String, pos_w: Vector3, f_w: Vector3, n_w: Vector3, grip: float, pole_w := Vector3.ZERO) -> void:
 	target[side] = pos_w
 	var a: Dictionary = _sides[side]
 	var inv := skel.global_transform.affine_inverse()
@@ -155,7 +155,7 @@ func solve(side: String, pos_w: Vector3, f_w: Vector3, n_w: Vector3, grip: float
 	var dir := (t - s).normalized()
 	var along := (l1 * l1 + d * d - l2 * l2) / (2.0 * d)
 	var h := sqrt(maxf(l1 * l1 - along * along, 0.0))
-	var pole := ib * Vector3(POLE.x * (1.0 if side == "r" else -1.0), POLE.y, POLE.z)
+	var pole := ib * (Vector3(POLE.x * (1.0 if side == "r" else -1.0), POLE.y, POLE.z) if pole_w == Vector3.ZERO else pole_w)
 	var perp := (pole - dir * pole.dot(dir)).normalized()
 	var e := s + dir * along + perp * h
 	var wrist := s + dir * d

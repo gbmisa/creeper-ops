@@ -9,8 +9,6 @@ const SPINE := ["spine_01", "spine_02", "spine_03"]
 const SPINE_SHARE := 0.6  # of the gun pitch, spread over the three spine bones
 const BOOTS := Color(0.1, 0.1, 0.09)
 const ARMBAND := Color(0.8, 0.1, 0.1)
-const STOCK_BACK := 0.04  # the gun's rear sits this far inside the shoulder pivot
-const PIVOT_IN := Vector3(-0.07, -0.04, 0.0)  # shoulder joint to the stock pocket
 
 ## Ragdoll (FB-A). Physical bones are built at _init under a PhysicalBoneSimulator3D and sit inert
 ## until die() starts the simulation from the current pose. Local cosmetic only: no multiplayer
@@ -79,6 +77,12 @@ var _spine: Array[int] = []
 var _spine_rest: Array[Quaternion] = []
 var _spine_axis: Array[Vector3] = []
 var _spine_roll: Array[Vector3] = []  # bone-local forward axis (lean)
+var _spine_up: Array[Vector3] = []  # bone-local up axis (blade)
+var _neck := -1
+var _neck_up := Vector3.UP
+var _neck_axis := Vector3.RIGHT
+var _hold := BotHold.STOCKED
+var _engage := 0.0  # 0 lowered .. 1 level (from the aim pitch)
 var _lean_reach := 1.0  # sum of the spine bones' heights below the head: roll per bone = asin(offset / this)
 var _grip := {}
 var _half_len := 0.4
@@ -101,6 +105,10 @@ func _init(uniform: Color) -> void:
 		_spine_rest.append(skel.get_bone_rest(i).basis.get_rotation_quaternion())
 		_spine_axis.append(skel.get_bone_global_rest(i).basis.inverse() * Vector3.RIGHT)
 		_spine_roll.append(skel.get_bone_global_rest(i).basis.inverse() * Vector3.BACK)
+		_spine_up.append(skel.get_bone_global_rest(i).basis.inverse() * Vector3.UP)
+	_neck = skel.find_bone("neck_01")
+	_neck_up = skel.get_bone_global_rest(_neck).basis.inverse() * Vector3.UP
+	_neck_axis = skel.get_bone_global_rest(_neck).basis.inverse() * Vector3.RIGHT
 	var head_y := skel.get_bone_global_rest(skel.find_bone("Head_2")).origin.y
 	_lean_reach = 0.0
 	for i in _spine:
@@ -216,13 +224,15 @@ func _dye(scene: Node3D, uniform: Color) -> void:
 	att.add_child(band)
 
 
-## Mounts the gun: grips and size come from the gun's def.
+## Mounts the gun: grips and size come from the gun's def, the hold (BotHold) from its class. The gun's rear end
+## sits on the pivot, which update() puts in the shoulder pocket (pistols: out in front of the chest).
 func hold(gun: Node3D, gun_def: Dictionary, half_len: float) -> void:
 	_grip = gun_def
 	_half_len = half_len
 	_flip = gun_def.get("flip", false)
+	_hold = BotHold.of(gun_def)
 	pivot.add_child(gun)
-	gun.position = PIVOT_IN + Vector3(0, 0, -(half_len - float(gun_def.get("butt", 0.0)) - STOCK_BACK))
+	gun.position = Vector3(0, 0, -half_len)
 
 
 ## Death: stop the canned animation, start the ragdoll from the current pose, and throw the
@@ -285,18 +295,33 @@ func update(delta: float, speed: float, pitch: float, gun: Node3D, crouch := fal
 		_tick_sleep(delta)
 		return
 	var roll := asin(clampf(TacticalConfig.LEAN_OFFSET * lean / _lean_reach, -1.0, 1.0))
+	var blade: float = _hold["blade"]
 	for k in _spine.size():
-		var q := Quaternion(_spine_axis[k], -pitch * SPINE_SHARE / _spine.size()) * Quaternion(_spine_roll[k], roll)
+		var q := Quaternion(_spine_axis[k], -pitch * SPINE_SHARE / _spine.size()) * Quaternion(_spine_roll[k], roll) \
+			* Quaternion(_spine_up[k], -blade / _spine.size())
 		skel.set_bone_pose_rotation(_spine[k], _spine_rest[k] * q)
+	_engage = clampf(1.0 + pitch / BotMesh.LOW_PITCH, 0.0, 1.0)
+	# The head turns back to the front and drops onto the stock while engaged (the clip keys the neck every frame).
+	var nq := Quaternion(_neck_up, blade) * Quaternion(_neck_axis, float(_hold["head"]) * _engage)
+	skel.set_bone_pose_rotation(_neck, skel.get_bone_pose_rotation(_neck) * nq)
 	arms.rebase()
-	pivot.global_position = skel.global_transform * skel.get_bone_global_pose(skel.find_bone("upperarm_r")).origin
+	var sh_r := to_local(skel.global_transform * skel.get_bone_global_pose(skel.find_bone("upperarm_r")).origin)
+	var mount := sh_r
+	if _hold["mount"] == "chest":
+		mount = (sh_r + to_local(skel.global_transform * skel.get_bone_global_pose(skel.find_bone("upperarm_l")).origin)) * 0.5
+	pivot.position = mount + (_hold["at"] as Vector3) + Vector3(0, float(_hold["lift"]) * _engage, 0)
 	pivot.rotation.x = pitch
 	pivot.rotation.z = -lean * deg_to_rad(TacticalConfig.LEAN_ROLL_DEG)  # the gun cants like the player's view
 	var gt := gun.global_transform
 	var fwd := gt.basis * Vector3(0, 0, -1)
 	var pistol: bool = _grip["class"] == "pistol"
-	arms.solve("r", gt * (_grip["grip_r"] as Vector3), fwd, gt.basis * Vector3(-1, 0, 0), 1.0)
-	arms.solve("l", gt * (_grip["grip_l"] as Vector3), fwd, gt.basis * (Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)), 1.0)
+	var b := global_transform.basis
+	arms.solve("r", gt * (_grip["grip_r"] as Vector3), fwd, gt.basis * Vector3(-1, 0, 0), 1.0, b * (_hold["pole_r"] as Vector3))
+	var la: Dictionary = arms._sides["l"]
+	var grip_l := BotHold.reach_back(gt * (_grip["grip_l"] as Vector3), -fwd.normalized(), skel.global_transform * (la["rest_up"] as Transform3D).origin,
+		(float(la["l1"]) + float(la["l2"])) * skel.global_transform.basis.get_scale().x * 0.98)
+	arms.solve("l", grip_l, fwd, gt.basis * (Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)), 1.0,
+		b * (_hold["pole_l"] as Vector3))
 
 
 func _play(want: String, rate: float, blend := 0.2) -> void:
