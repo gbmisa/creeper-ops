@@ -1,6 +1,5 @@
 class_name RangeTestPkmSight
-## F76: at full ADS the PKM front post tip is centred on the rear sight's middle block and shows above its top edge,
-## below the rear ears' tops. Points are the PKM mesh's own (rear block top 0.136, ears 0.141, post tip 0.136, x -0.001).
+## F76: at full ADS the PKM front post tip is centred in the notch and level with the rear shoulder tops (0.141). Points are the PKM mesh's own (rear block top 0.136, ears 0.141, post tip 0.136, x -0.001).
 
 
 static func run(t: RangeTest, r: Dictionary) -> void:
@@ -15,9 +14,7 @@ static func run(t: RangeTest, r: Dictionary) -> void:
 	var block: Vector2 = px.call(Vector3(-0.001, 0.136, -0.059))
 	var ear: Vector2 = px.call(Vector3(-0.009, 0.141, -0.059))
 	var dx := tip.x - block.x
-	var above := block.y - tip.y
-	var room := block.y - ear.y
-	print("[range] pkm ads px: post tip ", tip, " block top ", block, " ear top ", ear, " offset x ", dx, " above block ", above)
-	t.check("pkm ads: post tip centred on the middle block (|dx| %.2f px)" % dx, absf(dx) < 1.0)
-	t.check("pkm ads: post tip shows above the block top (%.1f px) and under the ear tops (%.1f px)" % [above, room],
-		above >= 3.0 and above < room)
+	var flush := tip.y - ear.y
+	print("[range] pkm ads px: post tip ", tip, " shoulder top ", ear, " offset x ", dx, " tip minus shoulder y ", flush)
+	t.check("pkm ads: post tip centred in the notch (|dx| %.2f px)" % dx, absf(dx) < 1.0)
+	t.check("pkm ads: post tip level with the rear shoulder tops (%.2f px, limit 1)" % flush, absf(flush) <= 1.0)
