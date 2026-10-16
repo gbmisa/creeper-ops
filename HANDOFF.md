@@ -2,7 +2,7 @@
 
 **What happened:** the on-foot game (Firing Range + Skirmish) was split out of `../creeper ops` (gbmisa/creeper-ops)
 into this repo with `git filter-repo` (history kept, same paths). Base: creeper-ops `feat/fb-reload` @ d3b08d6.
-Split commit on `feat/fb-reload` here. **No GitHub remote yet** (origin removed; Gregory to create the repo).
+Split commit on `feat/fb-reload` here. GitHub: **gbmisa/tactical-ops** (private, default branch feat/fb-reload).
 Run: `godot --path godot` -> title (Range / Skirmish / Quit). Windows: Godot 4.7.2 via winget (`godot_console.exe`
 in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MCP registered (user scope).
 
@@ -34,6 +34,5 @@ Parse clean; title / firing_range / skirmish boot headless, no script errors; `-
 Not verified: Gregory's play of the title screen; windowed run.
 
 ## Next
-1. Gregory: create the GitHub repo, then `git remote add origin <url>` and `git push -u origin feat/fb-reload`.
-2. Port the reload WIP once session B commits it (above), then continue FB-R (rifle empties, AXMC, M4A1, ...).
-3. Gregory rules on CHANGES P10 and plays Skirmish (MAP-2, F90-F93).
+1. Port the reload WIP once session B commits it (above), then continue FB-R (rifle empties, AXMC, M4A1, ...).
+2. Gregory rules on CHANGES P10 and plays Skirmish (MAP-2, F90-F93).
