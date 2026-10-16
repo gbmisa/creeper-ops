@@ -18,7 +18,7 @@ var bots: RangeBots
 var world_items: WorldItems
 var inv_ui: InventoryUI
 var quick: QuickUse
-var skirmish: SkirmishGame   # only on the Skirmish map
+var skirmish: Node   # only on a Skirmish map (SkirmishGame or SkirmishLargeGame; same members)
 var cheats: RangeCheats
 var cheat_menu: CheatMenu
 var tempest_fx: TempestFx

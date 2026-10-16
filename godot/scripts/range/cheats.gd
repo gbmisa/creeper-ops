@@ -113,7 +113,8 @@ func _do_action(n: String) -> void:
 			_tp_crosshair()
 		"tp_extract":
 			if fr.skirmish != null:
-				fr.player.global_position = SkirmishData.EXTRACT + Vector3(0, 0.5, 0)
+				var ep: Vector3 = fr.skirmish.extracts[0]["pos"] if "extracts" in fr.skirmish else SkirmishData.EXTRACT
+				fr.player.global_position = ep + Vector3(0, 0.5, 0)
 				fr.player.velocity = Vector3.ZERO
 		"instant_extract":
 			if fr.skirmish != null and not fr.skirmish.over:
