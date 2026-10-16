@@ -2,6 +2,8 @@ class_name TacticalViewmodel
 extends Node3D
 ## The held gun under the camera: hip / ADS poses (per-weapon ads_pos / hip_pos from WeaponDefs), recoil
 ## kick, mouse sway, walk bob, and the glb clips timed to fire / cycle / reload / fix.
+## Recoil (FB-I, Tarkov): the gun turns by the barrel angle the view did not take, about the row's pivot, and
+## kicks back along the bore by the position process (recoil_xform); applied on top of the smoothed pose.
 
 var weapons: PlayerWeapons
 var player: TacticalPlayer
@@ -13,8 +15,8 @@ var rig: AttachmentRig
 var _gun: Gun
 var half_len := 0.3
 var _def := {}
-var _kick := 0.0
-var _kick_v := 0.0
+var _base_pos := Vector3.ZERO  # the smoothed pose without recoil (what model.position/rotation used to hold)
+var _base_rot := Vector3.ZERO
 var _bob_t := 0.0
 var _check := 0.0
 var _cycle_clip := ""
@@ -48,6 +50,8 @@ func _on_switched(g: Gun) -> void:
 	_gun = g
 	_def = g.eff_def()
 	model = Node3D.new()
+	_base_pos = Vector3.ZERO
+	_base_rot = Vector3.ZERO
 	add_child(model)
 	var glb := (load("res://assets/models/guns/%s.glb" % _def["model"]) as PackedScene).instantiate()
 	model.add_child(glb)
@@ -102,9 +106,6 @@ func _clip_and_aim() -> void:
 func _on_shot(res: Dictionary, g: Gun) -> void:
 	if not res["fired"]:
 		return
-	_kick_v += 0.4 + g.stat("up") * 0.2
-	if weapons.recoil.tarkov:
-		_kick_v += TacticalConfig.RECOIL_T_VM_KICK * (1.0 + g.stat("up"))
 	if g.stat("flash") > 0.5:
 		flash.flash(Color(1.0, 0.8, 0.45), 0.07 + 0.02 * float(g.def["kg"]), 0.05, 2.0)
 	if _cycle_clip != "":
@@ -159,14 +160,6 @@ func _process(delta: float) -> void:
 	_bob_t += delta * speed * 2.0
 	var bob := speed * 0.0035 * (1.0 - a * 0.85)
 	pos += Vector3(sin(_bob_t) * bob, absf(sin(_bob_t)) * bob * 0.8, 0)
-	_kick_v -= (_kick * 400.0 + _kick_v * 20.0) * delta
-	_kick += _kick_v * delta
-	pos.z += _kick * (1.0 - a * 0.5)
-	rot.x += _kick * 6.0 * (1.0 - a * 0.5)
-	if weapons.recoil.tarkov:   # the gun follows the bore, which the camera only partly follows
-		var rest := weapons.recoil.barrel - weapons.recoil.offset
-		rot += Vector3(deg_to_rad(rest.x * TacticalConfig.RECOIL_T_VM_PITCH), deg_to_rad(rest.y * TacticalConfig.RECOIL_T_VM_YAW),
-			deg_to_rad(-rest.y * TacticalConfig.RECOIL_T_VM_ROLL))
 	if bolt != null:
 		bolt.update(delta)
 		rot.z += bolt.roll()
@@ -180,10 +173,28 @@ func _process(delta: float) -> void:
 		_check -= delta
 		pos += Vector3(-0.08, 0.02, 0.05)
 		rot += Vector3(0.15, 0.3, 1.1)
-	model.position = model.position.lerp(pos, minf(1.0, delta * 20.0))
-	model.rotation = model.rotation.lerp(rot, minf(1.0, delta * 20.0))
+	_base_pos = _base_pos.lerp(pos, minf(1.0, delta * 20.0))
+	_base_rot = _base_rot.lerp(rot, minf(1.0, delta * 20.0))
+	model.position = _base_pos
+	model.rotation = _base_rot
+	var rx := recoil_xform(weapons.recoil)
+	if rx != Transform3D.IDENTITY:
+		model.transform = model.transform * rx
 	if not _posed:
 		arms.update(model, delta)
+
+
+## The recoil's turn and kick back in the gun's own frame (identity at rest, so the FB-H poses are untouched).
+static func recoil_xform(rm: RecoilModel) -> Transform3D:
+	var w := rm.weapon_rot()
+	var rel := rm.barrel - rm.view_offset()   # the barrel angle the view did not take (deg)
+	var back := rm.weapon_pos().y
+	if rel.length_squared() < 1e-12 and absf(w.y) < 1e-6 and absf(back) < 1e-7:
+		return Transform3D.IDENTITY
+	var piv: Vector3 = rm.row["pivot"]
+	var p := Vector3(piv.x, piv.z, piv.y)   # Tarkov bone axes: y runs back along the bore -> gun-local z
+	var b := Basis.from_euler(Vector3(deg_to_rad(rel.x), deg_to_rad(rel.y), deg_to_rad(w.y)))
+	return Transform3D(Basis(), Vector3(0, 0, back) + p - b * p) * Transform3D(b, Vector3.ZERO)
 
 
 ## Gun model position under the camera, hip (a = 0) to ADS (a = 1). The butt is shouldered at the hip; when

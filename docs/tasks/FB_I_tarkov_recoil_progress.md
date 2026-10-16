@@ -53,3 +53,26 @@ back/roll are phase 2. `aim_basis` keeps the old "barrel minus camera" formula f
 - Phase 2: set `recoil.auto_fire` while the trigger is held in auto, `aiming` from ads_amt, `pose` from stance.
 - After a shot the muzzle settles near, not at, rest (TRP settle point): the ADS-at-rest alignment check in phase 2
   must allow for that or the settle point must be read as "where the sights now are".
+
+## Phase 2: wiring + tuning panel (done, Opus agent, 2026-10-15)
+Files: new `scripts/range/player_recoil.gd` (PlayerRecoil: aiming = ads_amt > 0.8, pose from crouch, automatic
+fire = trigger held in auto with a shot within 1.5 intervals; writes kick/follow/roll, applies the fold),
+`scripts/tactical/recoil_follow.gd` (RecoilFollow: spec "Onto the camera"), `scripts/range/recoil_panel.gd`
+(RecoilPanel, F7 `t_recoil_panel`, range map only), `scripts/range/range_test_recoil_wire.gd` (checks).
+Changed: recoil_model (follow, fold, hip_mult; `tarkov` stub and `aim_basis` removed; `view_offset()`),
+recoil_rotation (`take_settled`), recoil_defs (SETTLE_EPS, FOLD_RATE; POSE is a static var for the panel),
+hip_wander (amplitude 0 -> wander exactly 0, same rng draws), gun.shot_dirs (no hip cone), tactical_player
+(`view_basis`, `turn_view`, `recoil_roll`), player_weapons (bullets along `view_basis(recoil.barrel)`),
+tactical_viewmodel (old classic kick spring and RECOIL_T_VM_* gone; `recoil_xform` on top of the smoothed pose),
+range_menu / range_session / player_state (toggle and `recoil_mode` key removed; old saves load), range_shot
+(`--burst=N` held auto). Tests: deploy/kit/mp1 toggle checks replaced by an old-save-loads check; laser hip
+check now measures the hip wander (the laser's hip 0.7 scales the wander, it used to scale the cone).
+Decisions: fold = Gregory's hip rule via the orchestrator: when the return path has ended and the muzzle moves
+< 0.0005 deg/step, the residual is handed to the view at 10%/step (world aim continuous, worst 0.016 deg/step);
+it happens 0.97..1.35 s after a single AK shot (a shot before that is up to ~0.15 deg off the dot). Hip wander
+with no gain left was a light oscillation that never died (0.2 deg after 5 s); now exactly 0. Camera follow
+runs per 60 Hz step; pivot (0,-0.25,0) read as 0.25 m forward of the model origin. Not done: CameraSnap
+(aiming camera smoothing), the FOV-scale atan for scopes (the model is hidden when scoped).
+Checks: `--range-test` 661 PASS / 0 FAIL (phase-1 numbers unchanged); new: settled hip shot on the dot
+0.0000 deg, aimed follow 1.19 of 1.44 deg, auto reaches stable / semi never, ADS 5 s after a shot = exact pose.
+Shots: docs/art/recoil/ak47_burst_hip.png, ak47_burst_ads.png (`--weapon=ak47 [--ads] --burst=6 --wait=0`).

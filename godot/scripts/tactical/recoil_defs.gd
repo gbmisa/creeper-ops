@@ -23,7 +23,7 @@ const BACK_BONUS := 20.0                     # Aiming.RecoilBackBonus
 const PROGRESS_POWER_SHOT := 2
 const AIM_INTENSITY := 0.75                  # Aiming.AimProceduralIntensity
 ## Stance factors per axis [x, y, z], index 0 prone, 1 crouched, 2 standing.
-const POSE := [Vector3(0.6, 0.7, 0.7), Vector3(0.7, 0.7, 0.7), Vector3(1.0, 1.0, 1.0)]
+static var POSE := [Vector3(0.6, 0.7, 0.7), Vector3(0.7, 0.7, 0.7), Vector3(1.0, 1.0, 1.0)]
 ## ShotRecoilProcessValues: x -> rot x, y -> rot z, z -> pos y (m), x -> cam x (x camera), y -> cam y (x -camera).
 const TO_ROT := 0.15
 const TO_POS := 0.0007
@@ -33,6 +33,10 @@ const NEXT_STABLE := Vector2(0.1, 8.0)       # NextStablePointDistanceRange
 const STABLE_LIMIT := 0.95                   # ToNextStablePointDistanceLimit
 const TO_NEXT_SPEED := 0.2                   # ToNextCurrentSpeed
 const RETURN_CURVE := 0.008                  # ReturnSpeedCurve (flat on the prefab)
+# FB-I (not in TRP): the muzzle counts as settled when it moves less than SETTLE_EPS deg in a step after the
+# return path; its residual then moves into the view at FOLD_RATE of what is left per step (world aim unchanged).
+const SETTLE_EPS := 0.0005
+const FOLD_RATE := 0.1
 # hip wander (breath effector). Deviation from TRP (brief FB-I): base amplitude 0, not 1, so a rested
 # hip shot leaves exactly along the hip dot ray. hip_penalty / throw / hardness_speed are not in the spec.
 const HIP_BASE_AMP := 0.0

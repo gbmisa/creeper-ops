@@ -10,14 +10,14 @@ extends RefCounted
 ## Axes: weapon_rot() / camera_rot() are degrees in Tarkov's axes (x < 0 raises, weapon z / camera -y
 ## turn aside, weapon y and camera z roll); weapon_pos().y is metres back along the bore.
 ## `barrel` / `offset` are the same in game terms: x = pitch up, y = yaw (+ = left, Godot +Y).
-
-var tarkov: bool:   # kept for old callers; there is no other model
-	get: return true
-	set(_v): pass
+## `barrel` is relative to the view without its recoil (the dot ray); `offset` is the camera process (kick)
+## and `follow.value` the camera following the muzzle while aiming, both added to the view only.
+## `view_fold` (deg, game terms) is the settled residual the view must take (caller adds it, then zeroes it).
 
 var aiming := false
 var pose := 2              # 0 prone, 1 crouched, 2 standing
 var auto_fire := false     # in a run of automatic fire (trigger held, auto mode)
+var hip_mult := 1.0        # the fitted gun's `hip` stat (laser 0.7) scales the hip wander (was the hip cone)
 var barrel := Vector2.ZERO
 var offset := Vector2.ZERO
 var shot_index := 0
@@ -29,6 +29,9 @@ var rot: RecoilRotation
 var pos := RecoilSpring.new(TacRecoilDefs.POS_SPRING)
 var cam := RecoilSpring.new(TacRecoilDefs.CAM_SPRING)
 var hip := HipWander.new()
+var follow := RecoilFollow.new()
+var view_fold := Vector2.ZERO
+var _fold := Vector3.ZERO   # settled residual still being handed to the view (rotation axes)
 var row := {}
 var _id := ""
 var _seeded := false
@@ -54,6 +57,7 @@ func _use(r: Dictionary, id: String) -> void:
 	if id != _id or rot == null:
 		_id = id
 		rot = RecoilRotation.new(r)
+		_fold = Vector3.ZERO
 		pos = RecoilSpring.new(TacRecoilDefs.POS_SPRING)
 		cam = RecoilSpring.new(TacRecoilDefs.CAM_SPRING)
 		_curves = []
@@ -68,6 +72,7 @@ func shoot(def: Dictionary, src: RandomNumberGenerator = null, strength := 1.0) 
 	if not _seeded and src != null:
 		set_seed(src.seed)
 	_use(TacRecoilDefs.resolve(def), def.get("id", "ak47"))
+	hip_mult = float(def.get("hip", 1.0))
 	rot.intensity = TacRecoilDefs.AIM_INTENSITY if aiming else 1.0
 	shot_index += 1
 	var stable: int = row["stable_shot"]
@@ -106,7 +111,7 @@ func shoot(def: Dictionary, src: RandomNumberGenerator = null, strength := 1.0) 
 
 
 func _hip_intensity() -> float:
-	return (TacRecoilDefs.POSE[clampi(pose, 0, 2)] as Vector3).y
+	return (TacRecoilDefs.POSE[clampi(pose, 0, 2)] as Vector3).y * hip_mult
 
 
 ## Advances the springs by `dt` of real time in fixed steps. ergo / def are unused (old signature).
@@ -133,13 +138,30 @@ func _step() -> void:
 	pos.step()
 	cam.step()
 	rot.step(h, rng)
+	_fold_step()
 	var defs: Array = row["curves"]
 	for i in _curves.size():
 		var cd: Array = defs[i]
 		_curves[i][1] = (cd[4] if aiming else cd[3]) * RecoilSpring.curve_at(TacRecoilDefs.KICK_CURVE, _curves[i][0])
 		_curves[i][0] += h * cd[2]
 	_prev = _cur
-	_cur = [rot.value() + _curve_sum(2), pos.value() + _curve_sum(1), cam.current + _curve_sum(0)]
+	_cur = [rot.value() + _fold + _curve_sum(2), pos.value() + _curve_sum(1), cam.current + _curve_sum(0)]
+	var c := rot.current + _fold
+	follow.step(row, h, aiming, auto_fire, rot.stable_on, Vector2(-c.x, c.z))
+
+
+## Hands the settled residual to the view a share per step; the barrel's aim in the world never moves.
+func _fold_step() -> void:
+	_fold += rot.take_settled()
+	if _fold == Vector3.ZERO:
+		return
+	var d := _fold * TacRecoilDefs.FOLD_RATE
+	if _fold.length() < 1e-4:
+		d = _fold
+	_fold -= d
+	var g := Vector2(-d.x, d.z)
+	view_fold += g
+	follow.folded(g)
 
 
 func _curve_sum(target: int) -> Vector3:
@@ -169,11 +191,9 @@ func camera_rot() -> Vector3:
 	return (_prev[2] as Vector3).lerp(_cur[2], clampf(_acc / TacRecoilDefs.STEP, 0.0, 1.0))
 
 
-## Where the bullets go: the camera basis turned by the part of the barrel angle the camera did not follow.
-func aim_basis(cam_basis: Basis) -> Basis:
-	var rest := barrel - offset
-	var b := cam_basis.rotated(cam_basis.x, deg_to_rad(rest.x))
-	return b.rotated(b.y, deg_to_rad(rest.y))
+## The view's extra turn from recoil (deg, game terms): camera kick + following the muzzle.
+func view_offset() -> Vector2:
+	return offset + follow.value
 
 
 ## Breathing sway in degrees. hold = breath held; tired = arm stamina empty.

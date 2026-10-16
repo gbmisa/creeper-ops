@@ -382,11 +382,11 @@ static func _under_and_mag(t: RangeTest, r: Dictionary) -> void:
 		for i in 400:
 			sum += rad_to_deg(gun.shot_dirs(basis, ammo, not hip, rng)[0].angle_to(centre))
 		return sum / 400.0
-	var hip_base: float = spread.call(true, g)
 	var ads_base: float = spread.call(false, g)
+	var hip_base := RangeTestRecoilWire.hip_wander(g)
 	var lg := _equip(r, "m4a1", ["laser"])
-	var hip_laser: float = spread.call(true, lg)
-	t.check("laser: hip spread lower (%.2f -> %.2f deg, about -30%% of the hip cone)" % [hip_base, hip_laser], hip_laser < hip_base * 0.8 and hip_laser > hip_base * 0.6)
+	var hip_laser := RangeTestRecoilWire.hip_wander(lg)
+	t.check("laser: hip spread lower (%.3f -> %.3f deg mean hip wander, about -30%%; FB-I: the wander replaced the hip cone)" % [hip_base, hip_laser], hip_laser < hip_base * 0.8 and hip_laser > hip_base * 0.6)
 	t.check("laser: aimed spread is untouched", spread.call(false, lg) == ads_base)
 	await t.get_tree().process_frame
 	await t.get_tree().process_frame

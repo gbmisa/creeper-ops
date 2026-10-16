@@ -93,6 +93,7 @@ const DEFAULTS := {
 	"t_use": ["Tactical", "Use / take / cycle at bench", [KEY_F]],
 	"t_crosshair": ["Tactical", "Toggle hip-fire cone dot", [KEY_X]],
 	"t_help": ["Tactical", "Toggle help", [KEY_H]],
+	"t_recoil_panel": ["Tactical", "Recoil tuning panel (range)", [KEY_F7]],
 	"t_slot_1": ["Tactical", "Weapon slot 1", [KEY_1]],
 	"t_slot_2": ["Tactical", "Weapon slot 2", [KEY_2]],
 	"t_slot_3": ["Tactical", "Weapon slot 3", [KEY_3]],

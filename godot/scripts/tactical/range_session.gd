@@ -14,7 +14,6 @@ var maps := RangeMaps.new()
 ## Carried kit between maps. Backed by a static so it survives the new RangeSession a map load builds
 ## (same idea as RangeMaps.pending); the session API stays the same.
 static var _carried := {}
-static var _carried_recoil := false  # recoil mode of the local player, carried across map loads
 var saved_kit: Dictionary:
 	get:
 		return _carried
@@ -35,7 +34,6 @@ func add_player(peer_id: int, p_is_local: bool) -> PlayerState:
 	players.append(s)
 	if p_is_local:
 		local = s
-		s.recoil_mode = _carried_recoil
 	return s
 
 
@@ -75,8 +73,3 @@ func clear_kit() -> void:
 	saved_kit = {}
 
 
-## Esc-menu recoil toggle for the local player; also carried to the next map's session.
-func set_local_recoil(on: bool) -> void:
-	_carried_recoil = on
-	if local != null:
-		local.recoil_mode = on

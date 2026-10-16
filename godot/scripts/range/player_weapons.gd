@@ -36,6 +36,8 @@ var mag_text_t := 0.0
 var prompt := ""
 var trigger_ads := false  # debug overrides (--ads, --fire)
 var trigger_down := false
+var trigger_held := false  # the trigger is down this frame and the gun may fire (PlayerRecoil: automatic fire)
+var since_shot := 99.0     # s since the last round left (PlayerRecoil)
 var ui_open := false  # inventory screen up: no firing, no aiming
 var _check_t := 0.0
 var _reload_t := 99.0
@@ -58,7 +60,6 @@ func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack, s: Ran
 	else:
 		inv.load_dict(s.saved_kit)
 	inv.ids = s.ids
-	recoil.tarkov = s.local.recoil_mode if s.local != null else false
 	player.carried_kg = inv.total_kg()
 	select_slot("primary")
 
@@ -106,8 +107,6 @@ func drop_current() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	if session != null and session.local != null:
-		recoil.tarkov = session.local.recoil_mode
 	player.spot_mult = LASER_SPOT if gun != null and gun.fit.get("under", "") == "laser" else 1.0
 	_pickup_and_slots()
 	sync()
@@ -126,7 +125,7 @@ func _process(delta: float) -> void:
 		var left := reloader.finish(gun_item)
 		if not left.is_empty():
 			item_dropped.emit(left)
-	recoil.update(delta, gun.def["ergo"], gun.def)
+	PlayerRecoil.tick(self, delta)
 	_apply_view(delta)
 	mag_text_t = maxf(0.0, mag_text_t - delta)
 	if _check_t > 0.0:
@@ -175,6 +174,7 @@ func _ads(delta: float) -> void:
 func _trigger() -> void:
 	var down: bool = (input.frame.left or trigger_down) and not ui_open and not player.sprinting and draw_t <= 0.0
 	var pressed := down and not _was_left
+	trigger_held = down
 	_was_left = down
 	if not down:
 		_clicked = false
@@ -197,9 +197,10 @@ func _trigger() -> void:
 func _shoot(res: Dictionary) -> void:
 	var basis := player.cam.global_basis
 	var origin := player.eye_pos() + basis.z * -0.3
-	for d in gun.shot_dirs(recoil.aim_basis(basis), res["ammo"], ads_amt > 0.8, rng):
+	for d in gun.shot_dirs(player.view_basis(recoil.barrel), res["ammo"], ads_amt > 0.8, rng):
 		bal.spawn(origin, d, res["ammo"], [], gun.stat("vel"))
 	recoil.shoot(gun.eff_def(), rng)
+	since_shot = 0.0
 	if session != null:
 		session.noise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
 		session.events.shot_fired.emit(res, gun)
@@ -266,7 +267,6 @@ func start_reload(fast: bool) -> void:
 
 
 func _apply_view(_delta: float) -> void:
-	player.recoil_off = recoil.offset
 	var tired := arm_stamina < 0.12
 	var sw := RecoilModel.sway(_t, gun.def, holding_breath, tired)
 	player.sway_off = sw * ads_amt

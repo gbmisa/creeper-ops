@@ -29,6 +29,9 @@ class _Smooth:
 			var wanted := (rng.randf_range(-amplitude, amplitude) - current) / count
 			increase += (wanted - increase) * hardness
 		current += increase * dt
+		if amplitude <= 0.0:   # FB-I: no gain left, nothing to wander about: back on the dot (same draws as TRP)
+			current = 0.0
+			increase = 0.0
 		return current
 
 

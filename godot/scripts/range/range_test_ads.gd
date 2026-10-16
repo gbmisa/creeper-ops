@@ -40,13 +40,10 @@ static func run(t: RangeTest, r: Dictionary) -> void:
 
 
 static func _snap_ads(w: PlayerWeapons, vm: TacticalViewmodel) -> void:
-	w.recoil.offset = Vector2.ZERO
-	w.recoil.barrel = Vector2.ZERO
+	w.recoil = RecoilModel.new()   # at rest (no kick, no barrel offset)
 	w.trigger_ads = false
 	w.ads_amt = 1.0
 	w.draw_t = 0.0
-	vm._kick = 0.0
-	vm._kick_v = 0.0
 	vm._check = 0.0
 	vm._process(1.0)  # the first call may rebuild the rig for the new fit
 	vm._process(1.0)  # delta 1.0 snaps the pose lerps
