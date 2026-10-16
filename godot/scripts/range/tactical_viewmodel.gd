@@ -102,9 +102,10 @@ func _clip_and_aim() -> void:
 	ViewmodelClip.apply(model.get_child(0))
 	ViewmodelClip.apply(rig)
 	var sid: String = _gun.fit.get("sight", "")
-	_ads_ok = not AdsPose.points(_def, sid, half_len).is_empty()
+	# F99: the raw def, as AttachmentRig mounts the sight from it (eff_def's ads_pos already has the optic's height)
+	_ads_ok = not AdsPose.points(_gun.def, sid, half_len).is_empty()
 	if _ads_ok:
-		_ads = AttachmentMounts.ads_pose(_def, sid, half_len)
+		_ads = AttachmentMounts.ads_pose(_gun.def, sid, half_len)
 		_ads_euler = _ads.basis.get_euler()
 	else:
 		push_warning("%s has no sight points (mounts.json): ADS uses ads_pos" % _def["id"])
