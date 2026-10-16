@@ -1,21 +1,26 @@
 # Handoff: 2026-10-16 evening (Linux, Opus; branch play/f98-f107, NOT pushed)
 
 **Play build:** `play/f98-f107` (worktree `../creeper fps td-worktrees/f98-f107`) = `feat/fb-reload` d3b08d6
-+ fix/kit-persist + the fixes below + F115-F119/F97 + Muse RANGE5. Range suite **OK 1348**, Skirmish boots with 0 script errors, parse clean.
++ fix/kit-persist + the fixes below + F115-F119/F97 + Muse RANGE5. Range suite **OK 1350**, Skirmish boots with 0 script errors, parse clean.
 Run: `cd "<repo>-worktrees/f98-f107/godot" && godot --path .` (or `res://scenes/skirmish.tscn`).
 Feedback: `docs/playtests/feedback_2026-10-16.md` F98-F114. Rulings: CHANGES.md end (P10 B, P13 A+B).
 
 ## Start here (next session)
-1. PAUSED by Gregory after the Windows playtest build. Ask for playtester + his notes (F120+ in feedback_2026-10-16.md).
-2. Windows build: `tools/export_windows.sh <out>` (templates 4.7.2 installed; exe starts in Firing Range via
-   run/main_scene.template; art/gen json copied to res://export_data). Last: builds/2026-10-16/CreeperOps.zip.
-3. Agent fixing ~1900 SCRIPT ERROR lines (bot_cover freed instances, Muse F97) on fix/bot-cover-errors
-   (../bot-cover-errors): check its commit, suite >= 1348, merge into play. Errors are log-only.
-4. Push play/f98-f107 + move main to it (repo now PUBLIC; cousin got old main). Gregory not yet asked/answered.
-5. Docs-only merge of origin/feat/deactivate-pause-menu (feedback notes, CLAUDE.md refresh) was denied by
-   permission check: ask Gregory. Local feat/enemy-ai has F114 brief commit 2bdae05 not merged.
-6. SKS (F105b): he wants an earlier SKS; old note says "Garand good / SKS bad" about ART-2 Hunyuan. Ask him.
-7. Pause-menu "Deploy to Skirmish" only goes to the compound map, not skirmish_large.
+1. Playtester (Windows) on builds/2026-10-16/CreeperOps.zip (`tools/export_windows.sh <out>`; build id in log + reports).
+   F121 crash with NO guns left (Windows only, Linux fine): switched Windows to Vulkan (guess). Need his
+   %APPDATA%/Godot/app_userdata/Creeper Ops/logs/ newest log or an Esc > Report a bug folder.
+2. Rulings waiting: CHANGES P14 (on-foot keybinds never saved), P15 (F127 M870 tube won't take a different 12ga grade).
+3. Push play/f98-f107 + move main to it (repo PUBLIC; cousin got old main). Not yet answered.
+4. SKS (F105b): he wants an earlier SKS with a detachable mag; ART-2 Hunyuan one was "SKS bad". Ask what he means.
+5. Notes-branch merge (origin/feat/deactivate-pause-menu, docs only) was blocked by permission check: ask.
+
+## 2026-10-16 night (Opus): playtester round F120-F127, range OK 1350
+- Esc menu: typed mouse sensitivity, Display (windowed/borderless/fullscreen), HUD safe zone width/height %
+  (SafeZone; ultra-wide), Report a bug (mic voice.wav + note + screenshot + log -> user://reports). All saved in
+  user://settings.cfg. Sliders always get typed boxes (memory).
+- HUD pinned to corners / safe zone; hip dot projected on the bullet line; guns start on auto; shotgun pump -10 dB;
+  Skirmish spares that don't fit swap in an Assault rig (6x3); drop lag fixed (material caches, F124);
+  bot_cover freed-instance errors fixed.
 
 ## 2026-10-16 evening (Opus): Muse RANGE5 merged, range OK 1348
 - merge/r5-a: r5-med (18 meds, status effects; no fractures/splint) + r5-util (grapple, grenades, binocs). Keys:
