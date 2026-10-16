@@ -2,7 +2,7 @@ class_name RangeWorkbench
 extends Node3D
 ## F11: weapon customization station. Placeholder bench mesh + label; F opens the
 ## inventory UI, where all attachment fitting happens (drag a part onto a gun).
-## Uses the existing attachment data; the viewmodel's AttachmentRig shows the result.
+## Uses the existing attachment data; the viewmodel's AttachmentRig shows the result. F115: also shows RangeInfoPanel.
 
 const POS := Vector3(3.2, 0.0, 9.55)
 const REACH := 2.2
@@ -10,6 +10,7 @@ const REACH := 2.2
 var weapons: PlayerWeapons
 var player: TacticalPlayer
 var inv_ui: InventoryUI
+var info := RangeInfoPanel.new()  # F115: gun + wall reference beside the inventory
 
 
 func setup(w: PlayerWeapons, p: TacticalPlayer, u: InventoryUI) -> void:
@@ -28,15 +29,19 @@ func setup(w: PlayerWeapons, p: TacticalPlayer, u: InventoryUI) -> void:
 	l.position = POS + Vector3(0, 1.5, 0)
 	l.modulate = Color(0.85, 1.0, 0.8)
 	add_child(l)
+	add_child(info)
 
 
 func _process(_dt: float) -> void:
+	if inv_ui != null and info.visible and not inv_ui.is_open:
+		info.visible = false
 	if player == null or not player.enabled or inv_ui == null:
 		return
 	var to := POS - player.global_position
 	to.y = 0.0
 	if to.length() > REACH:
 		return
-	weapons.prompt = "%s: customize weapons" % Keybinds.short("t_use")
+	weapons.prompt = "%s: customize weapons, gun info" % Keybinds.short("t_use")
 	if player.input.act("t_use") and not inv_ui.is_open:
 		inv_ui.open()
+		info.visible = true

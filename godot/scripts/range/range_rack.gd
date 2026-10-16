@@ -42,7 +42,6 @@ func _add_gun(id: String, at: Vector3) -> void:
 	if def.get("flip", false):
 		gun.rotation.y = PI
 	holder.add_child(gun)
-	add_child(label_for(def, at + Vector3(0, -0.1, -0.05)))
 	_slots[id] = holder
 
 

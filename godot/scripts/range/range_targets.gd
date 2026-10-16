@@ -46,7 +46,7 @@ func _ready() -> void:
 		wall_dummies[WALL[i][0]] = _dummy("Wall dummy (%s)" % WALL[i][0], Vector3(x, 0, WALL_Z - 0.9))
 	mover = _dummy("Moving 48 m", Vector3(RAIL.x, 0, RAIL_Z))
 	mover.rail = RAIL
-	_signs()
+	# F115: no "PENETRATION WALL" sign (overlapped the 50 m board); the workbench info panel names the wall
 
 
 func _dummy(nm: String, pos: Vector3) -> RangeDummy:
@@ -61,25 +61,7 @@ func _dummy(nm: String, pos: Vector3) -> RangeDummy:
 func _panel(mat: String, thick: float, x: float) -> void:
 	var col: Color = MaterialDefs.of(mat)["color"]
 	RangeLayout.box(self, "panel_" + mat, Vector3(x, 1.1, WALL_Z), Vector3(2.4, 2.2, thick), mat, thick, col)
-	var l := Label3D.new()
-	l.text = "%s %d cm" % [mat.replace("_", " "), roundi(thick * 100.0)]
-	l.pixel_size = 0.007
-	l.font_size = 48
-	l.outline_size = 10
-	l.position = Vector3(x, 2.45, WALL_Z + 0.05)
-	l.modulate = Color(1, 0.95, 0.75)
-	add_child(l)
-
-
-func _signs() -> void:
-	for row in [["PENETRATION WALL", Vector3(WALL_X0 + WALL_STEP * 2, 3.1, WALL_Z)]]:
-		var l := Label3D.new()
-		l.text = row[0]
-		l.pixel_size = 0.007
-		l.font_size = 64
-		l.outline_size = 12
-		l.position = row[1]
-		add_child(l)
+	# F115: material / thickness labels moved to the workbench info panel (RangeInfoPanel)
 
 
 ## Loadout index into ArmorDefs.LOADOUTS for every dummy.
