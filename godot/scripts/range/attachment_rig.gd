@@ -29,6 +29,10 @@ func build(g: Gun, half: float) -> void:
 		var part := _load(id)
 		if part == null:
 			part = _placeholder(id, slot)
+		else:  # F119: the glb's window onto the reticle (the glass added below stays on the sight axis)
+			for c in part.get_children():
+				if c is Node3D:
+					c.position += AttachmentDefs.ROWS[id].get("glb_off", Vector3.ZERO)
 		part.position = at
 		add_child(part)
 		if slot == "sight" and AttachmentDefs.ROWS[id]["zoom"] <= 1.0:
