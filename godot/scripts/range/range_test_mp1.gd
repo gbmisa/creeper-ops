@@ -18,8 +18,6 @@ static func _isolation(t: RangeTest) -> void:
 	var it := a.inv.make("med_bandage")  # 1x1: pockets are 4x1
 	a.inv.place(it, "pockets", 0, 0)
 	t.check("mp1: inventories are per-player (item in A, B empty)", a.inv.all_items().has(it) and b.inv.all_items().is_empty())
-	a.recoil_mode = true
-	t.check("mp1: recoil_mode is per-player", a.recoil_mode and not b.recoil_mode)
 
 
 ## Bots target session.nearest_player: the nearer of two players wins, and it flips with distance.
@@ -74,7 +72,6 @@ static func _determinism(t: RangeTest) -> void:
 	var sprays := []
 	for rep in 2:
 		var rm := RecoilModel.new()
-		rm.tarkov = true
 		var rng := RandomNumberGenerator.new()
 		rng.seed = sd
 		var pts := []
@@ -86,16 +83,20 @@ static func _determinism(t: RangeTest) -> void:
 	t.check("mp1: same seed -> identical spray offsets", sprays[0] == sprays[1], str(sprays[0]))
 
 
-## PlayerState serializes and restores peer, recoil mode, stats and the kit.
+## PlayerState serializes and restores peer, stats and the kit; an old save's recoil_mode key still loads.
 static func _state_round_trip(t: RangeTest) -> void:
 	var session := RangeSession.new(13)
 	var ps := session.add_player(7, false)
-	ps.recoil_mode = true
 	ps.stats = {"kills": 3, "shots": 10, "hits": 4}
 	var ak := ps.inv.make("ak47")
 	ps.inv.place(ak, "primary")
 	var back := PlayerState.from_dict(ps.to_dict())
 	var bg = back.inv.equipped("primary")
-	t.check("mp1: PlayerState round-trips (peer, recoil mode, stats, kit)",
-		back.peer_id == 7 and back.recoil_mode and back.stats == {"kills": 3, "shots": 10, "hits": 4} \
+	var old := ps.to_dict()
+	old["recoil_mode"] = true   # the removed Classic/Tarkov toggle (FB-I)
+	var from_old := PlayerState.from_dict(old)
+	t.check("mp1: an old save with the removed recoil_mode key loads (peer, stats kept)",
+		from_old.peer_id == 7 and from_old.stats == {"kills": 3, "shots": 10, "hits": 4} and not ps.to_dict().has("recoil_mode"))
+	t.check("mp1: PlayerState round-trips (peer, stats, kit)",
+		back.peer_id == 7 and back.stats == {"kills": 3, "shots": 10, "hits": 4} \
 		and bg != null and bg["id"] == "ak47", str(back.to_dict().get("stats")))

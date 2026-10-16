@@ -2,6 +2,8 @@ class_name TacticalViewmodel
 extends Node3D
 ## The held gun under the camera: hip / ADS poses (per-weapon ads_pos / hip_pos from WeaponDefs), recoil
 ## kick, mouse sway, walk bob, and the glb clips timed to fire / cycle / reload / fix.
+## Recoil (FB-I, Tarkov): the gun turns by the barrel angle the view did not take, about the row's pivot, and
+## kicks back along the bore by the position process (recoil_xform); applied on top of the smoothed pose.
 
 var weapons: PlayerWeapons
 var player: TacticalPlayer
@@ -13,8 +15,8 @@ var rig: AttachmentRig
 var _gun: Gun
 var half_len := 0.3
 var _def := {}
-var _kick := 0.0
-var _kick_v := 0.0
+var _base_pos := Vector3.ZERO  # the smoothed pose without recoil (what model.position/rotation used to hold)
+var _base_rot := Vector3.ZERO
 var _bob_t := 0.0
 var _check := 0.0
 var _cycle_clip := ""
@@ -27,6 +29,8 @@ const HIP_YAW := 2.5
 var _ads := Transform3D.IDENTITY  # FB-H: gun pose at full ADS (AdsPose), valid when _ads_ok
 var _ads_euler := Vector3.ZERO
 var _ads_ok := false
+var _room := -1.0  # drawn kick-back room at full ADS (eye keeps ADS_EYE_CLEAR), < 0 = not measured yet
+var _full := Transform3D.IDENTITY  # gun pose at full ADS (for _room)
 
 
 func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
@@ -38,6 +42,8 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	arms = FpArms.new()
 	add_child(arms)
 	ViewmodelClip.apply(arms, "Arms")
+	if w.gun != null:
+		_on_switched(w.gun)  # F20: select_slot in PlayerWeapons.setup fired before we connected
 
 
 func _on_switched(g: Gun) -> void:
@@ -49,6 +55,8 @@ func _on_switched(g: Gun) -> void:
 	_gun = g
 	_def = g.eff_def()
 	model = Node3D.new()
+	_base_pos = Vector3.ZERO
+	_base_rot = Vector3.ZERO
 	add_child(model)
 	var glb := (load("res://assets/models/guns/%s.glb" % _def["model"]) as PackedScene).instantiate()
 	model.add_child(glb)
@@ -95,24 +103,25 @@ func _clip_and_aim() -> void:
 	ViewmodelClip.apply(rig)
 	var sid: String = _gun.fit.get("sight", "")
 	_ads_ok = not AdsPose.points(_def, sid, half_len).is_empty()
-	if not _ads_ok:
+	if _ads_ok:
+		_ads = AttachmentMounts.ads_pose(_def, sid, half_len)
+		_ads_euler = _ads.basis.get_euler()
+	else:
 		push_warning("%s has no sight points (mounts.json): ADS uses ads_pos" % _def["id"])
-		return
-	_ads = AttachmentMounts.ads_pose(_def, sid, half_len)
-	_ads_euler = _ads.basis.get_euler()
+	var full := Transform3D(Basis.from_euler(_ads_euler), _ads.origin) if _ads_ok \
+		else Transform3D(Basis(), base_pos(_def, half_len, 1.0))
+	_room = -1.0   # measured on first use (RecoilEyeRoom.room is a mesh scan)
+	_full = full
 
 
 func _on_shot(res: Dictionary, g: Gun) -> void:
 	if not res["fired"]:
 		return
-	_kick_v += 0.4 + g.stat("up") * 0.2
-	if weapons.recoil.tarkov:
-		_kick_v += TacticalConfig.RECOIL_T_VM_KICK * (1.0 + g.stat("up"))
 	if g.stat("flash") > 0.5:
 		flash.flash(Color(1.0, 0.8, 0.45), 0.07 + 0.02 * float(g.def["kg"]), 0.05, 2.0)
 	if _cycle_clip != "":
 		var clip := "FireWOBullet" if res["last"] else "FireWBullet"
-		_play(clip, 0.2 + g.def["cycle"] if g.def["cycle"] > 0.0 else maxf(0.18, 60.0 / g.def["rpm"]))
+		_play(clip, 0.2 + g.def["cycle"] if g.def["cycle"] > 0.0 else maxf(0.18, 60.0 / g.def["rpm"]), 0.0, true)
 	else:
 		_play("Fire", clampf(60.0 / g.def["rpm"], 0.06, 0.4))
 
@@ -128,8 +137,6 @@ func _on_action(kind: String, secs: float) -> void:
 			else:
 				_play("Reload", secs)
 				arms.reload(secs)
-		"fix":
-			_play("Slide" if anim.has_animation("Slide") else "Reload", secs)
 		"cycle":
 			if _cycle_clip != "" and not anim.is_playing():
 				_play(_cycle_clip, secs / 0.65, 0.35)
@@ -139,13 +146,18 @@ func _on_action(kind: String, secs: float) -> void:
 			_check = secs
 
 
-func _play(clip: String, secs: float, from := 0.0) -> void:
+## `restart`: a shot always plays its clip from the start. AnimationPlayer.play() of the clip already playing
+## carries on instead, so a fast gun (Garand 0.15 s gap, clip squeezed into 0.18 s) animated only every other
+## shot and the bolt and ejected case popped (F70 flicker).
+func _play(clip: String, secs: float, from := 0.0, restart := false) -> void:
 	if not anim.has_animation(clip):
 		return
 	var len := anim.get_animation(clip).length
 	anim.play(clip, 0.0, len * (1.0 - from) / maxf(secs, 0.05))
 	if from > 0.0:
 		anim.seek(len * from, true)
+	elif restart:
+		anim.seek(0.0, true)
 
 
 func _process(delta: float) -> void:
@@ -168,14 +180,6 @@ func _process(delta: float) -> void:
 	_bob_t += delta * speed * 2.0
 	var bob := speed * 0.0035 * (1.0 - a * 0.85)
 	pos += Vector3(sin(_bob_t) * bob, absf(sin(_bob_t)) * bob * 0.8, 0)
-	_kick_v -= (_kick * 400.0 + _kick_v * 20.0) * delta
-	_kick += _kick_v * delta
-	pos.z += _kick * (1.0 - a * 0.5)
-	rot.x += _kick * 6.0 * (1.0 - a * 0.5)
-	if weapons.recoil.tarkov:   # the gun follows the bore, which the camera only partly follows
-		var rest := weapons.recoil.barrel - weapons.recoil.offset
-		rot += Vector3(deg_to_rad(rest.x * TacticalConfig.RECOIL_T_VM_PITCH), deg_to_rad(rest.y * TacticalConfig.RECOIL_T_VM_YAW),
-			deg_to_rad(-rest.y * TacticalConfig.RECOIL_T_VM_ROLL))
 	if bolt != null:
 		bolt.update(delta)
 		rot.z += bolt.roll()
@@ -195,10 +199,35 @@ func _process(delta: float) -> void:
 		reload_tl.update(delta)
 		pos += reload_tl.gun_pos
 		rot += reload_tl.gun_rot
-	model.position = model.position.lerp(pos, minf(1.0, delta * 20.0))
-	model.rotation = model.rotation.lerp(rot, minf(1.0, delta * 20.0))
+	_base_pos = _base_pos.lerp(pos, minf(1.0, delta * 20.0))
+	_base_rot = _base_rot.lerp(rot, minf(1.0, delta * 20.0))
+	model.position = _base_pos
+	model.rotation = _base_rot
+	if _room < 0.0 and a > 0.0:
+		_room = RecoilEyeRoom.room(model, _full)
+	var rx := recoil_xform(weapons.recoil, a, _room / maxf(a, 1e-3) if _room >= 0.0 else RecoilEyeRoom.FREE)
+	if rx != Transform3D.IDENTITY:
+		model.transform = model.transform * rx
 	if not _posed:
 		arms.update(model, delta)
+
+
+## The recoil's turn and kick back in the gun's own frame (identity at rest, so the FB-H poses are untouched).
+## `room`: the drawn kick back eases into it (RecoilEyeRoom; the room at full ADS over the ADS amount).
+static func recoil_xform(rm: RecoilModel, ads := 0.0, room := RecoilEyeRoom.FREE) -> Transform3D:
+	var w := rm.weapon_rot()
+	var rel := rm.barrel - rm.view_offset()   # the barrel angle the view did not take (deg)
+	var back := rm.weapon_pos().y
+	var cap: float = rm.row.get("draw_back_max", 0.0)   # per-gun picture cap (F73), halved at full ADS like the classic kick
+	if cap > 0.0:
+		back = RecoilEyeRoom.soften(back, cap * (1.0 - 0.5 * ads))
+	back = RecoilEyeRoom.soften(back, room)
+	if rel.length_squared() < 1e-12 and absf(w.y) < 1e-6 and absf(back) < 1e-7:
+		return Transform3D.IDENTITY
+	var piv: Vector3 = rm.row["pivot"]
+	var p := Vector3(piv.x, piv.z, piv.y)   # Tarkov bone axes: y runs back along the bore -> gun-local z
+	var b := Basis.from_euler(Vector3(deg_to_rad(rel.x), deg_to_rad(rel.y), deg_to_rad(w.y)))
+	return Transform3D(Basis(), Vector3(0, 0, back) + p - b * p) * Transform3D(b, Vector3.ZERO)
 
 
 ## Gun model position under the camera, hip (a = 0) to ADS (a = 1). The butt is shouldered at the hip; when

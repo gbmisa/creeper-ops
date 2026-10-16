@@ -8,7 +8,7 @@ const BACK_Z := 14.0
 const DISTANCES := [10, 25, 50, 100, 200, 300]
 const SPAWN := Vector3(0, 0.05, 4.5)
 const RACK_POS := Vector3(-5.0, 0, 9.7)  # wall-mounted, faces -Z
-const BENCH_POS := Vector3(5.0, 0, 8.0)
+const BENCH_POS := Vector3(5.0, 0, 9.5)  # F9: ammo bench against the back wall
 
 static var _mats := {}
 

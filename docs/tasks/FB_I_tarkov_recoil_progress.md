@@ -1,0 +1,100 @@
+# FB-I recoil progress (brief: FB_I_tarkov_recoil.md)
+
+## Phase 1: the model (done, Opus agent, 2026-10-15)
+Source: the spec excerpt plus TRP's own code, fetched with `gh api` (Apache-2.0, credited in headers):
+`TRP/crates/trp-sim/src/recoil.rs` (Recoil, RotationProcess, Process) and `breath.rs` (SmoothRandom, hip gain).
+Ported line by line; nothing invented in the formulas.
+
+Files: `godot/scripts/tactical/recoil_defs.gd` (class **TacRecoilDefs**: `RecoilDefs` is already taken by
+`scripts/fps/recoil_defs.gd`), `recoil_springs.gd` (RecoilSpring: position/camera process, curve + Unity clamp),
+`recoil_rotation.gd` (RecoilRotation: stable mode, multiplier, return path, settle point), `hip_wander.gd`
+(HipWander), `recoil_model.gd` (rewritten: 60 Hz accumulator, blend of last two steps, curves, hip wander).
+Checks: `range_test_recoil.gd` rewritten; classic checks rewritten in `range_test_logic.gd` (`_recoil`) and
+`range_test_attach.gd` (`_first_kick`, `_climb`, base-kick and per-attachment checks). Dead classic consts
+removed from `tactical_config.gd` (RECOIL_CAP_SHOTS, RATE_*, T_UP/SIDE_MULT, T_DRIFT, T_OMEGA).
+
+### AKM values: what the spec gives vs what was worked back
+Given and used as-is: angle 85 +-11, group shots 1-200 narrowing +6/-6 (80..90), convergence 2.4, damping 0.86,
+category 0.19, stable shot 5, camera snap 3.5, cam-to-weapon 0.1..0.2 / step 0.1, pivot (0,-0.25,0), hip gain
+0.16 / 0.2 s / 7, all prefab numbers (ranges, 0.1399, bonuses 20, stance factors, routing, springs).
+**Not in the spec or repo (SPT template data):** worked back from the spec's measured shots:
+- force_back 270: spec's worked-back kick 18.49..29.78 mm = POS_STRENGTH x (B+20) x 0.1399 x 0.0007.
+- force_up 104 and camera 0.05: fitted to hip peak mean 1.77 / aimed 1.34 and camera force mean 0.906
+  (both fits agree; 0.05 is also TRP's rifle test value).
+- stable_step 2.5, stable_angle 0..28, post_v -1.5..0, post_h -1.5..1.5, return_offset 0.01, return_damping 0.48:
+  TRP's assault-rifle test settings (`recoil.rs` tests). The angle spread from shot 5 matches the spec's 66..90.
+- Hip prefab: HIP_PENALTY 1 (spec: "drifts about a degree"), throw 0.2..0.7, hardness speed 0.1: guesses.
+- Weapon curves (shape from spec): multipliers unmeasured: roll 1.0 (aim 0.5), back 0.001 m (0.0005), camera
+  roll 0.25 (0.125), time mult 1. Linear between keys (Unity tangents unknown). Tuning-panel candidates.
+
+### Other guns (TacRecoilDefs.row): AK row, force_up/force_back x (up / AK up), dispersion and the group's
+narrowing x (side / AK side). AK up 0.75 side 0.45 -> e.g. m4a1 force_up 69.3 back 180 disp 7.3; pkm 124.8 /
+324 / 14.7; glock18 332.8 / 864 / 26.9; sniper 485 / 1260 / 19.6. The old `angle`, `conv`, `cam_share` def
+columns are no longer read (left in weapon_defs; phase 2 may drop them).
+Attachments: parts = stat(up)/def up (scales force_up AND force_back, as the spec's `parts`); stat(side)/def side
+scales the angle spread (base dispersion and group narrowing).
+
+### Checks (40 seeds, AK47 standing) vs spec
+hip peak 1.54..1.95 mean 1.78 (spec sim 1.56..1.99, 1.77); at 0.133 s (0.141; TRP's extra frame of kick delay
+not modelled); back 15.4..24.5 mm mean 19.9 (15.3..24.5, 19.8); camera 0.79 (0.79); aimed 1.15..1.46 mean 1.34
+(1.17..1.51, 1.34); hip auto shots 2-5 1.61/2.56/3.69/5.25 (1.67/2.62/3.73/5.27); held shots 7-10 5.3..9.3 mean
+7.3 (5.3..9.5, 7.1); aimed auto probe 1.26/1.97/2.77/3.90 (1.16/1.92/2.74/3.85). Hip at rest 0.0000 deg.
+Decisions: muzzle peak is measured on the rotation process's `current` (excludes hip wander); kick back on the
+position spring (the spec works it back from that spring); bursts stand 0.5 s first (sets the return rate,
+as a player standing before firing does). `--range-test` 653 PASS / 0 FAIL. Smoke 1264 PASS, 0 failures.
+
+### Interim state (until phase 2)
+Game uses the new model whatever the Esc toggle says (`RecoilModel.tarkov` is a stub that reads true).
+player_weapons does not yet set `aiming`, `pose` or `auto_fire`, so in game every shot is "shot 1, hip"
+(no stable mode) until phase 2 wires them. Camera follow-while-aiming, CameraSnap and the viewmodel kick
+back/roll are phase 2. `aim_basis` keeps the old "barrel minus camera" formula for now.
+
+### Suggestions
+- Phase 2: set `recoil.auto_fire` while the trigger is held in auto, `aiming` from ads_amt, `pose` from stance.
+- After a shot the muzzle settles near, not at, rest (TRP settle point): the ADS-at-rest alignment check in phase 2
+  must allow for that or the settle point must be read as "where the sights now are".
+
+## Phase 2: wiring + tuning panel (done, Opus agent, 2026-10-15)
+Files: new `scripts/range/player_recoil.gd` (PlayerRecoil: aiming = ads_amt > 0.8, pose from crouch, automatic
+fire = trigger held in auto with a shot within 1.5 intervals; writes kick/follow/roll, applies the fold),
+`scripts/tactical/recoil_follow.gd` (RecoilFollow: spec "Onto the camera"), `scripts/range/recoil_panel.gd`
+(RecoilPanel, F7 `t_recoil_panel`, range map only), `scripts/range/range_test_recoil_wire.gd` (checks).
+Changed: recoil_model (follow, fold, hip_mult; `tarkov` stub and `aim_basis` removed; `view_offset()`),
+recoil_rotation (`take_settled`), recoil_defs (SETTLE_EPS, FOLD_RATE; POSE is a static var for the panel),
+hip_wander (amplitude 0 -> wander exactly 0, same rng draws), gun.shot_dirs (no hip cone), tactical_player
+(`view_basis`, `turn_view`, `recoil_roll`), player_weapons (bullets along `view_basis(recoil.barrel)`),
+tactical_viewmodel (old classic kick spring and RECOIL_T_VM_* gone; `recoil_xform` on top of the smoothed pose),
+range_menu / range_session / player_state (toggle and `recoil_mode` key removed; old saves load), range_shot
+(`--burst=N` held auto). Tests: deploy/kit/mp1 toggle checks replaced by an old-save-loads check; laser hip
+check now measures the hip wander (the laser's hip 0.7 scales the wander, it used to scale the cone).
+Decisions: fold = Gregory's hip rule via the orchestrator: when the return path has ended and the muzzle moves
+< 0.0005 deg/step, the residual is handed to the view at 10%/step (world aim continuous, worst 0.016 deg/step);
+it happens 0.97..1.35 s after a single AK shot (a shot before that is up to ~0.15 deg off the dot). Hip wander
+with no gain left was a light oscillation that never died (0.2 deg after 5 s); now exactly 0. Camera follow
+runs per 60 Hz step; pivot (0,-0.25,0) read as 0.25 m forward of the model origin. Not done: CameraSnap
+(aiming camera smoothing), the FOV-scale atan for scopes (the model is hidden when scoped).
+Checks: `--range-test` 661 PASS / 0 FAIL (phase-1 numbers unchanged); new: settled hip shot on the dot
+0.0000 deg, aimed follow 1.19 of 1.44 deg, auto reaches stable / semi never, ADS 5 s after a shot = exact pose.
+Shots: docs/art/recoil/ak47_burst_hip.png, ak47_burst_ads.png (`--weapon=ak47 [--ads] --burst=6 --wait=0`).
+
+## Playtest fix 2026-10-16 (Opus agent, night/2026-10-15): "the gun tilts down" (AK47, MP5), Glock 18
+Cause: aimed, the view = camera kick (cam spring, accumulates to ~3 deg in a 6-shot AK burst, slow return)
++ follow (converges on the muzzle). The gun is drawn at barrel - view, so it sat up to 3.4 deg muzzle-down
+in the view, rotated about the forward pivot (rear up toward the eye), and the position spring brought it
+back up to 5.9 cm (rest clearance 6.8 cm): top cover crossed the eye.
+Fix: `RecoilModel.view_offset()` pitch is capped at the muzzle's recoil pitch (barrel without hip wander),
+so the drawn bore never pitches below the view and sights = bullets. New `scripts/range/recoil_eye_room.gd`
+(RecoilEyeRoom): per gun/fit, the kick-back room at full ADS before any triangle is within ADS_EYE_CLEAR
+(walked in 1 mm steps, lazily on the first kick); the drawn kick back eases into it (unchanged below 60%).
+Check `range_test_recoil_eye.gd`: aimed 6-shot AK/MP5 burst, per 60 Hz step: eye clearance and bore dip.
+Before: AK 1.5 cm / -2.83 deg, MP5 3.1 cm / -1.39 deg. After: AK 3.1 cm (room 3.8 cm), MP5 3.3 cm, dip 0.000.
+Shots: docs/art/recoil/{ak47,mp5}_ads_burst{3,6}_fix.png. Range 859 OK, smoke 0 failures.
+Glock 18: classic measured on fix/fb-i (RecoilModel classic, 40 seeds, 1100 rpm, view = bullets): at shots
+2-15 1.78 2.96 3.75 4.27 4.62 4.85 5.01 5.11 5.18 5.23 5.26 5.28 5.29 5.30; mean |yaw| ~0.4-0.6;
+after release 4.13 / 1.80 / 0.45 / 0.03 at 0.1 / 0.25 / 0.5 / 1 s. Tarkov row before: aimed 2.46 4.69 7.41
+12.0 .. 17 deg plateau, hip 22. New `TacRecoilDefs.GUN_ROWS["glock18"]` = force_up 165, convergence 3.2,
+damping 0.78, stable_shot 3 (grid fit, aimed muzzle + hip view equally weighted; camera 0.05 kept).
+Aimed (view = muzzle): 1.07 2.09 3.11 3.96 4.25 4.48 4.58 4.60 .. 4.4; yaw 0.1-0.5; return 4.36 / 1.32 /
+-0.11 / 0.03. Hip view: 1.08 2.04 3.03 3.87 4.41 5.00 5.41 5.60 .. 5.9 (muzzle 1.37 .. 6.1); return 5.77 /
+1.77 / -0.16 / 0.04. The spring cannot jump instantly, so shot 2 lags the classic (1.07 vs 1.78).
+Suggestion: a range check pinning the Glock 18 curve.

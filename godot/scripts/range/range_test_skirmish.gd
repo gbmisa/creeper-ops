@@ -46,18 +46,19 @@ static func run(t: RangeTest, session: RangeSession, player: TacticalPlayer) -> 
 		if b.kind == "marksman":
 			m = b
 	t.check("marksman starts on the tower with two overwatch spots", m.global_position.y > 5.5 and m.patrol.size() == 2)
+	await _bots_move_on_shot(t, game, session, player)
 	for b in game.bots:
 		b.queue_free()
 	game.bots.clear()
 	var out := SkirmishData.EXTRACT + Vector3(SkirmishData.EXTRACT_R + 2.0, 0, 0)
 	var inside := SkirmishData.EXTRACT + Vector3(1, 0, 0)
 	t.check("extract timer: outside the zone does not count", not game.tick_extract(20.0, out) and game.progress == 0.0)
-	game.tick_extract(7.9, inside)
+	game.tick_extract(SkirmishData.EXTRACT_TIME - 0.1, inside)
 	var early := game.progress < SkirmishData.EXTRACT_TIME
 	game.tick_extract(1.0, out)
 	t.check("extract timer resets when leaving the zone", early and game.progress == 0.0)
-	game.tick_extract(7.9, inside)
-	t.check("extract timer wins after 8 s inside", game.tick_extract(0.2, inside))
+	game.tick_extract(SkirmishData.EXTRACT_TIME - 0.1, inside)
+	t.check("extract timer wins after EXTRACT_TIME inside", game.tick_extract(0.2, inside))
 	game.kills = 3
 	game.finish(true)
 	t.check("finish(true): EXTRACTED screen, player frozen", game.over and game.won and game.end_screen != null and not player.enabled)
@@ -68,9 +69,40 @@ static func run(t: RangeTest, session: RangeSession, player: TacticalPlayer) -> 
 	var before := player.body.total_frac()
 	game.loot(crate)
 	t.check("loot crate: meds heal once and the crate is taken", player.body.total_frac() > before and crate["taken"])
+	var mag := {}
+	for it in weapons.inv.all_items():
+		if not it.has("gun") and it["id"] in ItemDefs.ROWS and ItemDefs.ROWS[it["id"]]["kind"] == "mag":
+			mag = it
+			break
+	if not mag.is_empty():
+		mag["rounds"] = 0
+	game.loot({"pos": Vector3.ZERO, "loot": ["ammo"], "taken": false})
+	t.check("loot crate: ammo fills the carried mags (F88)", not mag.is_empty() and int(mag["rounds"]) == int(ItemDefs.def_of(mag)["cap"]))
+	t.check("loot prompt runs after PlayerWeapons clears it (F88)", game.process_priority > weapons.process_priority)
 	game.end_screen.queue_free()
 	game.queue_free()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+## F88: a shot at the spawn sends every bot moving. Bots used to stand still with a path: the navmesh sits 0.5 m up,
+## so waypoints over their feet never counted as reached; and the bake routed them over 0.6 m loot crates.
+static func _bots_move_on_shot(t: RangeTest, game: SkirmishGame, session: RangeSession, player: TacticalPlayer) -> void:
+	var god := player.god
+	player.god = true
+	player.global_position = SkirmishData.SPAWN
+	var p0 := {}
+	for b in game.bots:
+		p0[b] = b.global_position
+	session.noise.emit(SkirmishData.SPAWN + Vector3(0, 1.5, 0), BotNoise.SHOT_R, "shot", player)
+	for i in 240:
+		await t.get_tree().physics_frame
+	var stuck := []
+	for b in game.bots:
+		if b.kind != "marksman" and b.global_position.distance_to(p0[b]) < 1.0 and not b._arrived() and b.brain.state != BotBrain.ENGAGE:
+			stuck.append("%s %s" % [b.label_name, b.brain.state])
+	t.check("a shot at spawn: every bot that has somewhere to go moves within 4 s (F88)", stuck.is_empty(), str(stuck))
+	t.bal.shots.clear()
+	player.god = god
 
 
 static func _reaches(map: RID, from: Vector3, to: Vector3, tol := 1.2) -> bool:

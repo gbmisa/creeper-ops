@@ -4,7 +4,7 @@ extends Node
 ## fire mode, mag check, zeroing, inspect / fix, hold breath. Emits signals the viewmodel / HUD follow.
 
 signal shot(res: Dictionary, gun: Gun)
-signal action(kind: String, secs: float)  # "reload", "fix", "cycle"
+signal action(kind: String, secs: float)  # "reload", "cycle"
 signal switched(gun: Gun)
 signal message(text: String)
 signal item_dropped(item: Dictionary)  # left the inventory with nowhere to go; the world spawns it
@@ -36,6 +36,8 @@ var mag_text_t := 0.0
 var prompt := ""
 var trigger_ads := false  # debug overrides (--ads, --fire)
 var trigger_down := false
+var trigger_held := false  # the trigger is down this frame and the gun may fire (PlayerRecoil: automatic fire)
+var since_shot := 99.0     # s since the last round left (PlayerRecoil)
 var ui_open := false  # inventory screen up: no firing, no aiming
 var _check_t := 0.0
 var _reload_t := 99.0
@@ -51,13 +53,15 @@ func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack, s: Ran
 	bal = b
 	rack = r
 	session = s
+	reloader.infinite = session != null and session.maps.selected in RangeMaps.INFINITE_AMMO
 	rng.seed = s.next_seed()
 	if s.saved_kit.is_empty():
 		StarterLoadout.fill(inv)
 	else:
 		inv.load_dict(s.saved_kit)
+		if s.maps.selected == "skirmish":
+			SkirmishKit.top_up(inv)
 	inv.ids = s.ids
-	recoil.tarkov = s.local.recoil_mode if s.local != null else false
 	player.carried_kg = inv.total_kg()
 	select_slot("primary")
 
@@ -105,8 +109,6 @@ func drop_current() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	if session != null and session.local != null:
-		recoil.tarkov = session.local.recoil_mode
 	player.spot_mult = LASER_SPOT if gun != null and gun.fit.get("under", "") == "laser" else 1.0
 	_pickup_and_slots()
 	sync()
@@ -115,17 +117,18 @@ func _process(delta: float) -> void:
 		return
 	var before := gun.busy_kind
 	gun.update(delta)
-	draw_t = maxf(0.0, draw_t - delta)
-	_reload_t += delta
-	_ads(delta)
-	_trigger()
-	_commands()
+	# Finish before this frame's input: an R on the finishing frame must not restart on the stale old (empty) mag.
 	if before != "" and gun.busy_kind == "" and before == "reload":
 		_gun_snd("mag_in")
 		var left := reloader.finish(gun_item)
 		if not left.is_empty():
 			item_dropped.emit(left)
-	recoil.update(delta, gun.def["ergo"], gun.def)
+	draw_t = maxf(0.0, draw_t - delta)
+	_reload_t += delta
+	_ads(delta)
+	_trigger()
+	_commands()
+	PlayerRecoil.tick(self, delta)
 	_apply_view(delta)
 	mag_text_t = maxf(0.0, mag_text_t - delta)
 	if _check_t > 0.0:
@@ -174,6 +177,7 @@ func _ads(delta: float) -> void:
 func _trigger() -> void:
 	var down: bool = (input.frame.left or trigger_down) and not ui_open and not player.sprinting and draw_t <= 0.0
 	var pressed := down and not _was_left
+	trigger_held = down
 	_was_left = down
 	if not down:
 		_clicked = false
@@ -196,15 +200,16 @@ func _trigger() -> void:
 func _shoot(res: Dictionary) -> void:
 	var basis := player.cam.global_basis
 	var origin := player.eye_pos() + basis.z * -0.3
-	for d in gun.shot_dirs(recoil.aim_basis(basis), res["ammo"], ads_amt > 0.8, rng):
+	for d in gun.shot_dirs(player.view_basis(recoil.barrel), res["ammo"], ads_amt > 0.8, rng):
 		bal.spawn(origin, d, res["ammo"], [], gun.stat("vel"))
 	recoil.shoot(gun.eff_def(), rng)
+	since_shot = 0.0
 	if session != null:
 		session.noise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
 		session.events.shot_fired.emit(res, gun)
 	RangeAudio.event({"kind": "shot", "item": gun.id, "local": true, "cal": gun.def["cal"], "cls": gun.def["class"],
 		"suppressed": gun.stat("noise") < 0.9})
-	if res["ping"]:
+	if res["ping"] and gun.id in SoundDefs.PING_GUNS:
 		RangeAudio.event({"kind": "sample", "item": "garand_ping", "local": true, "db": -4.0})
 	shot.emit(res, gun)
 
@@ -238,18 +243,6 @@ func _commands() -> void:
 		_check_t = TacticalConfig.MAG_CHECK_TIME
 		mag_text = ""
 		action.emit("check", TacticalConfig.MAG_CHECK_TIME)
-	if input.frame.act("t_inspect"):
-		var r := gun.inspect()
-		match r:
-			"ok":
-				message.emit("Weapon looks fine")
-			"busy":
-				pass
-			"fixing":
-				message.emit("Clearing it...")
-				action.emit("fix", gun.busy_t)
-			_:
-				message.emit({"misfire": "Misfire: dud round", "feed": "Failure to feed", "jam": "Jammed"}[r])
 
 
 func start_reload(fast: bool) -> void:
@@ -265,7 +258,6 @@ func start_reload(fast: bool) -> void:
 
 
 func _apply_view(_delta: float) -> void:
-	player.recoil_off = recoil.offset
 	var tired := arm_stamina < 0.12
 	var sw := RecoilModel.sway(_t, gun.def, holding_breath, tired)
 	player.sway_off = sw * ads_amt

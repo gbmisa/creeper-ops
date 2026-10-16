@@ -6,6 +6,9 @@ class_name RangeMaps
 
 const SCENE := "res://scenes/firing_range.tscn"
 
+## Maps where the player's reloads never run dry (so reload animations can be watched).
+const INFINITE_AMMO := ["range"]
+
 static var pending := "range"
 
 var selected := "range"
@@ -13,7 +16,11 @@ var selected := "range"
 
 ## From outside a session (main menus): queue the map, then load the scene.
 static func go(map: String) -> void:
-	pending = map
+	queue(map)
+	var tree := Engine.get_main_loop() as SceneTree
+	var sfx := tree.root.get_node_or_null("Sfx") if tree != null else null
+	if sfx != null:
+		sfx.silence_beds()  # the command game's wind / creeper beds would keep looping in the range
 	Engine.get_main_loop().call_deferred("change_scene_to_file", SCENE)
 
 
@@ -21,3 +28,12 @@ static func go(map: String) -> void:
 func change(map: String) -> void:
 	selected = map
 	go(map)
+
+
+## Sets the next map and lifts the pause (F80: the pause menu's buttons switch maps with the tree
+## paused; the new scene inherited paused = true and every node in it stayed frozen for good).
+static func queue(map: String) -> void:
+	pending = map
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree != null:
+		tree.paused = false

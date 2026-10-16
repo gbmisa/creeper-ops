@@ -71,6 +71,14 @@ func set_bed(bed: String, vol: float) -> void:
 	_bed_target[bed] = clampf(vol, 0.0, 1.0)
 
 
+## Every bed off at once, no fade (leaving the command game for the Firing Range / Skirmish).
+func silence_beds() -> void:
+	for bed in _beds:
+		_bed_target[bed] = 0.0
+		_bed_now[bed] = 0.0
+		(_beds[bed] as AudioStreamPlayer).stop()
+
+
 func _process(delta: float) -> void:
 	for bed in _beds:
 		var p: AudioStreamPlayer = _beds[bed]

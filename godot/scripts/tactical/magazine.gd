@@ -1,6 +1,7 @@
 class_name Magazine
 extends RefCounted
-## A stack of rounds (ammo ids, top = last; mixed loads allowed). Also used for tubes and clips.
+## A stack of rounds of ONE ammo type (F79; ids kept per round for simple pop/count). Also used for tubes and clips.
+## push() refuses a round of another type; the loader must empty the mag first (or pick the matching type).
 
 var cap := 30
 var rounds: Array[String] = []
@@ -19,10 +20,21 @@ func is_full() -> bool:
 
 
 func push(ammo_id: String) -> bool:
-	if is_full():
+	if is_full() or not accepts(ammo_id):
 		return false
 	rounds.append(ammo_id)
 	return true
+
+
+## True if a round of this type may join (an empty magazine takes any type).
+func accepts(ammo_id: String) -> bool:
+	return rounds.is_empty() or rounds[0] == ammo_id
+
+
+## Old saves / hand-built lists: every round becomes the first round's type.
+func normalize() -> void:
+	for i in range(1, rounds.size()):
+		rounds[i] = rounds[0]
 
 
 func pop() -> String:
@@ -60,5 +72,7 @@ func to_dict() -> Dictionary:
 
 static func from_dict(d: Dictionary) -> Magazine:
 	var m := Magazine.new(int(d.get("cap", 30)))
-	m.rounds = (d.get("rounds", []) as Array).duplicate()
+	for r in d.get("rounds", []):
+		m.rounds.append(str(r))
+	m.normalize()
 	return m
