@@ -37,4 +37,8 @@ func tick(bot: Node3D, dt: float, speed: float, on_floor: bool, crouched := fals
 	_snd.max_distance = CROUCH_R if crouched else (BotNoise.SPRINT_R if sprint else BotNoise.WALK_R)
 	_snd.volume_db = CROUCH_DB if crouched else (SPRINT_DB if sprint else WALK_DB)
 	_snd.pitch_scale = 1.0 + randf_range(-0.05, 0.05)
+	var sp := RangeSpace.treat(RangeAudio._listener(), bot.global_position)
+	RangeSpace.ensure_buses()
+	_snd.bus = sp["bus"]
+	_snd.volume_db += sp["db"]
 	_snd.play()

@@ -50,6 +50,7 @@ func _ready() -> void:
 		return
 	RangeMaps.pending = map_id()
 	TacticalViewmodel.tune = args.has("tune")
+	RangeSpace.clear()   # F110: sound zones are per scene
 	_build()
 	if args.has("shot") or args.has("weapon"):
 		var s := RangeShot.new()

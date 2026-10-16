@@ -38,6 +38,7 @@ func build() -> void:
 func _building(d: Dictionary, id: String) -> void:
 	var r := Rect2(d["rect"][0], d["rect"][1], d["rect"][2] - d["rect"][0], d["rect"][3] - d["rect"][1])
 	var h: float = d["h"]
+	RangeSpace.add_building(d["rect"], h, d["floors"])
 	SkirmishParts.building(self, r, 0.0, h, d["open"], d["mat"], d["col"])
 	for w in d.get("inner", []):   # [axis, fixed (absolute), from, to (relative to the rect's corner), openings (absolute)]
 		var off: float = r.position.y if w[0] == "z" else r.position.x

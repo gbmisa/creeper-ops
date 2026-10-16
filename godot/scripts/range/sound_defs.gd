@@ -3,6 +3,13 @@ class_name SoundDefs
 ## CREDITS.md there). Guns resolve by gun id, then calibre, then class. Names are file stems without ".ogg".
 
 const DIR := "res://assets/audio/range/"
+## F110 indoor / outdoor: reverb bus for a shared room, low-passed buses when listener and source are in different spaces.
+const ROOM_BUS := "RangeRoom"
+const MUFFLE_BUS := "RangeMuffle"
+const MUFFLE_ROOM_BUS := "RangeMuffleRoom"
+const MUFFLE_HZ := 1000.0
+const MUFFLE_DB := -5.0
+const MUFFLE_ROOM_WET := 0.15
 const GUN_EVENTS := ["shot", "shot_suppressed", "tail", "dry", "mag_out", "mag_in", "action", "mode"]
 
 ## Report profiles: shot sample, suppressed sample, distant/room tail, shot level (dB).
