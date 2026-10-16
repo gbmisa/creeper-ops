@@ -34,6 +34,43 @@ const ROWS := {
 	# res = HP pool (Tarkov-style): each use spends the HP it restores; the kit is used up when the pool hits 0.
 	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4, "use": 3.0, "heal": 0.6, "res": 300.0, "short": "IFAK", "glyph": "IF"},
 	"med_bandage": {"name": "Bandage", "kind": "med", "w": 1, "h": 1, "kg": 0.05, "use": 2.0, "stop_bleed": true, "short": "Bandage", "glyph": "BA"},
+	# Track MED rows: "use" is a Dictionary (TacticalPlayer.use_med / StatusEffects.apply_med). The two rows above keep QuickUse.
+	"med_esmarch": {"name": "Esmarch tourniquet", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 3.0, "effect": "stop_bleed", "bleed": "heavy", "limb_only": true}},
+	"med_cms": {"name": "CMS surgical kit", "kind": "med", "w": 2, "h": 2, "kg": 1.0,
+		"use": {"time": 15.0, "effect": "surgery", "uses": 3}},
+	"med_ai2": {"name": "AI-2 medkit", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "hp_pool", "amount": 100.0}},
+	"med_car": {"name": "Car first aid kit", "kind": "med", "w": 2, "h": 1, "kg": 0.3,
+		"use": {"time": 4.0, "effect": "hp_pool", "amount": 220.0, "stop": ["light"]}},
+	"med_salewa": {"name": "Salewa first aid kit", "kind": "med", "w": 2, "h": 2, "kg": 0.5,
+		"use": {"time": 5.0, "effect": "hp_pool", "amount": 400.0, "stop": ["light", "heavy"]}},
+	"med_grizzly": {"name": "Grizzly medical kit", "kind": "med", "w": 3, "h": 2, "kg": 1.2,
+		"use": {"time": 8.0, "effect": "hp_pool", "amount": 1800.0, "stop": ["light", "heavy"], "all_wounds": true}},
+	"med_analgin": {"name": "Analgin painkillers", "kind": "med", "w": 1, "h": 1, "kg": 0.05,
+		"use": {"time": 1.0, "effect": "pain_off", "dur": 95.0, "uses": 4}},
+	"med_morphine": {"name": "Morphine syrette", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "pain_off", "dur": 300.0, "dehydration": 0.3}},
+	"med_propital": {"name": "Propital RG stimulant", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 3.0, "effect": "regen", "rate": 1.0, "dur": 300.0, "id": "med_propital"}},
+	"med_sj6": {"name": "SJ6 TGLabs stim", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "sj6"}},
+	"med_adrenaline": {"name": "Adrenaline syrette", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "adrenaline", "dehydration": 0.25}},
+	"med_etgc": {"name": "eTG-c stim", "kind": "med", "w": 1, "h": 1, "kg": 0.15,
+		"use": {"time": 3.0, "effect": "etgc"}},
+	"med_iodine": {"name": "Iodine pills", "kind": "med", "w": 1, "h": 1, "kg": 0.05,
+		"use": {"time": 1.0, "effect": "iodine"}},
+	"med_water": {"name": "Water bottle", "kind": "med", "w": 1, "h": 2, "kg": 0.5,
+		"use": {"time": 2.0, "effect": "hydrate", "amount": 0.5}},
+	"med_juice": {"name": "Juice carton", "kind": "med", "w": 1, "h": 1, "kg": 0.3,
+		"use": {"time": 2.0, "effect": "hydrate", "amount": 0.35, "energy": 0.2}},
+	"med_crackers": {"name": "Crackers", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "feed", "amount": 0.3, "dehydration": 0.1}},
+	"med_mre": {"name": "MRE ration", "kind": "med", "w": 2, "h": 1, "kg": 0.5,
+		"use": {"time": 4.0, "effect": "feed", "amount": 0.6, "dehydration": -0.2}},
+	"med_stim": {"name": "Combat stim", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "stim", "dur": 20.0, "mult": 2.0}},
 }
 ## Quick-use bar order: card n is bound to t_slot_(4 + n).
 const QUICK := ["med_ifak", "med_bandage"]
@@ -90,6 +127,8 @@ static func make(id: String, opts: Dictionary, ids: IdSource) -> Dictionary:
 		"med":
 			if d.has("res"):
 				it["res"] = float(opts.get("res", d["res"]))
+			if d.get("use") is Dictionary and (d["use"] as Dictionary).has("uses"):
+				it["uses"] = int(d["use"]["uses"])
 	return it
 
 
