@@ -100,6 +100,12 @@ const COVER := [
 	["crate", -47, 47, 1.2, 1.2, 1.2], ["barrier", 44, 46, 3.0, 0.6, 1.1], ["crate", 49, 32, 1.2, 1.2, 1.2],
 	["barrier", 42, 6, 3.0, 0.6, 1.1], ["crate", 52, 4, 1.2, 1.2, 1.2], ["barrier", 43, -22, 3.0, 0.6, 1.1],
 	["crate", 8, -8, 1.2, 1.2, 1.2], ["barrier", 12, -22, 3.0, 0.6, 1.1],
+	# F109: three distinct defensible positions reached from the spawn (left, centre, right), each with cover to fall back to
+	["wall", -34, 48, 5.0, 0.4, 1.8], ["wall", -36.5, 50.5, 0.4, 4.0, 1.8], ["crate", -31, 52, 1.2, 1.2, 1.2],
+	["barrier", -34, 43, 3.0, 0.6, 1.1], ["crate", -24, 38, 1.2, 1.2, 1.2],
+	["wall", 4, 37, 0.4, 4.0, 1.8], ["wall", -4, 36, 0.4, 3.0, 1.8], ["barrier", 0, 30, 3.0, 0.6, 1.8],
+	["wall", 38, 48, 5.0, 0.4, 1.8], ["wall", 40.5, 45.5, 0.4, 4.0, 1.8], ["crate", 33, 45, 1.2, 1.2, 1.2],
+	["barrier", 46, 38, 3.0, 0.6, 1.1], ["crate", 40, 31, 1.2, 1.2, 1.2],
 ]
 const COVER_STYLE := {
 	"barrier": ["concrete", Color(0.55, 0.55, 0.52)], "crate": ["wood_plank", WOOD], "truck": ["sheet_metal", Color(0.28, 0.34, 0.26)],
