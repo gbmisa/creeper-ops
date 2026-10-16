@@ -240,7 +240,7 @@ func die(impulse := Vector3.ZERO, zone := "") -> void:
 		var nudge := Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
 		if nudge.length_squared() < 0.01:
 			nudge = Vector3(1.0, 0.0, 0.0)
-		pb.apply_central_impulse(nudge.normalized() * 25.0)
+		pb.apply_central_impulse(nudge.normalized() * TacticalConfig.RAGDOLL_NUDGE)
 	if TacticalConfig.RAGDOLL_SLEEP > 0.0:
 		_sleep_t = 0.0
 

@@ -87,7 +87,7 @@ func _drop_gun(impulse: Vector3) -> void:
 	rb.name = "DroppedGun"
 	rb.collision_layer = TacticalConfig.LAYER_ITEM
 	rb.collision_mask = TacticalConfig.LAYER_WORLD
-	rb.mass = 3.0
+	rb.mass = TacticalConfig.DEAD_GUN_MASS
 	rb.linear_damp = 0.3
 	rb.angular_damp = 0.8
 	var cs := CollisionShape3D.new()
@@ -100,7 +100,7 @@ func _drop_gun(impulse: Vector3) -> void:
 	gun.transform = Transform3D.IDENTITY
 	rb.add_child(gun)
 	# Small toss so it clears the falling body; not part of the kill impulse.
-	rb.apply_central_impulse(Vector3(impulse.x * 0.05, 1.5, impulse.z * 0.05))
+	rb.apply_central_impulse(Vector3(impulse.x * 0.05, TacticalConfig.DEAD_GUN_TOSS, impulse.z * 0.05))
 
 
 func walk(delta: float, speed: float) -> void:
