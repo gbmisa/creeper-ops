@@ -70,7 +70,7 @@ func _begin_free(gi: Dictionary, g: Gun, fast: bool) -> String:
 func _begin_tube(gi: Dictionary, g: Gun, fast: bool) -> String:
 	if g.busy() or g.needs_cycle or g.mag.is_full():
 		return "no"
-	var round_id := g.ammo_pick if infinite else inv.take_round(g.def["cal"])
+	var round_id := g.ammo_pick if infinite else inv.take_round(g.def["cal"], g.mag.top())
 	if round_id == "":
 		return "none"
 	var pouch := Magazine.new(1)
