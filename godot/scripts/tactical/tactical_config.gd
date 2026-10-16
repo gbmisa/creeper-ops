@@ -60,6 +60,16 @@ const LEG_STAMINA_REGEN := 0.08
 const LEAN_ROLL_DEG := 12.0
 const LEAN_OFFSET := 0.35
 
+# Bot stance (BotPose): crouch and peek leans, sized like the player's (crouch 1.2 of 1.8 m, lean LEAN_OFFSET).
+const BOT_CROUCH_K := 1.2 / 1.8  # crouched heights (hitboxes, eye) = standing x this
+const BOT_CROUCH_SPEED := 0.55   # move speed x this while crouch-walking (the player's crouch factor)
+const BOT_CROUCH_FIRE_M := 25.0  # Engage: crouch to shoot from a standstill beyond this distance
+const BOT_STANCE_RATE := 4.0     # crouch / stand per second (0.25 s)
+const BOT_LEAN_RATE := 6.0       # lean in / out per second (the player's)
+const BOT_LEAN_PIVOT := 1.07     # standing height the upper body leans about (body.glb spine_01)
+const BOT_LEAN_RAD := 0.635      # tilt that puts the head hitbox (1.66 m) LEAN_OFFSET to the side
+const BOT_PEEK_CHECK := 0.3      # s between a covered bot's peek-side sight checks
+
 # Bolt-action cycle (BoltCycle): handle up, bolt back, bolt forward, handle down. Rest of the gun is untouched.
 const BOLT_ANGLE_DEG := 85.0  # handle lift about the bore axis (rests pointing right, rises to the top)
 const BOLT_TRAVEL := 0.09  # m the bolt and handle slide back (+Z gun space)

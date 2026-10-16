@@ -24,6 +24,12 @@ static func engage(b: ScavBot) -> void:
 		b._shoot_at(p.last_known)
 
 
+## TakeCover: leaned out (BotPose) with the target in sight -> shoot.
+static func peek(b: ScavBot) -> void:
+	if b.pose.peeking() and b.percept.seeing and b.eye().distance_to(b.percept.last_known) <= b.def["fire"]:
+		b._shoot_at(b.percept.last_known)
+
+
 ## Marksman: move to the next overwatch spot and stay quiet until there.
 static func relocate(b: ScavBot) -> void:
 	if not b.def["overwatch"] or b.patrol.size() < 2 or b._dying or b.body.dead:

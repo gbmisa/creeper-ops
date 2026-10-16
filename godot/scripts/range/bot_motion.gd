@@ -3,7 +3,8 @@ class_name BotMotion
 
 
 static func speed(b: ScavBot) -> float:
-	return base_speed(b) * b.def["speed"]
+	var crouched := b.pose.crouch and b.brain.state in BotPose.CROUCH_MOVE
+	return base_speed(b) * b.def["speed"] * (TacticalConfig.BOT_CROUCH_SPEED if crouched else 1.0)
 
 
 static func base_speed(b: ScavBot) -> float:
@@ -51,7 +52,7 @@ static func move(b: ScavBot, dt: float) -> void:
 	BotUnstick.track(b, v, dt)  # F91: snagged on a prop -> sidestep + fresh path
 	if b.unstick_t > 0.0 and v.length() > 0.05:
 		v = BotUnstick.steer(b) * v.length()
-	if b.brain.state == BotBrain.ENGAGE and b.percept.seeing or b.brain.state == BotBrain.SUPPRESS and b.percept.has_last:
+	if b.brain.state == BotBrain.ENGAGE and b.percept.seeing or b.brain.state == BotBrain.SUPPRESS and b.percept.has_last 			or b.brain.state == BotBrain.COVER and b.pose.crouch and b.percept.has_last:  # in cover: face the threat to peek
 		face = b._flat(b.percept.last_known - b.global_position)
 	if face.length() <= 0.05 and b.percept.alerted() and not b.percept.seeing:  # F87: idle and alert: watch the shot
 		face = b._flat(b.percept.noise_pos - b.global_position)

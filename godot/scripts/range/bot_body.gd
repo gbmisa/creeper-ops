@@ -78,6 +78,8 @@ var _sleep_t := -1.0
 var _spine: Array[int] = []
 var _spine_rest: Array[Quaternion] = []
 var _spine_axis: Array[Vector3] = []
+var _spine_roll: Array[Vector3] = []  # bone-local forward axis (lean)
+var _lean_reach := 1.0  # sum of the spine bones' heights below the head: roll per bone = asin(offset / this)
 var _grip := {}
 var _half_len := 0.4
 var _flip := false
@@ -98,6 +100,11 @@ func _init(uniform: Color) -> void:
 		_spine.append(i)
 		_spine_rest.append(skel.get_bone_rest(i).basis.get_rotation_quaternion())
 		_spine_axis.append(skel.get_bone_global_rest(i).basis.inverse() * Vector3.RIGHT)
+		_spine_roll.append(skel.get_bone_global_rest(i).basis.inverse() * Vector3.BACK)
+	var head_y := skel.get_bone_global_rest(skel.find_bone("Head_2")).origin.y
+	_lean_reach = 0.0
+	for i in _spine:
+		_lean_reach += head_y - skel.get_bone_global_rest(i).origin.y
 	arms = FpArms.new(skel)
 	add_child(arms)
 	pivot = Node3D.new()
@@ -265,21 +272,26 @@ func ragdoll_bones() -> Array:
 	return _pbones.keys()
 
 
-## Advance the clip, pitch the spine, then solve both arms onto the gun.
-func update(delta: float, speed: float, pitch: float, gun: Node3D) -> void:
+## Advance the clip, pitch (and lean-roll) the spine, then solve both arms onto the gun. `lean` -1..1 toward the
+## bot's -X..+X, already scaled for crouch: the head moves LEAN_OFFSET x lean to that side (BotPose's hitboxes).
+func update(delta: float, speed: float, pitch: float, gun: Node3D, crouch := false, lean := 0.0) -> void:
 	if not dead:
 		var want := FpBody.locomotion(speed)
-		_play(want, 1.0 if want == "idle" else FpBody.rate_for(want, speed))
+		if crouch:
+			want = "crouch_idle" if speed < 0.3 else "crouch_walk"
+		_play(want, 1.0 if want in ["idle", "crouch_idle"] else FpBody.rate_for(want, speed))
 	anim.advance(delta)
 	if dead:
 		_tick_sleep(delta)
 		return
+	var roll := asin(clampf(TacticalConfig.LEAN_OFFSET * lean / _lean_reach, -1.0, 1.0))
 	for k in _spine.size():
-		var q := Quaternion(_spine_axis[k], -pitch * SPINE_SHARE / _spine.size())
+		var q := Quaternion(_spine_axis[k], -pitch * SPINE_SHARE / _spine.size()) * Quaternion(_spine_roll[k], roll)
 		skel.set_bone_pose_rotation(_spine[k], _spine_rest[k] * q)
 	arms.rebase()
 	pivot.global_position = skel.global_transform * skel.get_bone_global_pose(skel.find_bone("upperarm_r")).origin
 	pivot.rotation.x = pitch
+	pivot.rotation.z = -lean * deg_to_rad(TacticalConfig.LEAN_ROLL_DEG)  # the gun cants like the player's view
 	var gt := gun.global_transform
 	var fwd := gt.basis * Vector3(0, 0, -1)
 	var pistol: bool = _grip["class"] == "pistol"

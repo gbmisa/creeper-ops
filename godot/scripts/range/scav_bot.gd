@@ -20,6 +20,7 @@ var body := BodyHealth.new()
 var gun: Gun
 var brain := BotBrain.new()
 var percept := BotPerception.new()
+var pose := BotPose.new()  # crouch / peek lean: eye, hitboxes, mesh
 var rig := {}
 var session: RangeSession
 var bal: Ballistics
@@ -103,6 +104,8 @@ func _ready() -> void:
 
 func _physics_process(dt: float) -> void:
 	think(dt)
+	if not _dying and not body.dead:
+		pose.update(self, dt)
 	_move(dt)
 	flash.update(dt)
 	mesh.aim(dt, is_engaged())
@@ -113,7 +116,7 @@ func is_engaged() -> bool:
 
 
 func eye() -> Vector3:
-	return global_position + Vector3(0, EYE, 0)
+	return pose.eye(self)
 
 
 func _on_noise(pos: Vector3, radius: float, kind: String, src: Object) -> void:
@@ -208,14 +211,11 @@ func _enter(s: String) -> void:
 		BotBrain.PATROL:
 			_go(patrol[patrol_i])
 		BotBrain.ENGAGE:
-			# F18: reaction delay before the first aimed shot of this engagement.
-			var rc: Array = def.get("react", [0.5, 1.0])
-			react_t = rng.randf_range(float(rc[0]), float(rc[1]))
-			if percept.alerted():
-				react_t *= BotPerception.ALERT_REACT_MULT
+			_roll_react()
 		BotBrain.INVESTIGATE:
 			_go(percept.noise_pos)
 		BotBrain.COVER:
+			_roll_react()  # a peek from cover is a fresh sighting
 			_find_cover()
 			_go(cover_pos)
 		BotBrain.HEAL, BotBrain.SUPPRESS:
@@ -226,7 +226,14 @@ func _enter(s: String) -> void:
 			_go(percept.last_known + side)
 		BotBrain.SEARCH:
 			_go(percept.last_known)
-	mesh.scale.y = 0.8 if s == BotBrain.HEAL else 1.0
+
+
+## F18: reaction delay before the first aimed shot of this engagement (or peek).
+func _roll_react() -> void:
+	var rc: Array = def.get("react", [0.5, 1.0])
+	react_t = rng.randf_range(float(rc[0]), float(rc[1]))
+	if percept.alerted():
+		react_t *= BotPerception.ALERT_REACT_MULT
 
 
 func _act() -> void:
@@ -246,6 +253,8 @@ func _act() -> void:
 			BotEngage.patrol(self)
 		BotBrain.ENGAGE:
 			BotEngage.engage(self)
+		BotBrain.COVER:
+			BotEngage.peek(self)
 		BotBrain.SUPPRESS:
 			if percept.has_last:
 				_shoot_at(percept.last_known + Vector3(rng.randf_range(-1.2, 1.2), 0.2, rng.randf_range(-1.2, 1.2)))

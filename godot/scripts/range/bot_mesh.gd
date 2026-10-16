@@ -13,6 +13,8 @@ var anim: AnimationPlayer
 var fire_clip := ""
 var scope_glint: MeshInstance3D
 var pitch := -LOW_PITCH
+var crouch := false  # set by BotPose each tick
+var lean := 0.0
 var _gun_size := Vector3(0.1, 0.1, 0.8)
 
 
@@ -104,4 +106,4 @@ func _drop_gun(impulse: Vector3) -> void:
 
 
 func walk(delta: float, speed: float) -> void:
-	body.update(delta, speed, pitch, gun)
+	body.update(delta, speed, pitch, gun, crouch, lean)
