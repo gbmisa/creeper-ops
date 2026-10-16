@@ -17,6 +17,10 @@ var selected := "range"
 ## From outside a session (main menus): queue the map, then load the scene.
 static func go(map: String) -> void:
 	queue(map)
+	var tree := Engine.get_main_loop() as SceneTree
+	var sfx := tree.root.get_node_or_null("Sfx") if tree != null else null
+	if sfx != null:
+		sfx.silence_beds()  # the command game's wind / creeper beds would keep looping in the range
 	Engine.get_main_loop().call_deferred("change_scene_to_file", SCENE)
 
 

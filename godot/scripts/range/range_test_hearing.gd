@@ -47,3 +47,11 @@ static func run(t: RangeTest) -> void:
 	stub.queue_free()
 	block.queue_free()
 	floor_body.queue_free()
+
+
+## F88: a bot that took cover from a heard shot fights as soon as it is aware; a bot covering from a fight does not.
+static func brain_checks(t: RangeTest) -> void:
+	var f := {"aware": true, "seeing": true, "shot_cover": true, "arrived": false}
+	t.check("hearing: running to cover from a shot, aware -> Engage", BotBrain.next(BotBrain.COVER, f) == BotBrain.ENGAGE)
+	f["shot_cover"] = false
+	t.check("hearing: covering from a fight keeps running to cover", BotBrain.next(BotBrain.COVER, f) == BotBrain.COVER)

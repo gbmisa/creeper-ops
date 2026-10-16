@@ -168,7 +168,7 @@ func bake() -> void:
 	nm.agent_height = 2.0
 	nm.cell_size = 0.25
 	nm.cell_height = 0.25
-	nm.agent_max_climb = 0.5
+	nm.agent_max_climb = 0.25  # F88: bots cannot step up; at 0.5 the bake routed them over 0.6 m loot crates
 	nm.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
 	nm.geometry_collision_mask = TacticalConfig.LAYER_WORLD
 	var src := NavigationMeshSourceGeometryData3D.new()

@@ -40,24 +40,47 @@ static func _collider(root: Node3D, d: Array) -> void:
 	var sb := StaticBody3D.new()
 	sb.collision_layer = TacticalConfig.LAYER_WORLD
 	sb.collision_mask = 0
-	var cs := CollisionShape3D.new()
-	if str(spec["kind"]) == "cyl":
-		var cyl := CylinderShape3D.new()
-		cyl.radius = float(spec["radius"]) * sc
-		cyl.height = float(spec["height"]) * sc
-		cs.shape = cyl
-		cs.position.y = cyl.height * 0.5
+	if str(spec["kind"]) == "mesh":
+		_hull(sb, d[0], sc)
 	else:
-		var b := BoxShape3D.new()
-		b.size = (spec["size"] as Vector3) * sc
-		cs.shape = b
-		cs.position.y = b.size.y * 0.5
-	sb.add_child(cs)
+		var cs := CollisionShape3D.new()
+		if str(spec["kind"]) == "cyl":
+			var cyl := CylinderShape3D.new()
+			cyl.radius = float(spec["radius"]) * sc
+			cyl.height = float(spec["height"]) * sc
+			cs.shape = cyl
+			cs.position.y = cyl.height * 0.5
+		else:
+			var b := BoxShape3D.new()
+			b.size = (spec["size"] as Vector3) * sc
+			cs.shape = b
+			cs.position.y = b.size.y * 0.5
+		sb.add_child(cs)
 	sb.position = Vector3(d[1], 0.0, d[2])
 	sb.rotation_degrees.y = float(d[3])
 	sb.set_meta("mat", str(spec["mat"]))
 	sb.set_meta("thick", float(spec["thick"]))
 	root.add_child(sb)
+
+
+## Collision that matches the model exactly: one convex hull per mesh, in the prop's placed scale.
+static func _hull(sb: StaticBody3D, id: String, sc: float) -> void:
+	var ps := _scene(id)
+	if ps == null:
+		return
+	var n: Node3D = ps.instantiate()
+	for c in n.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = c
+		var xf := Transform3D.IDENTITY
+		var p: Node = mi
+		while p != n and p is Node3D:
+			xf = (p as Node3D).transform * xf
+			p = p.get_parent()
+		var cs := CollisionShape3D.new()
+		cs.shape = mi.mesh.create_convex_shape()
+		cs.transform = Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * sc), Vector3.ZERO) * xf
+		sb.add_child(cs)
+	n.free()
 
 
 static func _scene(id: String) -> PackedScene:
