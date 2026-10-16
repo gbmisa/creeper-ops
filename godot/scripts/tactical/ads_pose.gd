@@ -33,8 +33,12 @@ static func kind(def: Dictionary, sight_id: String) -> String:
 	return "notch" if k == "none" or k == "" else k
 
 
+## Iron sights: never closer than the gun's `relief_min` (mounts.json, from art/guns_src/eye_clear.py: the eye keeps
+## TacticalConfig.ADS_EYE_CLEAR from every part of the gun). Set only where the kind's relief would put the eye inside it.
 static func relief(def: Dictionary, sight_id: String) -> float:
-	return float(TacticalConfig.ADS_RELIEF.get(kind(def, sight_id), 0.16))
+	var r := float(TacticalConfig.ADS_RELIEF.get(kind(def, sight_id), 0.16))
+	var m = AttachmentMounts._override(def["id"], "relief_min") if sight_id == "" else null
+	return maxf(r, float(m)) if m != null else r
 
 
 ## Rotation (pitch, yaw, zero roll; Node3D YXZ order) that sends front - rear to -Z, and the origin that puts the
