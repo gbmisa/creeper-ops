@@ -105,6 +105,7 @@ func _build() -> void:
 	var hud := RangeHud.new()
 	add_child(hud)
 	hud.setup(weapons, player)
+	hud.process_mode = Node.PROCESS_MODE_ALWAYS   # F19: HUD stays live while the pause menu freezes the world
 	var body_hud := RangeBodyHud.new()
 	hud.add_child(body_hud)
 	body_hud.setup(player)
