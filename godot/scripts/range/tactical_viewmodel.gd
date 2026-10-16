@@ -29,6 +29,8 @@ const HIP_YAW := 2.5
 var _ads := Transform3D.IDENTITY  # FB-H: gun pose at full ADS (AdsPose), valid when _ads_ok
 var _ads_euler := Vector3.ZERO
 var _ads_ok := false
+var _room := -1.0  # drawn kick-back room at full ADS (eye keeps ADS_EYE_CLEAR), < 0 = not measured yet
+var _full := Transform3D.IDENTITY  # gun pose at full ADS (for _room)
 
 
 func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
@@ -101,11 +103,15 @@ func _clip_and_aim() -> void:
 	ViewmodelClip.apply(rig)
 	var sid: String = _gun.fit.get("sight", "")
 	_ads_ok = not AdsPose.points(_def, sid, half_len).is_empty()
-	if not _ads_ok:
+	if _ads_ok:
+		_ads = AttachmentMounts.ads_pose(_def, sid, half_len)
+		_ads_euler = _ads.basis.get_euler()
+	else:
 		push_warning("%s has no sight points (mounts.json): ADS uses ads_pos" % _def["id"])
-		return
-	_ads = AttachmentMounts.ads_pose(_def, sid, half_len)
-	_ads_euler = _ads.basis.get_euler()
+	var full := Transform3D(Basis.from_euler(_ads_euler), _ads.origin) if _ads_ok \
+		else Transform3D(Basis(), base_pos(_def, half_len, 1.0))
+	_room = -1.0   # measured on first use (RecoilEyeRoom.room is a mesh scan)
+	_full = full
 
 
 func _on_shot(res: Dictionary, g: Gun) -> void:
@@ -194,7 +200,9 @@ func _process(delta: float) -> void:
 	_base_rot = _base_rot.lerp(rot, minf(1.0, delta * 20.0))
 	model.position = _base_pos
 	model.rotation = _base_rot
-	var rx := recoil_xform(weapons.recoil)
+	if _room < 0.0 and a > 0.0 and weapons.recoil.weapon_pos().y > 0.0:
+		_room = RecoilEyeRoom.room(model, _full)
+	var rx := recoil_xform(weapons.recoil, _room / maxf(a, 1e-3) if _room >= 0.0 else RecoilEyeRoom.FREE)
 	if rx != Transform3D.IDENTITY:
 		model.transform = model.transform * rx
 	if not _posed:
@@ -202,10 +210,11 @@ func _process(delta: float) -> void:
 
 
 ## The recoil's turn and kick back in the gun's own frame (identity at rest, so the FB-H poses are untouched).
-static func recoil_xform(rm: RecoilModel) -> Transform3D:
+## `room`: the drawn kick back eases into it (RecoilEyeRoom; the room at full ADS over the ADS amount).
+static func recoil_xform(rm: RecoilModel, room := RecoilEyeRoom.FREE) -> Transform3D:
 	var w := rm.weapon_rot()
 	var rel := rm.barrel - rm.view_offset()   # the barrel angle the view did not take (deg)
-	var back := rm.weapon_pos().y
+	var back := RecoilEyeRoom.soften(rm.weapon_pos().y, room)
 	if rel.length_squared() < 1e-12 and absf(w.y) < 1e-6 and absf(back) < 1e-7:
 		return Transform3D.IDENTITY
 	var piv: Vector3 = rm.row["pivot"]

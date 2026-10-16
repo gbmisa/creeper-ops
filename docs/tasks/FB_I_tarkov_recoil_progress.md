@@ -76,3 +76,16 @@ runs per 60 Hz step; pivot (0,-0.25,0) read as 0.25 m forward of the model origi
 Checks: `--range-test` 661 PASS / 0 FAIL (phase-1 numbers unchanged); new: settled hip shot on the dot
 0.0000 deg, aimed follow 1.19 of 1.44 deg, auto reaches stable / semi never, ADS 5 s after a shot = exact pose.
 Shots: docs/art/recoil/ak47_burst_hip.png, ak47_burst_ads.png (`--weapon=ak47 [--ads] --burst=6 --wait=0`).
+
+## Playtest fix 2026-10-16 (Opus agent, night/2026-10-15): "the gun tilts down" (AK47, MP5), Glock 18
+Cause: aimed, the view = camera kick (cam spring, accumulates to ~3 deg in a 6-shot AK burst, slow return)
++ follow (converges on the muzzle). The gun is drawn at barrel - view, so it sat up to 3.4 deg muzzle-down
+in the view, rotated about the forward pivot (rear up toward the eye), and the position spring brought it
+back up to 5.9 cm (rest clearance 6.8 cm): top cover crossed the eye.
+Fix: `RecoilModel.view_offset()` pitch is capped at the muzzle's recoil pitch (barrel without hip wander),
+so the drawn bore never pitches below the view and sights = bullets. New `scripts/range/recoil_eye_room.gd`
+(RecoilEyeRoom): per gun/fit, the kick-back room at full ADS before any triangle is within ADS_EYE_CLEAR
+(walked in 1 mm steps, lazily on the first kick); the drawn kick back eases into it (unchanged below 60%).
+Check `range_test_recoil_eye.gd`: aimed 6-shot AK/MP5 burst, per 60 Hz step: eye clearance and bore dip.
+Before: AK 1.5 cm / -2.83 deg, MP5 3.1 cm / -1.39 deg. After: AK 3.1 cm (room 3.8 cm), MP5 3.3 cm, dip 0.000.
+Shots: docs/art/recoil/{ak47,mp5}_ads_burst{3,6}_fix.png. Range 859 OK, smoke 0 failures.
