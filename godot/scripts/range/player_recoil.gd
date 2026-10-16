@@ -24,5 +24,5 @@ static func apply_view(w: PlayerWeapons) -> void:
 	if rm.view_fold != Vector2.ZERO:
 		w.player.turn_view(rm.view_fold)
 		rm.view_fold = Vector2.ZERO
-	w.player.recoil_off = rm.view_offset()
+	w.player.recoil_off = Vector2.ZERO if w.no_recoil() else rm.view_offset()
 	w.player.recoil_roll = rm.camera_rot().z

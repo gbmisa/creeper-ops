@@ -176,6 +176,7 @@ func level_buttons() -> Array:
 			g.get_tree().reload_current_scene() })
 	out.append({ "label": "Firing Range", "on_click": func(): RangeMaps.go("range") })
 	out.append({ "label": "Skirmish", "on_click": func(): RangeMaps.go("skirmish") })
+	out.append({ "label": "Skirmish (large)", "on_click": func(): RangeMaps.go("skirmish_large") })
 	return out
 
 

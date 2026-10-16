@@ -33,7 +33,7 @@ func _init() -> void:
 func setup(s: RangeSession) -> void:
 	session = s
 	_col.add_child(UiKit.button("Reset range", func(): reset_requested.emit()))
-	if session.maps.selected == "skirmish":
+	if RangeMaps.is_skirmish(session.maps.selected):
 		_col.add_child(UiKit.button("Back to Firing Range", func(): session.maps.go("range")))
 	else:
 		_col.add_child(UiKit.button("Deploy to Skirmish", func(): deploy_requested.emit()))

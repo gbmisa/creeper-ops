@@ -39,6 +39,7 @@ signal message(text: String)
 var med_use := {}  # {item, zone, t, inv} while a med use is in progress
 var label_name := "You"
 var god := false  # --god (screenshots): body health never drops
+var noclip := false  # cheat: fly through walls, WASD + Space/Ctrl, 3x speed
 var dead_t := 0.0
 var rig := {}
 var head: Node3D
@@ -218,6 +219,9 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if noclip:
+		_noclip_move(delta)
+		return
 	var dir := Vector2.ZERO
 	if enabled:
 		dir.y = float(input.frame.held("t_back")) - float(input.frame.held("t_forward"))
@@ -282,6 +286,29 @@ func turn_view(d: Vector2) -> void:
 
 func horizontal_speed() -> float:
 	return Vector2(velocity.x, velocity.z).length()
+
+
+## Cheat fly: WASD moves in look direction, Space up / Ctrl down, 3x walk speed, no collision.
+func _noclip_move(delta: float) -> void:
+	var dir := Vector3.ZERO
+	if enabled:
+		var fwd := -cam.global_basis.z
+		var right := cam.global_basis.x
+		if input.held("t_forward"):
+			dir += fwd
+		if input.held("t_back"):
+			dir -= fwd
+		if input.held("t_right"):
+			dir += right
+		if input.held("t_left"):
+			dir -= right
+		if input.held("t_jump"):
+			dir += Vector3.UP
+		if Input.is_physical_key_pressed(KEY_CTRL):
+			dir -= Vector3.UP
+	if dir != Vector3.ZERO:
+		global_position += dir.normalized() * TacticalConfig.WALK * 3.0 * delta
+	velocity = Vector3.ZERO
 
 
 ## Debug / screenshot hook: look toward a world point.
