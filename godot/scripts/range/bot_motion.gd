@@ -62,3 +62,4 @@ static func move(b: ScavBot, dt: float) -> void:
 	b.velocity.y = -1.0 if b.is_on_floor() else b.velocity.y - 20.0 * dt
 	b.move_and_slide()
 	b.mesh.walk(dt, v.length())
+	b.steps.tick(b, dt, Vector2(b.velocity.x, b.velocity.z).length(), b.is_on_floor())

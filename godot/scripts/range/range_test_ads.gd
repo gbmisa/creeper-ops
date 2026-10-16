@@ -26,7 +26,7 @@ static func run(t: RangeTest, r: Dictionary) -> void:
 			elif g.fit.get("sight", "") != sid:
 				g.set_fit("sight", sid)  # the inventory grid refuses sights on pistols; the rule does not care
 			_snap_ads(w, vm)
-			if AdsPose.points(vm._def, sid, vm.half_len).is_empty():
+			if AdsPose.points(vm._gun.def, sid, vm.half_len).is_empty():
 				t.check("ads: %s has no irons: falls back to ads_pos" % id, not vm._ads_ok and sid == "")
 				continue
 			var e := _error(vm, cam, sid)
@@ -51,14 +51,17 @@ static func _snap_ads(w: PlayerWeapons, vm: TacticalViewmodel) -> void:
 
 ## Worst angle (deg): rear and front off the camera forward, and the cant of a point 5 cm under the rear sight.
 static func _error(vm: TacticalViewmodel, cam: Camera3D, sid: String) -> float:
-	var p := AdsPose.points(vm._def, sid, vm.half_len)
+	var p := AdsPose.points(vm._gun.def, sid, vm.half_len)
 	var inv := cam.global_transform.affine_inverse()
 	var to_cam := func(q: Vector3) -> Vector3: return inv * (vm.model.global_transform * q)
 	var ang := func(c: Vector3) -> float: return rad_to_deg(atan2(Vector2(c.x, c.y).length(), -c.z))
 	var rear: Vector3 = to_cam.call(p[0])
 	var below: Vector3 = to_cam.call(p[0] + Vector3(0, -0.05, 0))
 	var cant := rad_to_deg(atan2(absf(below.x), -below.z))
-	return maxf(maxf(ang.call(rear), ang.call(to_cam.call(p[1]))), cant)
+	var worst := maxf(maxf(ang.call(rear), ang.call(to_cam.call(p[1]))), cant)
+	if vm.rig.glass != null:  # F99: the reticle the player sees, not just the solved points
+		worst = maxf(worst, ang.call(inv * vm.rig.glass.global_position))
+	return worst
 
 
 static func _math(t: RangeTest) -> void:

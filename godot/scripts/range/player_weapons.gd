@@ -37,6 +37,7 @@ var prompt := ""
 var trigger_ads := false  # debug overrides (--ads, --fire)
 var trigger_down := false
 var trigger_held := false  # the trigger is down this frame and the gun may fire (PlayerRecoil: automatic fire)
+var mag_in_early := false  # F106: the reload timeline already played the mag-seat sound this reload
 var since_shot := 99.0     # s since the last round left (PlayerRecoil)
 var ui_open := false  # inventory screen up: no firing, no aiming
 var hands_busy := false  # a quick-use item is being used (QuickUse): no firing, no aiming
@@ -120,7 +121,8 @@ func _process(delta: float) -> void:
 	gun.update(delta)
 	# Finish before this frame's input: an R on the finishing frame must not restart on the stale old (empty) mag.
 	if before != "" and gun.busy_kind == "" and before == "reload":
-		_gun_snd("mag_in")
+		if not mag_in_early:   # guns without a timeline mark (or a timeline-less viewmodel) click at the end as before
+			_gun_snd("mag_in")
 		var left := reloader.finish(gun_item)
 		if not left.is_empty():
 			item_dropped.emit(left)
@@ -215,6 +217,11 @@ func _shoot(res: Dictionary) -> void:
 	shot.emit(res, gun)
 
 
+func gun_sound(ev: String) -> void:   # the viewmodel's timeline marks fire gun sounds at their moment (F106)
+	if gun != null:
+		_gun_snd(ev)
+
+
 func _gun_snd(ev: String) -> void:
 	RangeAudio.event({"kind": "gun", "item": gun.id, "ev": ev, "local": true, "cal": gun.def["cal"], "cls": gun.def["class"]})
 
@@ -254,6 +261,7 @@ func start_reload(fast: bool) -> void:
 		gun.busy_t *= player.body.arm_loss("reload")   # P9: blacked arms reload slower (the animation follows busy_t)
 		_reload_t = 0.0
 		_reload_fast = fast
+		mag_in_early = false
 		_check_t = 0.0
 		action.emit("reload", gun.busy_t)
 		_gun_snd("mag_out")

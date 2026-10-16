@@ -75,6 +75,8 @@ func _on_switched(g: Gun) -> void:
 	arms.bolt = bolt
 	reload_tl = ReloadTimeline.make(glb, _def)
 	arms.reload_tl = reload_tl
+	if reload_tl != null:
+		reload_tl.mark.connect(_on_reload_mark)
 	rig = AttachmentRig.new()
 	model.add_child(rig)
 	rig.build(g, half_len)
@@ -102,9 +104,10 @@ func _clip_and_aim() -> void:
 	ViewmodelClip.apply(model.get_child(0))
 	ViewmodelClip.apply(rig)
 	var sid: String = _gun.fit.get("sight", "")
-	_ads_ok = not AdsPose.points(_def, sid, half_len).is_empty()
+	# F99: the raw def, as AttachmentRig mounts the sight from it (eff_def's ads_pos already has the optic's height)
+	_ads_ok = not AdsPose.points(_gun.def, sid, half_len).is_empty()
 	if _ads_ok:
-		_ads = AttachmentMounts.ads_pose(_def, sid, half_len)
+		_ads = AttachmentMounts.ads_pose(_gun.def, sid, half_len)
 		_ads_euler = _ads.basis.get_euler()
 	else:
 		push_warning("%s has no sight points (mounts.json): ADS uses ads_pos" % _def["id"])
@@ -124,6 +127,13 @@ func _on_shot(res: Dictionary, g: Gun) -> void:
 		_play(clip, 0.2 + g.def["cycle"] if g.def["cycle"] > 0.0 else maxf(0.18, 60.0 / g.def["rpm"]), 0.0, true)
 	else:
 		_play("Fire", clampf(60.0 / g.def["rpm"], 0.06, 0.4))
+
+
+## F106: the mag-seat click plays at the timeline's seat moment, not when the reload ends.
+func _on_reload_mark(mark_name: String) -> void:
+	if mark_name == "mag_in" and weapons != null and _gun != null and _gun.busy_kind == "reload":  # not on a cancel (stop() flushes marks)
+		weapons.mag_in_early = true
+		weapons.gun_sound("mag_in")
 
 
 func _on_action(kind: String, secs: float) -> void:

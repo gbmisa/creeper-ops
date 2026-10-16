@@ -20,6 +20,7 @@ var body := BodyHealth.new()
 var gun: Gun
 var brain := BotBrain.new()
 var percept := BotPerception.new()
+var steps := BotSteps.new()   # F107
 var rig := {}
 var session: RangeSession
 var bal: Ballistics
