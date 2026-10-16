@@ -55,3 +55,8 @@ static func ads_pos(def: Dictionary, sight_id: String) -> Vector3:
 	if sight_id != "":
 		p.y = -sight_line(def, sight_id)
 	return p
+
+
+## FB-H ADS pose of the gun model under the camera (see AdsPose). `half` is the model's half length.
+static func ads_pose(def: Dictionary, sight_id: String, half: float) -> Transform3D:
+	return AdsPose.pose(def, sight_id, half)

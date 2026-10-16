@@ -21,5 +21,10 @@
   blade 11.6 mm under the front post; possibly a rear-leaf model issue), revolver 0.9°, glock 0.4°.
 - Offsets the rule absorbs: mosin x -7.9 mm, sr25 -10.7, pkm -15 to -17, scarh -4.8, sniper -3.9, ak47 -2.0.
 
-## Phase 2 — not started (Sonnet feature-dev)
-Read only: AGENTS.md, this brief + log, attachment_mounts.gd, tactical_viewmodel.gd, gun.gd, range_test_attach.gd.
+## Phase 2 - Sonnet, 2026-10-15 (done, committed)
+- `AdsPose` (tactical/ads_pose.gd) solves the pose; `AttachmentMounts.ads_pose(def, sid, half)` delegates. Viewmodel lerps
+  hip -> ads origin and adds the (pitch, yaw, 0) euler * a into rot. No sight points (P90 with the dot off) = old ads_pos + warning.
+- `TacticalConfig.ADS_RELIEF` (pistol .138, pistol_optic .193, notch .160, aperture .1465, optic .286, scope .295): medians of the old
+  eye-to-rear distances; Opus tunes in Phase 3. `VM_Z_CLIP` 0.3. `ViewmodelClip` (range/viewmodel_clip.gd) sets z-clip on duplicated
+  materials (gun glb, rig parts, posed arms, FpArms "Arms" mesh). `ads_near()`/`ADS_NEAR` removed; cam.near stays 0.03.
+- Tests: `RangeTestAds` (range/range_test_ads.gd): 83 gun x sight setups within 0.02 deg (worst 0.0007), pure math, z-clip.

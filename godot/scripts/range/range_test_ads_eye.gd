@@ -36,5 +36,5 @@ static func run(t: RangeTest) -> void:
 	var m4 := WeaponDefs.of("m4a1")
 	t.check("ADS: base_pos uses the per-gun eye when set (m4a1)",
 		absf(TacticalViewmodel.base_pos(m4, 0.42, 1.0).z + 0.42 - float(m4["eye"])) < 0.001)
-	t.check("ADS: near plane is low enough not to clip the visible stock",
-		TacticalViewmodel.ADS_NEAR <= 0.1)
+	t.check("ADS: the camera near plane is one low value (z-clip scale keeps the stock and sight unclipped)",
+		TacticalConfig.VM_Z_CLIP < 1.0 and TacticalConfig.VM_Z_CLIP > 0.0)

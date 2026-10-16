@@ -23,8 +23,9 @@ var _posed := false  # held gun uses hand-posed arms (WeaponDefs arms_pose) inst
 const HIP_BUTT := 0.1  # how far the butt sits behind the eye at the hip
 const HIP_MIN_Z := 0.3  # pistols: held out at least this far
 const HIP_YAW := 2.5
-const ADS_NEAR := 0.06  # P4: the eye sits 0.30 m ahead of the butt plate (cheek weld), so the stock is in
-                        # view while ADS — 0.06 keeps it from clipping. ads_near() still guards the sight.
+var _ads := Transform3D.IDENTITY  # FB-H: gun pose at full ADS (AdsPose), valid when _ads_ok
+var _ads_euler := Vector3.ZERO
+var _ads_ok := false
 
 
 func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
@@ -35,6 +36,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	w.action.connect(_on_action)
 	arms = FpArms.new()
 	add_child(arms)
+	ViewmodelClip.apply(arms, "Arms")
 
 
 func _on_switched(g: Gun) -> void:
@@ -65,6 +67,7 @@ func _on_switched(g: Gun) -> void:
 	rig = AttachmentRig.new()
 	model.add_child(rig)
 	rig.build(g, half_len)
+	_clip_and_aim()
 	arms.set_gun(_def)
 	_posed = _add_posed_arms(String(_def.get("arms_pose", "")))
 	arms.visible = not _posed
@@ -79,7 +82,21 @@ func _add_posed_arms(id: String) -> bool:
 	model.add_child(posed)
 	for mi in posed.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ViewmodelClip.apply(posed)
 	return true
+
+
+## After the gun or its fit changes: z-clip the new materials and solve the ADS pose for the sight now fitted.
+func _clip_and_aim() -> void:
+	ViewmodelClip.apply(model.get_child(0))
+	ViewmodelClip.apply(rig)
+	var sid: String = _gun.fit.get("sight", "")
+	_ads_ok = not AdsPose.points(_def, sid, half_len).is_empty()
+	if not _ads_ok:
+		push_warning("%s has no sight points (mounts.json): ADS uses ads_pos" % _def["id"])
+		return
+	_ads = AttachmentMounts.ads_pose(_def, sid, half_len)
+	_ads_euler = _ads.basis.get_euler()
 
 
 func _on_shot(res: Dictionary, g: Gun) -> void:
@@ -130,11 +147,14 @@ func _process(delta: float) -> void:
 	if rig.stale():
 		_def = _gun.eff_def()
 		rig.build(_gun, half_len)
+		_clip_and_aim()
 	rig.update_beam()
 	var a := smoothstep(0.0, 1.0, weapons.ads_amt)
 	var pos := base_pos(_def, half_len, a)
-	player.cam.near = lerpf(0.03, ads_near(), a)
 	var rot := Vector3(0, deg_to_rad(HIP_YAW) * (1.0 - a), 0)
+	if _ads_ok:  # FB-H: hip pose to the sight-aligned pose, rotation (pitch, yaw, no roll) scaled by a
+		pos = base_pos(_def, half_len, 0.0).lerp(_ads.origin, a)
+		rot += _ads_euler * a
 	var speed := player.horizontal_speed() if player.is_on_floor() else 0.0
 	_bob_t += delta * speed * 2.0
 	var bob := speed * 0.0035 * (1.0 - a * 0.85)
@@ -164,15 +184,6 @@ func _process(delta: float) -> void:
 	model.rotation = model.rotation.lerp(rot, minf(1.0, delta * 20.0))
 	if not _posed:
 		arms.update(model, delta)
-
-
-## Camera near plane while aiming: small enough not to clip the visible stock, but never past the sight
-## (a pistol red dot sits close to the eye).
-func ads_near() -> float:
-	if _gun == null or not _gun.fit.has("sight"):
-		return ADS_NEAR
-	var sight_z := half_len - ads_eye(_def) - AttachmentMounts.mount(_def, "sight", half_len).z  # eye to sight centre
-	return clampf(sight_z - float(AttachmentDefs.ROWS[_gun.fit["sight"]]["depth"]) * 0.5 - 0.04, 0.03, ADS_NEAR)
 
 
 ## Gun model position under the camera, hip (a = 0) to ADS (a = 1). The butt is shouldered at the hip; when

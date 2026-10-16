@@ -218,6 +218,7 @@ static func _functional(t: RangeTest) -> void:
 	var tree := t.get_tree()
 	await tree.process_frame
 	await _sights(t, r)
+	await RangeTestAds.run(t, r)
 	# recoil: compensator / vgrip lower vertical, flash hider lowers horizontal; a baseline first
 	_equip(r, "m4a1")
 	t.bal.shots.clear()
@@ -292,18 +293,16 @@ static func _sights(t: RangeTest, r: Dictionary) -> void:
 	var iron_frames := _ads_frames(w)
 	await _settle(r, true)
 	var iron_y := vm.model.position.y
-	t.check("sight: iron sights ADS to the def line at the base FOV", absf(iron_y - (WeaponDefs.of("m4a1")["ads_pos"] as Vector3).y) < 0.004 and is_equal_approx(player.cam.fov, irons) and vm.rig.glass == null)
+	t.check("sight: iron sights ADS to the sight-aligned pose (FB-H) at the base FOV", vm.model.position.distance_to(AttachmentMounts.ads_pose(vm._def, "", vm.half_len).origin) < 0.004 and is_equal_approx(player.cam.fov, irons) and vm.rig.glass == null)
 	var want_mult := {"reddot": 0.9, "holo": 0.95, "acog3x": 1.15, "lpvo": 1.2}
 	for id in ["reddot", "holo"]:
 		var g := _equip(r, "m4a1", [id])
 		await _settle(r, true)
-		var row: Dictionary = AttachmentDefs.ROWS[id]
-		var rail_y := AttachmentMounts.mount(g.def, "sight", 0.0).y
-		t.check("%s: the ADS line moves to the sight (model %.3f -> %.3f)" % [id, iron_y, vm.model.position.y], absf(vm.model.position.y + rail_y + row["axis_h"]) < 0.004 and absf(vm.model.position.y - iron_y) > 0.002)
+		t.check("%s: the ADS pose moves to the sight (model y %.3f -> %.3f)" % [id, iron_y, vm.model.position.y], vm.model.position.distance_to(AttachmentMounts.ads_pose(vm._def, id, vm.half_len).origin) < 0.004 and absf(vm.model.position.y - iron_y) > 0.002)
 		var gp := player.cam.to_local(vm.rig.glass.global_position) if vm.rig.glass != null else Vector3(9, 9, 9)
 		t.check("%s: the reticle glass is on the sight line, centred (x %.4f y %.4f)" % [id, gp.x, gp.y], vm.rig.glass != null and absf(gp.x) < 0.003 and absf(gp.y) < 0.004 and gp.z < -0.06)
 		t.check("%s: 1x, the FOV stays at the iron-sight FOV and the model stays visible" % id, is_equal_approx(player.cam.fov, irons) and not w.scoped() and vm.model.visible)
-		t.check("%s: the sight is not clipped by the near plane" % id, player.cam.near < -gp.z - 0.03)
+		t.check("%s: the sight is not clipped: z-clip scale on its materials, near stays 0.03" % id, ViewmodelClip.all_clipped(vm.rig) and is_equal_approx(player.cam.near, 0.03))
 		t.check("%s: ADS time x%.2f of the iron sights" % [id, want_mult[id]], absf(float(_ads_frames(w)) / iron_frames - want_mult[id]) < 0.04)
 	for id in ["acog3x", "lpvo"]:
 		var g := _equip(r, "m4a1", [id])
