@@ -48,6 +48,9 @@ static func move(b: ScavBot, dt: float) -> void:
 		if d.length() > 0.05:
 			v = d.normalized() * speed(b)
 			face = d
+	BotUnstick.track(b, v, dt)  # F91: snagged on a prop -> sidestep + fresh path
+	if b.unstick_t > 0.0 and v.length() > 0.05:
+		v = BotUnstick.steer(b) * v.length()
 	if b.brain.state == BotBrain.ENGAGE and b.percept.seeing or b.brain.state == BotBrain.SUPPRESS and b.percept.has_last:
 		face = b._flat(b.percept.last_known - b.global_position)
 	if face.length() <= 0.05 and b.percept.alerted() and not b.percept.seeing:  # F87: idle and alert: watch the shot
