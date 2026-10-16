@@ -25,6 +25,13 @@ func _ready() -> void:
 		RangeMaps.pending = str(args["map"])
 	process_priority = 100  # runs after the player / weapons, so end_frame() clears input last
 	if args.has("range-test"):
+		var broken := RangeTestLoadCheck.broken()
+		for path in broken:
+			print("[range] FAIL script compiles: ", path)
+		if not broken.is_empty():
+			print("[range] FAILED ", broken.size(), " script(s) do not compile")
+			get_tree().quit(1)
+			return
 		var t := RangeTest.new()
 		add_child(t)
 		await t.run()
