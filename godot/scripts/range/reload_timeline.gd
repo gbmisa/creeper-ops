@@ -94,11 +94,16 @@ func start(secs: float, empty: bool, fast: bool) -> void:
 	_phases.clear()
 	var pose := {"gp": Vector3.ZERO, "gr": Vector3.ZERO, "mag": "seat", "hl": "grip", "bolt": float(plan.get("empty_bolt", 0.0)) if empty else 0.0}
 	var at := 0.0
+	var shift: Array = _rig.get("pose_shift", [Vector3.ZERO, Vector3.ZERO])
 	for s in steps:
 		var to := pose.duplicate()
 		for key in pose:
 			if s[0].has(key):
 				to[key] = s[0][key]
+		for k in 2:  # rig pose_shift moves every reload pose of the plan, never the rest pose
+			var key: String = ["gp", "gr"][k]
+			if s[0].has(key) and s[0][key] != Vector3.ZERO:
+				to[key] = (s[0][key] as Vector3) + (shift[k] as Vector3)
 		_phases.append({"n": s[0]["n"], "t0": at, "t1": at + float(s[1]), "from": pose, "to": to, "ease": s[0].get("ease", "io"), "mark": s[0].get("mark", "")})
 		at += float(s[1])
 		pose = to
@@ -183,12 +188,11 @@ func _anchor(name: String) -> Array:
 	var p: Vector3
 	match name:
 		"mag": p = mag_xf * (_rig["hold"] as Vector3)
-		"pouch": p = _rig["pouch_hand"]
-		"stop": p = _rig["stop_hand"]
 		"charge": p = (_rig["charge"] as Vector3) + (_rig["travel"] as Vector3) * bolt
-		_:
+		"grip":
 			var pistol: bool = _def["class"] == "pistol"
 			return [_def["grip_l"], Vector3(0, 0, -1), Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)]
+		_: p = _rig[name + "_hand"]  # pouch, stop, slap: fixed points per rig
 	var hd: Dictionary = _rig.get("hands", {}).get(name, ReloadAnims.HANDS[name])
 	var f: Vector3 = (hd["f"] as Vector3).normalized()
 	var n: Vector3 = (hd["n"] as Vector3).normalized()
