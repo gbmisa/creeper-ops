@@ -32,6 +32,8 @@ Anything here changes (or already changed) behaviour that was working and that G
 | M4 | Stamina while airborne (FB-C, F23) | No drain in the air | Stamina drains while airborne (`tactical_player.gd:158-161`) | Sprint-jump fix only | |
 | M5 | Shotgun ammo top-up at the range bench (FB-C, F22) | Bench gave the rounds asked for | Tops every stack of that caliber up to the stack maximum, writing counts directly | "Don't change ammo amounts" | |
 | M6 | Attachment recoil scaling (side effect of approved P3, Tarkov recoil) | A compensator multiplies kick by 0.80 | Tarkov's formula: x0.845 | Follows P3's Tarkov port | |
+| M7 | How far the view climbs in a burst, every gun (side effect of the F64/F65 fix, da0a47e on night) | Camera kick + muzzle follow could take the view up to ~3° above the barrel, so the gun drew muzzle-down and clipped | View pitch never climbs past the muzzle (`RecoilModel.view_offset`). Aimed: the gun barely rises on screen, only kicks back and rolls; sights stay on the bullet line. Hip: the camera kick comes down with the muzzle | F64/F65: fix the tilt and clipping. Alternative: keep the old view climb and stop only the drawn tilt, but then the sights sit above where bullets go | |
+| M8 | Drawn ADS kick back for guns short of room (side effect of F64) | Kick back drawn at full size (AK up to 5.9 cm, into the eye) | Eases into a per-gun limit that keeps 3 cm eye clearance (AK 3.8 cm); unchanged below 60 % of it. Visual only, bullets same | Needed for "clips while firing" | |
 
 ## Proposed (not built)
 
