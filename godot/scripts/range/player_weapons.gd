@@ -73,6 +73,7 @@ func give(id: String) -> void:
 
 
 func sync() -> void:
+	WornArmor.sync(inv, player.body)
 	HandGear.sync(self)
 
 
