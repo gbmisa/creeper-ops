@@ -21,6 +21,7 @@ var _status_lbl: Label
 var _tunnel := ColorRect.new()
 
 
+const DOT_RANGE := 50.0   # m: where the hip dot samples the bullet line
 var frame := SafeZone.new()   # edge HUD pieces live in the user-set safe zone (ultra-wide)
 
 
@@ -129,6 +130,12 @@ func _process(delta: float) -> void:
 	if inp.act("t_crosshair"):
 		_show_dot = not _show_dot
 	_dot.visible = _show_dot and weapons.ads_amt < 0.5
+	if _dot.visible:  # on the bullet's line (view + recoil barrel offset, as PlayerWeapons._shoot), at any resolution
+		var cam := player.cam
+		var dir := -(player.view_basis(weapons.recoil.barrel).z)
+		var far := player.eye_pos() + dir * DOT_RANGE
+		if not cam.is_position_behind(far):
+			_dot.global_position = cam.unproject_position(far) - _dot.size * 0.5
 	scope.visible = weapons.scoped()
 	if weapons.gun != null:
 		scope.style = weapons.gun.reticle()
