@@ -25,7 +25,7 @@ var crouching := false
 var sprinting := false
 var leg_stamina := 1.0
 var carried_kg := 0.0
-var move_mult := 1.0  # body health slows (fractured legs)
+var move_mult := 1.0  # injury slow (BodyHealth.move_mult; 1.0 since fractures were removed)
 var ads_amt := 0.0  # set by PlayerWeapons
 var spot_mult := 1.0  # bots notice this player from range x this (laser lit); set by PlayerWeapons
 var recoil_off := Vector2.ZERO  # deg, x = pitch up, y = yaw
