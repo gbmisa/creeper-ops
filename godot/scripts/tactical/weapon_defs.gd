@@ -51,7 +51,7 @@ const ROWS := {
 		"model": "revolver", "model_fallback": "m1911", "inv_w": 2, "inv_h": 1, "scope": 1.0, "fb_flip": true},
 	"mp5": {"tier": 1, "unlock": 1, "role": "Accurate, low-recoil SMG: the safe CQB pick", "slots": ["sight","muzzle","under"], "name": "MP5", "class": "smg", "cal": "9x19", "mag": 30, "rpm": 800.0, "modes": ["semi", "auto"], "ergo": 72.0,
 		"conv": 6.1, "cam_share": 0.3, "angle": 88.0, "kg": 2.9, "up": 0.3, "side": 0.2, "moa": 2.2, "action": "detachable", "cycle": 0.0, "reload": 2.5, "reload_fast": 1.7,
-		"spares": 4, "zeros": [25.0, 50.0, 100.0], "ads_pos": Vector3(0.0000, -0.1310, -0.850), "hip_pos": Vector3(0.17, -0.17, -0.45), "grip_r": Vector3(0.047,-0.050,0.160), "grip_l": Vector3(0.0,-0.095,0.0), "mag_l": Vector3(0.0,0.11,-0.05), "butt": 0.30, "eye": 0.10,
+		"spares": 4, "zeros": [25.0, 50.0, 100.0], "ads_pos": Vector3(0.0000, -0.1310, -0.850), "hip_pos": Vector3(0.17, -0.17, -0.45), "grip_r": Vector3(0.047,-0.050,0.160), "grip_l": Vector3(0.0,-0.1295,-0.136), "mag_l": Vector3(0.0,0.11,-0.05), "butt": 0.30, "eye": 0.10,
 		"model": "mp5", "model_fallback": "p90", "inv_w": 3, "inv_h": 2, "scope": 1.0},
 	"vector": {"tier": 3, "unlock": 22, "role": "1100 rpm, tiny recoil, short range, eats mags", "slots": ["sight","muzzle","under","mag"], "name": "KRISS Vector", "class": "smg", "cal": "45acp", "mag": 25, "rpm": 1100.0, "modes": ["semi", "auto"], "ergo": 78.0,
 		"conv": 8.4, "cam_share": 0.3, "angle": 95.0, "kg": 2.7, "up": 0.18, "side": 0.12, "moa": 3.8, "action": "detachable", "cycle": 0.0, "reload": 2.2, "reload_fast": 1.5,

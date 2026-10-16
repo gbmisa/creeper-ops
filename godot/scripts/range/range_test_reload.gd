@@ -4,7 +4,7 @@ class_name RangeTestReload
 ## stays on its target (within IK reach) every frame, the bolt/slide starts home and the mag never teleports, and at the end both hands are on their grips and the bolt or
 ## slide (bone or region-cut part) is home. The split leaves the gun mesh's AABB as the glb had it.
 
-const IDS := ["ak47", "m1911", "glock18", "mp5", "p90"]
+const IDS := ["ak47", "m1911", "glock18", "mp5", "p90", "scarh", "sr25", "saiga12", "sks"]
 const STEP := 1.0 / 60.0
 
 
