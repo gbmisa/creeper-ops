@@ -2,10 +2,8 @@ class_name RecoilModel
 extends RefCounted
 ## Camera / viewmodel recoil offset (degrees: x = pitch up, y = yaw) plus idle sway.
 ##
-## Two models; the Esc menu toggles per player (range/range_menu.gd), Classic is the default.
-## Classic (default): instant offset, bullets follow the camera.
-## Tarkov (per-player flag): two separately-parameterized channels (FB-H, from the EFT community
-## reverse-engineering research):
+## Single recoil model (FB-H, from the EFT community reverse-engineering research): two
+## separately-parameterized channels:
 ##   (1) BARREL (bore angle, aim-affecting): each shot is an impulse into a critically-damped spring
 ##       (`_tgt`/`_vel`, OMEGA). Per-gun `conv` decays the target so auto fire plateaus. A compensation
 ##       ramp scales the added impulse 1.0 -> RECOIL_T_COMP_MIN over the first RECOIL_T_COMP_SHOTS shots,
@@ -41,14 +39,12 @@ extends RefCounted
 ## FB-H judgment calls (not datamined; tuned approximations): the 1.0 -> 0.45 compensation ramp, the
 ## per-gun `cam_up` / `cam_snap` / `disp` values, CLIMB_FRAC 0.35 and CLIMB_MAX 6.0. BSG's exact per-shot
 ## constants were never published — no faithful open-source reimplementation of them exists.
-var tarkov := false
-
 var offset := Vector2.ZERO  # camera offset (deg): x = pitch up, y = yaw
-var barrel := Vector2.ZERO  # Tarkov only: bore angle from the un-recoiled aim (deg)
+var barrel := Vector2.ZERO  # bore angle from the un-recoiled aim (deg)
 var _tgt := Vector2.ZERO
 var _vel := Vector2.ZERO
 var _drift := 0.0
-# Tarkov camera channel (FB-H): _cam springs toward _cam_tgt + _climb; offset always mirrors _cam.
+# Camera channel (FB-H): _cam springs toward _cam_tgt + _climb; offset always mirrors _cam.
 var _cam := Vector2.ZERO
 var _cam_tgt := Vector2.ZERO
 var _cam_vel := Vector2.ZERO
@@ -84,16 +80,6 @@ func reset() -> void:
 
 func shoot(def: Dictionary, rng: RandomNumberGenerator) -> void:
 	var ks := kick_stats(def)
-	if tarkov:
-		_shoot_tarkov(def, rng, ks)
-		return
-	var cap: float = ks.x * TacticalConfig.RECOIL_CAP_SHOTS
-	offset.x += ks.x * clampf(1.0 - offset.x / cap, 0.0, 1.0)
-	var side_cap: float = ks.y * TacticalConfig.RECOIL_CAP_SHOTS
-	offset.y = clampf(offset.y + rng.randf_range(-ks.y, ks.y), -side_cap, side_cap)
-
-
-func _shoot_tarkov(def: Dictionary, rng: RandomNumberGenerator, ks: Vector2) -> void:
 	_shots += 1
 	_since_shot = 0.0
 	# Automatic recoil compensation: the first shots kick hardest, sustained fire self-limits.
@@ -115,17 +101,9 @@ func _shoot_tarkov(def: Dictionary, rng: RandomNumberGenerator, ks: Vector2) -> 
 		_climb = _climb.normalized() * cm
 
 
-## Classic: converges back to zero faster with higher ergonomics. Tarkov: bore spring + convergence (def
-## gives conv); camera spring at cam_snap toward its target plus the permanent climb.
-func update(dt: float, ergo: float, def: Dictionary = {}) -> void:
-	if tarkov:
-		_update_tarkov(dt, def)
-		return
-	var rate := lerpf(TacticalConfig.RECOIL_RATE_LOW, TacticalConfig.RECOIL_RATE_HIGH, ergo / 100.0)
-	offset *= exp(-rate * dt)
-
-
-func _update_tarkov(dt: float, def: Dictionary) -> void:
+## Bore spring + convergence (def gives conv); camera spring at cam_snap toward its target plus the
+## permanent climb.
+func update(dt: float, def: Dictionary) -> void:
 	_since_shot += dt
 	if _since_shot >= TacticalConfig.RECOIL_T_BURST_GAP:
 		_shots = 0  # burst over: tapping re-triggers the full first-shot kick
@@ -155,8 +133,6 @@ func _update_camera(dt: float, snap: float) -> void:
 
 ## Where the bullets go: the camera basis turned by the part of the barrel angle the camera did not follow.
 func aim_basis(cam: Basis) -> Basis:
-	if not tarkov:
-		return cam
 	var rest := barrel - offset
 	var b := cam.rotated(cam.x, deg_to_rad(rest.x))
 	return b.rotated(b.y, deg_to_rad(rest.y))

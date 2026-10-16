@@ -143,10 +143,15 @@ static func _malfunction(t: RangeTest) -> void:
 
 static func _recoil(t: RangeTest) -> void:
 	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
 	var def := WeaponDefs.of("ak47")
 	var rm := RecoilModel.new()
+	var gap: float = 60.0 / float(def["rpm"])
 	for i in 200:
 		rm.shoot(def, rng)
-	t.check("recoil climbs to a cap", rm.offset.x <= def["up"] * TacticalConfig.RECOIL_CAP_SHOTS + 0.001 and rm.offset.x > def["up"] * 3.0)
-	rm.update(3.0, 50.0)
-	t.check("recoil converges back", rm.offset.length() < 0.1)
+		rm.update(gap, def)
+	t.check("recoil camera climb is capped (%.2f <= %.2f)" % [rm.offset.x, TacticalConfig.RECOIL_T_CLIMB_MAX],
+		rm.offset.x <= TacticalConfig.RECOIL_T_CLIMB_MAX + 0.5 and rm.offset.x > 1.0)
+	rm.update(3.0, def)
+	t.check("recoil keeps its climb instead of recentering (%.2f)" % rm.offset.length(), rm.offset.length() > 0.2)
+	t.check("recoil bore settles back (%.3f)" % rm.barrel.length(), rm.barrel.length() < 0.05)

@@ -1,5 +1,5 @@
 class_name RangeTestRecoil
-## Recoil checks for `--range-test` (Tarkov model, Classic untouched) and the `--recoil-probe` spray printer.
+## Recoil checks for `--range-test` and the `--recoil-probe` spray printer.
 ## FB-H: two-channel model — bore spring + compensation, separate camera channel with permanent climb.
 
 const DT := 1.0 / 120.0
@@ -20,27 +20,25 @@ static func run(t: RangeTest) -> void:
 	_semi_returns(t)
 	_semi_returns_exact(t)
 	_aim_basis(t)
-	_classic(t)
 	if OS.get_cmdline_user_args().has("--recoil-probe"):
 		probe()
 
 
 ## Fires `n` shots at `cadence` s apart (-1 = the gun's rpm); returns [pitch, yaw] of the bore at each shot.
-static func spray(id: String, n: int, cadence := -1.0, tarkov := true, seed := 7) -> Array:
+static func spray(id: String, n: int, cadence := -1.0, seed := 7) -> Array:
 	var def := WeaponDefs.of(id)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed
 	var rm := RecoilModel.new()
-	rm.tarkov = tarkov
 	var gap: float = cadence if cadence > 0.0 else 60.0 / def["rpm"]
 	var out := []
 	for i in n:
-		out.append(rm.barrel if rm.tarkov else rm.offset)
+		out.append(rm.barrel)
 		rm.shoot(def, rng)
 		var left := gap
 		while left > 1e-6:
 			var h := minf(DT, left)
-			rm.update(h, def["ergo"], def)
+			rm.update(h, def)
 			left -= h
 	return out
 
@@ -51,7 +49,6 @@ static func _per_shot_kicks(id: String, n: int, seed := 7, cadence := -1.0) -> A
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed
 	var rm := RecoilModel.new()
-	rm.tarkov = true
 	var gap: float = cadence if cadence > 0.0 else 60.0 / def["rpm"]
 	var out := []
 	for i in n:
@@ -60,7 +57,7 @@ static func _per_shot_kicks(id: String, n: int, seed := 7, cadence := -1.0) -> A
 		var left := gap
 		while left > 1e-6:
 			var h := minf(DT, left)
-			rm.update(h, def["ergo"], def)
+			rm.update(h, def)
 			left -= h
 		out.append((rm.barrel - before).length())
 	return out
@@ -69,7 +66,6 @@ static func _per_shot_kicks(id: String, n: int, seed := 7, cadence := -1.0) -> A
 static func _rise(t: RangeTest) -> void:
 	var def := WeaponDefs.of("ak47")
 	var rm := RecoilModel.new()
-	rm.tarkov = true
 	var rng := RandomNumberGenerator.new()
 	rm.shoot(def, rng)
 	t.check("tarkov: a shot does not jump the barrel instantly", rm.barrel.length() == 0.0)
@@ -78,7 +74,7 @@ static func _rise(t: RangeTest) -> void:
 	var tt := 0.0
 	var samples := []
 	while tt < 0.3:
-		rm.update(DT, def["ergo"], def)
+		rm.update(DT, def)
 		tt += DT
 		samples.append(rm.barrel.x)
 		peak = maxf(peak, rm.barrel.x)
@@ -123,11 +119,10 @@ static func _offset_after(def: Dictionary, n: int) -> float:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var rm := RecoilModel.new()
-	rm.tarkov = true
 	for i in n:
 		rm.shoot(def, rng)
 		for k in 12:
-			rm.update(DT, def["ergo"], def)
+			rm.update(DT, def)
 	return rm.offset.length()
 
 
@@ -155,7 +150,6 @@ static func _dispersion_bounds(t: RangeTest) -> void:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 7
 		var rm := RecoilModel.new()
-		rm.tarkov = true
 		var gap: float = 60.0 / def["rpm"]
 		var bound: float = def["side"] * float(def["disp"]) * 6.0
 		var ok := true
@@ -165,7 +159,7 @@ static func _dispersion_bounds(t: RangeTest) -> void:
 			var left := gap
 			while left > 1e-6:
 				var h := minf(DT, left)
-				rm.update(h, def["ergo"], def)
+				rm.update(h, def)
 				left -= h
 				peak_y = maxf(peak_y, absf(rm.barrel.y))
 			ok = ok and peak_y <= bound
@@ -184,19 +178,18 @@ static func _settle(id: String) -> float:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var rm := RecoilModel.new()
-	rm.tarkov = true
 	var gap: float = 60.0 / def["rpm"]
 	for i in 10:
 		rm.shoot(def, rng)
 		var left := gap
 		while left > 1e-6:
 			var h := minf(DT, left)
-			rm.update(h, def["ergo"], def)
+			rm.update(h, def)
 			left -= h
 	var peak := rm.barrel.length()
 	var tt := 0.0
 	while tt < 5.0:
-		rm.update(DT, def["ergo"], def)
+		rm.update(DT, def)
 		tt += DT
 		if rm.barrel.length() < 0.1 * peak:
 			break
@@ -209,20 +202,19 @@ static func _climb(t: RangeTest) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var rm := RecoilModel.new()
-	rm.tarkov = true
 	var gap: float = 60.0 / def["rpm"]
 	for i in 200:
 		rm.shoot(def, rng)
 		var left := gap
 		while left > 1e-6:
 			var h := minf(DT, left)
-			rm.update(h, def["ergo"], def)
+			rm.update(h, def)
 			left -= h
 	t.check("tarkov: permanent climb is capped (%.2f <= %.2f)" % [rm.climb().length(), TacticalConfig.RECOIL_T_CLIMB_MAX],
 		rm.climb().length() <= TacticalConfig.RECOIL_T_CLIMB_MAX + 0.001)
 	var tt := 0.0
 	while tt < 2.0:
-		rm.update(DT, def["ergo"], def)
+		rm.update(DT, def)
 		tt += DT
 	t.check("tarkov: camera keeps its climb after the bore settles (cam %.2f, bore %.3f)" % [rm.offset.length(), rm.barrel.length()],
 		rm.offset.length() > 0.2 and rm.barrel.length() < 0.05)
@@ -235,7 +227,6 @@ static func _burst_reset(t: RangeTest) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var rm := RecoilModel.new()
-	rm.tarkov = true
 	var peaks := []
 	for i in 6:
 		rm.shoot(def, rng)
@@ -243,7 +234,7 @@ static func _burst_reset(t: RangeTest) -> void:
 		var left := 0.5
 		while left > 1e-6:
 			var h := minf(DT, left)
-			rm.update(h, def["ergo"], def)
+			rm.update(h, def)
 			left -= h
 			peak = maxf(peak, rm.barrel.x)
 		peaks.append(peak)
@@ -267,14 +258,13 @@ static func _semi_returns(t: RangeTest) -> void:
 	for id in ["sks", "garand", "sr25"]:
 		var def := WeaponDefs.of(id)
 		var rm := RecoilModel.new()
-		rm.tarkov = true
 		var rng := RandomNumberGenerator.new()
 		var peak := 0.0
 		var worst_back := 0.0
 		for i in 6:
 			rm.shoot(def, rng)
 			for k in 40:   # 1/3 s at 120 Hz
-				rm.update(DT, def["ergo"], def)
+				rm.update(DT, def)
 				peak = maxf(peak, rm.barrel.length())
 			worst_back = maxf(worst_back, rm.barrel.length())
 		t.check("tarkov: %s is back on the aim point 1/3 s after each shot (%.3f of %.2f)" % [id, worst_back, peak], worst_back < 0.1 * peak)
@@ -282,43 +272,19 @@ static func _semi_returns(t: RangeTest) -> void:
 
 static func _aim_basis(t: RangeTest) -> void:
 	var rm := RecoilModel.new()
-	rm.tarkov = true
 	rm.barrel = Vector2(2.0, 0.0)
 	rm.offset = Vector2(0.5, 0.0)
 	var dir := rm.aim_basis(Basis.IDENTITY) * Vector3(0, 0, -1)
 	t.check("tarkov: bullets leave along the bore minus what the camera followed", absf(rad_to_deg(asin(dir.y)) - 1.5) < 0.01)
-	rm.tarkov = false
-	t.check("classic: aim basis is the camera basis", rm.aim_basis(Basis.IDENTITY) == Basis.IDENTITY)
-	rm.tarkov = true
-
-
-static func _classic(t: RangeTest) -> void:
-	var def := WeaponDefs.of("ak47")
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 3
-	var rm := RecoilModel.new()
-	rm.tarkov = false
-	var cap: float = def["up"] * TacticalConfig.RECOIL_CAP_SHOTS
-	var ref := Vector2.ZERO   # the old formula, inline
-	var rng2 := RandomNumberGenerator.new()
-	rng2.seed = 3
-	for i in 40:
-		rm.shoot(def, rng)
-		ref.x += def["up"] * clampf(1.0 - ref.x / cap, 0.0, 1.0)
-		ref.y = clampf(ref.y + rng2.randf_range(-def["side"], def["side"]), -def["side"] * 10.0, def["side"] * 10.0)
-		rm.update(0.02, def["ergo"], def)
-		ref *= exp(-lerpf(2.0, 6.0, def["ergo"] / 100.0) * 0.02)
-	t.check("classic: recoil identical to the old model", rm.offset.is_equal_approx(ref) and rm.barrel == Vector2.ZERO)
 
 
 static func probe() -> void:
 	for id in ["ak47", "m4a1", "vector", "pkm"]:
-		for mode in [false, true]:
-			var s := spray(id, 30, -1.0, mode)
-			var row := ""
-			for i in 30:
-				row += "%.2f/%.2f " % [s[i][0], s[i][1]]
-			print("[probe] %s %s pitch/yaw per shot: %s" % [id, "tarkov" if mode else "classic", row])
+		var s := spray(id, 30)
+		var row := ""
+		for i in 30:
+			row += "%.2f/%.2f " % [s[i][0], s[i][1]]
+		print("[probe] %s pitch/yaw per shot: %s" % [id, row])
 
 static func _plateau_m4_exact(t: RangeTest) -> void:
 	# Brief: 30-shot M4A1 burst plateaus — climb of shots 20-30 < 10% of climb of shots 1-10.
@@ -331,13 +297,13 @@ static func _plateau_m4_exact(t: RangeTest) -> void:
 
 static func _determinism(t: RangeTest) -> void:
 	# Same seed -> the same learnable pattern; a different seed -> a different one.
-	var a := spray("ak47", 30, -1.0, true, 7)
-	var b := spray("ak47", 30, -1.0, true, 7)
+	var a := spray("ak47", 30, -1.0, 7)
+	var b := spray("ak47", 30, -1.0, 7)
 	var same := true
 	for i in 30:
 		same = same and (a[i] as Vector2).is_equal_approx(b[i])
 	t.check("tarkov: same seed gives the same recoil pattern", same)
-	var c := spray("ak47", 30, -1.0, true, 8)
+	var c := spray("ak47", 30, -1.0, 8)
 	var diff := false
 	for i in 30:
 		diff = diff or not (a[i] as Vector2).is_equal_approx(c[i])
@@ -348,7 +314,6 @@ static func _semi_returns_exact(t: RangeTest) -> void:
 	# Brief: semi at 2 shots/s (0.5 s apart) returns within 0.1 deg of the start before each shot.
 	var def := WeaponDefs.of("sks")
 	var rm := RecoilModel.new()
-	rm.tarkov = true
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 11
 	var ok := true
@@ -359,6 +324,6 @@ static func _semi_returns_exact(t: RangeTest) -> void:
 		var left := 0.5
 		while left > 1e-6:
 			var h := minf(DT, left)
-			rm.update(h, def["ergo"], def)
+			rm.update(h, def)
 			left -= h
 	t.check("tarkov: SKS at 2 shots/s is within 0.1 deg of aim before every shot", ok)

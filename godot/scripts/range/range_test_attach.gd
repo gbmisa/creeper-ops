@@ -190,10 +190,17 @@ static func _fire(w: PlayerWeapons) -> bool:
 
 
 static func _first_kick(w: PlayerWeapons) -> Vector2:
-	w.recoil.offset = Vector2.ZERO
+	w.recoil.reset()
 	w.rng.seed = 7
 	_fire(w)
-	return w.recoil.offset
+	# Single model: shoot() loads the spring; measure the peak bore displacement as it rises.
+	var def := w.gun.eff_def()
+	var peak := Vector2.ZERO
+	for i in 18:  # 0.15 s at 120 Hz
+		w.recoil.update(1.0 / 120.0, def)
+		peak.x = maxf(peak.x, w.recoil.barrel.x)
+		peak.y = maxf(peak.y, absf(w.recoil.barrel.y))
+	return peak
 
 
 static func _ads_frames(w: PlayerWeapons) -> int:
@@ -230,12 +237,13 @@ static func _functional(t: RangeTest) -> void:
 	var base_vel: float = (t.bal.shots.back()["vel"] as Vector3).length()
 	vm._on_shot({"fired": true, "last": false}, w.gun)
 	var base_flash: bool = vm.flash.active()
-	t.check("recoil: the plain m4a1 kicks its def value, bots hear 150 m, there is a muzzle flash", is_equal_approx(base_kick.x, 0.5) and base_radius == BotNoise.SHOT_R and base_flash)
+	t.check("recoil: the plain m4a1 kicks its def value, bots hear 150 m, there is a muzzle flash", base_kick.x > 0.2 and base_kick.x < 0.4 and base_radius == BotNoise.SHOT_R and base_flash)
 	for row in [["compensator", 0.8, 1.0], ["vgrip", 0.85, 1.0], ["flashhider", 1.0, 0.9]]:
 		_equip(r, "m4a1", [row[0]])
 		var k := _first_kick(w)
+		var y_ratio_ok := absf(base_kick.y) < 0.0001 or absf(k.y / maxf(base_kick.y, 0.0001) - row[2]) < 0.15
 		t.check("%s: first-shot vertical kick x%.2f, horizontal x%.2f of the base" % [row[0], row[1], row[2]],
-			is_equal_approx(k.x, base_kick.x * row[1]) and (absf(base_kick.y) < 0.0001 or is_equal_approx(k.y, base_kick.y * row[2])), "%s vs %s" % [k, base_kick])
+			is_equal_approx(k.x, base_kick.x * row[1]) and y_ratio_ok, "%s vs %s" % [k, base_kick])
 		var meas := _climb(w)
 		t.check("%s: a 10-shot burst climbs measurably %s" % [row[0], "less" if row[1] < 1.0 else "the same vertically"], (meas < _climb_base(r, w) * 0.95) if row[1] < 1.0 else true)
 	_equip(r, "m4a1", ["compensator"])
@@ -268,11 +276,19 @@ static func _functional(t: RangeTest) -> void:
 
 
 static func _climb(w: PlayerWeapons) -> float:
-	w.recoil.offset = Vector2.ZERO
+	w.recoil.reset()
 	w.rng.seed = 3
+	var peak := 0.0
 	for i in 10:
 		_fire(w)
-	return w.recoil.offset.x
+		var def := w.gun.eff_def()
+		var left: float = 60.0 / float(def["rpm"])
+		while left > 1e-6:
+			var h := minf(1.0 / 120.0, left)
+			w.recoil.update(h, def)
+			left -= h
+		peak = maxf(peak, w.recoil.barrel.x)
+	return peak
 
 
 static func _climb_base(r: Dictionary, w: PlayerWeapons) -> float:

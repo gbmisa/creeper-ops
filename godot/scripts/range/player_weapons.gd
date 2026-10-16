@@ -57,7 +57,6 @@ func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack, s: Ran
 	else:
 		inv.load_dict(s.saved_kit)
 	inv.ids = s.ids
-	recoil.tarkov = s.local.recoil_mode if s.local != null else false
 	player.carried_kg = inv.total_kg()
 	select_slot("primary")
 
@@ -106,8 +105,6 @@ func drop_current() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	if session != null and session.local != null:
-		recoil.tarkov = session.local.recoil_mode
 	player.spot_mult = LASER_SPOT if gun != null and gun.fit.get("under", "") == "laser" else 1.0
 	_pickup_and_slots()
 	sync()
@@ -126,7 +123,7 @@ func _process(delta: float) -> void:
 		var left := reloader.finish(gun_item)
 		if not left.is_empty():
 			item_dropped.emit(left)
-	recoil.update(delta, gun.def["ergo"], gun.def)
+	recoil.update(delta, gun.def)
 	_apply_view(delta)
 	mag_text_t = maxf(0.0, mag_text_t - delta)
 	if _check_t > 0.0:

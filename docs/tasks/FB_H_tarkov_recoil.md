@@ -4,8 +4,10 @@ Muse task (headless: parse, `--range-test`, unit probes). Branch `fix/fb-h-recoi
 Opus judges feel on GPU after: sight picture during kick, viewmodel shake, whether the camera climb reads right.
 
 Must not change: damage, fire interval / rpm, ammo behavior and reserves, hip pose, ADS FOV/zoom/speed,
-any gun's stats other than the recoil keys named below, timings, AI, UI, level data, sounds. Classic recoil
-model (`RecoilModel.tarkov == false`) is byte-identical: the `_classic` range test pins it.
+any gun's stats other than the recoil keys named below, timings, AI, UI, level data, sounds.
+
+2026-10-16 (Gregory): Tarkov recoil is the ONLY mode. The Classic model and the per-player mode toggle
+are removed (this follow-up); there is no opt-in and no Classic fallback.
 
 ## Goal
 
@@ -15,10 +17,11 @@ two separately-parameterized channels (gun kick vs camera recoil), automatic rec
 per-shot pseudo-random horizontal bounce, per-weapon convergence, a camera that does not fully recenter, and a
 visual-only shake layer that cannot affect aim.
 
-## Background: current implementation (6182f1d1)
+## Background: implementation (6182f1d1 base; single model since 2026-10-16)
 
-`godot/scripts/tactical/recoil_model.gd` — `RecoilModel`, per-player flag `tarkov` (Esc menu, `range_menu.gd`;
-Classic is the default). Tarkov mode today:
+`godot/scripts/tactical/recoil_model.gd` — `RecoilModel`, one model for every player (the old Classic
+path and the Esc-menu toggle in `range_menu.gd` were removed 2026-10-16; `PlayerState.recoil_mode` is gone).
+The model:
 - `shoot(def, rng)`: adds an impulse to a barrel target `_tgt`: vertical `up * RECOIL_T_UP_MULT` along the
   gun's `angle` (80..100, 90 = straight up), horizontal = low-passed drift noise (`_drift`) scaled by `side`.
   Every shot adds the SAME impulse; there is no shot-count compensation.
@@ -60,7 +63,7 @@ Judgment calls (NOT in the research; tuned approximations, marked as such in cod
 
 ## Changes
 
-### `godot/scripts/tactical/recoil_model.gd` (tarkov branch only)
+### `godot/scripts/tactical/recoil_model.gd`
 New state: `_cam` (camera spring angle), `_cam_tgt` (recoverable camera target), `_cam_vel`, `_climb`
 (permanent camera climb, capped), `_shots` (burst shot counter), `_since_shot`. `offset` keeps its meaning:
 the camera's total recoil angle, now `offset = _cam` with the spring target `_cam_tgt + _climb`.
@@ -109,10 +112,10 @@ them — no-op today, future-proof). `conv`/`cam_snap` stay base-def (update-tim
 Without this the permanent climb would leak between guns. Nothing else changes.
 
 ### `godot/scripts/range/tactical_viewmodel.gd` (visual-only shake layer)
-Tarkov mode only: on shot, add a small random rotational impulse to a new `_shake` spring
+On shot, add a small random rotational impulse to a new `_shake` spring
 (`RECOIL_T_SHAKE_DEG`, decay `RECOIL_T_SHAKE_DECAY`), applied to the MODEL rotation in `_process` only.
 It never touches `RecoilModel`, `aim_basis`, or bullet directions — aim-affecting and non-aim-affecting stay
-in distinct code paths. Classic mode keeps its existing `_kick` exactly.
+in distinct code paths.
 
 ### `godot/scripts/range/range_test_recoil.gd`
 Keep `_rise`, `_plateau` (bounds re-measured), `_plateau_m4_exact`, `_determinism`, `_semi_returns`,
@@ -129,7 +132,8 @@ New checks:
 
 ## Test plan
 Parse clean. `--range-test` all PASS, zero new failures vs the 6182f1d1 base (run base for comparison).
-`--recoil-probe` spray printout for the report (ak47/m4a1/vector/pkm, both modes).
+`--recoil-probe` spray printout for the report (ak47/m4a1/vector/pkm). No Classic-vs-Tarkov comparisons:
+all assertions target the single model.
 
 ## Open questions (for Opus / Gregory, not this branch)
 - Do the `cam_up` values feel right per class? The numbers are estimates; GPU-side judgment.

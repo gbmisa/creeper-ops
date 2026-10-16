@@ -47,10 +47,7 @@ const EXACT_COUNT_MAX_CAP := 8
 const MAG_WORDS := [[1.0, "Full"], [0.75, "Almost full"], [0.4, "About half"], [0.16, "Less than half"], [0.001, "Almost empty"]]
 
 # Recoil / sway
-const RECOIL_CAP_SHOTS := 10.0
-const RECOIL_RATE_LOW := 2.0
-const RECOIL_RATE_HIGH := 6.0
-# Tarkov-style recoil (RecoilModel.tarkov): per-shot impulse = up x UP_MULT along the gun's `angle`, side drift is
+# Recoil (RecoilModel): per-shot impulse = up x UP_MULT along the gun's `angle`, side drift is
 # low-passed noise; OMEGA = critically damped rise (~60 ms); VM_* = viewmodel follows the bore (visual only).
 # Model refs (TRP spec, TRP/docs/spec/weapon-handling.md "Recoil", Apache-2.0): spring shape
 # (force -> Velocity, ReturnSpeed pull, Damping), stable/plateau from ~shot 5 (TRP RecoilStableIndexShot = 5
