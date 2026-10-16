@@ -1,6 +1,6 @@
 class_name RangeBench
 extends Node3D
-## Two booth stations. Ammo bench (on the bench): use cycles the held gun's ammo type and refills its mags.
+## Two booth stations. Ammo bench (on the bench): use refills the held gun's mags (F116: no ammo types).
 ## Armor station: use cycles the dummy armor loadout and resets every target. Prompts go through weapons.prompt.
 
 const AMMO_POS := Vector3(5.0, 0.0, 9.5)  # F9: against the back wall with the bench prop
@@ -63,14 +63,13 @@ func _process(_dt: float) -> void:
 	if player == null:
 		return
 	if _near(AMMO_POS) and weapons.gun != null:
-		var next := TacAmmoDefs.next_grade(weapons.gun.ammo_pick)
 		var tube: bool = weapons.gun.def["action"] == "tube"  # F22: UI says tube/shells, never magazine
-		weapons.prompt = "%s: load %s and refill %s" % [Keybinds.short("t_use"), TacAmmoDefs.of(next)["name"], "shells" if tube else "mags"]
-		if player.enabled and player.input.act("t_use"):
+		weapons.prompt = "%s: refill %s" % [Keybinds.short("t_use"), "shells" if tube else "mags"]
+		if player.enabled and player.input.act("t_use"):  # F116: refill only, no ammo types to cycle
 			weapons.reload_cancel()
-			cycle_ammo(weapons.gun)
+			weapons.gun.refill()
 			weapons.refill_mags()
-			weapons.message.emit("Loaded %s, %s refilled" % [TacAmmoDefs.of(weapons.gun.ammo_pick)["name"], "tube shells" if tube else "mags"])
+			weapons.message.emit("%s refilled" % ("Tube shells" if tube else "Mags"))
 	elif _near(ARMOR_POS):
 		var n: int = (targets.loadout + 1) % ArmorDefs.LOADOUTS.size()
 		weapons.prompt = "%s: dummy armor -> %s (resets targets)" % [Keybinds.short("t_use"), ArmorDefs.LOADOUT_NAMES[n]]
