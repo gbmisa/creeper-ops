@@ -42,6 +42,8 @@ func run() -> void:
 	RangeTestAmmo.run(self)
 	RangeTestOneType.run(self)
 	RangeTestRangeReload.run(self)
+	RangeTestAmmo2.run(self)
+	RangeTestNoAmmo.run(self)
 	RangeTestReloadRace.run(self)
 	RangeTestReloadRace.second_r(self)
 	RangeTestMp1.run(self)
