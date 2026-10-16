@@ -47,6 +47,7 @@ static func run(t: RangeTest, session: RangeSession, player: TacticalPlayer) -> 
 			m = b
 	t.check("marksman starts on the tower with two overwatch spots", m.global_position.y > 5.5 and m.patrol.size() == 2)
 	await _bots_move_on_shot(t, game, session, player)
+	await RangeTestF91.run(t, game)
 	for b in game.bots:
 		b.queue_free()
 	game.bots.clear()
