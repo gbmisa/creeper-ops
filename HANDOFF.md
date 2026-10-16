@@ -24,6 +24,17 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - Range suite 1114 pass / 0 fail (38 SCRIPT ERRORs: the known `ReloadTimeline 'lock'` spam, fixed by the WIP below).
 - **CHANGES P12** (hold cover longer while peeking; today cover lasts 1.5 s) waits for Gregory. Pushed.
 
+## Bot gun hold (ee245ff on feat/bot-anims, merged into feat/fb-reload, pushed; Gregory: arms behind them)
+- Cause: BotBody placed the gun with the viewmodel's `butt` (eye-to-butt at ADS), so stocks sat 0.3 m behind the
+  shoulder (P90 inside the Warlord, pistols at the shoulder), and the elbow pole was world-fixed (swung back by heading).
+- Now `range/bot_hold.gd` (BotHold): butt in the right shoulder pocket, torso bladed 0.55 rad (head turned back), head
+  drops onto the stock when engaged; pistols out in front of the chest; elbow poles in the bot's frame; left hand slides
+  back along the gun if the handguard is out of reach (sniper, shotgun). `FpArms.solve` takes an optional pole.
+- Clips, speeds, hitboxes, eye/shot origin unchanged. Side effect: muzzle flash / shot-sound position moves with the gun.
+- Renders judged (scratchpad): every kind, idle/jog/sprint, lowered/engaged, crouch+lean; both hands on target 0 mm.
+- Parse clean, skirmish boots; range suite 1114 pass / 0 fail (a first run flaked: navmesh doorway + bleed-out fall;
+  30-bot probe: every bleed-out falls, old and new). Not verified: Gregory's play. Next: his verdict on the look.
+
 ## Not yet ported from creeper-ops (do this before more on-foot work there)
 - Session B's **uncommitted reload WIP** (`reload_anims.gd`, `reload_rigs.gd`, `reload_timeline.gd`) is still in the
   creeper-ops main checkout. Once committed there: `git -C "../creeper ops" format-patch -1 <sha> --stdout | git am`.
