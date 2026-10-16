@@ -108,7 +108,7 @@ static func facts(b: ScavBot) -> Dictionary:
 	if ally_eng and ally.percept.has_last:
 		p.contact.ally(ally.percept.contact.pos, ally.percept.contact.err)
 		p.tick(0.0)  # re-sync last_known / has_last from the shared contact
-	if b.cover_t <= 0.0 and p.has_last and b.brain.state in [BotBrain.ENGAGE, BotBrain.COVER]:
+	if b.cover_t <= 0.0 and p.has_last and b.brain.state in [BotBrain.ENGAGE, BotBrain.COVER] and not b.combat.active:
 		find_cover(b)
 	var alone := ally == null or ally.body.dead
 	var outgunned := p.aware and ((alone and b.body.total_frac() < 0.7) or b.gun.rounds_total() < 3)

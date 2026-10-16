@@ -117,7 +117,7 @@ static func _reserved_by_ally(session: RangeSession, marker: Vector3, me: ScavBo
 
 ## True when the marker was claimed against a threat far (angularly) from the current one:
 ## the cover no longer protects against this threat.
-static func _flanked(session: RangeSession, marker: Vector3, threat: Vector3) -> bool:
+static func is_flanked(session: RangeSession, marker: Vector3, threat: Vector3) -> bool:
 	if session == null:
 		return false
 	var c: Dictionary = session.cover_claims.get(marker, {})
@@ -129,6 +129,10 @@ static func _flanked(session: RangeSession, marker: Vector3, threat: Vector3) ->
 	if a.length() < 0.01 or cc.length() < 0.01:
 		return false
 	return absf(rad_to_deg(a.angle_to(cc))) > BotTacticsDefs.COVER_FLANK_ANGLE
+
+
+static func _flanked(session: RangeSession, marker: Vector3, threat: Vector3) -> bool:
+	return is_flanked(session, marker, threat)
 
 
 ## Drop claims whose holder is gone.

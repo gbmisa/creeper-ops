@@ -48,6 +48,7 @@ var cover_t := 0.0
 var shot_cover := false  # F88: current TakeCover was entered from a heard shot
 var squad: BotSquad  # F97 phase C: this bot's squad plan (shared with its members)
 var squad_role := BotSquad.ROLE_HOLD  # this bot's current role in the plan
+var combat := BotCombat.new()  # F97 phase D: the fight-from-cover loop state
 var _dying := false
 var _go_age := 0.0
 var stuck_win := 0.0  # F91 (BotUnstick): time in the current progress window
@@ -183,7 +184,9 @@ func think(dt: float, over := {}) -> void:
 		_enter(to)
 		print("[bot] ", label_name, " ", from, " -> ", to)
 		state_changed.emit(self, from, to)
-	_act()
+	if brain.state not in [BotBrain.ENGAGE, BotBrain.COVER]:
+		combat.active = false  # F97 phase D: the cover loop only runs in ENGAGE/COVER
+	_act(dt)
 
 
 func _sense(dt: float) -> void:
@@ -251,7 +254,18 @@ func _enter(s: String) -> void:
 	mesh.scale.y = 0.8 if s == BotBrain.HEAL else 1.0
 
 
-func _act() -> void:
+func _at_cover() -> bool:
+	if not has_cover:
+		return false
+	return Vector2(global_position.x - cover_pos.x, global_position.z - cover_pos.z).length() < 1.5
+
+
+## F97 phase D: the cover loop runs when active, or when at cover with a live contact.
+func _in_combat() -> bool:
+	return combat.active or (has_cover and percept.contact.has() and _at_cover())
+
+
+func _act(dt: float) -> void:
 	var s := brain.state
 	if gun.mag.count() == 0 and gun.chamber == "" and not gun.busy():
 		if not gun.reload(false):
@@ -267,7 +281,13 @@ func _act() -> void:
 		BotBrain.PATROL:
 			BotEngage.patrol(self)
 		BotBrain.ENGAGE:
-			BotEngage.engage(self)
+			if _in_combat():
+				BotCombat.tick(self, dt)  # F97 phase D: fight from cover (peek/hide/reposition)
+			else:
+				BotEngage.engage(self)
+		BotBrain.COVER:
+			if _in_combat():
+				BotCombat.tick(self, dt)  # arrived at cover with a contact: fight from it
 		BotBrain.SUPPRESS:
 			if percept.has_last:
 				_shoot_at(percept.last_known + Vector3(rng.randf_range(-1.2, 1.2), 0.2, rng.randf_range(-1.2, 1.2)))
