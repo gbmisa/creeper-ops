@@ -89,3 +89,12 @@ so the drawn bore never pitches below the view and sights = bullets. New `script
 Check `range_test_recoil_eye.gd`: aimed 6-shot AK/MP5 burst, per 60 Hz step: eye clearance and bore dip.
 Before: AK 1.5 cm / -2.83 deg, MP5 3.1 cm / -1.39 deg. After: AK 3.1 cm (room 3.8 cm), MP5 3.3 cm, dip 0.000.
 Shots: docs/art/recoil/{ak47,mp5}_ads_burst{3,6}_fix.png. Range 859 OK, smoke 0 failures.
+Glock 18: classic measured on fix/fb-i (RecoilModel classic, 40 seeds, 1100 rpm, view = bullets): at shots
+2-15 1.78 2.96 3.75 4.27 4.62 4.85 5.01 5.11 5.18 5.23 5.26 5.28 5.29 5.30; mean |yaw| ~0.4-0.6;
+after release 4.13 / 1.80 / 0.45 / 0.03 at 0.1 / 0.25 / 0.5 / 1 s. Tarkov row before: aimed 2.46 4.69 7.41
+12.0 .. 17 deg plateau, hip 22. New `TacRecoilDefs.GUN_ROWS["glock18"]` = force_up 165, convergence 3.2,
+damping 0.78, stable_shot 3 (grid fit, aimed muzzle + hip view equally weighted; camera 0.05 kept).
+Aimed (view = muzzle): 1.07 2.09 3.11 3.96 4.25 4.48 4.58 4.60 .. 4.4; yaw 0.1-0.5; return 4.36 / 1.32 /
+-0.11 / 0.03. Hip view: 1.08 2.04 3.03 3.87 4.41 5.00 5.41 5.60 .. 5.9 (muzzle 1.37 .. 6.1); return 5.77 /
+1.77 / -0.16 / 0.04. The spring cannot jump instantly, so shot 2 lags the classic (1.07 vs 1.78).
+Suggestion: a range check pinning the Glock 18 curve.
