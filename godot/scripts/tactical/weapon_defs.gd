@@ -13,6 +13,7 @@ const ORDER := ["m1911", "p90", "ak47", "shotgun", "garand", "sniper",
 ## One rack line per weapon family, earlier tier first.
 const RACK_ROWS := [["m1911", "glock18", "revolver"], ["mp5", "p90", "vector"], ["ak47", "m4a1", "scarh"],
 	["shotgun", "saiga12"], ["sks", "garand", "sr25"], ["mosin", "sniper"], ["pkm"]]
+## fit: parts a new gun comes with (slot -> AttachmentDefs id; FB-H: the P90 has no irons, so it ships with a red dot).
 ## model_fallback: until guns/<id>.glb exists the row uses this model (fb_flip replaces "flip" then).
 
 const ROWS := {
@@ -23,7 +24,7 @@ const ROWS := {
 	"p90": {"tier": 2, "unlock": 6, "role": "Big 50-round mag, armor-piercing 5.7: sustained SMG fire", "slots": ["sight","muzzle"], "name": "FN P90", "class": "smg", "cal": "57x28", "mag": 50, "rpm": 900.0, "modes": ["semi", "auto"], "ergo": 74.0,
 		"conv": 6.9, "cam_share": 0.3, "angle": 94.0, "kg": 2.6, "up": 0.35, "side": 0.25, "moa": 3.2, "action": "detachable", "cycle": 0.0, "reload": 2.8, "reload_fast": 1.9,
 		"spares": 3, "zeros": [50.0], "ads_pos": Vector3(0.0000, -0.0900, -0.850), "hip_pos": Vector3(0.17, -0.17, -0.45),
-		"model": "p90", "grip_r": Vector3(0.047,-0.050,0.160), "grip_l": Vector3(0.0,-0.095,0.0), "mag_l": Vector3(0.0,0.11,-0.05), "butt": 0.30, "inv_w": 3, "inv_h": 2, "scope": 1.0},
+		"model": "p90", "grip_r": Vector3(0.047,-0.050,0.160), "grip_l": Vector3(0.0,-0.095,0.0), "mag_l": Vector3(0.0,0.11,-0.05), "butt": 0.30, "inv_w": 3, "inv_h": 2, "scope": 1.0, "fit": {"sight": "reddot"}},
 	"ak47": {"tier": 1, "unlock": 1, "role": "Rugged all-rounder: heavy hits, climbs hard", "slots": ["sight","muzzle","mag"], "name": "AK-47", "class": "assault rifle", "cal": "762x39", "mag": 30, "rpm": 600.0, "modes": ["semi", "auto"], "ergo": 50.0,
 		"conv": 4.6, "cam_share": 0.35, "angle": 82.0, "kg": 3.6, "up": 0.75, "side": 0.45, "moa": 3.0, "action": "detachable", "cycle": 0.0, "reload": 3.0, "reload_fast": 2.1,
 		"spares": 3, "zeros": [50.0, 100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0000, -0.1310, -0.950), "hip_pos": Vector3(0.16, -0.18, -0.58),
