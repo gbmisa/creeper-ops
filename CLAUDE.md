@@ -2,7 +2,10 @@
 
 ## Start of a session
 Read `HANDOFF.md` first. Read [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) only if HANDOFF points you there.
-When you finish a large task, overwrite `HANDOFF.md` (**under 60 lines**: state, how to run, open issues, next steps).
+**After every completed task (not only large ones), update `HANDOFF.md` without being asked**, so the user can `/clear`
+at any point and a fresh session resumes from it (**under 60 lines**: state, branch, how to run, what's verified and
+what isn't, uncommitted work, open issues, next steps). Several sessions may share this checkout: rewrite your own
+section, keep the others' current. End the reply with "HANDOFF.md updated, safe to /clear."
 
 ## Current focus (2026-10-16): the on-foot tactical game
 Work is on the **Firing Range** and the **Skirmish** (Tarkov-style guns, inventory, recoil, ADS, bots, extraction).

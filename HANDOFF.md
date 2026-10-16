@@ -1,38 +1,39 @@
-# Handoff: 2026-10-16 (Opus, branch feat/fb-reload, main checkout)
+# Handoff: 2026-10-16 (branch feat/fb-reload, main checkout; two Opus sessions share it)
 
-## This session (uncommitted until the commit below; the 3 `reload_*.gd` files were already dirty, not touched)
-1. **P9 arm loss (APPROVED, built)**: `TacticalConfig.ARM_LOSS`, `BodyHealth.arms_down/arm_loss/can_hold_breath`.
-   Player: sway, ADS time, recoil (`RecoilModel.shoot` strength), reload time (busy_t, the animation follows), no breath
-   hold. **Bots too** (Gregory): aim spread x sway, reaction x ads, reload x reload. HUD: red line beside the body figure.
-2. **Meds + quick-use bar**: Skirmish crate "meds" now gives `ItemDefs.CRATE_MEDS` (IFAK + bandage) into the
-   inventory (drops at your feet if full) instead of healing on the spot. `QuickUse` (range/quick_use.gd): keys 4 / 5
-   (`t_slot_4/5`, relabelled "Quick use"), IFAK 3 s heal 60 % + stops bleeds, bandage 2 s stops bleeds; hands busy =
-   no fire/ADS. `QuickBar` (range/quick_bar.gd) = the build-menu panel + BuildCards (BuildCard got an optional glyph arg).
-3. **Skirmish MAP-2 layout**: plan + map in `docs/tasks/SKIRMISH_MAP2.md`. West = CQC old town (9 buildings, alleys,
-   sniper street to the tower), east = open with barracks + warehouse and spaced cover. New cover kind `container`.
-   `SkirmishLayout` inner walls now support axis "x" (offset bug fixed; the barracks "z" wall is unchanged).
-4. CHANGES.md: P9 ruled; new **P10** (bots ignore leg damage; slow on blacked legs?) and **P11** (arm fracture sway is
-   dead code).
+**Play build:** `feat/fb-reload` (pushed up to `194f425`; local is ahead: `a0b68d6` + merge `bfd4aad`, not pushed).
+Run: `godot --path godot` -> level select -> Firing Range / Skirmish (Skirmish is its own scene since F82:
+`godot --path godot res://scenes/skirmish.tscn`). Windows machine: Godot 4.7.2 via winget, Blender 5.2.2 portable,
+Blender MCP registered (user scope). After pulling new `class_name` files: `godot --headless --path godot --import`.
 
-## Verified
-- Parse clean. `--range-test`: everything I added passes (P9, quick use, loot, 6 `map2` checks, F93). Screenshots
-  (Vulkan, real display) judged by Opus: overview, tower view down the street, alley, east field, quick bar.
-- Not verified: Gregory's play, bot behaviour over a full match on the new map, perf with 9 more buildings and lights.
+## Session A (Skirmish gameplay; committed a0b68d6)
+- **P9 arm loss APPROVED + built** (player and bots): `TacticalConfig.ARM_LOSS`, `BodyHealth.arms_down/arm_loss`.
+- Meds crate -> IFAK + bandage into the inventory; quick-use keys 4/5 (`QuickUse`, `QuickBar`).
+- Skirmish MAP-2 layout (`docs/tasks/SKIRMISH_MAP2.md`): CQC old town west, open east, cover kind `container`.
+- CHANGES.md: new **P10** (bots ignore leg damage) and **P11** (arm fracture sway is dead code), waiting for Gregory.
+- Known: kill-house navmesh doorway check can fail (pre-existing); barracks north door split by the inner wall.
 
-## Test failures (4) and why
-- `navmesh routes through the doorways to the far room` (kill house) fails in this checkout **before my changes too**
-  (baseline copy). When it fails, two roster checks that reuse the kill house can fail as well (shotgunner closes in,
-  boss followers).
-- `a shot at spawn: every bot ... moves within 4 s (F88)`: Scav 5 runs 6.6 m to cover, then walks back on Search, so
-  its *net* move is 0.6 m. It isn't stuck: the check measures net distance. The new cover list changed which cover it
-  picks. Check left as is (rule: report, don't loosen).
-- `ReloadTimeline._anchor` 'lock' script errors come from the uncommitted reload WIP files, not this work.
+## Session B (reloads + F89-F93 + merges)
+- **F89-F93** (`fix/f89-f93`, pushed, merged into fb-reload): spare mags on deploy (F90), `BotUnstick` (F91, safety
+  net; no real snag reproduced), death screen bottom-left + 1 s click grace (F92), spawn/lane cover (F93), P9 written.
+- **Merge `bfd4aad`** of `origin/feat/skirmish-scene` (F82 + CLAUDE.md refresh): `firing_range.gd` conflict resolved
+  by taking F82's `TacticalScene` split; `a0b68d6`'s QuickUse/QuickBar wiring moved into `TacticalScene._add_hud`.
+- **FB-R reloads** (brief `docs/tasks/FB_R_reload_anims.md`, log `FB_R_progress.md`, scores `docs/art/reload/SCORES.md`):
+  judged >= 8: ak47, m1911, glock18, p90 (all), mp5 plain/fast (empty 7: structural), scarh/sr25/saiga12/sks plain
+  (+ scarh/sr25 fast). Below 8: the 4 rifles' empty reloads (5-6), saiga12/sks fast (7).
+- **Uncommitted WIP** (`reload_anims.gd`, `reload_rigs.gd`, `reload_timeline.gd`): empty-tail fix for the 4 rifles
+  (charge phases skip `pose_shift`, AR press = catch +1.5 cm in + hold, SKS/Saiga charge points from a mesh probe,
+  swing-in >= 0.35 s on rifle/ar plans) + `HANDS["lock"]` default (fixes the `_anchor 'lock'` SCRIPT ERROR spam).
+  Sheets rendered in the session scratchpad, **not yet reviewed or judged**; commit after a judge round.
+- Tools (scratchpad, not in git): `sheet.py` (frame strips -> labelled sheet, 3 renders in parallel max, never while
+  the headless suite runs: it hangs), `grid.py` + tall ortho (mag coordinates), `mag_probe.gd` / side probes.
 
-## Known issues (pre-existing, not fixed: outside the ask)
-- Barracks navmesh: the north door (x 24-26) is split by the inner wall at x 25 (two 0.9 m halves, too narrow for a
-  bot), and paths into the east room / warehouse end ~2 m short (map2 probes; same on the old map).
-- Older items: see git history of this file (integ worktree, perf probe, CHANGES 1-15 rulings).
+## Verified (merged tree incl. WIP)
+Parse clean; `--range-test` 1113 pass / 1 fail; smoke 0 FAIL. The fail is `a shot at spawn ... (F88)`: Scav 5 runs to
+cover and back on MAP-2, net move 0.6 m (not stuck; check measures net distance; left as is, report-don't-loosen).
+Not verified: Gregory's play of any of this; bots over a full match on MAP-2; GPU perf with the new map.
 
 ## Next
-1. Gregory plays Skirmish MAP-2 and rules on CHANGES P10 / P11.
-2. If wanted: fix the barracks door / navmesh gaps, rooftop routes, container visuals.
+1. Push `feat/fb-reload` (a0b68d6 + bfd4aad) when the user says so.
+2. Reloads: review the WIP sheets, judge round 2 for the 4 rifles' empty + fast, then commit. Then sniper (AXMC, bones),
+   M4A1 (`ar` plan; ask Gregory about hiding his posed arms during reloads), then tube / en-bloc / revolver plans.
+3. Gregory rules on CHANGES P10 / P11 and plays Skirmish (MAP-2, F90-F93).
