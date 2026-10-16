@@ -15,6 +15,7 @@ var hit_log: RangeHitLog
 var bots: RangeBots
 var world_items: WorldItems
 var inv_ui: InventoryUI
+var quick: QuickUse
 var skirmish: SkirmishGame   # set when the Skirmish map is selected (RangeMaps)
 
 
@@ -120,6 +121,12 @@ func _build() -> void:
 	var body_hud := RangeBodyHud.new()
 	hud.add_child(body_hud)
 	body_hud.setup(player)
+	quick = QuickUse.new()
+	add_child(quick)
+	quick.setup(weapons, player)
+	var bar := QuickBar.new()
+	hud.add_child(bar)
+	bar.setup(quick)
 	bots = RangeBots.new()
 	if is_skirmish:
 		skirmish.start(player, weapons, bal, hit_log, hud, session)
