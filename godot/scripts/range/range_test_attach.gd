@@ -346,8 +346,8 @@ static func _sights(t: RangeTest, r: Dictionary) -> void:
 static func _ads_frames_iron(r: Dictionary, id: String) -> int:
 	var w: PlayerWeapons = r["w"]
 	var g := _equip(r, id)
+	g.clear_fit("sight")  # the default red dot (p90/pkm/sr25): irons means truly bare
 	var n := _ads_frames(w)
-	g.fit.clear()
 	return n
 
 

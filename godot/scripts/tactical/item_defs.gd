@@ -77,7 +77,10 @@ static func make(id: String, opts: Dictionary, ids: IdSource) -> Dictionary:
 			it["ammo"] = str(opts.get("ammo", cal_grade))
 			it["rounds"] = int(opts.get("rounds", d["cap"]))
 		"gun":
-			it["gun"] = opts.get("gun", Gun.new(id))
+			var g: Gun = opts.get("gun", Gun.new(id))
+			if not opts.has("gun"):
+				g.apply_default_fit()
+			it["gun"] = g
 		"rig", "backpack":
 			it["items"] = []
 	return it

@@ -6,6 +6,8 @@ class_name WeaponDefs
 ## instead of butt, so the eye stays behind a rear sight near the stock; bots keep butt) are viewmodel data (range/).
 ## ads_pos.y is minus the iron sight line (gun space; art/gen/mounts.json ads_y holds the same value).
 ## While aiming the camera near plane is TacticalViewmodel.ADS_NEAR, small enough not to clip the visible stock.
+## default_sight (optional): attachment id fitted on every fresh player gun (ItemDefs.make) — "reddot" for the
+## FB-G guns whose irons are unusable (p90/pkm/sr25). Bots (Gun.new directly) and bare test guns keep no fit.
 
 ## Rack order: the original six, then the new lines (tier ascending within a line). RACK_ROWS groups them for the rack.
 const ORDER := ["m1911", "p90", "ak47", "shotgun", "garand", "sniper",
@@ -23,7 +25,7 @@ const ROWS := {
 	"p90": {"tier": 2, "unlock": 6, "role": "Big 50-round mag, armor-piercing 5.7: sustained SMG fire", "slots": ["sight","muzzle"], "name": "FN P90", "class": "smg", "cal": "57x28", "mag": 50, "rpm": 900.0, "modes": ["semi", "auto"], "ergo": 74.0,
 		"conv": 6.9, "cam_share": 0.3, "angle": 94.0, "kg": 2.6, "up": 0.35, "side": 0.25, "moa": 3.2, "action": "detachable", "cycle": 0.0, "reload": 2.8, "reload_fast": 1.9,
 		"spares": 3, "zeros": [50.0], "ads_pos": Vector3(0.0000, -0.0900, -0.850), "hip_pos": Vector3(0.17, -0.17, -0.45),
-		"model": "p90", "grip_r": Vector3(0.047,-0.050,0.160), "grip_l": Vector3(0.0,-0.095,0.0), "mag_l": Vector3(0.0,0.11,-0.05), "butt": 0.30, "inv_w": 3, "inv_h": 2, "scope": 1.0},
+		"model": "p90", "grip_r": Vector3(0.047,-0.050,0.160), "grip_l": Vector3(0.0,-0.095,0.0), "mag_l": Vector3(0.0,0.11,-0.05), "butt": 0.30, "inv_w": 3, "inv_h": 2, "scope": 1.0, "default_sight": "reddot"},
 	"ak47": {"tier": 1, "unlock": 1, "role": "Rugged all-rounder: heavy hits, climbs hard", "slots": ["sight","muzzle","mag"], "name": "AK-47", "class": "assault rifle", "cal": "762x39", "mag": 30, "rpm": 600.0, "modes": ["semi", "auto"], "ergo": 50.0,
 		"conv": 4.6, "cam_share": 0.35, "angle": 82.0, "kg": 3.6, "up": 0.75, "side": 0.45, "moa": 3.0, "action": "detachable", "cycle": 0.0, "reload": 3.0, "reload_fast": 2.1,
 		"spares": 3, "zeros": [50.0, 100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0000, -0.1310, -0.950), "hip_pos": Vector3(0.16, -0.18, -0.58),
@@ -75,7 +77,7 @@ const ROWS := {
 	"sr25": {"tier": 3, "unlock": 24, "role": "20-round semi DMR: best mid-range", "slots": ["sight","muzzle","under","mag"], "name": "SR-25", "class": "marksman", "cal": "762x51", "mag": 20, "rpm": 450.0, "modes": ["semi"], "ergo": 55.0,
 		"conv": 10, "cam_share": 0.35, "angle": 90.0, "kg": 4.5, "up": 1.2, "side": 0.5, "moa": 1.0, "action": "detachable", "cycle": 0.0, "reload": 2.8, "reload_fast": 1.9,
 		"spares": 3, "zeros": [50.0, 100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0115, -0.1040, -0.810), "hip_pos": Vector3(0.16, -0.17, -0.66), "grip_r": Vector3(0.042,0.000,0.340), "grip_l": Vector3(0.0,0.02,-0.15), "mag_l": Vector3(0.0,-0.02,0.0), "butt": 0.30,
-		"model": "sr25", "model_fallback": "garand", "inv_w": 5, "inv_h": 2, "scope": 1.0},
+		"model": "sr25", "model_fallback": "garand", "inv_w": 5, "inv_h": 2, "scope": 1.0, "default_sight": "reddot"},
 	"mosin": {"tier": 1, "unlock": 6, "role": "Cheap bolt sniper, iron sights, strong round", "slots": ["sight","muzzle"], "name": "Mosin-Nagant", "class": "bolt-action", "cal": "762x54r", "mag": 5, "rpm": 50.0, "modes": ["semi"], "ergo": 38.0,
 		"conv": 6, "cam_share": 0.5, "angle": 90.0, "kg": 4.0, "up": 3.2, "side": 0.9, "moa": 1.6, "action": "detachable", "cycle": 1.3, "reload": 3.8, "reload_fast": 2.8,
 		"spares": 4, "zeros": [100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0080, -0.0910, -0.860), "hip_pos": Vector3(0.16, -0.18, -0.72), "grip_r": Vector3(0.042,-0.040,0.340), "grip_l": Vector3(0.0,0.0,-0.15), "mag_l": Vector3(0.0,-0.03,0.05), "butt": 0.30, "bolt_knob": Vector3(0.0241, 0.0644, 0.1985),
@@ -83,7 +85,7 @@ const ROWS := {
 	"pkm": {"tier": 3, "unlock": 28, "role": "100-round belt, suppression, very heavy, slow reload", "slots": ["sight","muzzle"], "name": "PKM", "class": "lmg", "cal": "762x54r", "mag": 100, "rpm": 650.0, "modes": ["auto"], "ergo": 25.0,
 		"conv": 5.0, "cam_share": 0.3, "angle": 85.0, "kg": 8.4, "up": 0.9, "side": 0.6, "moa": 3.8, "action": "detachable", "cycle": 0.0, "reload": 7.0, "reload_fast": 5.5,
 		"spares": 1, "zeros": [50.0, 100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0000, -0.1340, -0.950), "hip_pos": Vector3(0.16, -0.18, -0.58), "grip_r": Vector3(0.042,-0.030,0.240), "grip_l": Vector3(0.0,0.04,-0.10), "mag_l": Vector3(0.0,-0.12,-0.04), "butt": 0.30, "eye": 0.17,
-		"model": "pkm", "model_fallback": "ak47", "inv_w": 6, "inv_h": 2, "scope": 1.0},
+		"model": "pkm", "model_fallback": "ak47", "inv_w": 6, "inv_h": 2, "scope": 1.0, "default_sight": "reddot"},
 }
 
 

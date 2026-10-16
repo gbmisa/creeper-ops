@@ -110,6 +110,14 @@ func clear_fit(slot: String) -> Array[String]:
 	return _after_fit()
 
 
+## Fits the def's default_sight (FB-G: "reddot" for p90/pkm/sr25, whose irons are unusable) when the sight slot
+## is empty and takes it. Called for fresh player guns (ItemDefs.make); bots (Gun.new directly) keep bare guns.
+func apply_default_fit() -> void:
+	var sid := str(def.get("default_sight", ""))
+	if sid != "" and not fit.has("sight") and AttachmentDefs.why_not(def, sid) == "":
+		set_fit("sight", sid)
+
+
 func _after_fit() -> Array[String]:
 	fit_ver += 1
 	var spill: Array[String] = []
