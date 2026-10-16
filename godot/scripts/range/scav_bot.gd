@@ -125,7 +125,10 @@ func on_hit(res: Dictionary) -> void:
 		var target := session.nearest_player(global_position) if session != null else null
 		percept.alert(target.node.global_position if target != null and target.node != null else res.get("origin", global_position))
 	if body.dead:
-		_die()
+		# Killing shot: throw the ragdoll along the bullet's travel direction, scaled by damage.
+		var dir: Vector3 = (res["pos"] as Vector3) - (res["origin"] as Vector3)
+		var scale := clampf(float(res.get("dmg", TacticalConfig.DEATH_IMPULSE_REF_DMG)) / TacticalConfig.DEATH_IMPULSE_REF_DMG, 0.25, 2.0)
+		_die(dir.normalized() * TacticalConfig.DEATH_IMPULSE * scale, str(res.get("zone", "")))
 
 
 func think(dt: float, over := {}) -> void:
@@ -250,10 +253,16 @@ func _flat(v: Vector3) -> Vector3:
 
 
 func _move(dt: float) -> void:
+	# A dead bot no longer drives its CharacterBody3D (its collision layer is 0, so move_and_slide
+	# would sink the corpse through the floor); the ragdoll simulates in place instead. walk() is
+	# still called so the ragdoll sleep timer ticks.
+	if _dying:
+		mesh.walk(dt, 0.0)
+		return
 	BotMotion.move(self, dt)
 
 
-func _die() -> void:
+func _die(impulse := Vector3.ZERO, zone := "") -> void:
 	if _dying:
 		return
 	_dying = true
@@ -261,7 +270,7 @@ func _die() -> void:
 		(rig[z] as CollisionObject3D).collision_layer = 0
 	collision_layer = 0
 	var tw := create_tween()
-	mesh.die()
+	mesh.die(impulse, zone)
 	tw.tween_interval(8.5)
 	tw.tween_callback(queue_free)
 	died.emit(self)
