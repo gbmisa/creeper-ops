@@ -258,13 +258,13 @@
   "relief_min": 0.18,
   "sight_front": [
    -0.001,
-   0.136,
+   0.1385,
    -0.51
   ],
   "sight_kind": "notch",
   "sight_rear": [
    -0.001,
-   0.136,
+   0.1385,
    -0.059
   ],
   "under": [
