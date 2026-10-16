@@ -18,7 +18,11 @@ func _init() -> void:
 	_lbl = UiKit.label("HIT LOG", 13, Color(0.92, 0.92, 0.85))
 	p.add_child(_lbl)
 	_tgt_panel = UiKit.panel(Color(0.04, 0.05, 0.07, 0.7))
-	_tgt_panel.position = Vector2(1330, 20)
+	_tgt_panel.anchor_left = 1.0  # top-right corner at any window size (was fixed 1330, 20 on 1600 wide)
+	_tgt_panel.anchor_right = 1.0
+	_tgt_panel.offset_left = 1330.0 - 1600.0
+	_tgt_panel.offset_right = 1330.0 - 1600.0
+	_tgt_panel.offset_top = 20.0
 	_tgt_panel.custom_minimum_size = Vector2(250, 0)
 	_tgt_panel.visible = false
 	add_child(_tgt_panel)

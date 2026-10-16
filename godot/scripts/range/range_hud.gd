@@ -31,7 +31,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	add_child(_tunnel)
 	add_child(scope)
 	var right := UiKit.panel(Color(0.04, 0.05, 0.07, 0.6))
-	right.position = Vector2(1330, 700)
+	_pin(right, Vector2(1, 1), Vector2(1330, 700))
 	right.custom_minimum_size = Vector2(250, 0)
 	add_child(right)
 	var col := VBoxContainer.new()
@@ -42,7 +42,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	for l in [_gun_lbl, _ammo_lbl, _mag_lbl]:
 		col.add_child(l)
 	var left := UiKit.panel(Color(0.04, 0.05, 0.07, 0.6))
-	left.position = Vector2(20, 790)
+	_pin(left, Vector2(0, 1), Vector2(20, 790))
 	add_child(left)
 	var bars := VBoxContainer.new()
 	left.add_child(bars)
@@ -53,10 +53,10 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	_arm = UiKit.bar(180, 10, Color(0.9, 0.75, 0.3))
 	bars.add_child(_arm)
 	_prompt_lbl = UiKit.label("", 20, Color(1, 0.95, 0.7))
-	_prompt_lbl.position = Vector2(680, 560)
+	_pin(_prompt_lbl, Vector2(0.5, 0.5), Vector2(680, 560))
 	add_child(_prompt_lbl)
 	_msg_lbl = UiKit.label("", 22)
-	_msg_lbl.position = Vector2(660, 620)
+	_pin(_msg_lbl, Vector2(0.5, 0.5), Vector2(660, 620))
 	add_child(_msg_lbl)
 	_help = UiKit.panel(Color(0.04, 0.05, 0.07, 0.35))
 	_help.position = Vector2(8, 8)
@@ -66,15 +66,30 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	_dot = ColorRect.new()
 	_dot.size = Vector2(4, 4)
 	_dot.color = Color(1, 1, 1, 0.8)
-	_dot.position = Vector2(798, 448)
+	_pin(_dot, Vector2(0.5, 0.5), Vector2(798, 448))
 	_dot.visible = false
 	_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE  # it sits under the captured cursor: don't eat the fire click
 	add_child(_dot)
 	_status_lbl = UiKit.label("", 13, Color(1.0, 0.62, 0.4))
-	_status_lbl.position = Vector2(20, 690)
+	_pin(_status_lbl, Vector2(0, 1), Vector2(20, 690))
 	add_child(_status_lbl)
 	w.message.connect(say)
 	p.message.connect(say)
+
+
+## Places c at `at` on the 1600x900 design screen, anchored to `anchor` (0..1 per axis: corner, edge or centre), so at
+## any window size it keeps its distance from that point instead of drifting (the weapon panel ended up mid-screen).
+static func _pin(c: Control, anchor: Vector2, at: Vector2) -> void:
+	var off := at - anchor * Vector2(1600, 900)
+	c.anchor_left = anchor.x
+	c.anchor_right = anchor.x
+	c.anchor_top = anchor.y
+	c.anchor_bottom = anchor.y
+	var sz := c.size
+	c.offset_left = off.x
+	c.offset_top = off.y
+	c.offset_right = off.x + sz.x
+	c.offset_bottom = off.y + sz.y
 
 
 func say(text: String) -> void:
