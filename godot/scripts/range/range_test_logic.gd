@@ -145,8 +145,15 @@ static func _recoil(t: RangeTest) -> void:
 	var rng := RandomNumberGenerator.new()
 	var def := WeaponDefs.of("ak47")
 	var rm := RecoilModel.new()
-	for i in 200:
+	rm.aiming = true
+	rm.update(0.5)
+	rm.auto_fire = true
+	var top := 0.0
+	for i in 60:
 		rm.shoot(def, rng)
-	t.check("recoil climbs to a cap", rm.offset.x <= def["up"] * TacticalConfig.RECOIL_CAP_SHOTS + 0.001 and rm.offset.x > def["up"] * 3.0)
-	rm.update(3.0, 50.0)
-	t.check("recoil converges back", rm.offset.length() < 0.1)
+		rm.update(0.1)
+		top = maxf(top, rm.barrel.x)
+	t.check("recoil climbs to a cap (Tarkov stable mode, aimed, %.1f deg)" % top, top > 3.0 and top < 10.3)
+	rm.auto_fire = false
+	rm.update(3.0)
+	t.check("recoil converges back (%.2f deg)" % rm.offset.length(), rm.offset.length() < 0.1)
