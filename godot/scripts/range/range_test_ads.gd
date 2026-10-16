@@ -40,13 +40,10 @@ static func run(t: RangeTest, r: Dictionary) -> void:
 
 
 static func _snap_ads(w: PlayerWeapons, vm: TacticalViewmodel) -> void:
-	w.recoil.offset = Vector2.ZERO
-	w.recoil.barrel = Vector2.ZERO
+	w.recoil = RecoilModel.new()   # at rest (no kick, no barrel offset)
 	w.trigger_ads = false
 	w.ads_amt = 1.0
 	w.draw_t = 0.0
-	vm._kick = 0.0
-	vm._kick_v = 0.0
 	vm._check = 0.0
 	vm._process(1.0)  # the first call may rebuild the rig for the new fit
 	vm._process(1.0)  # delta 1.0 snaps the pose lerps
@@ -76,6 +73,10 @@ static func _math(t: RangeTest) -> void:
 	var id := AdsPose.solve(Vector3(0, 0.1, 0.1), Vector3(0, 0.1, -0.4), 0.2)
 	t.check("ads math: level sights give no rotation", id.basis.is_equal_approx(Basis.IDENTITY))
 	t.check("ads relief: every kind in use has a value", ["pistol", "pistol_optic", "notch", "aperture", "optic", "scope"].all(func(k): return TacticalConfig.ADS_RELIEF.has(k)))
+	var mosin := WeaponDefs.of("mosin")  # F58: eye kept clear of the gun (eye_clear.py); only guns that needed it move
+	t.check("ads relief: mosin irons keep the eye out of the receiver (relief_min 0.28)", is_equal_approx(AdsPose.relief(mosin, ""), 0.28))
+	t.check("ads relief: an optic on the mosin ignores relief_min", is_equal_approx(AdsPose.relief(mosin, "scope8x"), TacticalConfig.ADS_RELIEF["scope"]))
+	t.check("ads relief: ak47 irons unchanged by the clearance rule", is_equal_approx(AdsPose.relief(WeaponDefs.of("ak47"), ""), TacticalConfig.ADS_RELIEF["notch"]))
 
 
 static func _clip(t: RangeTest, r: Dictionary) -> void:

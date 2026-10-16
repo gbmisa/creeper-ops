@@ -52,12 +52,12 @@ static func run(t: RangeTest, session: RangeSession, player: TacticalPlayer) -> 
 	var out := SkirmishData.EXTRACT + Vector3(SkirmishData.EXTRACT_R + 2.0, 0, 0)
 	var inside := SkirmishData.EXTRACT + Vector3(1, 0, 0)
 	t.check("extract timer: outside the zone does not count", not game.tick_extract(20.0, out) and game.progress == 0.0)
-	game.tick_extract(7.9, inside)
+	game.tick_extract(SkirmishData.EXTRACT_TIME - 0.1, inside)
 	var early := game.progress < SkirmishData.EXTRACT_TIME
 	game.tick_extract(1.0, out)
 	t.check("extract timer resets when leaving the zone", early and game.progress == 0.0)
-	game.tick_extract(7.9, inside)
-	t.check("extract timer wins after 8 s inside", game.tick_extract(0.2, inside))
+	game.tick_extract(SkirmishData.EXTRACT_TIME - 0.1, inside)
+	t.check("extract timer wins after EXTRACT_TIME inside", game.tick_extract(0.2, inside))
 	game.kills = 3
 	game.finish(true)
 	t.check("finish(true): EXTRACTED screen, player frozen", game.over and game.won and game.end_screen != null and not player.enabled)

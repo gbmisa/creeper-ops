@@ -9,7 +9,6 @@ static func _glb(id: String) -> Node3D:
 static func run(t: RangeTest) -> void:
 	var def := WeaponDefs.of("mosin")
 	var g := Gun.new("mosin")
-	g.durability = 1.0
 	g.ammo_pick = TacAmmoDefs.grades(def["cal"])[0]
 	var rng := RandomNumberGenerator.new()
 	g.fire(rng)

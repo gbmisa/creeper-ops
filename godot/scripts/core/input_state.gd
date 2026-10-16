@@ -26,6 +26,7 @@ var _seq := 0
 
 func _ready() -> void:
 	process_priority = -100  # snap before gameplay
+	process_mode = Node.PROCESS_MODE_ALWAYS  # FB-B: mouse releases must land while the pause menu is open
 
 
 func _process(_delta: float) -> void:
@@ -56,6 +57,14 @@ func snap() -> InputFrame:
 
 
 func _input(e: InputEvent) -> void:
+	if get_tree().paused:  # paused: only button releases, so held fire/aim end; nothing else queues up
+		if e is InputEventMouseButton and not e.pressed:
+			if e.button_index == MOUSE_BUTTON_LEFT and left:
+				left = false
+				left_released = true
+			elif e.button_index == MOUSE_BUTTON_RIGHT:
+				right = false
+		return
 	if e is InputEventKey and e.pressed and not e.echo:
 		_pressed[e.physical_keycode] = true
 		if on_key.is_valid():
@@ -69,6 +78,8 @@ func _input(e: InputEvent) -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
+	if get_tree().paused:
+		return
 	if e is InputEventMouseButton:
 		mouse = e.position
 		match e.button_index:

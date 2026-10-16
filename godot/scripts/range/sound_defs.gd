@@ -12,7 +12,7 @@ const PROFILES := {
 	"mag44": {"shot": "shot_44mag", "sup": "sup_heavy", "tail": "tail_savage", "db": 2.0},
 	"smg9": {"shot": "shot_cg", "sup": "sup_smg", "tail": "tail_cg", "db": -2.0},
 	"smg45": {"shot": "shot_vector", "sup": "sup_smg", "tail": "tail_cg", "db": -2.0},
-	"smg57": {"shot": "shot_p90", "sup": "sup_smg", "tail": "tail_ppsh", "db": -3.0},
+	"smg57": {"shot": "shot_p90", "sup": "sup_smg", "tail": "tail_p90", "db": -3.0},
 	"ak": {"shot": "shot_ak", "sup": "sup_rifle", "tail": "tail_ak", "db": 0.0},
 	"m4": {"shot": "shot_ar15", "sup": "sup_rifle", "tail": "tail_ar15", "db": -1.0},
 	"nato762": {"shot": "shot_scar", "sup": "sup_rifle", "tail": "tail_savage", "db": 1.0},
@@ -49,7 +49,7 @@ const MECH := {
 	"saiga": {"mag_out": "rifle_mag_out", "mag_in": "rifle_mag_in", "action": "saiga_charge"},
 	"pump": {"mag_out": "pistol_mag_out", "mag_in": "shotgun_shell_in", "action": "shotgun_pump"},
 	"bolt": {"mag_out": "pistol_mag_out", "mag_in": "round_in", "action": "bolt_action"},
-	"garand": {"mag_out": "garand_ping", "mag_in": "smg_mag_in", "action": "rifle_charge"},
+	"garand": {"mag_out": "rifle_mag_out", "mag_in": "smg_mag_in", "action": "rifle_charge"},
 	"belt": {"mag_out": "belt_open", "mag_in": "lmg_belt_in", "action": "belt_close"},
 }
 const GUN_MECH := {
@@ -59,6 +59,8 @@ const GUN_MECH := {
 }
 const CLASS_MECH := {"pistol": "pistol", "smg": "smg", "assault rifle": "rifle", "shotgun": "pump", "marksman": "semi_auto",
 	"bolt-action": "bolt", "lmg": "belt"}
+## Guns that ping when the last round leaves (en-bloc clip ejects). Only the Garand: the Colt .44 is en-bloc too, but silent.
+const PING_GUNS := ["garand"]
 const DRY := "dry_click"
 const MODE := "mode_click"
 

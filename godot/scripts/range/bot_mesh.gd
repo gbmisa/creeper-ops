@@ -13,6 +13,7 @@ var anim: AnimationPlayer
 var fire_clip := ""
 var scope_glint: MeshInstance3D
 var pitch := -LOW_PITCH
+var _gun_size := Vector3(0.1, 0.1, 0.8)
 
 
 func _init(def := {}) -> void:
@@ -32,6 +33,7 @@ func _init(def := {}) -> void:
 	if fire_clip != "":
 		anim.get_animation(fire_clip).loop_mode = Animation.LOOP_NONE
 	var mi := glb.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+	_gun_size = mi.get_aabb().size
 	muzzle = Node3D.new()
 	muzzle.position = Vector3(0, 0.01, -mi.get_aabb().size.z * 0.5)
 	body.hold(gun, gun_def, mi.get_aabb().size.z * 0.5)
@@ -69,8 +71,36 @@ func fire() -> void:
 	anim.seek(0.0, true)
 
 
-func die() -> void:
-	body.die()
+func die(impulse := Vector3.ZERO, zone := "") -> void:
+	body.die(impulse, zone)
+	_drop_gun(impulse)
+
+
+## Death detaches the gun into a visual-only RigidBody3D (LAYER_ITEM so nothing targets it as
+## loot, mask WORLD so it lands on the ground); it is freed with the corpse.
+func _drop_gun(impulse: Vector3) -> void:
+	if gun == null or gun.get_parent() == null:
+		return
+	var gt := gun.global_transform
+	gun.get_parent().remove_child(gun)
+	var rb := RigidBody3D.new()
+	rb.name = "DroppedGun"
+	rb.collision_layer = TacticalConfig.LAYER_ITEM
+	rb.collision_mask = TacticalConfig.LAYER_WORLD
+	rb.mass = TacticalConfig.DEAD_GUN_MASS
+	rb.linear_damp = 0.3
+	rb.angular_damp = 0.8
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = _gun_size
+	cs.shape = box
+	rb.add_child(cs)
+	add_child(rb)
+	rb.global_transform = gt
+	gun.transform = Transform3D.IDENTITY
+	rb.add_child(gun)
+	# Small toss so it clears the falling body; not part of the kill impulse.
+	rb.apply_central_impulse(Vector3(impulse.x * 0.05, TacticalConfig.DEAD_GUN_TOSS, impulse.z * 0.05))
 
 
 func walk(delta: float, speed: float) -> void:

@@ -83,7 +83,7 @@ const ROWS := {
 		"model": "mosin", "model_fallback": "sniper", "inv_w": 5, "inv_h": 2, "scope": 1.0},
 	"pkm": {"tier": 3, "unlock": 28, "role": "100-round belt, suppression, very heavy, slow reload", "slots": ["sight","muzzle"], "name": "PKM", "class": "lmg", "cal": "762x54r", "mag": 100, "rpm": 650.0, "modes": ["auto"], "ergo": 25.0,
 		"conv": 5.0, "cam_share": 0.3, "angle": 85.0, "kg": 8.4, "up": 0.9, "side": 0.6, "moa": 3.8, "action": "detachable", "cycle": 0.0, "reload": 7.0, "reload_fast": 5.5,
-		"spares": 1, "zeros": [50.0, 100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0000, -0.1340, -0.950), "hip_pos": Vector3(0.16, -0.18, -0.58), "grip_r": Vector3(0.042,-0.030,0.240), "grip_l": Vector3(0.0,0.04,-0.10), "mag_l": Vector3(0.0,-0.12,-0.04), "butt": 0.30, "eye": 0.17,
+		"spares": 1, "zeros": [50.0, 100.0, 200.0, 300.0, 400.0, 500.0], "ads_pos": Vector3(0.0000, -0.1340, -0.950), "hip_pos": Vector3(0.16, -0.18, -0.58), "grip_r": Vector3(0.041,0.010,0.150), "grip_l": Vector3(0.0,0.015,-0.290), "mag_l": Vector3(0.029,-0.060,-0.010), "butt": 0.30, "eye": 0.17,
 		"model": "pkm", "model_fallback": "ak47", "inv_w": 6, "inv_h": 2, "scope": 1.0},
 }
 

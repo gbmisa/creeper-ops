@@ -29,6 +29,8 @@ static func move(b: ScavBot, dt: float) -> void:
 			face = d
 	if b.brain.state == BotBrain.ENGAGE and b.percept.seeing or b.brain.state == BotBrain.SUPPRESS and b.percept.has_last:
 		face = b._flat(b.percept.last_known - b.global_position)
+	if face.length() <= 0.05 and b.percept.alerted() and not b.percept.seeing:  # F87: idle and alert: watch the shot
+		face = b._flat(b.percept.noise_pos - b.global_position)
 	if face.length() > 0.05:
 		b.rotation.y = lerp_angle(b.rotation.y, atan2(-face.x, -face.z), minf(1.0, ScavBot.TURN * dt))
 	b.velocity.x = v.x

@@ -130,7 +130,9 @@ static func _hearing() -> void:
 	t.check("scav starts on Patrol", b.brain.state == "Patrol")
 	session.noise.emit(b.global_position + Vector3(0, 0, 100), BotNoise.SHOT_R, "shot", player)
 	b.think(0.03)
-	t.check("a shot 100 m away triggers Investigate", b.brain.state == "Investigate")
+	# F87 (Gregory 2026-10-16): a heard shot sends the bot to cover when a spot hidden from the shot exists, else to investigate
+	var want := BotBrain.COVER if b.has_cover and not b.def["rush"] else BotBrain.INVESTIGATE
+	t.check("a shot 100 m away triggers %s (%s)" % [want, b.brain.state], b.brain.state == want and b.percept.alerted())
 	var c := _bot(Vector3(-10, 0, 8), 0.0, "Test2")
 	session.noise.emit(c.global_position + Vector3(0, 0, 30), BotNoise.step_radius(false, false), "step", player)
 	c.think(0.03)

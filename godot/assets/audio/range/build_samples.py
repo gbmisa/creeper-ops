@@ -77,8 +77,10 @@ w = f"{TMP}/bolt_a.wav"; sh("sox", R+"lockclick.mp3", w, "remix", "-", "pad", "0
 w2 = f"{TMP}/bolt_b.wav"; sh("sox", S+"/k/kenney_rpg-audio/Audio/metalLatch.ogg", w2, "remix", "-", "pad", "0.18", "0")
 sh("sox", "-m", w, w2, f"{TMP}/bolt.wav", "norm", "-4"); enc(f"{TMP}/bolt.wav", "bolt_action")
 cut(R+"eqclicks.wav", "belt_open", 1.0, 0.9); cut(R+"eqclicks.wav", "belt_close", 3.6, 0.8)
-# ping (Garand): decaying 2.6 kHz sine pair
-sh("sox", "-n", f"{TMP}/ping.wav", "synth", "0.9", "sine", "2650", "sine", "3980", "fade", "q", "0.002", "0.9", "0.8", "gain", "-8", "norm", "-6"); enc(f"{TMP}/ping.wav", "garand_ping")
+# ping (Garand): short, quiet inharmonic metallic ping, fast attack, smooth fade out (plays once, on the last shot)
+sh("sox", "-n", f"{TMP}/ping.wav", "synth", "0.25", "sine", "2630", "sine", "3790", "sine", "5260", "fade", "h", "0.002", "0.25", "0.22", "gain", "-8", "norm", "-14"); enc(f"{TMP}/ping.wav", "garand_ping")
+# P90 distant report: the PPSh tail holds a baked burst of several shots; keep only its first report (before the 2nd one at ~0.10 s)
+sh("sox", OUT + "/tail_ppsh.ogg", f"{TMP}/tp90.wav", "trim", "0", "0.095", "fade", "t", "0", "0.095", "0.04", "norm", "-3"); enc(f"{TMP}/tp90.wav", "tail_p90")
 # generic UI/foley from Kenney
 def kn(pack, f, name, *fx):
     ogg(f"{K}kenney_{pack}/Audio/{f}.ogg", name, *fx)

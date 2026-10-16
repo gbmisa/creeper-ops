@@ -11,7 +11,14 @@ var seed := 0
 var events := TacEvents.new()
 var noise := BotNoise.new()
 var maps := RangeMaps.new()
-var saved_kit := {}  # was static RangeLoadout.saved: carried kit between maps
+## Carried kit between maps. Backed by a static so it survives the new RangeSession a map load builds
+## (same idea as RangeMaps.pending); the session API stays the same.
+static var _carried := {}
+var saved_kit: Dictionary:
+	get:
+		return _carried
+	set(v):
+		_carried = v
 var _seed_counter := 0
 
 
@@ -64,3 +71,5 @@ func save_kit(inv: Inventory) -> void:
 ## KIA: the kit is lost, the next start uses the default kit (was RangeLoadout.clear).
 func clear_kit() -> void:
 	saved_kit = {}
+
+

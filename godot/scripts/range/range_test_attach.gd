@@ -180,8 +180,6 @@ static func _settle(r: Dictionary, ads: bool) -> void:
 
 static func _fire(w: PlayerWeapons) -> bool:
 	w.gun.fire_cd = 0.0
-	w.gun.durability = 1.0
-	w.gun.malf = ""
 	w.gun.needs_cycle = false
 	var res := w.gun.fire(w.rng)
 	if res["fired"]:
@@ -189,11 +187,13 @@ static func _fire(w: PlayerWeapons) -> bool:
 	return res["fired"]
 
 
+## Tarkov recoil: the first shot's kick from rest, same seed: x = rotation power (|kick xy|), y = angle off RecoilAngle (deg).
 static func _first_kick(w: PlayerWeapons) -> Vector2:
-	w.recoil.offset = Vector2.ZERO
+	w.recoil = RecoilModel.new()
+	w.recoil.set_seed(7)
 	w.rng.seed = 7
 	_fire(w)
-	return w.recoil.offset
+	return Vector2(Vector2(w.recoil.last_kick.x, w.recoil.last_kick.y).length(), w.recoil.last_angle - float(w.recoil.row["angle"]))
 
 
 static func _ads_frames(w: PlayerWeapons) -> int:
@@ -219,6 +219,7 @@ static func _functional(t: RangeTest) -> void:
 	await tree.process_frame
 	await _sights(t, r)
 	await RangeTestAds.run(t, r)
+	RangeTestPkmSight.run(t, r)
 	# recoil: compensator / vgrip lower vertical, flash hider lowers horizontal; a baseline first
 	_equip(r, "m4a1")
 	t.bal.shots.clear()
@@ -231,12 +232,15 @@ static func _functional(t: RangeTest) -> void:
 	var base_vel: float = (t.bal.shots.back()["vel"] as Vector3).length()
 	vm._on_shot({"fired": true, "last": false}, w.gun)
 	var base_flash: bool = vm.flash.active()
-	t.check("recoil: the plain m4a1 kicks its def value, bots hear 150 m, there is a muzzle flash", is_equal_approx(base_kick.x, 0.5) and base_radius == BotNoise.SHOT_R and base_flash)
+	t.check("recoil: the plain m4a1 kicks (Tarkov), bots hear 150 m, there is a muzzle flash", base_kick.x > 0.0 and base_radius == BotNoise.SHOT_R and base_flash)
 	for row in [["compensator", 0.8, 1.0], ["vgrip", 0.85, 1.0], ["flashhider", 1.0, 0.9]]:
 		_equip(r, "m4a1", [row[0]])
 		var k := _first_kick(w)
-		t.check("%s: first-shot vertical kick x%.2f, horizontal x%.2f of the base" % [row[0], row[1], row[2]],
-			is_equal_approx(k.x, base_kick.x * row[1]) and (absf(base_kick.y) < 0.0001 or is_equal_approx(k.y, base_kick.y * row[2])), "%s vs %s" % [k, base_kick])
+		# Tarkov parts term: rotation force ~ (RecoilForceUp * parts + RecoilVertBonus); side scales the angle spread.
+		var fu: float = TacRecoilDefs.row("m4a1")["force_up"]
+		var vert: float = (fu * row[1] + TacRecoilDefs.VERT_BONUS) / (fu + TacRecoilDefs.VERT_BONUS)
+		t.check("%s: first-shot vertical kick x%.3f (parts %.2f), angle spread x%.2f of the base" % [row[0], vert, row[1], row[2]],
+			is_equal_approx(k.x, base_kick.x * vert) and (absf(base_kick.y) < 0.0001 or is_equal_approx(k.y, base_kick.y * row[2])), "%s vs %s" % [k, base_kick])
 		var meas := _climb(w)
 		t.check("%s: a 10-shot burst climbs measurably %s" % [row[0], "less" if row[1] < 1.0 else "the same vertically"], (meas < _climb_base(r, w) * 0.95) if row[1] < 1.0 else true)
 	_equip(r, "m4a1", ["compensator"])
@@ -269,11 +273,16 @@ static func _functional(t: RangeTest) -> void:
 
 
 static func _climb(w: PlayerWeapons) -> float:
-	w.recoil.offset = Vector2.ZERO
+	w.recoil = RecoilModel.new()
+	w.recoil.set_seed(3)
+	w.recoil.aiming = true   # no hip wander, so the climb is the kick alone
+	w.recoil.update(0.5)
+	w.recoil.auto_fire = true
 	w.rng.seed = 3
 	for i in 10:
 		_fire(w)
-	return w.recoil.offset.x
+		w.recoil.update(0.1)
+	return w.recoil.barrel.x
 
 
 static func _climb_base(r: Dictionary, w: PlayerWeapons) -> float:
@@ -372,11 +381,11 @@ static func _under_and_mag(t: RangeTest, r: Dictionary) -> void:
 		for i in 400:
 			sum += rad_to_deg(gun.shot_dirs(basis, ammo, not hip, rng)[0].angle_to(centre))
 		return sum / 400.0
-	var hip_base: float = spread.call(true, g)
 	var ads_base: float = spread.call(false, g)
+	var hip_base := RangeTestRecoilWire.hip_wander(g)
 	var lg := _equip(r, "m4a1", ["laser"])
-	var hip_laser: float = spread.call(true, lg)
-	t.check("laser: hip spread lower (%.2f -> %.2f deg, about -30%% of the hip cone)" % [hip_base, hip_laser], hip_laser < hip_base * 0.8 and hip_laser > hip_base * 0.6)
+	var hip_laser := RangeTestRecoilWire.hip_wander(lg)
+	t.check("laser: hip spread lower (%.3f -> %.3f deg mean hip wander, about -30%%; FB-I: the wander replaced the hip cone)" % [hip_base, hip_laser], hip_laser < hip_base * 0.8 and hip_laser > hip_base * 0.6)
 	t.check("laser: aimed spread is untouched", spread.call(false, lg) == ads_base)
 	await t.get_tree().process_frame
 	await t.get_tree().process_frame
