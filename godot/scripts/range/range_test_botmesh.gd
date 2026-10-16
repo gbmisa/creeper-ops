@@ -24,6 +24,7 @@ static func run(t: RangeTest, session: RangeSession, house: Node3D, player: Tact
 		t.check("%s ragdoll simulating" % kind, m.body.sim.is_simulating_physics())
 		b.queue_free()
 	await _death_physics(t, session, house, player)
+	await sleep_pose(t, session, house, player)
 
 
 ## Killing shot with a +X impulse: the pelvis is thrown +X, comes to rest low, and no bone ends
@@ -53,3 +54,32 @@ static func _death_physics(t: RangeTest, session: RangeSession, house: Node3D, p
 		await t.get_tree().physics_frame
 	t.check("bleed-out death falls", m2.body.bone_pos("pelvis").y < 0.6, "y=%.2f m" % m2.body.bone_pos("pelvis").y)
 	b2.queue_free()
+
+
+## FB-A: after the sleep timer fires the corpse keeps its last ragdoll pose (no snap back to standing).
+static func sleep_pose(t: RangeTest, session: RangeSession, house: Node3D, player: TacticalPlayer) -> void:
+	var b := RangeTestRoster.make(session, house, player, "rifleman", Vector3(0, 0.1, 0))
+	await t.get_tree().process_frame
+	var m: BotMesh = b.mesh
+	m.die(Vector3(TacticalConfig.DEATH_IMPULSE, 0, 0), "thorax")
+	var before := {}
+	var at := TacticalConfig.RAGDOLL_SLEEP - 0.1
+	for i in int((at + 0.5) * 60.0):
+		await t.get_tree().physics_frame
+		m.walk(1.0 / 60.0, 0.0)
+		if i == int(at * 60.0):
+			for bn in m.body.ragdoll_bones():
+				before[bn] = _pose(m, bn)
+	var worst := 0.0
+	for bn in before:
+		var now: Array = _pose(m, bn)
+		for k in 2:
+			worst = maxf(worst, (now[k] as Vector3).distance_to(before[bn][k]))
+	t.check("corpse keeps its pose after the sleep timer (<1 cm)", worst < 0.01, "%.3f m" % worst)
+	b.queue_free()
+
+
+## Bone position as the visible skeleton shows it and as the physical bone reports it; either snapping back is caught.
+static func _pose(m: BotMesh, bn: String) -> Array:
+	var sk := m.body.skel
+	return [sk.global_transform * sk.get_bone_global_pose(sk.find_bone(bn)).origin, m.body.bone_pos(bn)]
