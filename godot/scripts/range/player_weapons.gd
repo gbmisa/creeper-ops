@@ -59,6 +59,8 @@ func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack, s: Ran
 		StarterLoadout.fill(inv)
 	else:
 		inv.load_dict(s.saved_kit)
+		if s.maps.selected == "skirmish":
+			SkirmishKit.top_up(inv)
 	inv.ids = s.ids
 	player.carried_kg = inv.total_kg()
 	select_slot("primary")
