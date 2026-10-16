@@ -15,7 +15,7 @@
 ## When you finish
 Stop and report exactly:
 - **Done:** what you changed (files), and the commit hash(es) on your branch.
-- **Verified:** parse check, smoke result (pass/fail count), and the sim or screenshot the brief asked for.
+- **Verified:** parse check, the scene boots, and any test the brief asked for (see CLAUDE.md "Testing": Gregory playtests; don't add tests he didn't ask for).
 - **Not done / unsure:** anything skipped, guessed or worth the orchestrator's attention.
 - **Suggestions:** ideas outside the brief (not implemented).
 
