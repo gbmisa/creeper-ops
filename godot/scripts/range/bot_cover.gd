@@ -93,7 +93,8 @@ static func release(session: RangeSession, bot: ScavBot) -> void:
 		return
 	for pos in session.cover_claims.keys():
 		var c: Dictionary = session.cover_claims[pos]
-		if c.get("bot") == bot:
+		var o = c.get("bot")
+		if o == bot or not is_instance_valid(o):
 			session.cover_claims.erase(pos)
 
 
@@ -102,7 +103,7 @@ static func holder(session: RangeSession, pos: Vector3) -> ScavBot:
 	if session == null:
 		return null
 	var c: Dictionary = session.cover_claims.get(pos, {})
-	var h: Object = c.get("bot")
+	var h = c.get("bot")
 	if h == null or not is_instance_valid(h):
 		if not c.is_empty():
 			session.cover_claims.erase(pos)
@@ -139,6 +140,6 @@ static func _flanked(session: RangeSession, marker: Vector3, threat: Vector3) ->
 static func _purge(session: RangeSession) -> void:
 	for pos in session.cover_claims.keys():
 		var c: Dictionary = session.cover_claims[pos]
-		var h: Object = c.get("bot")
+		var h = c.get("bot")
 		if h == null or not is_instance_valid(h):
 			session.cover_claims.erase(pos)
