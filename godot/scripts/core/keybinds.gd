@@ -87,7 +87,6 @@ const DEFAULTS := {
 	"t_zoom": ["Tactical", "Variable sight zoom", [KEY_N]],
 	"t_fire_mode": ["Tactical", "Fire mode", [KEY_B]],
 	"t_mag_check": ["Tactical", "Check magazine", [KEY_T]],
-	"t_inspect": ["Tactical", "Inspect / fix malfunction", [KEY_L]],
 	"t_zero_up": ["Tactical", "Zero distance up", [KEY_PAGEUP]],
 	"t_zero_down": ["Tactical", "Zero distance down", [KEY_PAGEDOWN]],
 	"t_use": ["Tactical", "Use / take / cycle at bench", [KEY_F]],

@@ -4,7 +4,7 @@ extends Node
 ## fire mode, mag check, zeroing, inspect / fix, hold breath. Emits signals the viewmodel / HUD follow.
 
 signal shot(res: Dictionary, gun: Gun)
-signal action(kind: String, secs: float)  # "reload", "fix", "cycle"
+signal action(kind: String, secs: float)  # "reload", "cycle"
 signal switched(gun: Gun)
 signal message(text: String)
 signal item_dropped(item: Dictionary)  # left the inventory with nowhere to go; the world spawns it
@@ -243,18 +243,6 @@ func _commands() -> void:
 		_check_t = TacticalConfig.MAG_CHECK_TIME
 		mag_text = ""
 		action.emit("check", TacticalConfig.MAG_CHECK_TIME)
-	if input.frame.act("t_inspect"):
-		var r := gun.inspect()
-		match r:
-			"ok":
-				message.emit("Weapon looks fine")
-			"busy":
-				pass
-			"fixing":
-				message.emit("Clearing it...")
-				action.emit("fix", gun.busy_t)
-			_:
-				message.emit({"misfire": "Misfire: dud round", "feed": "Failure to feed", "jam": "Jammed"}[r])
 
 
 func start_reload(fast: bool) -> void:

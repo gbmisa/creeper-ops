@@ -9,14 +9,9 @@ static func _glb(id: String) -> Node3D:
 static func run(t: RangeTest) -> void:
 	var def := WeaponDefs.of("mosin")
 	var g := Gun.new("mosin")
-	g.durability = 1.0
 	g.ammo_pick = TacAmmoDefs.grades(def["cal"])[0]
 	var rng := RandomNumberGenerator.new()
-	# the ammo grade has a random malfunction chance: a click is legal game behaviour, so clear it and fire again
-	for _i in 40:
-		if g.fire(rng)["fired"]:
-			break
-		g.malf = ""
+	g.fire(rng)
 	t.check("bolt: mosin fire sets needs_cycle", g.needs_cycle)
 	g.fire_cd = 0.0
 	g.release()
