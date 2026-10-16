@@ -121,7 +121,7 @@ func _on_shot(res: Dictionary, g: Gun) -> void:
 		flash.flash(Color(1.0, 0.8, 0.45), 0.07 + 0.02 * float(g.def["kg"]), 0.05, 2.0)
 	if _cycle_clip != "":
 		var clip := "FireWOBullet" if res["last"] else "FireWBullet"
-		_play(clip, 0.2 + g.def["cycle"] if g.def["cycle"] > 0.0 else maxf(0.18, 60.0 / g.def["rpm"]))
+		_play(clip, 0.2 + g.def["cycle"] if g.def["cycle"] > 0.0 else maxf(0.18, 60.0 / g.def["rpm"]), 0.0, true)
 	else:
 		_play("Fire", clampf(60.0 / g.def["rpm"], 0.06, 0.4))
 
@@ -148,13 +148,18 @@ func _on_action(kind: String, secs: float) -> void:
 			_check = secs
 
 
-func _play(clip: String, secs: float, from := 0.0) -> void:
+## `restart`: a shot always plays its clip from the start. AnimationPlayer.play() of the clip already playing
+## carries on instead, so a fast gun (Garand 0.15 s gap, clip squeezed into 0.18 s) animated only every other
+## shot and the bolt and ejected case popped (F70 flicker).
+func _play(clip: String, secs: float, from := 0.0, restart := false) -> void:
 	if not anim.has_animation(clip):
 		return
 	var len := anim.get_animation(clip).length
 	anim.play(clip, 0.0, len * (1.0 - from) / maxf(secs, 0.05))
 	if from > 0.0:
 		anim.seek(len * from, true)
+	elif restart:
+		anim.seek(0.0, true)
 
 
 func _process(delta: float) -> void:
@@ -200,7 +205,7 @@ func _process(delta: float) -> void:
 	_base_rot = _base_rot.lerp(rot, minf(1.0, delta * 20.0))
 	model.position = _base_pos
 	model.rotation = _base_rot
-	if _room < 0.0 and a > 0.0 and weapons.recoil.weapon_pos().y > 0.0:
+	if _room < 0.0 and a > 0.0:
 		_room = RecoilEyeRoom.room(model, _full)
 	var rx := recoil_xform(weapons.recoil, _room / maxf(a, 1e-3) if _room >= 0.0 else RecoilEyeRoom.FREE)
 	if rx != Transform3D.IDENTITY:
