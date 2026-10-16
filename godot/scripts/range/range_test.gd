@@ -39,6 +39,7 @@ func run() -> void:
 	await RangeTestKit.run(self)
 	await RangeTestPause.run(self)
 	RangeTestAmmo.run(self)
+	RangeTestReloadRace.run(self)
 	RangeTestMp1.run(self)
 	RangeTestGuns.run(self)
 	RangeTestBolt.run(self)
