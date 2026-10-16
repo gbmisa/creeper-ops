@@ -1,7 +1,8 @@
 class_name FpArms
 extends Node3D
 ## Viewmodel arms: a second body.glb (only `Arms` drawn) under the camera. Two-bone IK puts each hand bone on the
-## gun's grip_r / grip_l (gun model space, WeaponDefs); the left hand goes to mag_l during a reload.
+## gun's grip_r / grip_l (gun model space, WeaponDefs); the left hand goes to mag_l during a reload, or follows
+## the ReloadTimeline (FB-R) on guns that have one.
 ## Fingers are curled around the grip. Everything is solved per frame from the gun model's transform.
 
 const ROOT_POS := Vector3(0, -1.62, -0.22)  # shoulders land ~0.2 m out, 0.2 below and 0.15 ahead of the eye
@@ -17,6 +18,7 @@ var _def := {}
 var _reload := 0.0
 var _reload_len := 1.0
 var bolt: BoltCycle  # set while the held gun is a bolt-action: the right hand works the handle
+var reload_tl: ReloadTimeline  # FB-R: set when the held gun has a reload timeline; it drives the left hand
 var target := {}  # side -> world position of the wrist the last solve aimed at (tests)
 
 
@@ -101,6 +103,9 @@ func update(gun: Node3D, delta: float) -> void:
 		var t := 1.0 - _reload / _reload_len
 		mag_w = smoothstep(0.0, 0.2, t) * (1.0 - smoothstep(0.8, 1.0, t))
 	var left_t: Vector3 = (_def["grip_l"] as Vector3).lerp(_def["mag_l"], mag_w)
+	if reload_tl != null:
+		mag_w = 0.0
+		left_t = reload_tl.hand_l if reload_tl.playing() else _def["grip_l"]
 	var left_n := Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)
 	var grip_r: Vector3 = _def["grip_r"]
 	if bolt != null:
