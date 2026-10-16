@@ -12,6 +12,15 @@ const PAINT := {   # per building: [paint band, door colour]
 	"cottage": [Color(0.5, 0.58, 0.52), Color(0.4, 0.22, 0.18)],
 	"warehouse": [Color(0.55, 0.3, 0.2), Color(0.3, 0.32, 0.3)],
 	"shack": [Color(0.58, 0.58, 0.5), Color(0.28, 0.3, 0.26)],
+	# MAP-2 west old town
+	"garage": [Color(0.5, 0.48, 0.36), Color(0.3, 0.32, 0.3)],
+	"storehouse": [Color(0.72, 0.66, 0.52), Color(0.36, 0.24, 0.18)],
+	"pumphouse": [Color(0.55, 0.6, 0.62), Color(0.26, 0.3, 0.32)],
+	"clinic": [Color(0.82, 0.82, 0.76), Color(0.55, 0.16, 0.14)],
+	"bunkhouse": [Color(0.46, 0.55, 0.48), Color(0.3, 0.36, 0.3)],
+	"row_a": [Color(0.75, 0.62, 0.48), Color(0.25, 0.3, 0.36)],
+	"workshop": [Color(0.6, 0.45, 0.2), Color(0.3, 0.32, 0.3)],
+	"office": [Color(0.66, 0.7, 0.66), Color(0.22, 0.32, 0.28)],
 }
 const OUT := {"n": Vector2(0, -1), "s": Vector2(0, 1), "w": Vector2(-1, 0), "e": Vector2(1, 0)}
 

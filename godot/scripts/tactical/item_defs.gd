@@ -29,9 +29,15 @@ const ROWS := {
 	"rig_chest": {"name": "Chest rig", "kind": "rig", "w": 3, "h": 2, "kg": 0.8, "grid": [4, 2]},
 	"pack_small": {"name": "Small backpack", "kind": "backpack", "w": 3, "h": 3, "kg": 0.9, "grid": [4, 4]},
 	"pack_big": {"name": "Large backpack", "kind": "backpack", "w": 4, "h": 4, "kg": 1.6, "grid": [5, 6]},
-	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4},
-	"med_bandage": {"name": "Bandage", "kind": "med", "w": 1, "h": 1, "kg": 0.05},
+	# Meds (QuickUse): use = seconds with the hands busy; heal = fraction of each living zone's max HP
+	# (BodyHealth.heal also stops every bleed); stop_bleed = the bandage's only effect. Blacked zones stay down.
+	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4, "use": 3.0, "heal": 0.6, "short": "IFAK", "glyph": "IF"},
+	"med_bandage": {"name": "Bandage", "kind": "med", "w": 1, "h": 1, "kg": 0.05, "use": 2.0, "stop_bleed": true, "short": "Bandage", "glyph": "BA"},
 }
+## Quick-use bar order: card n is bound to t_slot_(4 + n).
+const QUICK := ["med_ifak", "med_bandage"]
+## What one "meds" entry in a Skirmish loot crate hands out.
+const CRATE_MEDS := ["med_ifak", "med_bandage"]
 
 const ARMOR_SIZE := {"vest2": [3, 3, 1.5], "plate4": [3, 3, 6.0], "steel6": [2, 2, 3.5], "helmet3": [2, 2, 1.2]}
 

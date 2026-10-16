@@ -31,6 +31,12 @@ const FRACTURE_MIN_DMG := 25.0
 const FRACTURE_CHANCE := 0.35
 const LEG_FRACTURE_SPEED := 0.6
 const ARM_FRACTURE_SWAY := 1.0
+## P9: penalties by the number of blacked-out arms (player and bots). Multipliers on aim sway, reload time,
+## ADS raise time and recoil; `breath` false = no breath hold. Bots read sway as aim spread and ads as reaction time.
+const ARM_LOSS := {
+	1: {"sway": 2.0, "reload": 1.25, "ads": 1.25, "recoil": 1.15, "breath": false},
+	2: {"sway": 3.5, "reload": 1.6, "ads": 1.5, "recoil": 1.3, "breath": false},
+}
 const ARMOR_RICOCHET_GLANCE_DEG := 25.0
 
 # Gun handling

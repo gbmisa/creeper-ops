@@ -234,8 +234,11 @@ func _act() -> void:
 	if gun.mag.count() == 0 and gun.chamber == "" and not gun.busy():
 		if not gun.reload(false):
 			gun.refill()
+		else:
+			gun.busy_t *= body.arm_loss("reload")   # P9: blacked arms reload slower, as for the player
 	elif s not in [BotBrain.ENGAGE, BotBrain.SUPPRESS] and gun.mag.count() < 10 and not gun.mag.is_full() and not gun.busy():
-		gun.reload(false)
+		if gun.reload(false):
+			gun.busy_t *= body.arm_loss("reload")
 	if gun.needs_cycle and not gun.busy():
 		gun.release()
 	match s:

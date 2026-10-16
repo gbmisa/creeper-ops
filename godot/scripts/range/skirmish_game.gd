@@ -139,14 +139,18 @@ func _loot_prompt() -> void:
 
 
 ## Hands out a crate's loot list. "ammo": every carried gun loaded and every carried mag full (F88: reloads draw
-## from the inventory, so the old top-up of Gun.spares did nothing). "meds": heals.
+## from the inventory, so the old top-up of Gun.spares did nothing). "meds": ItemDefs.CRATE_MEDS go into the
+## inventory (used from the quick-use bar); what doesn't fit drops at your feet.
 func loot(c: Dictionary) -> void:
 	c["taken"] = true
 	for item in c["loot"]:
 		if item == "ammo":
 			SkirmishKit.top_up(weapons.inv)
 		elif item == "meds":
-			player.body.heal(0.6)
+			for id in ItemDefs.CRATE_MEDS:
+				var it := weapons.inv.make(id)
+				if not weapons.inv.add(it):
+					weapons.item_dropped.emit(it)
 	log.add("Looted: %s" % ", ".join(c["loot"]))
 	weapons.message.emit("Looted: %s" % ", ".join(c["loot"]))
 

@@ -26,6 +26,7 @@ static func run(t: RangeTest, session: RangeSession, player: TacticalPlayer) -> 
 	t.check("navmesh path spawn -> extract", _reaches(map, SkirmishData.SPAWN, SkirmishData.EXTRACT))
 	t.check("navmesh path up the hotel stairs to the second floor", _reaches(map, SkirmishData.SPAWN, SkirmishData.SPOTS[1], 0.8))
 	t.check("navmesh path up the tower ramp to the platform", _reaches(map, SkirmishData.SPAWN, SkirmishData.SPOTS[0], 0.8))
+	RangeTestMap2.run(t, map)
 	var kinds := {}
 	for b in game.bots:
 		kinds[b.kind] = kinds.get(b.kind, 0) + 1
@@ -68,8 +69,18 @@ static func run(t: RangeTest, session: RangeSession, player: TacticalPlayer) -> 
 	for z in BodyHealth.ZONES:
 		player.body.hp[z] *= 0.4
 	var before := player.body.total_frac()
+	var q := QuickUse.new()
+	game.add_child(q)
+	q.setup(weapons, player)
+	var had := q.count("med_ifak") + q.count("med_bandage")
 	game.loot(crate)
-	t.check("loot crate: meds heal once and the crate is taken", player.body.total_frac() > before and crate["taken"])
+	t.check("loot crate: meds go into the inventory and the crate is taken",
+		q.count("med_ifak") + q.count("med_bandage") == had + ItemDefs.CRATE_MEDS.size() and crate["taken"])
+	var ifaks := q.count("med_ifak")
+	t.check("quick use: IFAK starts, hands busy", q.start("med_ifak") == "" and weapons.hands_busy)
+	q._process(float(ItemDefs.of("med_ifak")["use"]) + 0.1)
+	t.check("quick use: IFAK heals and is used up", player.body.total_frac() > before and q.count("med_ifak") == ifaks - 1 and not weapons.hands_busy)
+	q.queue_free()
 	var mag := {}
 	for it in weapons.inv.all_items():
 		if not it.has("gun") and it["id"] in ItemDefs.ROWS and ItemDefs.ROWS[it["id"]]["kind"] == "mag":

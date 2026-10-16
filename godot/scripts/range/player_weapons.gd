@@ -39,6 +39,7 @@ var trigger_down := false
 var trigger_held := false  # the trigger is down this frame and the gun may fire (PlayerRecoil: automatic fire)
 var since_shot := 99.0     # s since the last round left (PlayerRecoil)
 var ui_open := false  # inventory screen up: no firing, no aiming
+var hands_busy := false  # a quick-use item is being used (QuickUse): no firing, no aiming
 var _check_t := 0.0
 var _reload_t := 99.0
 var _reload_fast := false
@@ -158,11 +159,11 @@ func _pickup_and_slots() -> void:
 
 func _ads(delta: float) -> void:
 	var want: bool = trigger_ads or input.frame.right
-	want = want and not ui_open and not player.sprinting and draw_t < DRAW_TIME * 0.5 and gun.busy_kind != "reload"
-	var rate := 1.0 / (RecoilModel.ads_time(gun.def["ergo"]) * gun.stat("ads_mult"))
+	want = want and not ui_open and not hands_busy and not player.sprinting and draw_t < DRAW_TIME * 0.5 and gun.busy_kind != "reload"
+	var rate := 1.0 / (RecoilModel.ads_time(gun.def["ergo"]) * gun.stat("ads_mult") * player.body.arm_loss("ads"))
 	ads_amt = move_toward(ads_amt, 1.0 if want else 0.0, rate * delta)
 	player.ads_amt = ads_amt
-	holding_breath = ads_amt > 0.9 and input.frame.held("t_sprint") and arm_stamina > 0.0
+	holding_breath = ads_amt > 0.9 and input.frame.held("t_sprint") and arm_stamina > 0.0 and player.body.can_hold_breath()
 	var drain := 0.0
 	if ads_amt > 0.9:
 		drain = TacticalConfig.ARM_STAMINA_DRAIN_ADS * gun.def["kg"] / 4.0
@@ -175,7 +176,7 @@ func _ads(delta: float) -> void:
 
 
 func _trigger() -> void:
-	var down: bool = (input.frame.left or trigger_down) and not ui_open and not player.sprinting and draw_t <= 0.0
+	var down: bool = (input.frame.left or trigger_down) and not ui_open and not hands_busy and not player.sprinting and draw_t <= 0.0
 	var pressed := down and not _was_left
 	trigger_held = down
 	_was_left = down
@@ -202,7 +203,7 @@ func _shoot(res: Dictionary) -> void:
 	var origin := player.eye_pos() + basis.z * -0.3
 	for d in gun.shot_dirs(player.view_basis(recoil.barrel), res["ammo"], ads_amt > 0.8, rng):
 		bal.spawn(origin, d, res["ammo"], [], gun.stat("vel"))
-	recoil.shoot(gun.eff_def(), rng)
+	recoil.shoot(gun.eff_def(), rng, player.body.arm_loss("recoil"))
 	since_shot = 0.0
 	if session != null:
 		session.noise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
@@ -250,6 +251,7 @@ func start_reload(fast: bool) -> void:
 	if r == "none":
 		message.emit("No magazine" if gun.def["action"] != "tube" else "No %s rounds" % gun.def["cal"])
 	if r == "ok":
+		gun.busy_t *= player.body.arm_loss("reload")   # P9: blacked arms reload slower (the animation follows busy_t)
 		_reload_t = 0.0
 		_reload_fast = fast
 		_check_t = 0.0
@@ -260,7 +262,7 @@ func start_reload(fast: bool) -> void:
 func _apply_view(_delta: float) -> void:
 	var tired := arm_stamina < 0.12
 	var sw := RecoilModel.sway(_t, gun.def, holding_breath, tired)
-	player.sway_off = sw * ads_amt
+	player.sway_off = sw * ads_amt * player.body.arm_loss("sway")
 	player.cam.fov = fov_for(ads_amt, gun.stat("scope"))
 
 

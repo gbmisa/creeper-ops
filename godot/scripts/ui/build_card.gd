@@ -15,8 +15,13 @@ var _cost: Label
 var _note: Label
 
 
-func _init(id: String, slot: int) -> void:
+var _glyph := ""
+
+
+## `glyph`: two-letter stencil for items that are not structures (the Range quick-use bar); "" = from StructureDefs.
+func _init(id: String, slot: int, glyph := "") -> void:
 	item = id
+	_glyph = glyph
 	set_meta("slot", slot)
 	focus_mode = Control.FOCUS_NONE
 	toggle_mode = true
@@ -80,7 +85,7 @@ func _icon(id: String) -> Control:
 	p.add_theme_stylebox_override("panel", UiTheme.box(Color(0, 0, 0, 0.35), Color(UiKit.EDGE, 0.4), 1, 0))
 	p.custom_minimum_size = Vector2(40, 52)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var l := UiKit.label(StructureDefs.label(id).left(2).to_upper(), 18, UiKit.DIM)
+	var l := UiKit.label(_glyph if _glyph != "" else StructureDefs.label(id).left(2).to_upper(), 18, UiKit.DIM)
 	l.add_theme_font_override("font", UiTheme.header_font())
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

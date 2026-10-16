@@ -59,6 +59,22 @@ func sway_add() -> float:
 	return TacticalConfig.ARM_FRACTURE_SWAY if (fractured.has("larm") or fractured.has("rarm")) else 0.0
 
 
+## P9: how many arms are blacked out (0 HP), 0..2.
+func arms_down() -> int:
+	return int(hp["larm"] <= 0.0) + int(hp["rarm"] <= 0.0)
+
+
+## P9: the arm-loss multiplier for "sway", "reload", "ads" or "recoil" (1.0 with both arms working).
+func arm_loss(stat: String) -> float:
+	var n := arms_down()
+	return 1.0 if n == 0 else float(TacticalConfig.ARM_LOSS[n][stat])
+
+
+func can_hold_breath() -> bool:
+	var n := arms_down()
+	return n == 0 or bool(TacticalConfig.ARM_LOSS[n]["breath"])
+
+
 ## A bullet reaching `zone`: armor first, then frag / bleeds, then hit(). shot: dmg, pen,
 ## armor_dmg, frag (ammo dict), lbleed, hbleed, glance. Returns hit()'s result plus result text.
 func shoot(zone: String, shot: Dictionary) -> Dictionary:
@@ -121,6 +137,11 @@ func heal(frac: float) -> void:
 	for z in ZONES:
 		if hp[z] > 0.0:
 			hp[z] = minf(MAX[z], hp[z] + MAX[z] * frac)
+
+
+## Bandage: stops every bleed, heals nothing.
+func stop_bleeds() -> void:
+	bleeds.clear()
 
 
 func tick(dt: float) -> void:
