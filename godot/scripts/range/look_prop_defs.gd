@@ -30,7 +30,7 @@ const RANGE := [
 ## the def's scale entry; the shape sits on the ground (bottom at y=0).
 const COLLISION := {
 	"sandbags": {"kind": "box", "size": Vector3(1.6, 1.0, 0.6), "mat": "dirt_berm", "thick": 0.8},
-	"jersey": {"kind": "box", "size": Vector3(2.0, 0.85, 0.55), "mat": "concrete", "thick": 0.5},
+	"jersey": {"kind": "mesh", "mat": "concrete", "thick": 0.5},  # F88: hull of the model (was a 2.0 x 0.85 x 0.55 box inside a 3.0 x 1.8 x 1.2 m block)
 	"drum": {"kind": "cyl", "radius": 0.3, "height": 0.9, "mat": "sheet_metal", "thick": 0.1},
 	"pallets": {"kind": "box", "size": Vector3(1.2, 1.1, 1.0), "mat": "wood_plank", "thick": 0.3},
 	"fueltank": {"kind": "cyl", "radius": 1.0, "height": 2.4, "mat": "sheet_metal", "thick": 0.15},

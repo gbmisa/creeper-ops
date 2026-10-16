@@ -17,13 +17,34 @@ static func base_speed(b: ScavBot) -> float:
 	return ScavBot.MOVE
 
 
+## The point to steer at. F88: the agent advances along its path by 3D distance, and the navmesh sits up to 0.5 m
+## above the ground, so a waypoint straight over the bot's feet never counted as reached and the bot stood still
+## with a path (or walked back to it). Then steer at the waypoint after the nearest one, by ground distance.
+static func next_point(b: ScavBot) -> Vector3:
+	var nxt := b.nav.get_next_path_position()
+	var path := b.nav.get_current_navigation_path()
+	var j := -1
+	var best := INF
+	for i in range(maxi(0, b.nav.get_current_navigation_path_index()), path.size()):
+		var d := b._flat(path[i] - b.global_position).length()
+		if d < best:
+			best = d
+			j = i
+	if j < 0:
+		return nxt
+	for i in range(j + 1, path.size()):  # the first waypoint past the nearest one that is not on top of the bot
+		if b._flat(path[i] - b.global_position).length() > 0.3:
+			return path[i]
+	return path[path.size() - 1]
+
+
 static func move(b: ScavBot, dt: float) -> void:
 	if b.body.dead or b._dying:
 		return
 	var v := Vector3.ZERO
 	var face := Vector3.ZERO
 	if b._has_target and not b._arrived():
-		var d := b._flat(b.nav.get_next_path_position() - b.global_position)
+		var d := b._flat(next_point(b) - b.global_position)
 		if d.length() > 0.05:
 			v = d.normalized() * speed(b)
 			face = d

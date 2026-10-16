@@ -35,6 +35,7 @@ func start(p: TacticalPlayer, w: PlayerWeapons, b: Ballistics, l: RangeHitLog, h
 	log = l
 	session = s
 	session.noise.reset()
+	process_priority = 50  # F88: after PlayerWeapons, which clears weapons.prompt every frame (the loot prompt never showed)
 	layout.bake()
 	_label = UiKit.label("", 20, Color(0.8, 1.0, 0.8))
 	_label.position = Vector2(520, 14)
@@ -137,26 +138,17 @@ func _loot_prompt() -> void:
 			return
 
 
-## Hands out a crate's loot list. Items: "ammo" tops up spare magazines, "meds" heals (hook for the inventory branch).
+## Hands out a crate's loot list. "ammo": every carried gun loaded and every carried mag full (F88: reloads draw
+## from the inventory, so the old top-up of Gun.spares did nothing). "meds": heals.
 func loot(c: Dictionary) -> void:
 	c["taken"] = true
 	for item in c["loot"]:
 		if item == "ammo":
-			for g in weapons.guns.values():
-				_restock(g)
+			SkirmishKit.top_up(weapons.inv)
 		elif item == "meds":
 			player.body.heal(0.6)
 	log.add("Looted: %s" % ", ".join(c["loot"]))
-
-
-func _restock(g: Gun) -> void:
-	for m in g.spares:
-		if m.count() < m.cap:
-			m.fill(g.ammo_pick)
-	while g.def["action"] != "tube" and g.spares.size() < int(g.def["spares"]):
-		var m := Magazine.new(g.def["mag"])
-		m.fill(g.ammo_pick)
-		g.spares.append(m)
+	weapons.message.emit("Looted: %s" % ", ".join(c["loot"]))
 
 
 func on_player_died() -> void:

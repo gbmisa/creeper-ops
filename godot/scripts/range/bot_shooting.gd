@@ -112,7 +112,7 @@ static func facts(b: ScavBot) -> Dictionary:
 		find_cover(b)
 	var alone := ally == null or ally.body.dead
 	var outgunned := p.aware and ((alone and b.body.total_frac() < 0.7) or b.gun.rounds_total() < 3)
-	return {"aware": p.aware, "seeing": p.seeing, "noise": p.noise_new, "shot": p.shot_new, "since_seen": p.since_seen,
+	return {"aware": p.aware, "seeing": p.seeing, "noise": p.noise_new, "shot": p.shot_new, "shot_cover": b.shot_cover, "since_seen": p.since_seen,
 		"hp": b.body.total_frac(), "hurt": b.hurt_t > 0.0, "reloading": b.gun.busy_kind == "reload", "arrived": b._arrived(),
 		"cover": b.has_cover and not b.def["rush"], "outgunned": outgunned, "flank_eager": b.def["flank_eager"], "ally_engaged": ally_eng,
 		"ally_flank": ally != null and not ally.body.dead and ally.brain.state == BotBrain.FLANK, "has_last": p.has_last}

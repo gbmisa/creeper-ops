@@ -26,9 +26,12 @@ static func _collider_specs() -> void:
 	for id in LookPropDefs.COLLISION:
 		var spec: Dictionary = LookPropDefs.COLLISION[id]
 		var kind := str(spec.get("kind", ""))
-		if kind != "box" and kind != "cyl":
+		if kind not in ["box", "cyl", "mesh"]:
 			ok = false
 			why = id + " bad kind"
+		elif kind == "mesh" and not _hull_ok(id):
+			ok = false
+			why = id + " mesh collider has no shapes or does not cover the model"
 		elif kind == "box" and ((spec["size"] as Vector3).x <= 0.0 or (spec["size"] as Vector3).y <= 0.0 or (spec["size"] as Vector3).z <= 0.0):
 			ok = false
 			why = id + " bad size"
@@ -42,6 +45,23 @@ static func _collider_specs() -> void:
 			ok = false
 			why = id + " bad thick"
 	t.check("F25 prop collision specs are sane", ok, why)
+
+
+## F88: a "mesh" collider is built from the model and spans its full footprint and height.
+static func _hull_ok(id: String) -> bool:
+	var root := Node3D.new()
+	LookProps.build(root, [[id, 0.0, 0.0, 0.0, 1.0]], false, true)
+	var bb := AABB()
+	var n := 0
+	for c in root.find_children("*", "CollisionShape3D", true, false):
+		var cs: CollisionShape3D = c
+		var pts: PackedVector3Array = (cs.shape as ConvexPolygonShape3D).points if cs.shape is ConvexPolygonShape3D else PackedVector3Array()
+		for p in pts:
+			var w: Vector3 = cs.transform * p
+			bb = AABB(w, Vector3.ZERO) if n == 0 else bb.expand(w)
+			n += 1
+	root.free()
+	return n > 0 and bb.size.y > 1.0 and bb.size.x > 2.5
 
 
 ## A sandbag collider on LAYER_WORLD blocks a walking player body.

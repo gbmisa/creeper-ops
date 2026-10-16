@@ -45,6 +45,7 @@ var burst := 0
 var cd := 0.0
 var react_t := 0.0   # F18: rolled per engagement; the bot will not fire at a seen target before sight_t passes this
 var cover_t := 0.0
+var shot_cover := false  # F88: current TakeCover was entered from a heard shot
 var _dying := false
 var _go_age := 0.0
 
@@ -168,6 +169,7 @@ func think(dt: float, over := {}) -> void:
 	if to != "":
 		if from == BotBrain.HEAL and to == BotBrain.SEARCH:
 			body.heal(0.4)
+		shot_cover = to == BotBrain.COVER and from in [BotBrain.PATROL, BotBrain.INVESTIGATE]
 		_enter(to)
 		print("[bot] ", label_name, " ", from, " -> ", to)
 		state_changed.emit(self, from, to)
@@ -260,7 +262,10 @@ func _arrived() -> bool:
 		return true
 	# the navmesh needs a few frames to sync after bake: only trust "finished" once a path exists (or 1.5 s passed)
 	var routed := nav != null and (nav.get_current_navigation_path().size() > 1 or _go_age > 1.5)
-	return routed and nav.is_navigation_finished() and _flat(global_position - nav.get_final_position()).length() < 1.0
+	# F88: "finished" is judged in 3D and the navmesh sits 0.5 m up, so a bot at a path's end (target inside an
+	# obstacle) never finished; being within 1 m of the path's end on the ground counts too.
+	var at_end := nav != null and nav.get_current_navigation_path().size() > 1
+	return routed and (nav.is_navigation_finished() or at_end) and _flat(global_position - nav.get_final_position()).length() < 1.0
 
 
 func _flat(v: Vector3) -> Vector3:
