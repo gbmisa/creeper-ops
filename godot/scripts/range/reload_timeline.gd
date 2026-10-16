@@ -18,6 +18,7 @@ var _phases: Array = []  # [{t0, t1, from: pose, to: pose, ease, mark}]
 var t := 0.0
 var len := 0.0
 var _next := 0
+var _lock := 0.0  # empty reload: the bolt/slide eases from home to `empty_bolt` over this long (plan "empty_lock")
 # sampled pose (valid while playing)
 var gun_pos := Vector3.ZERO
 var gun_rot := Vector3.ZERO
@@ -62,11 +63,17 @@ func start(secs: float, empty: bool, fast: bool) -> void:
 	var extra := TacticalConfig.CHAMBER_TIME if empty else 0.0
 	var base := maxf(secs - extra, 0.05)
 	var list: Array = (plan["fast"] if fast else plan["plain"]).duplicate()
+	var charge_t := extra
+	if empty:  # "charge_takes": that base phase's time goes to the charge instead (smoother swing into it)
+		for p in list.duplicate():
+			if p["n"] == plan.get("charge_takes", ""):
+				charge_t += float(p["w"]) * base
+				list.erase(p)
 	var steps := []
 	for i in list.size():
 		if empty and i == list.size() - 1:
 			for p in plan["charge"]:
-				steps.append([p, float(p["w"]) * extra])
+				steps.append([p, float(p["w"]) * charge_t])
 		steps.append([list[i], float(list[i]["w"]) * base])
 	_phases.clear()
 	var pose := {"gp": Vector3.ZERO, "gr": Vector3.ZERO, "mag": "seat", "hl": "grip", "bolt": float(plan.get("empty_bolt", 0.0)) if empty else 0.0}
@@ -80,6 +87,7 @@ func start(secs: float, empty: bool, fast: bool) -> void:
 		at += float(s[1])
 		pose = to
 	len = at
+	_lock = float(plan.get("empty_lock", 0.0)) if empty else 0.0
 	t = 0.0
 	_next = 0
 	if bone >= 0:
@@ -123,6 +131,8 @@ func _sample() -> void:
 	gun_pos = (a["gp"] as Vector3).lerp(b["gp"], u)
 	gun_rot = (a["gr"] as Vector3).lerp(b["gr"], u)
 	bolt = lerpf(a["bolt"], b["bolt"], u)
+	if t < _lock:
+		bolt *= smoothstep(0.0, 1.0, t / _lock)
 	var m0 := _mag_off(a["mag"])
 	var m1 := _mag_off(b["mag"])
 	var pv: Vector3 = _rig["pivot"]
@@ -158,6 +168,7 @@ func _anchor(name: String) -> Array:
 	match name:
 		"mag": p = mag_xf * (_rig["hold"] as Vector3)
 		"pouch": p = _rig["pouch_hand"]
+		"stop": p = _rig["stop_hand"]
 		"charge": p = (_rig["charge"] as Vector3) + (_rig["travel"] as Vector3) * bolt
 		_:
 			var pistol: bool = _def["class"] == "pistol"
