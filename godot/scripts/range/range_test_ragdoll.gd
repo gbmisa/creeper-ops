@@ -33,6 +33,10 @@ static func run(t: RangeTest, session: RangeSession, house: Node3D, player: Tact
 				if e > worst:
 					worst = e
 					who = bn
+		var high := 0.0
+		for bn in m.body.ragdoll_bones():
+			high = maxf(high, m.body.bone_pos(bn).y - m.body.bone_pos("pelvis").y)
+		t.check("ragdoll lies down: no bone more than 0.5 m above the pelvis 3 s after death (impulse %s): %.2f m" % [impulse, high], high <= 0.5)
 		print("[range] ragdoll impulse ", impulse, " worst bone-to-parent error ", snappedf(worst, 0.001), " (", who, ")")
 		t.check("ragdoll stays connected for 3 s (impulse %s): worst %s %.3f m" % [impulse, who, worst], worst <= RANGE_TOL)
 		b.queue_free()
