@@ -251,7 +251,9 @@ func _tick_sleep(dt: float) -> void:
 	_sleep_t += dt
 	if _sleep_t >= TacticalConfig.RAGDOLL_SLEEP:
 		_sleep_t = -1.0
-		sim.physical_bones_stop_simulation()
+		# Freeze in place: stopping the simulation would snap the skeleton back to its animated pose.
+		for pb: PhysicalBone3D in _pbones.values():
+			PhysicsServer3D.body_set_mode(pb.get_rid(), PhysicsServer3D.BODY_MODE_STATIC)
 
 
 func bone_pos(bone: String) -> Vector3:
