@@ -106,8 +106,8 @@ static func facts(b: ScavBot) -> Dictionary:
 	var ally := b.ally
 	var ally_eng := ally != null and ally.is_engaged() and not b.is_engaged()
 	if ally_eng and ally.percept.has_last:
-		p.last_known = ally.percept.last_known
-		p.has_last = true
+		p.contact.ally(ally.percept.contact.pos, ally.percept.contact.err)
+		p.tick(0.0)  # re-sync last_known / has_last from the shared contact
 	if b.cover_t <= 0.0 and p.has_last and b.brain.state in [BotBrain.ENGAGE, BotBrain.COVER]:
 		find_cover(b)
 	var alone := ally == null or ally.body.dead
@@ -115,7 +115,8 @@ static func facts(b: ScavBot) -> Dictionary:
 	return {"aware": p.aware, "seeing": p.seeing, "noise": p.noise_new, "shot": p.shot_new, "shot_cover": b.shot_cover, "since_seen": p.since_seen,
 		"hp": b.body.total_frac(), "hurt": b.hurt_t > 0.0, "reloading": b.gun.busy_kind == "reload", "arrived": b._arrived(),
 		"cover": b.has_cover and not b.def["rush"], "outgunned": outgunned, "flank_eager": b.def["flank_eager"], "ally_engaged": ally_eng,
-		"ally_flank": ally != null and not ally.body.dead and ally.brain.state == BotBrain.FLANK, "has_last": p.has_last}
+		"ally_flank": ally != null and not ally.body.dead and ally.brain.state == BotBrain.FLANK, "has_last": p.has_last,
+		"forgotten": p.contact.forgotten, "calm": p.contact.age >= BotTacticsDefs.CALM_PERIOD}
 
 
 ## Nearest cover marker whose spot (crouched eye) cannot be seen from the last known player position.

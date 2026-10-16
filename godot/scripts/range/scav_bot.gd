@@ -121,7 +121,7 @@ func _on_noise(pos: Vector3, radius: float, kind: String, src: Object) -> void:
 		return
 	if global_position.distance_to(pos) <= radius:
 		var shot := kind == "shot"
-		percept.hear(pos, shot)
+		percept.hear(pos, shot, global_position.distance_to(pos), rng)
 		if shot and not percept.seeing:  # F87: snap round to the shot so the view cone checks it now
 			var d := _flat(pos - global_position)
 			if d.length() > 0.05:
@@ -174,7 +174,7 @@ func think(dt: float, over := {}) -> void:
 	if to != "":
 		if from == BotBrain.HEAL and to == BotBrain.SEARCH:
 			body.heal(0.4)
-		shot_cover = to == BotBrain.COVER and from in [BotBrain.PATROL, BotBrain.INVESTIGATE]
+		shot_cover = to == BotBrain.COVER and from in [BotBrain.PATROL, BotBrain.INVESTIGATE, BotBrain.HOLD]
 		_enter(to)
 		print("[bot] ", label_name, " ", from, " -> ", to)
 		state_changed.emit(self, from, to)
@@ -188,6 +188,7 @@ func _sense(dt: float) -> void:
 		percept.seeing = false
 		percept.aware = false
 		percept.since_seen = 99.0
+		percept.tick(dt)  # F97: the contact still ages with no player to sense
 		return
 	var head := player.eye_pos()
 	var chest := player.global_position + Vector3(0, 0.85 if player.crouching else 1.3, 0)
@@ -226,6 +227,20 @@ func _enter(s: String) -> void:
 			_go(percept.last_known + side)
 		BotBrain.SEARCH:
 			_go(percept.last_known)
+		BotBrain.HOLD:
+			# F97: defensive post = nearest cover marker (no threat direction: the contact is
+			# forgotten). Phase B replaces this with scored cover. No markers: hold position.
+			var post := Vector3.INF
+			var bd := 1.0e9
+			for c in covers:
+				var dd := _flat(c - global_position).length()
+				if dd < bd:
+					bd = dd
+					post = c
+			if post != Vector3.INF:
+				_go(post)
+			else:
+				_has_target = false
 	mesh.scale.y = 0.8 if s == BotBrain.HEAL else 1.0
 
 
