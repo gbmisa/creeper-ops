@@ -55,11 +55,6 @@ Feedback: `docs/playtests/feedback_2026-10-16.md` F98-F114. Rulings: CHANGES.md 
   Rebuild: `godot --headless --path godot -s ../art/reload_hands/dump_anchors.gd`, then
   `blender -b --python art/reload_hands/build_hands.py`. "mag" marker is posed with the mag seated.
 
-## Branches merged into play/f98-f107
-fix/kit-persist, fix/f98-audio, fix/f99-reddot, fix/f100-map, fix/f110-sound, fix/f102-hands, fix/f112-rebind,
-fix/p13-damage, fix/f103-f105-mags (worktrees of the same names under ../). Briefs: docs/tasks/F98_F107_brief.md,
-F110_sound_brief.md.
-
 ## Known issues
 - `reload_timeline.gd:196` SCRIPT ERROR spam ('lock' anchor, MP5 empty) in the suite: pre-existing. The Windows
   session's uncommitted WIP had a `HANDS["lock"]` default; that WIP (rifle empty reloads) touches
