@@ -110,7 +110,8 @@ static func _specials(t: RangeTest) -> void:
 static func _rack_and_crate(t: RangeTest) -> void:
 	var rack := RangeRack.new()
 	t.add_child(rack)
-	t.check("rack holds all 17 guns", rack._slots.size() == 17)
+	t.check("rack holds all 17 guns (+ the compound bow and crossbow, F146)", rack._slots.size() == 19 and WeaponDefs.ORDER.all(func(id): return rack._slots.has(id))
+		and rack._slots.has("compound_bow") and rack._slots.has("crossbow"))
 	var lbl := RangeRack.label_text(WeaponDefs.of("scarh"))
 	t.check("rack label shows name, tier and role", "SCAR-H" in lbl and "T3" in lbl and WeaponDefs.of("scarh")["role"] in lbl)
 	rack.queue_free()

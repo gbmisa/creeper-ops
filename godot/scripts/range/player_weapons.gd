@@ -240,7 +240,9 @@ func shoot(res: Dictionary, vel_mult: float) -> void:
 	if session != null:
 		session.noise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
 		session.events.shot_fired.emit(res, gun)
-	if not loose:
+	if loose:   # F146: string twang / crossbow thunk, no gun report
+		RangeAudio.event({"kind": "sample", "item": SoundDefs.gun_event(gun.id, "shot", gun.def["cal"], gun.def["class"]), "local": true, "db": -2.0})
+	else:
 		RangeAudio.event({"kind": "shot", "item": gun.id, "local": true, "cal": gun.def["cal"], "cls": gun.def["class"],
 			"suppressed": gun.stat("noise") < 0.9})
 	if res["ping"] and gun.id in SoundDefs.PING_GUNS:

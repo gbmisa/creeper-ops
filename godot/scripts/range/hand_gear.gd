@@ -62,3 +62,16 @@ static func _refill_tube(w: PlayerWeapons) -> void:
 			have = true
 	if not have:
 		w.inv.add(w.inv.make(w.gun.ammo_pick, {"count": maxc}))
+
+
+## Ammo bench wording: shells for a tube, arrows / bolts for the bows (F146), else mags.
+static func refill_word(g: Gun, tube: bool) -> String:
+	if BowDefs.is_loose(g.def):
+		return "arrows" if g.def["cal"] == "arrow" else "bolts"
+	return "shells" if tube else "mags"
+
+
+static func refill_msg(g: Gun, tube: bool) -> String:
+	if BowDefs.is_loose(g.def):
+		return "Arrows" if g.def["cal"] == "arrow" else "Bolts"
+	return "Tube shells" if tube else "Mags"

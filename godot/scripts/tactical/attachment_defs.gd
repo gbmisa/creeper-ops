@@ -51,6 +51,8 @@ static func why_not(gun_def: Dictionary, id: String) -> String:
 	var r: Dictionary = ROWS[id]
 	if not (r["slot"] in gun_def["slots"]):
 		return "%s has no %s slot" % [gun_def["name"], r["slot"]]
+	if r["slot"] == "sight" and gun_def.has("sight_ok") and not (id in gun_def["sight_ok"]):   # F146: bows take a short list
+		return "%s can't carry a %s" % [gun_def["name"], r["name"]]
 	if r.has("only") and not (gun_def["id"] in r["only"]):
 		return "%s needs a sniper rail" % r["name"]
 	return ""

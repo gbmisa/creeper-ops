@@ -31,6 +31,8 @@ const PROFILES := {
 	"pkm": {"shot": "shot_pkm", "sup": "sup_heavy", "tail": "tail_mosin", "db": 2.0},
 	"pump12": {"shot": "shot_model12", "sup": "sup_shotgun", "tail": "tail_model12", "db": 2.0},
 	"tempest": {"shot": "shot_338", "sup": "sup_sniper", "tail": "tail_tikka", "db": 0.0, "pitch": 1.7},  # secret railgun: pitched-up .338 crack (+ zap, TempestFx)
+	"bow": {"shot": "bow_twang", "sup": "bow_twang", "tail": "arrow_thud", "db": -4.0},   # F146 (procedural, BowSounds)
+	"crossbow": {"shot": "crossbow_thunk", "sup": "crossbow_thunk", "tail": "arrow_thud", "db": -3.0},
 	"semi12": {"shot": "shot_saiga", "sup": "sup_shotgun", "tail": "tail_nova", "db": 1.0},
 }
 const GUN_PROFILE := {
@@ -41,7 +43,7 @@ const GUN_PROFILE := {
 const CAL_PROFILE := {
 	"45acp": "pistol45", "9x19": "pistol9", "44mag": "mag44", "57x28": "smg57", "762x39": "ak", "556x45": "m4",
 	"762x51": "nato762", "762x54r": "mosin", "3006": "garand", "338": "axmc", "12ga": "pump12",
-	"arrow": "pistol9", "bolt": "pistol9",   # F146 placeholder until the bow sounds (arrows never play a shot sample)
+	"arrow": "bow", "bolt": "crossbow",
 }
 const CLASS_PROFILE := {
 	"pistol": "pistol45", "smg": "smg9", "assault rifle": "ak", "shotgun": "pump12", "marksman": "sks",
@@ -60,6 +62,8 @@ const MECH := {
 	"bolt": {"mag_out": "pistol_mag_out", "mag_in": "round_in", "action": "bolt_action"},
 	"garand": {"mag_out": "rifle_mag_out", "mag_in": "smg_mag_in", "action": "rifle_charge"},
 	"belt": {"mag_out": "belt_open", "mag_in": "lmg_belt_in", "action": "belt_close"},
+	"bow": {"mag_out": "inv_wood", "mag_in": "round_in", "action": "mode_click"},          # F146: reach for an arrow, nock it
+	"crossbow": {"mag_out": "bolt_action", "mag_in": "round_in", "action": "bolt_action"},   # cock the string, drop the bolt in
 }
 ## Extra dB per mechanical sample on top of RangeAudio.gun's -2 (samples recorded at different levels).
 const MECH_DB := {"shotgun_pump": -10.0}  # F123: the pump was far louder than the shotgun's shot
@@ -67,6 +71,7 @@ const GUN_MECH := {
 	"m1911": "pistol", "glock18": "pistol", "revolver": "revolver", "mp5": "smg", "p90": "smg", "vector": "smg",
 	"ak47": "rifle", "m4a1": "rifle", "scarh": "rifle", "sks": "semi_auto", "garand": "garand", "sr25": "rifle",
 	"mosin": "bolt", "sniper": "bolt", "pkm": "belt", "shotgun": "pump", "saiga12": "saiga",
+	"compound_bow": "bow", "crossbow": "crossbow",
 }
 const CLASS_MECH := {"pistol": "pistol", "smg": "smg", "assault rifle": "rifle", "shotgun": "pump", "marksman": "semi_auto",
 	"bolt-action": "bolt", "lmg": "belt"}

@@ -4,6 +4,38 @@ class_name RangeTestBow
 
 
 static func run(t: RangeTest) -> void:
+	_sights_and_places(t)
+	await _flight(t)
+
+
+static func _sights_and_places(t: RangeTest) -> void:
+	for id in ["compound_bow", "crossbow"]:
+		var d := WeaponDefs.of(id)
+		var ok: Array = []
+		for a in AttachmentDefs.ROWS.keys():
+			if AttachmentDefs.why_not(d, a) == "":
+				ok.append(a)
+		t.check("%s: takes exactly 3 optics (red dot, holo, ACOG), nothing else" % id, ok.size() == 3 and "reddot" in ok and "holo" in ok and "acog3x" in ok, str(ok))
+		var g := Gun.new(id)
+		g.set_fit("sight", "acog3x")
+		t.check("%s: ACOG zooms 3x and moves the sight line" % id, is_equal_approx(g.stat("scope"), 3.0) and g.eff_def()["ads_pos"] != d["ads_pos"])
+		t.check("%s: has ADS sight points (mounts.json), so the irons are placed" % id, not AdsPose.points(d, "", 0.4).is_empty())
+	var in_rack := 0
+	for row in RangeRack.GRID:
+		in_rack += int("compound_bow" in row) + int("crossbow" in row)
+	var crate := RangeCrate.LOOT.map(func(r): return r[0])
+	t.check("bows: on the rack, arrows and bolts in the crate", in_rack == 2 and "arrow_field" in crate and "bolt_broad" in crate)
+	t.check("bows: not in the 17-gun roster", not WeaponDefs.ORDER.has("compound_bow") and not WeaponDefs.ROWS.has("crossbow"))
+	var sup: float = BotNoise.SHOT_R * AttachmentDefs.ROWS["suppressor"]["mods"]["noise"]
+	var bow_r: float = BotNoise.SHOT_R * Gun.new("compound_bow").stat("noise")
+	t.check("bow: bots hear a shot at 1/5 of a suppressed gun's range", is_equal_approx(bow_r * 5.0, sup), "%f vs %f" % [bow_r, sup])
+	t.check("bows: own sounds (twang, thunk, thud) exist", RangeAudio.stream(SoundDefs.gun_event("compound_bow", "shot", "arrow", "bow")) != null
+		and RangeAudio.stream(SoundDefs.gun_event("crossbow", "shot", "bolt", "crossbow")) != null and RangeAudio.stream("arrow_thud") != null)
+	var gun := Gun.new("compound_bow")
+	t.check("bows: bench wording is arrows / bolts", HandGear.refill_word(gun, false) == "arrows" and HandGear.refill_word(Gun.new("crossbow"), false) == "bolts")
+
+
+static func _flight(t: RangeTest) -> void:
 	var input := InputState.new()
 	t.add_child(input)
 	var player := TacticalPlayer.new()

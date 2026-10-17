@@ -12,6 +12,32 @@
    -0.045
   ]
  },
+ "compound_bow": {
+  "sight_front": [
+   -0.0002,
+   0.147,
+   -0.318
+  ],
+  "sight_kind": "aperture",
+  "sight_rear": [
+   -0.0002,
+   0.1462,
+   0.184
+  ]
+ },
+ "crossbow": {
+  "sight_front": [
+   -0.0002,
+   0.0942,
+   -0.5
+  ],
+  "sight_kind": "notch",
+  "sight_rear": [
+   -0.0002,
+   0.0942,
+   0.1
+  ]
+ },
  "garand": {
   "sight_front": [
    -0.0002,

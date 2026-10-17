@@ -125,6 +125,7 @@ func _drop_flying(id: int) -> void:
 
 ## A stuck arrow: a frozen WorldItem holding one arrow of the grade, the mesh nose-first into the surface.
 func _stick(ammo_id: String, pos: Vector3, dir: Vector3) -> void:
+	RangeAudio.event({"kind": "sample", "item": "arrow_thud", "pos": pos, "db": -4.0})
 	var it := weapons.inv.make(ammo_id, {"count": 1})
 	var wi := world_items.drop(it, pos - dir.normalized() * 0.15)
 	wi.freeze = true
