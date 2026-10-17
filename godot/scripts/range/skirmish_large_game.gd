@@ -223,6 +223,10 @@ func loot(c: Dictionary) -> void:
 				var it := weapons.inv.make(id)
 				if not weapons.inv.add(it):
 					weapons.item_dropped.emit(it)
+		elif ItemDefs.CRATE_GEAR.has(item):  # F134
+			var it := weapons.inv.make(ItemDefs.CRATE_GEAR[item])
+			if not weapons.inv.add(it):
+				weapons.item_dropped.emit(it)
 	log.add("Looted: %s" % ", ".join(c["loot"]))
 	weapons.message.emit("Looted: %s" % ", ".join(c["loot"]))
 

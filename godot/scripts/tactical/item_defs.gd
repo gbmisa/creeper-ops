@@ -72,6 +72,7 @@ const ROWS := {
 		"use": {"time": 4.0, "effect": "feed", "amount": 0.6, "dehydration": -0.2}},
 	"med_stim": {"name": "Combat stim", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
 		"use": {"time": 2.0, "effect": "stim", "dur": 20.0, "mult": 2.0}},
+	"headset_comtac": {"name": "Comtac earmuffs", "kind": "headset", "w": 2, "h": 1, "kg": 0.5},
 	"util_grapple": {"name": "Grappling hook", "kind": "utility", "w": 2, "h": 2, "kg": 1.1},
 	"util_frag": {"name": "Frag grenade", "kind": "utility", "w": 1, "h": 1, "kg": 0.4},
 	"util_smoke": {"name": "Smoke grenade", "kind": "utility", "w": 1, "h": 1, "kg": 0.5},
@@ -82,6 +83,8 @@ const ROWS := {
 const QUICK := ["med_ifak", "med_bandage"]
 ## What one "meds" entry in a Skirmish loot crate hands out.
 const CRATE_MEDS := ["med_ifak", "med_bandage"]
+## Skirmish crate loot entries that hand out one gear item (F134).
+const CRATE_GEAR := {"headset": "headset_comtac"}
 
 const ARMOR_SIZE := {"vest2": [3, 3, 1.5], "plate4": [3, 3, 6.0], "steel6": [2, 2, 3.5], "helmet3": [2, 2, 1.2]}
 
