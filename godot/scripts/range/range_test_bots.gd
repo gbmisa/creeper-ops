@@ -24,6 +24,10 @@ static func run(test: RangeTest) -> void:
 	t.add_child(player.input)
 	for i in 8:  # the navigation map syncs every other physics frame
 		await t.get_tree().physics_frame
+	var shots: Variant = RangeArgs.parse().get("ragdoll-shots")
+	if shots is String:
+		await RangeRagdollShots.run(t, session, house, player, shots)
+		return
 	_pure()
 	_nav()
 	_loadout()
