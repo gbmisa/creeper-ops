@@ -39,6 +39,7 @@ var prompt := ""
 var trigger_ads := false  # debug overrides (--ads, --fire)
 var trigger_down := false
 var trigger_held := false  # the trigger is down this frame and the gun may fire (PlayerRecoil: automatic fire)
+var mag_out_early := false  # F135: same for the mag-out sound (set by the viewmodel when a timeline starts)
 var mag_in_early := false  # F106: the reload timeline already played the mag-seat sound this reload
 var since_shot := 99.0     # s since the last round left (PlayerRecoil)
 var ui_open := false  # inventory screen up: no firing, no aiming
@@ -262,13 +263,16 @@ func start_reload(fast: bool) -> void:
 	if r == "none":
 		message.emit("No magazine" if gun.def["action"] != "tube" else "No %s rounds" % gun.def["cal"])
 	if r == "ok":
+		gun.busy_t /= TacticalConfig.PLAYER_RELOAD_SPEED   # F135: player-only speed-up (the animation follows busy_t)
 		gun.busy_t *= player.body.arm_loss("reload")   # P9: blacked arms reload slower (the animation follows busy_t)
 		_reload_t = 0.0
 		_reload_fast = fast
 		mag_in_early = false
+		mag_out_early = false
 		_check_t = 0.0
 		action.emit("reload", gun.busy_t)
-		_gun_snd("mag_out")
+		if not mag_out_early:   # F135: with a reload timeline the mag-out sound plays at its mark, not at the start
+			_gun_snd("mag_out")
 
 
 func _apply_view(_delta: float) -> void:

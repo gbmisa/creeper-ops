@@ -131,6 +131,8 @@ func _on_shot(res: Dictionary, g: Gun) -> void:
 
 ## F106: the mag-seat click plays at the timeline's seat moment, not when the reload ends.
 func _on_reload_mark(mark_name: String) -> void:
+	if mark_name == "mag_out" and weapons != null and _gun != null and _gun.busy_kind == "reload":
+		weapons.gun_sound("mag_out")
 	if mark_name == "mag_in" and weapons != null and _gun != null and _gun.busy_kind == "reload":  # not on a cancel (stop() flushes marks)
 		weapons.mag_in_early = true
 		weapons.gun_sound("mag_in")
@@ -144,6 +146,7 @@ func _on_action(kind: String, secs: float) -> void:
 					anim.seek(anim.current_animation_length, true)
 					anim.stop()
 				reload_tl.start(secs, _gun.chamber == "", weapons._reload_fast)
+				weapons.mag_out_early = true   # F135: mag_out sounds at the timeline's mark
 			else:
 				_play("Reload", secs)
 				arms.reload(secs)

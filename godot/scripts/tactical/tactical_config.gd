@@ -41,6 +41,8 @@ const ARMOR_RICOCHET_GLANCE_DEG := 25.0
 
 # Gun handling
 const CHAMBER_TIME := 0.4
+## F135: the player reloads this much faster than the def times (1/0.7 = reload time x0.7). Bots keep the def times.
+const PLAYER_RELOAD_SPEED := 1.0 / 0.7
 const ADS_TIME_SLOW := 0.45
 const ADS_TIME_FAST := 0.15
 const MAG_CHECK_TIME := 1.0
