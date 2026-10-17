@@ -18,6 +18,7 @@ var _dot: ColorRect
 var _msg_t := 0.0
 var _show_dot := false
 var _status_lbl: Label
+var _stamina: PanelContainer
 var _tunnel := ColorRect.new()
 
 
@@ -49,6 +50,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	var left := UiKit.panel(Color(0.04, 0.05, 0.07, 0.6))
 	_pin(left, Vector2(0, 1), Vector2(20, 790))
 	frame.add_child(left)
+	_stamina = left
 	var bars := VBoxContainer.new()
 	left.add_child(bars)
 	bars.add_child(UiKit.caption("LEG STAMINA"))
@@ -67,6 +69,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 	_help.position = Vector2(8, 8)
 	var h := UiKit.label(_help_text(), 11, Color(1, 1, 1, 0.75))
 	_help.add_child(h)
+	_help.visible = HudSettings.on("help")
 	frame.add_child(_help)
 	_dot = ColorRect.new()
 	_dot.size = Vector2(4, 4)
@@ -126,7 +129,9 @@ func _process(delta: float) -> void:
 		return
 	var inp := player.input
 	if inp.act("t_help"):
-		_help.visible = not _help.visible
+		HudSettings.set_on("help", not HudSettings.on("help"))   # H and the Esc menu switch share one saved setting
+	_help.visible = HudSettings.on("help")
+	_stamina.visible = HudSettings.on("stamina")
 	if inp.act("t_crosshair"):
 		_show_dot = not _show_dot
 	_dot.visible = _show_dot and weapons.ads_amt < 0.5

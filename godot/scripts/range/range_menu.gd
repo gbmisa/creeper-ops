@@ -48,6 +48,7 @@ func setup(s: RangeSession) -> void:
 	_add_sensitivity()
 	_add_display()
 	_add_safe_zone()
+	_add_hud_parts()
 	report.set_anchors_preset(Control.PRESET_CENTER)
 	report.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	report.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -140,3 +141,17 @@ func _add_safe_zone() -> void:
 		box.value_changed.connect(func(v: float): SafeZone.set_pct(axis, v))
 		line.add_child(box)
 		_col.add_child(line)
+
+
+## HUD pieces on/off (HudSettings, saved). Two columns so the menu stays short.
+func _add_hud_parts() -> void:
+	_col.add_child(UiKit.caption("HUD"))
+	var grid := GridContainer.new()
+	grid.columns = 2
+	for k in HudSettings.PARTS:
+		var c := CheckBox.new()
+		c.text = HudSettings.PARTS[k]
+		c.button_pressed = HudSettings.on(k)
+		c.toggled.connect(func(v: bool): HudSettings.set_on(k, v))
+		grid.add_child(c)
+	_col.add_child(grid)

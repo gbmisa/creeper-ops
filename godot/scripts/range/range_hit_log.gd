@@ -7,12 +7,14 @@ var lines: Array[String] = []
 var _lbl: Label
 var _tgt: Label
 var _tgt_panel: PanelContainer
+var _log_panel: PanelContainer
 
 
 func _init() -> void:
 	layer = 5
 	var p := UiKit.panel(Color(0.04, 0.05, 0.07, 0.55))
 	p.position = Vector2(8, 330)
+	_log_panel = p
 	p.custom_minimum_size = Vector2(430, 0)
 	var frame := SafeZone.new()   # hit log + target panel stay inside the HUD safe zone
 	add_child(frame)
@@ -65,3 +67,7 @@ static func format(res: Dictionary) -> String:
 		armor = " | armor %d" % int(res["armor_dur"])
 	var tail := " KILL" if res.get("killed", false) else ""
 	return "%s | %s | %.0f m | %d dmg | %s%s%s" % [who, res["zone"], res["dist"], int(round(res["dmg"])), res["result"], armor, tail]
+
+
+func _process(_dt: float) -> void:
+	_log_panel.visible = HudSettings.on("hit_log")   # Esc menu > HUD

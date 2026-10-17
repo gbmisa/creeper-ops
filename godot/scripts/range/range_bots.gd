@@ -58,7 +58,8 @@ func spawn_scavs() -> void:
 
 
 func _on_state(bot: ScavBot, _from: String, to: String) -> void:
-	log.add("%s: %s" % [bot.label_name, to])
+	if HudSettings.on("bot_log"):
+		log.add("%s: %s" % [bot.label_name, to])
 
 
 func _process(_dt: float) -> void:

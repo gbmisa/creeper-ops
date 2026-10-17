@@ -83,7 +83,9 @@ func _spawn(kind: String, pos: Vector3, route: Array[Vector3], idx: int) -> Scav
 	bot.setup(session, bal, layout, "%s %d" % [BotDefs.of(kind)["name"], idx + 1], idx, kind, route)
 	add_child(bot)
 	bot.global_position = pos
-	bot.state_changed.connect(func(b, _f, to): log.add("%s: %s" % [b.label_name, to]))
+	bot.state_changed.connect(func(b, _f, to):
+		if HudSettings.on("bot_log"):   # Esc menu > HUD
+			log.add("%s: %s" % [b.label_name, to]))
 	bot.died.connect(_on_bot_died)
 	bots.append(bot)
 	return bot

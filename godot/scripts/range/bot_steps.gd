@@ -7,8 +7,8 @@ extends RefCounted
 const STRIDE := 1.7
 const MIN_SPEED := 0.5
 const SPRINT_SPEED := 3.8      # a bot at or above this is running (ScavBot.RUN 4.2 x its class speed)
-const WALK_DB := 0.0           # F118: was -4.4 (Gregory couldn't hear bots coming up behind him)
-const SPRINT_DB := 3.0         # F118: was 0.0
+const WALK_DB := 10.0          # F128: was 0 (F118), -4.4 before; still inaudible
+const SPRINT_DB := 14.0        # F128: was 3 (F118: was 0); the old max_db 3 cap made raises do nothing
 const WALK_HEAR_R := 15.0      # F118: heard out to 15 m walking / 30 m running (was BotNoise 8 / 20; bots' hearing unchanged)
 const SPRINT_HEAR_R := 30.0
 const CROUCH_DB := -10.0
@@ -34,6 +34,7 @@ func tick(bot: Node3D, dt: float, speed: float, on_floor: bool, crouched := fals
 		_snd = AudioStreamPlayer3D.new()
 		_snd.stream = stream
 		_snd.unit_size = 6.0  # F118: was 4
+		_snd.max_db = 24.0  # F128: Godot default 3 dB capped WALK/SPRINT_DB
 		_snd.attenuation_filter_db = 0.0  # F118: no distance low-pass on steps (room muffling still applies)
 		_snd.pitch_scale = 1.0
 		bot.add_child(_snd)
