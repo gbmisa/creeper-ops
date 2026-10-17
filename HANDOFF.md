@@ -28,7 +28,7 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - P9 built; P11 no fractures; **P10** waits for Gregory. Known: kill-house navmesh doorway check can fail; barracks north door split by the inner wall.
 - Range suite before split: 1113 pass / 1 fail (`a shot at spawn ... (F88)`, Scav 5 net move 0.6 m; left as is).
 
-## Session D (2026-10-16; merged into feat/fb-reload, not pushed yet)
+## Session D (2026-10-16/17; merged into feat/fb-reload and pushed)
 - Insert sound on the `mag_in` mark (0105c26). Arms (dc8304a..): runtime forearm twist bones (`ArmTwist`), M4A1 unbaked
   (IK arms; grip_r = Gregory's posed wrist), `arms_fp.glb` (Blender: arms x1.3, viewmodel only), shoulders 4 cm behind
   the eye (ROOT_POS z -0.02), support hand slides into reach (`left_hold`), Gregory's M4A1 wrap grip on handguard guns.
@@ -38,9 +38,9 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - Merged: BOT-ANIM2 (3c0a00a: BotIdle/BotLegs/BotHead, low-ready/patrol carry, eased raise, head within 2.5 cm of its
   hitbox when still; moving bots' clips still lean up to 21 cm off, pre-existing) and FB-R2 (750eff6: session B WIP
   ported, review + 2 hand rounds, M4A1/Vector `ar`, AXMC/Mosin `boltbox`; scores `docs/art/reload/SCORES.md`).
-- **Merged tree suite: 1228 pass / 6 FAIL** (sniper + mosin reload "left wrist on target", 4-6 cm: new shorter reach
-  after the shoulder move). Reload agent fixing (branch `feat/reload-groups2`, worktree `reload-groups`), then
-  tube / en-bloc / revolver / PKM belt with hinged parts. **Not pushed until green.**
+- **Merged tree: suite 1234 pass / 0 fail / 0 SCRIPT ERROR** (sniper/mosin harness fix 56577ce; the kill-house navmesh
+  doorway check still flakes now and then, pre-existing). Pushed. Reload agent continues on `feat/reload-groups2`
+  (worktree `reload-groups`, uncommitted hinge WIP: `reload_hinge.gd`): tube / en-bloc / revolver / PKM belt.
 
 ## Next
-1. Merge the sniper/mosin fix, suite green, push; then reload-groups2. 2. Gregory: P10, P13, plays Town + arms.
+1. Review + merge reload-groups2 (hinged parts, non-detachable reloads). 2. Gregory: P10, P13, plays Town + arms.
