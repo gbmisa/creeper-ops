@@ -38,18 +38,15 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - Merged: BOT-ANIM2 (3c0a00a: BotIdle/BotLegs/BotHead, low-ready/patrol carry, eased raise, head within 2.5 cm of its
   hitbox when still; moving bots' clips still lean up to 21 cm off, pre-existing) and FB-R2 (750eff6: session B WIP
   ported, review + 2 hand rounds, M4A1/Vector `ar`, AXMC/Mosin `boltbox`; scores `docs/art/reload/SCORES.md`).
-- **Merged tree: suite 1234 pass / 0 fail / 0 SCRIPT ERROR** (sniper/mosin harness fix 56577ce; the kill-house navmesh
-  doorway check still flakes now and then, pre-existing). Pushed. Reload agent continues on `feat/reload-groups2`
-  (worktree `reload-groups`, uncommitted hinge WIP: `reload_hinge.gd`): tube / en-bloc / revolver / PKM belt.
+- FB-R2b merged: `ReloadHinge` (rotating parts), timelines for non-detachable guns, plans `tube` (shotgun), `enbloc`
+  (Garand), `cylinder` (revolver), `belt` (PKM): all score 7 (SCORES.md "FB-R2b"; why not 8 listed there).
+- **Play build: suite 1366 pass / 0 fail / 0 SCRIPT ERROR**, pushed. (Kill-house navmesh doorway check flakes now and
+  then, pre-existing.) All agents done; no worktrees of this session left except `reload-groups` (merged, removable).
 
 ## Next (fresh session: start here)
-1. **Reload agent may still be running** after /clear (FB-R2 round 2, brief `docs/tasks/FB_R2_reload_groups.md` step 3
-   + orchestrator asks: 3 regression sheets with the new arms, hinged parts, shotgun tube, Garand en-bloc, revolver,
-   PKM belt). Check `git -C "../tactical ops-worktrees/reload-groups" log feat/fb-reload..feat/reload-groups2` and
-   `status`. If it stopped mid-way, finish or brief a new Opus agent from that state. Review (sheets in
-   `docs/art/reload/`, scores in SCORES.md), parse, suite (background; never render meanwhile), merge, push.
-2. Gregory: rule on CHANGES P10, P12, P13; play Town, the new arms/hands, bot idle/aim, new reloads.
+1. Gregory: rule on CHANGES P10, P12, P13; play Town, the new arms/hands, bot idle/aim, the reloads (every gun now).
+2. Reload 7s -> 8 (FB-R2b list): shotgun keeps the loading pose between presses, PKM belt object, Garand empty-clip
+   mesh; rifle empty racks (forearm covers 20-25 %). Only if Gregory asks.
 3. Open ideas (not asked yet): Town Kestrel dressing pass; FOB no-go for bots; bot WALK 1.8 m/s vs walk clip (fast
    steps); split ragdoll out of `bot_body.gd` (352 lines); right hand cups the grip in rolled reload poses.
-Tools (scratchpad of the 2026-10-16 session, may be gone): skin_probe.gd, reach_probe.gd, make_arms_fp.py, sheet.gd.
 Godot in background shells: `$LOCALAPPDATA/Microsoft/WinGet/Links/godot_console.exe` (plain `godot` not on PATH).
