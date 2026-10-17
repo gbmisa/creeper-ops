@@ -220,6 +220,7 @@ static func _functional(t: RangeTest) -> void:
 	await _sights(t, r)
 	await RangeTestAds.run(t, r)
 	RangeTestPkmSight.run(t, r)
+	RangeTestZero.run(t, r)
 	# recoil: compensator / vgrip lower vertical, flash hider lowers horizontal; a baseline first
 	_equip(r, "m4a1")
 	t.bal.shots.clear()
