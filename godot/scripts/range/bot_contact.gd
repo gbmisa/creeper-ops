@@ -45,15 +45,24 @@ func lose_sight() -> void:
 
 ## Heard shot: never the exact spot. Position is offset randomly within an error that
 ## grows with distance (HEAR_ERR_FRAC of it, clamped to HEAR_ERR_MIN..MAX).
-func shot(p: Vector3, dist: float, rng: RandomNumberGenerator) -> void:
-	err = clampf(dist * BotTacticsDefs.HEAR_ERR_FRAC, BotTacticsDefs.HEAR_ERR_MIN, BotTacticsDefs.HEAR_ERR_MAX)
-	var a := rng.randf() * TAU
-	var r := err * sqrt(rng.randf())
-	pos = p + Vector3(cos(a) * r, 0.0, sin(a) * r)
+func shot(p: Vector3, dist: float, rng: RandomNumberGenerator, mult := 1.0) -> void:
+	err = heard_err(dist, mult)
+	pos = fuzz(p, err, rng)
 	age = 0.0
 	source = SRC_SHOT
 	forgotten = false
 	_sight_lost = false
+
+
+## F133: heard-position error for a sound `dist` away; `mult` > 1 while several shots are heard at once.
+static func heard_err(dist: float, mult := 1.0) -> float:
+	return clampf(dist * BotTacticsDefs.HEAR_ERR_FRAC * mult, BotTacticsDefs.HEAR_ERR_MIN, BotTacticsDefs.HEAR_ERR_MAX)
+
+
+static func fuzz(p: Vector3, e: float, rng: RandomNumberGenerator) -> Vector3:
+	var a := rng.randf() * TAU
+	var r := e * sqrt(rng.randf())
+	return p + Vector3(cos(a) * r, 0.0, sin(a) * r)
 
 
 ## Shared by an ally: take their position and error as-is.
