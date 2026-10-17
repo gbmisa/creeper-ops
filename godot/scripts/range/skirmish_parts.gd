@@ -82,6 +82,7 @@ static func ramp(parent: Node3D, lo: Vector3, hi: Vector3, width: float, col: Co
 	var dir := hi - lo
 	var len := dir.length()
 	var sb := RangeLayout.box(parent, "stairs", Vector3.ZERO, Vector3(width, 0.3, len), "concrete", 0.3, col)
+	sb.set_meta("ramp", true)   # F137: lets tests find every ramp (node names get uniquified)
 	var basis := Basis.looking_at(dir.normalized(), Vector3.UP)
 	sb.transform = Transform3D(basis, (lo + hi) * 0.5 - basis.y * 0.15)
 	var n := int(len / 0.45)

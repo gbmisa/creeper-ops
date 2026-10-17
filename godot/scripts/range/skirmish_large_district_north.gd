@@ -28,7 +28,9 @@ static func _hill(l: SkirmishLargeLayout) -> void:
 ## (ramps must not cut through the solid terrace boxes): west up T1, east up T2, west up T3.
 static func _ramps(l: SkirmishLargeLayout) -> void:
 	var col := Color(0.4, 0.36, 0.24)
-	SkirmishParts.ramp(l, Vector3(-8, 0.0, -60), Vector3(-8, 1.5, -65), 3.0, col)
+	# F137: the old ramp started inside the gate wall (z -61..-60) and was unreachable; it now runs east to west along the strip
+	# between the wall and the hill, entered from the gate and ending flush with the hill-1 top.
+	SkirmishParts.ramp(l, Vector3(-4.0, 0.0, -63), Vector3(-9.0, 1.5, -63), 3.8, col)
 	SkirmishParts.ramp(l, Vector3(8, 1.5, -66), Vector3(8, 3.0, -71), 3.0, col)
 	SkirmishParts.ramp(l, Vector3(-8, 3.0, -72), Vector3(-8, 4.5, -77), 3.0, col)
 
