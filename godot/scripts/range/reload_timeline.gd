@@ -85,11 +85,11 @@ func start(secs: float, empty: bool, fast: bool) -> void:
 	var steps := []
 	if empty:
 		for p in plan.get("charge_pre", []):  # charge before the mag change (HK: lock the handle back first)
-			steps.append([p, float(p["w"]) * charge_t])
+			steps.append([p, float(p["w"]) * charge_t, true])
 	for i in list.size():
 		if empty and i == list.size() - 1:
 			for p in plan.get("charge", []):
-				steps.append([p, float(p["w"]) * charge_t])
+				steps.append([p, float(p["w"]) * charge_t, true])
 		steps.append([list[i], float(list[i]["w"]) * base])
 	_phases.clear()
 	var pose := {"gp": Vector3.ZERO, "gr": Vector3.ZERO, "mag": "seat", "hl": "grip", "bolt": float(plan.get("empty_bolt", 0.0)) if empty else 0.0}
@@ -100,7 +100,8 @@ func start(secs: float, empty: bool, fast: bool) -> void:
 		for key in pose:
 			if s[0].has(key):
 				to[key] = s[0][key]
-		for k in 2:  # rig pose_shift moves every reload pose of the plan, never the rest pose
+		for k in (0 if s.size() > 2 else 2):  # rig pose_shift moves the mag-change poses (not the rest pose, not the
+			# empty-only charge poses: those are tuned for the arm's reach, and a shifted gun stretches the arm)
 			var key: String = ["gp", "gr"][k]
 			if s[0].has(key) and s[0][key] != Vector3.ZERO:
 				to[key] = (s[0][key] as Vector3) + (shift[k] as Vector3)

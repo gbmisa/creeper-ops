@@ -66,8 +66,8 @@ const RIGS := {
 		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
 		"drop": [Vector3(0.0, -0.55, -0.02), Vector3(1.0, 0.0, 0.4)],
 		"pouch_hand": Vector3(-0.15, -0.5, 0.22),
-		"stop_hand": Vector3(-0.055, -0.035, 0.03),  # palm left of the well, thumb up on the bolt catch
-		"press_hand": Vector3(-0.045, -0.03, 0.03),
+		"stop_hand": Vector3(-0.055, -0.07, 0.04),  # palm low on the left of the lower, thumb up on the bolt catch
+		"press_hand": Vector3(-0.04, -0.07, 0.04),  # pushed 1.5 cm in
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},  # long gun: well up into the view
 	"sr25": {"plan": "ar",  # single mesh: straight AR-10 mag cut by region (well bottom y 0.0); catch above the well
 		"mag_box": AABB(Vector3(-0.03, -0.11, -0.025), Vector3(0.04, 0.17, 0.096)),  # whole mag part reaches y 0.056
@@ -78,7 +78,7 @@ const RIGS := {
 		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
 		"drop": [Vector3(0.0, -0.55, -0.02), Vector3(1.0, 0.0, 0.4)],
 		"pouch_hand": Vector3(-0.15, -0.5, 0.22),
-		"stop_hand": Vector3(-0.055, 0.0, 0.06), "press_hand": Vector3(-0.045, 0.005, 0.06),
+		"stop_hand": Vector3(-0.055, 0.0, 0.06), "press_hand": Vector3(-0.04, 0.0, 0.06),  # press: 1.5 cm in, no drift
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},
 	"saiga12": {"plan": "rifle",  # AK pattern: single mesh, the box mag cut by region, rocked about its front lip
 		"mag_box": AABB(Vector3(-0.12, -0.20, -0.06), Vector3(0.24, 0.26, 0.122)),  # 4 mag parts, up to y 0.055
@@ -89,7 +89,7 @@ const RIGS := {
 		"out": [Vector3(0.0, -0.12, -0.04), Vector3(0.45, 0.0, 0.0)],
 		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
 		"drop": [Vector3(0.0, -0.55, -0.06), Vector3(1.0, 0.0, 0.4)],
-		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "charge": Vector3(0.035, 0.06, 0.08),  # charge: estimate (right side)
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "charge": Vector3(0.04, 0.085, 0.02),  # upper right of the receiver (no separate handle part on the mesh)
 		"travel": Vector3(0.0, 0.0, 0.09),
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},
 	"sks": {"plan": "rifle",  # stand-in model: detachable box mag cut by region, rocked about its front lip
@@ -101,7 +101,7 @@ const RIGS := {
 		"out": [Vector3(0.0, -0.12, -0.04), Vector3(0.45, 0.0, 0.0)],
 		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
 		"drop": [Vector3(0.0, -0.55, -0.06), Vector3(1.0, 0.0, 0.4)],
-		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "charge": Vector3(0.035, 0.07, 0.06),  # charge: estimate (right side)
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "charge": Vector3(0.032, 0.084, -0.092),  # the handle part on the right (mesh probe)
 		"travel": Vector3(0.0, 0.0, 0.09),
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},
 	"p90": {"plan": "bullpup", "pivot": Vector3(0.0, 0.025, -0.125), "hold": Vector3(-0.01, 0.045, 0.12),
