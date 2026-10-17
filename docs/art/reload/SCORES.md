@@ -181,3 +181,18 @@ pose_shift z -0.10). Reference: EFT KRISS Vector reloads from memory (straight m
 | vector | plain | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: well empty 0.57-1.15, new mag tipped in 1.29, seated 1.43-1.58. Criterion 3: dark mag on a dark gun (material), right hand cups the grip. |
 | vector | fast | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: the long mag slides out and falls 0.19-0.39. |
 | vector | empty | G-1 | 7 | 1 | 2 | 1 | 1 | 2 | (a) reach / press 1.53-1.7: palm on the left above the guard, the press travel is not seen; the forearm covers the well 1.7-1.87. (b) The idle pose fills the upper right (orchestrator's hip pose), so the return 2.04-2.38 grows the gun fast. |
+
+AXMC (`sniper`) and Mosin: new `boltbox` plan (ReloadPlansMore): straight box mag out / in; on an empty chamber the mag change
+ends with the support hand back on the fore-end, gun at rest, then the `bolt` mark has the viewmodel work the bolt over the
+`work` phase (BoltCycle on the Mosin: right hand to the knob; the AXMC's own FireWBullet clip from 35 %, as after a shot). AXMC mag
+= its Magazine bone (split by weight). Mosin has no mag on the mesh: an empty Mag node carrying a 5-round box (metal material)
+hidden in the stock ahead of the guard. Reference: EFT AXMC / Mosin (box-mag variant) reloads from memory.
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| sniper | plain | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: hand on the short box mag 0.47, pouch, tipped in 1.89, seated 2.13. Mag is small (glb). |
+| sniper | fast | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: mag drops free 0.3-0.6. |
+| sniper | empty | G-1 | 7 | 2 | 2 | 1 | 1 | 1 | Mag change as plain, then the gun returns and the right hand leaves the grip for the bolt (2.6-3.1, glb clip). (a) The right hand reads as raised beside the scope, the knob is hidden behind the scope bell: roll the gun ~15 deg left during `work`. |
+| mosin | plain | G-1 | 7 | 2 | 1 | 1 | 1 | 2 | (a) The 5-round box is small and dark under the palm (0.75-2.5): hold it 2 cm lower so its front shows. (b) Gun rolled so the stock's underside fills the right half. |
+| mosin | empty | G-1 | 7 | 2 | 1 | 1 | 1 | 2 | As plain, then the BoltCycle: right hand to the knob, lift, back, forward 3.04-3.6, reads like the after-shot cycle. The left hand stays on the fore-end. |
+| mosin | fast | - | - | | | | | | Not rendered (same plan as the AXMC fast). |

@@ -20,6 +20,12 @@ static func split(glb: Node, rig: Dictionary = {}) -> MeshInstance3D:
 		if m != null and rig.has("mag_body"):
 			_add_body(glb, m, rig["mag_body"])
 		return m
+	if rig.has("mag_body"):  # no mag part on the mesh at all (Mosin): an empty Mag node carrying only the body box
+		var e := MeshInstance3D.new()
+		e.name = "Mag"
+		glb.add_child(e)
+		_add_body(glb, e, rig["mag_body"])
+		return e
 	for node in glb.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
 		var sk := mi.get_parent() as Skeleton3D
@@ -79,7 +85,11 @@ static func to_gun(n: Node, glb: Node) -> Transform3D:
 static func _add_body(glb: Node, mag: MeshInstance3D, body: Array) -> void:
 	var box := BoxMesh.new()
 	box.size = body[1]
-	box.material = mag.mesh.surface_get_material(0)
+	if mag.mesh != null:
+		box.material = mag.mesh.surface_get_material(0)
+	else:  # empty Mag node: the gun mesh's material, surface body[3] (default 0)
+		var gm := (glb.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D).mesh
+		box.material = gm.surface_get_material(int(body[3]) if body.size() > 3 else 0)
 	var b := MeshInstance3D.new()
 	b.name = "Body"
 	b.mesh = box

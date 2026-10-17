@@ -22,6 +22,7 @@ var t := 0.0
 var len := 0.0
 var _next := 0
 var _lock := 0.0  # empty reload: the bolt/slide eases from home to `empty_bolt` over this long (plan "empty_lock")
+var mark_next_len := 0.0  # while a mark is emitted: the length (s) of the phase that starts there ("bolt": the work)
 # sampled pose (valid while playing)
 var gun_pos := Vector3.ZERO
 var gun_rot := Vector3.ZERO
@@ -71,7 +72,7 @@ func phase() -> String:
 
 ## secs: the logic's busy time (includes CHAMBER_TIME when empty). empty: chamber was empty at the start.
 func start(secs: float, empty: bool, fast: bool) -> void:
-	var plan: Dictionary = ReloadAnims.PLANS[_rig["plan"]]
+	var plan: Dictionary = ReloadAnims.plan(_rig["plan"])
 	var extra := TacticalConfig.CHAMBER_TIME if empty else 0.0
 	var base := maxf(secs - extra, 0.05)
 	var list: Array = []
@@ -140,6 +141,8 @@ func _sample() -> void:
 		i += 1
 	while _next < _phases.size() and t >= float(_phases[_next]["t1"]):
 		if str(_phases[_next]["mark"]) != "":
+			var nx: Dictionary = _phases[_next + 1] if _next + 1 < _phases.size() else {}
+			mark_next_len = float(nx["t1"]) - float(nx["t0"]) if not nx.is_empty() else 0.0
 			mark.emit(_phases[_next]["mark"])
 		_next += 1
 	var ph: Dictionary = _phases[i] if not _phases.is_empty() else {}

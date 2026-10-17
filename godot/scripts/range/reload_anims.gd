@@ -209,3 +209,8 @@ const WRIST_OFF := 0.03
 
 static func rig(def: Dictionary) -> Dictionary:
 	return ReloadRigs.RIGS.get(str(def.get("model", "")), {})
+
+
+## A plan by id: PLANS here, then ReloadPlansMore.PLANS.
+static func plan(id: String) -> Dictionary:
+	return PLANS[id] if PLANS.has(id) else ReloadPlansMore.PLANS[id]

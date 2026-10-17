@@ -129,6 +129,25 @@ const RIGS := {
 		"travel": Vector3(0.0, 0.0, 0.09),
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)],
 		"charge_shift": [Vector3(0.0, 0.0, -0.08), Vector3.ZERO]},
+	"sniper": {"plan": "boltbox",  # AXMC: Magazine bone (split by weight); short box mag under the action, front lip z 0.134
+		"pivot": Vector3(-0.004, -0.015, 0.134), "hold": Vector3(-0.004, -0.055, 0.17),
+		"slip": [Vector3(0.0, -0.03, 0.0), Vector3.ZERO],
+		"near": [Vector3(0.0, -0.06, -0.01), Vector3(0.1, 0.0, 0.0)],
+		"out": [Vector3(0.0, -0.11, 0.0), Vector3(0.1, 0.0, 0.0)],
+		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
+		"drop": [Vector3(0.0, -0.55, -0.02), Vector3(1.0, 0.0, 0.4)],
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22),
+		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},  # long gun: well up into the view
+	"mosin": {"plan": "boltbox",  # no mag part on the mesh: a 5-round box (metal, surface 1) hidden in the stock ahead of the guard
+		"mag_body": [Vector3(-0.008, 0.0, 0.135), Vector3(0.02, 0.06, 0.075), Vector3.ZERO, 1],
+		"pivot": Vector3(-0.008, -0.03, 0.098), "hold": Vector3(-0.008, -0.045, 0.135),  # palm under the box: it shows above
+		"slip": [Vector3(0.0, -0.03, 0.0), Vector3.ZERO],
+		"near": [Vector3(0.0, -0.06, -0.01), Vector3(0.1, 0.0, 0.0)],
+		"out": [Vector3(0.0, -0.10, 0.0), Vector3(0.1, 0.0, 0.0)],
+		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
+		"drop": [Vector3(0.0, -0.55, -0.02), Vector3(1.0, 0.0, 0.4)],
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22),
+		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},
 	"p90": {"plan": "bullpup", "pivot": Vector3(0.0, 0.025, -0.125), "hold": Vector3(-0.01, 0.045, 0.12),
 		"rock": [Vector3.ZERO, Vector3(-0.22, 0.0, 0.0)],
 		"slip": [Vector3(0.0, 0.05, 0.06), Vector3(-0.3, 0.0, 0.0)],

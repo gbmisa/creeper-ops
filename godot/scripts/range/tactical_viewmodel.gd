@@ -133,6 +133,11 @@ func _on_shot(res: Dictionary, g: Gun) -> void:
 func _on_reload_mark(m: String) -> void:
 	if m == "mag_in" and _gun != null:
 		weapons._gun_snd("mag_in")
+	elif m == "bolt":  # empty bolt-action reload (ReloadPlansMore "boltbox"): the right hand works the bolt
+		if bolt != null:
+			bolt.start(reload_tl.mark_next_len)
+		elif _cycle_clip != "":
+			_play(_cycle_clip, reload_tl.mark_next_len / 0.65, 0.35)
 
 
 func _on_action(kind: String, secs: float) -> void:
