@@ -49,6 +49,7 @@ static func _one(t: RangeTest, id: String, label: String, fast: bool, empty: boo
 		t.check(n + ": slide cut out as its own part", tl.part != null)
 	var marks: Array[String] = []
 	tl.mark.connect(func(m: String): marks.append(m))
+	arms.update(gun, STEP)  # as in play: the arms solve every frame before R, so the timeline's "grip" anchor knows the slid hold
 	tl.start(secs, empty, fast)
 	t.check(n + ": lasts the logic's %.2f s (%.3f)" % [secs, tl.len], absf(tl.len - secs) < 0.001)
 	t.check(n + ": bolt / slide starts home, no pop (%.3f)" % tl.bolt, tl.bolt < 0.001)
