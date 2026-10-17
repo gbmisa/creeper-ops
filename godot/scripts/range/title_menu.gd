@@ -23,6 +23,6 @@ func _ready() -> void:
 	p.add_child(col)
 	col.add_child(UiKit.label(ProjectSettings.get_setting("application/config/name").to_upper(), 22))
 	col.add_child(UiKit.button("Firing Range", func(): RangeMaps.go("range")))
-	col.add_child(UiKit.button("Skirmish", func(): RangeMaps.go("skirmish")))
-	col.add_child(UiKit.button("Skirmish (large)", func(): RangeMaps.go("skirmish_large")))
+	col.add_child(UiKit.button("Skirmish", func(): RangeMaps.go_staging("skirmish")))
+	col.add_child(UiKit.button("Skirmish (large)", func(): RangeMaps.go_staging("skirmish_large")))
 	col.add_child(UiKit.button("Quit", func(): get_tree().quit()))

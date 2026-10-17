@@ -56,8 +56,14 @@ func _process(_dt: float) -> void:
 	var to := POS - player.global_position
 	to.y = 0.0
 	if to.length() < REACH:
-		weapons.prompt = "%s: Deploy to Skirmish with this kit   %s: Skirmish (large)" % [Keybinds.short("t_use"), Keybinds.short("t_deploy_large")]
+		weapons.prompt = "%s: Loadout room (Skirmish) with this kit   %s: Skirmish (large)" % [Keybinds.short("t_use"), Keybinds.short("t_deploy_large")]
 		if player.input.act("t_use"):
-			player.session.deploy(weapons.inv)
+			_to_staging("skirmish")
 		elif player.input.act("t_deploy_large"):
-			player.session.deploy(weapons.inv, "skirmish_large")
+			_to_staging("skirmish_large")
+
+
+## F139: the truck takes the kit to the loadout room with that Skirmish preselected (was: straight into the map).
+func _to_staging(map: String) -> void:
+	RangeMaps.staging_target = map
+	player.session.deploy(weapons.inv, "staging")
