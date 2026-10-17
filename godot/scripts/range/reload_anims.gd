@@ -201,6 +201,10 @@ const HANDS := {
 	"stop": {"f": Vector3(0.0, 0.0, -1.0), "n": Vector3(1.0, 0.0, 0.0)},  # pistol support hand moved up: thumb on the stop
 	"lock": {"f": Vector3(0.0, 0.3, -1.0), "n": Vector3(1.0, 0.0, 0.0)},  # HK handle pushed up into its notch
 	"press": {"f": Vector3(0.0, 0.0, -1.0), "n": Vector3(1.0, 0.0, 0.0)},  # "stop" pushed in: thumb presses a bolt catch
+	"lid": {"f": Vector3(0.0, -0.2, -1.0), "n": Vector3(0.0, -1.0, 0.0)},  # palm down on a cover (turns with it)
+	"flip": {"f": Vector3(0.0, 0.2, -1.0), "n": Vector3(0.0, -1.0, 0.0)},  # hand up off a cover it flicked open
+	"tray": {"f": Vector3(0.3, -0.3, -1.0), "n": Vector3(0.0, -1.0, 0.0)},  # palm down, laying the belt on the tray
+	"clear": {"f": Vector3(0.0, 0.3, -1.0), "n": Vector3(0.0, -1.0, 0.0)},  # thumb off the clip, hand up and forward out of the way
 	"slap": {"f": Vector3(0.0, -0.3, -1.0), "n": Vector3(0.7, -0.7, 0.0)},  # raised above / behind a handle, palm down toward it
 }
 const WRIST_BACK := 0.075
@@ -209,6 +213,14 @@ const WRIST_OFF := 0.03
 
 static func rig(def: Dictionary) -> Dictionary:
 	return ReloadRigs.RIGS.get(str(def.get("model", "")), {})
+
+
+## Phase easing: in (falls, speeds up) | out | io (default, smoothstep).
+static func ease(kind: String, u: float) -> float:
+	match kind:
+		"in": return u * u
+		"out": return 1.0 - (1.0 - u) * (1.0 - u)
+	return smoothstep(0.0, 1.0, u)
 
 
 ## A plan by id: PLANS here, then ReloadPlansMore.PLANS.

@@ -72,6 +72,11 @@ static func cut_box(glb: Node, box: AABB, part_name: String, whole := false) -> 
 	return null
 
 
+## A mag offset [pos, rot (euler)] about `pivot` as a gun-model transform.
+static func off_xf(pivot: Vector3, off: Array) -> Transform3D:
+	return Transform3D(Basis.from_euler(off[1]), pivot + (off[0] as Vector3)) * Transform3D(Basis.IDENTITY, -pivot)
+
+
 ## Node space -> gun-model space (the glb's parent).
 static func to_gun(n: Node, glb: Node) -> Transform3D:
 	var k := Transform3D.IDENTITY

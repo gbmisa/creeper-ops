@@ -12,6 +12,8 @@ var bone := -1
 var part: MeshInstance3D  # region-cut slide / bolt (static meshes), null if the rig has a bone or none
 var _part_base := Transform3D.IDENTITY
 var _part_k := Transform3D.IDENTITY
+var hinge: ReloadHinge  # rig "hinge": a part turned about a pivot by the phases' "open" (0..1), null if none
+var open := 0.0
 var _rig := {}
 var _def := {}
 var _k := Transform3D.IDENTITY
@@ -36,10 +38,10 @@ var hold_f = null  # FpArms: its finger / palm directions (gun space); null = th
 var hold_n = null
 
 
-## Null unless the gun has a ReloadAnims rig and a magazine that could be split out.
+## Null unless the gun has a ReloadAnims rig and a magazine (or shell, clip, rounds) that could be split out.
 static func make(glb: Node, def: Dictionary) -> ReloadTimeline:
 	var r := ReloadAnims.rig(def)
-	if r.is_empty() or def["action"] != "detachable":
+	if r.is_empty():
 		return null
 	var m := ReloadMag.split(glb, r)
 	if m == null:
@@ -58,6 +60,8 @@ static func make(glb: Node, def: Dictionary) -> ReloadTimeline:
 		if tl.part != null:
 			tl._part_base = tl.part.transform
 			tl._part_k = ReloadMag.to_gun(tl.part.get_parent(), glb)
+	tl.hinge = ReloadHinge.make(glb, r)
+	m.visible = not r.get("loose", false)  # a loose round rests hidden in the gun
 	return tl
 
 
@@ -76,6 +80,7 @@ func phase() -> String:
 ## secs: the logic's busy time (includes CHAMBER_TIME when empty). empty: chamber was empty at the start.
 func start(secs: float, empty: bool, fast: bool) -> void:
 	var plan: Dictionary = ReloadAnims.plan(_rig["plan"])
+	empty = empty and _def["action"] == "detachable"  # tube / en-bloc: no chamber time in the logic's seconds
 	var extra := TacticalConfig.CHAMBER_TIME if empty else 0.0
 	var base := maxf(secs - extra, 0.05)
 	var list: Array = []
@@ -96,7 +101,8 @@ func start(secs: float, empty: bool, fast: bool) -> void:
 				steps.append([p, float(p["w"]) * charge_t, true])
 		steps.append([list[i], float(list[i]["w"]) * base])
 	_phases.clear()
-	var pose := {"gp": Vector3.ZERO, "gr": Vector3.ZERO, "mag": "seat", "hl": "grip", "bolt": float(plan.get("empty_bolt", 0.0)) if empty else 0.0}
+	var pose := {"gp": Vector3.ZERO, "gr": Vector3.ZERO, "mag": plan.get("mag_from", "seat"), "hl": "grip", "open": 0.0,
+		"bolt": float(plan.get("empty_bolt", 0.0)) if empty else 0.0}
 	var at := 0.0
 	var shift: Array = _rig.get("pose_shift", [Vector3.ZERO, Vector3.ZERO])
 	for s in steps:
@@ -153,10 +159,7 @@ func _sample() -> void:
 		_put_rest()
 		return
 	var u := clampf((t - float(ph["t0"])) / maxf(float(ph["t1"]) - float(ph["t0"]), 0.0001), 0.0, 1.0)
-	match ph["ease"]:
-		"in": u = u * u
-		"out": u = 1.0 - (1.0 - u) * (1.0 - u)
-		_: u = smoothstep(0.0, 1.0, u)
+	u = ReloadAnims.ease(str(ph["ease"]), u)
 	var a: Dictionary = ph["from"]
 	var b: Dictionary = ph["to"]
 	gun_pos = (a["gp"] as Vector3).lerp(b["gp"], u)
@@ -169,9 +172,15 @@ func _sample() -> void:
 	var pv: Vector3 = _rig["pivot"]
 	var q := Quaternion.from_euler(m0[1]).slerp(Quaternion.from_euler(m1[1]), u)
 	mag_xf = Transform3D(Basis(q), pv + (m0[0] as Vector3).lerp(m1[0], u)) * Transform3D(Basis.IDENTITY, -pv)
+	open = lerpf(a["open"], b["open"], u)
+	var on_h: bool = hinge != null and _rig.get("mag_on_hinge", false)  # revolver: the rounds ride the cylinder
+	if on_h:
+		mag_xf = hinge.xf(open) * mag_xf
+	if _rig.get("loose", false):  # a loose round: shown only between the pouch and the gun
+		mag.visible = not (a["mag"] == "seat" and b["mag"] == "seat")
 	# a hand on the mag holds it where the phase starts / ends, so it lets go of a dropped mag instead of riding it down
-	var h0 := _anchor(a["hl"], _mag_at(m0))
-	var h1 := _anchor(b["hl"], _mag_at(m1))
+	var h0 := _anchor(a["hl"], _hx(a, m0, on_h))
+	var h1 := _anchor(b["hl"], _hx(b, m1, on_h))
 	hand_l = (h0[0] as Vector3).lerp(h1[0], u)
 	hand_f = (h0[1] as Vector3).lerp(h1[1], u).normalized()
 	hand_n = (h0[2] as Vector3).lerp(h1[2], u).normalized()
@@ -182,7 +191,9 @@ func _put_rest() -> void:
 	gun_pos = Vector3.ZERO
 	gun_rot = Vector3.ZERO
 	bolt = 0.0
+	open = 0.0
 	mag_xf = Transform3D.IDENTITY
+	mag.visible = not _rig.get("loose", false)
 	var h := _anchor("grip")
 	hand_l = h[0]
 	hand_f = h[1]
@@ -194,19 +205,21 @@ func _mag_off(state: String) -> Array:
 	return [Vector3.ZERO, Vector3.ZERO] if state == "seat" else _rig[state]
 
 
-## The mag offset [pos, rot] (about the rig pivot) as a gun-model transform.
-func _mag_at(off: Array) -> Transform3D:
-	var pv: Vector3 = _rig["pivot"]
-	return Transform3D(Basis.from_euler(off[1]), pv + (off[0] as Vector3)) * Transform3D(Basis.IDENTITY, -pv)
+## The frame a pose's hand anchor moves with: the hinged part for "lid", the mag (on the hinge if it rides it) else.
+func _hx(pose: Dictionary, m: Array, on_h: bool) -> Transform3D:
+	if pose["hl"] == "lid":
+		return hinge.xf(pose["open"])
+	return hinge.xf(pose["open"]) * ReloadMag.off_xf(_rig["pivot"], m) if on_h else ReloadMag.off_xf(_rig["pivot"], m)
 
 
 ## [wrist target, finger dir, palm dir] for a left-hand anchor (gun-model space); mxf = the mag's transform for "mag".
 func _anchor(name: String, mxf := Transform3D.IDENTITY) -> Array:
 	if name == "let":  # the hand stays where it let go of the mag (its "slip" pose) while the mag falls away
-		return _anchor("mag", _mag_at(_rig["slip"]))
+		return _anchor("mag", ReloadMag.off_xf(_rig["pivot"], _rig["slip"]))
 	var p: Vector3
 	match name:
 		"mag": p = mxf * (_rig["hold"] as Vector3)
+		"lid": p = mxf * (_rig["lid_hand"] as Vector3)  # on the hinged part (PKM cover): rides it open / shut
 		"charge": p = (_rig["charge"] as Vector3) + (_rig["travel"] as Vector3) * bolt
 		"grip":
 			var pistol: bool = _def["class"] == "pistol"
@@ -216,7 +229,7 @@ func _anchor(name: String, mxf := Transform3D.IDENTITY) -> Array:
 	var hd: Dictionary = _rig.get("hands", {}).get(name, ReloadAnims.HANDS[name])
 	var f: Vector3 = (hd["f"] as Vector3).normalized()
 	var n: Vector3 = (hd["n"] as Vector3).normalized()
-	if name == "mag":
+	if name == "mag" or name == "lid":
 		f = mxf.basis * f
 		n = mxf.basis * n
 	return [p - f * ReloadAnims.WRIST_BACK - n * ReloadAnims.WRIST_OFF, f, n]
@@ -225,6 +238,8 @@ func _anchor(name: String, mxf := Transform3D.IDENTITY) -> Array:
 ## Gun-model offsets onto the Mag node and the charging bone or part (each in its parent's space).
 func _apply() -> void:
 	mag.transform = _k.affine_inverse() * mag_xf * _k * _base
+	if hinge != null:
+		hinge.apply(open)
 	if bone >= 0:
 		var tb := Transform3D(Basis.IDENTITY, (_rig["travel"] as Vector3) * bolt)
 		skel.set_bone_global_pose(bone, _k.affine_inverse() * tb * _k * _bone_rest)

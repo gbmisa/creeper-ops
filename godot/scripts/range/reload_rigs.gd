@@ -148,6 +148,48 @@ const RIGS := {
 		"drop": [Vector3(0.0, -0.55, -0.02), Vector3(1.0, 0.0, 0.4)],
 		"pouch_hand": Vector3(-0.15, -0.5, 0.22),
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},
+	"shotgun": {"plan": "tube", "loose": true,  # one shell per press; the shell rests hidden in the receiver over the port
+		"mag_body": [Vector3(0.0, 0.05, 0.03), Vector3(0.02, 0.02, 0.065), Vector3.ZERO, 0],  # shell (the glb's shell material)
+		"pivot": Vector3(0.0, 0.04, -0.005), "hold": Vector3(0.0, 0.035, 0.075),  # palm under the shell's base, thumb pushes
+		"near": [Vector3(0.0, -0.08, 0.04), Vector3(0.35, 0.0, 0.0)],  # under the loading port, nose tipped up into it
+		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
+		"hands": {"mag": {"f": Vector3(0.0, 0.3, -1.0), "n": Vector3(0.0, 1.0, 0.0)}}},
+	"garand": {"plan": "enbloc",  # Magazine bone = the clip + 8 rounds in the receiver (split by weight)
+		"pivot": Vector3(-0.005, 0.004, 0.227), "hold": Vector3(-0.005, 0.085, 0.235),  # palm above the clip, thumb on the rounds
+		"ping": [Vector3(0.03, 0.16, 0.03), Vector3(0.6, 0.0, 0.8)],
+		"drop": [Vector3(0.1, -0.5, 0.1), Vector3(1.5, 0.0, 1.0)],
+		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
+		"near": [Vector3(0.0, 0.06, 0.0), Vector3.ZERO],
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "clear_hand": Vector3(-0.09, 0.12, 0.10),
+		"hands": {"mag": {"f": Vector3(1.0, -0.3, -0.3), "n": Vector3(0.0, -1.0, 0.0)}},  # from the left, fingers across the receiver
+		"pose_shift": [Vector3(0.0, -0.04, -0.12), Vector3.ZERO]},  # receiver out of the face
+	"revolver": {"plan": "cylinder", "mag_on_hinge": true,  # cylinder cut as a hinged part; rounds = a box inside it
+		"hinge": {"box": AABB(Vector3(-0.023, 0.007, 0.007), Vector3(0.046, 0.048, 0.053)), "whole": true,
+			"pivot": Vector3(-0.008, -0.005, 0.03), "axis": Vector3(0.0, 0.0, 1.0), "angle": 1.5},  # crane: swings out left
+		"mag_body": [Vector3(0.0, 0.031, 0.034), Vector3(0.03, 0.03, 0.05), Vector3.ZERO, 2],
+		"pivot": Vector3(0.0, 0.031, 0.034), "hold": Vector3(-0.02, 0.0, 0.034),  # fingers under the cylinder's left side, thumb pushes it out
+		# mag offsets are in the open cylinder's frame (turned 1.5 rad about Z): its "down" is about -X
+		"slip": [Vector3(0.0, 0.0, 0.05), Vector3.ZERO],
+		"drop": [Vector3(-0.5, -0.04, 0.12), Vector3(0.0, 0.0, 1.0)],
+		"pouch": [Vector3(-0.43, 0.09, 0.2), Vector3(0.5, 0.0, 0.5)],
+		"near": [Vector3(0.0, 0.0, 0.07), Vector3.ZERO],
+		"pouch_hand": Vector3(-0.12, -0.46, 0.18),
+		"hands": {"mag": {"f": Vector3(0.0, 0.0, -1.0), "n": Vector3(1.0, 0.0, 0.0)}},
+		"pose_shift": [Vector3(0.0, -0.04, -0.10), Vector3.ZERO]},  # pistol out from the face: the hand on the cylinder
+	"pkm": {"plan": "belt",  # single mesh: the box (whole parts under y 0.02), the feed cover hinged at its front
+		"mag_box": AABB(Vector3(-0.015, -0.145, -0.085), Vector3(0.07, 0.165, 0.147)), "mag_parts": true,
+		"hinge": {"box": AABB(Vector3(-0.03, 0.10, -0.095), Vector3(0.06, 0.025, 0.29)), "whole": true,
+			"pivot": Vector3(0.0, 0.112, -0.09), "axis": Vector3(1.0, 0.0, 0.0), "angle": -0.8},  # rear lifts
+		"pivot": Vector3(0.02, 0.018, -0.075), "hold": Vector3(-0.015, -0.06, -0.01),  # palm on the box's left face
+		"slip": [Vector3(0.0, -0.03, 0.0), Vector3.ZERO],
+		"out": [Vector3(-0.02, -0.14, 0.02), Vector3(0.2, 0.0, 0.0)],
+		"near": [Vector3(-0.02, -0.08, 0.0), Vector3(0.15, 0.0, 0.0)],
+		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
+		"drop": [Vector3(0.0, -0.55, -0.02), Vector3(1.0, 0.0, 0.4)],
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "lid_hand": Vector3(0.0, 0.135, 0.15), "tray_hand": Vector3(0.0, 0.13, 0.02),
+		"flip_hand": Vector3(-0.02, 0.19, 0.13),
+		"charge": Vector3(0.045, 0.058, 0.05), "travel": Vector3(0.0, 0.0, 0.08),
+		"pose_shift": [Vector3(0.0, 0.0, -0.06), Vector3.ZERO]},
 	"p90": {"plan": "bullpup", "pivot": Vector3(0.0, 0.025, -0.125), "hold": Vector3(-0.01, 0.045, 0.12),
 		"rock": [Vector3.ZERO, Vector3(-0.22, 0.0, 0.0)],
 		"slip": [Vector3(0.0, 0.05, 0.06), Vector3(-0.3, 0.0, 0.0)],
