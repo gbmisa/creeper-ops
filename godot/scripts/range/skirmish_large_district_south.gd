@@ -24,10 +24,10 @@ static func _house(l: SkirmishLargeLayout, x0: float, z0: float) -> void:
 		"brick", col)
 	# upper floor: slab with a ramp lane along the west wall, walls with windows, roof slab
 	var lane_x := r.position.x + 0.2 + 2.0
-	var top_z := r.position.y + 4.0
+	var top_z := r.position.y + 1.5   # F137: ramp was 1.5 m run for 3 m rise (63 deg, unclimbable); now 4.5 m run (34 deg) with a 1.5 m landing
 	SkirmishParts.slab(l, Rect2(r.position.x, r.position.y, r.size.x, top_z - r.position.y), h, 0.2, "concrete", Color(0.4, 0.4, 0.38))
 	SkirmishParts.slab(l, Rect2(lane_x, top_z, r.end.x - lane_x, r.end.y - top_z), h, 0.2, "concrete", Color(0.4, 0.4, 0.38))
-	SkirmishParts.ramp(l, Vector3(lane_x - 1.0, 0.0, r.end.y - 1.5), Vector3(lane_x - 1.0, h, top_z), 2.0, Color(0.45, 0.45, 0.42))
+	SkirmishParts.ramp(l, Vector3(lane_x - 1.0, 0.0, r.end.y - 1.0), Vector3(lane_x - 1.0, h, top_z), 2.0, Color(0.45, 0.45, 0.42))
 	SkirmishParts.building(l, r, h, h,
 		{"s": [[x0 + 3.0, x0 + 5.0, 1.0]], "n": [[x0 + 3.0, x0 + 5.0, 1.0]], "w": [[z0 + 2.0, z0 + 4.0, 1.0]]},
 		"brick", col)

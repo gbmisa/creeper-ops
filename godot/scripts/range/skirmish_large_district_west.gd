@@ -39,9 +39,10 @@ static func _bridges(l: SkirmishLargeLayout) -> void:
 	SkirmishParts.slab(l, Rect2(-93.0, -4.0, 16.0, 8.0), 0.7, 0.4, "wood_plank", Color(0.4, 0.3, 0.2))
 	SkirmishParts.ramp(l, Vector3(-97.0, 0.0, 0), Vector3(-93.0, 0.7, 0), 8.0, Color(0.4, 0.36, 0.24))
 	SkirmishParts.ramp(l, Vector3(-73.0, 0.0, 0), Vector3(-77.0, 0.7, 0), 8.0, Color(0.4, 0.36, 0.24))
-	SkirmishParts.slab(l, Rect2(-86.5, -41.5, 3.0, 3.0), 0.7, 0.3, "wood_plank", Color(0.42, 0.32, 0.22))
+	# F137: the deck now spans bank to bank (banks are 0.6 m high at x -90.2..-89 and -81..-79.8) and the ramps start outside them
+	SkirmishParts.slab(l, Rect2(-90.2, -41.5, 10.4, 3.0), 0.7, 0.3, "wood_plank", Color(0.42, 0.32, 0.22))
 	for sx in [-1.0, 1.0]:
-		SkirmishParts.ramp(l, Vector3(-85 + sx * 5.0, 0.0, -40), Vector3(-85 + sx * 1.5, 0.7, -40), 3.0, Color(0.4, 0.36, 0.24))
+		SkirmishParts.ramp(l, Vector3(-85 + sx * 9.6, 0.0, -40), Vector3(-85 + sx * 5.2, 0.7, -40), 3.0, Color(0.4, 0.36, 0.24))
 
 
 ## Birch trunks as thin colliders (deterministic scatter; avoids river, bridges, pump house, extract).
