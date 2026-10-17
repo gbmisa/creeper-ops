@@ -30,6 +30,9 @@ var hand_l := Vector3.ZERO  # left wrist target
 var hand_f := Vector3(0, 0, -1)  # left fingers / palm-facing directions (FpArms.solve)
 var hand_n := Vector3(0, 1, 0)
 var bolt := 0.0
+var hold_l = null  # FpArms: gun-space point the support hand holds at rest (grip_l slid into reach); null = grip_l
+var hold_f = null  # FpArms: its finger / palm directions (gun space); null = the defaults below
+var hold_n = null
 
 
 ## Null unless the gun has a ReloadAnims rig and a magazine that could be split out.
@@ -192,7 +195,8 @@ func _anchor(name: String) -> Array:
 		"charge": p = (_rig["charge"] as Vector3) + (_rig["travel"] as Vector3) * bolt
 		"grip":
 			var pistol: bool = _def["class"] == "pistol"
-			return [_def["grip_l"], Vector3(0, 0, -1), Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)]
+			return [_def["grip_l"] if hold_l == null else hold_l, Vector3(0, 0, -1) if hold_f == null else hold_f,
+				(Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)) if hold_n == null else hold_n]
 		_: p = _rig[name + "_hand"]  # pouch, stop, slap: fixed points per rig
 	var hd: Dictionary = _rig.get("hands", {}).get(name, ReloadAnims.HANDS[name])
 	var f: Vector3 = (hd["f"] as Vector3).normalized()

@@ -78,7 +78,7 @@ static func _one(t: RangeTest, id: String, label: String, fast: bool, empty: boo
 	if tl.part != null:
 		t.check(n + ": slide part home", tl.part.transform.is_equal_approx(part_rest))
 	var gt := gun.global_transform
-	var dl: float = arms.target["l"].distance_to(gt * (def["grip_l"] as Vector3))
+	var dl: float = arms.target["l"].distance_to(arms.left_hold(gt))  # grip_l, slid back if out of reach
 	var dr: float = arms.target["r"].distance_to(gt * (def["grip_r"] as Vector3))
 	t.check(n + ": hands back on their grips (%.4f / %.4f m)" % [dl, dr], dl < 0.001 and dr < 0.001)
 	cam.free()
