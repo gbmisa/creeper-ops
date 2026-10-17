@@ -28,6 +28,8 @@ const ROWS := {
 	"clip_garand": {"name": "M1 en-bloc clip", "kind": "mag", "w": 1, "h": 1, "kg": 0.1, "gun": "garand"},
 	"rig_chest": {"name": "Chest rig", "kind": "rig", "w": 3, "h": 2, "kg": 0.8, "grid": [4, 2]},
 	"rig_assault": {"name": "Assault rig", "kind": "rig", "w": 3, "h": 3, "kg": 1.2, "grid": [6, 3]},  # Skirmish deploy swaps it in when spares don't fit
+	"rig_plate": {"name": "Plate carrier rig", "kind": "rig", "w": 3, "h": 3, "kg": 1.6, "grid": [8, 3]},
+	"rig_heavy": {"name": "Heavy assault rig", "kind": "rig", "w": 4, "h": 3, "kg": 2.2, "grid": [8, 4]},
 	"pack_small": {"name": "Small backpack", "kind": "backpack", "w": 3, "h": 3, "kg": 0.9, "grid": [4, 4]},
 	"pack_big": {"name": "Large backpack", "kind": "backpack", "w": 4, "h": 4, "kg": 1.6, "grid": [5, 6]},
 	# Meds (QuickUse): use = seconds with the hands busy; heal = fraction of each living zone's max HP

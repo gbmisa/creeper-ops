@@ -20,6 +20,8 @@ var _guns: Array = []
 var _spares: Array = []
 var _rotating := false
 var pick_slot := ""   # F145: the slot whose parts are listed
+var mags_mode := false  # F147: the Magazines row is picked: the list shows this gun's mags
+var note := ""
 var _slot_press := -1  # slot row pressed: dragging away from it pulls the fitted part off
 var _press_pos := Vector2.ZERO
 
@@ -75,8 +77,7 @@ func _slot_rect(i: int) -> Rect2:
 	return Rect2(size.x - SIDE_W - 20, 90 + i * (SLOT_ROW + 6), SIDE_W, SLOT_ROW)
 
 
-## F145: every part for the picked slot that fits the selected gun: bag spares first, then catalogue ids not in
-## the bags ({"id": id, "catalog": true}; made from supply when clicked). The fitted part is left out.
+## F145: parts for the picked slot (bag spares, then supply); F147: this gun's mags when the Magazines row is picked.
 func choices() -> Array:
 	var g := gun_item()
 	var slots := slot_list()
@@ -84,24 +85,15 @@ func choices() -> Array:
 		return []
 	if not (pick_slot in slots):
 		pick_slot = slots[0]
-	var gdef: Dictionary = (g["gun"] as Gun).def
-	var out := []
-	var seen := {}
-	for it in ui.spares():
-		var id: String = it["id"]
-		if AttachmentDefs.ROWS[id]["slot"] == pick_slot and AttachmentDefs.why_not(gdef, id) == "":
-			out.append(it)
-			seen[id] = true
-	var fitted: Dictionary = (g["gun"] as Gun).fit
-	for id in AttachmentDefs.ROWS:
-		if AttachmentDefs.ROWS[id]["slot"] == pick_slot and not seen.has(id) and fitted.get(pick_slot, "") != id \
-				and AttachmentDefs.why_not(gdef, id) == "":
-			out.append({"id": id, "catalog": true})
-	return out
+	return GunsmithMags.choices(g["gun"]) if mags_mode else GunsmithMags.parts(g["gun"], ui.spares(), pick_slot)
+
+
+func _mag_rect() -> Rect2:
+	return Rect2(size.x - SIDE_W - 20, 90 + slot_list().size() * (SLOT_ROW + 6), SIDE_W, SLOT_ROW)
 
 
 func _spare_rect(i: int) -> Rect2:
-	var top := 90 + slot_list().size() * (SLOT_ROW + 6) + 50
+	var top := 90 + slot_list().size() * (SLOT_ROW + 6) + 100
 	return Rect2(size.x - SIDE_W - 20, top + i * (SPARE_ROW + 4), SIDE_W, SPARE_ROW)
 
 
@@ -140,13 +132,25 @@ func _press(p: Vector2) -> void:
 	for i in slots.size():
 		if _slot_rect(i).has_point(p):
 			pick_slot = slots[i]
+			mags_mode = false
+			note = ""
 			_slot_press = i
 			_press_pos = p
 			_after()
 			return
+	if not slots.is_empty() and _mag_rect().has_point(p):
+		mags_mode = true
+		note = ""
+		_after()
+		return
 	for i in _spares.size():
 		if _spare_rect(i).has_point(p):
 			var it: Dictionary = _spares[i]
+			if it.has("mag"):
+				note = GunsmithMags.give(ui.weapons.inv, it["id"])
+				ui.inv_ui._settle()
+				_after()
+				return
 			if it.has("catalog"):
 				it = ui.weapons.inv.make(it["id"])
 			ui.fit(it, gun_item())
@@ -216,7 +220,7 @@ func _draw() -> void:
 	for i in slots.size():
 		var r := _slot_rect(i)
 		var fitted: Dictionary = (gi["gun"] as Gun).fit
-		var picked: bool = slots[i] == pick_slot
+		var picked: bool = slots[i] == pick_slot and not mags_mode
 		draw_rect(r, Color(0.2, 0.26, 0.22, 0.95) if picked else Color(0.08, 0.09, 0.07, 0.95))
 		draw_rect(r, Color(0.46, 0.49, 0.33, 0.9 if picked else 0.6), false, 2.0 if picked else 1.0)
 		draw_string(font, r.position + Vector2(10, 18), String(slots[i]).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiKit.DIM)
@@ -224,23 +228,16 @@ func _draw() -> void:
 		if AttachMarks.is_part(drag):  # F143: only the matching slot of a compatible gun is green
 			AttachMarks.mark(self, r, AttachMarks.fits(gi, drag, slots[i]))
 		draw_string(font, r.position + Vector2(10, 37), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, UiKit.TEXT if fitted.has(slots[i]) else UiKit.DIM)
-	var sy := 90 + slots.size() * (SLOT_ROW + 6) + 38
-	draw_string(font, Vector2(size.x - SIDE_W - 20, sy), ("AVAILABLE: %s" % pick_slot.to_upper()) if pick_slot != "" else "AVAILABLE", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, UiKit.DIM)
+	if not slots.is_empty():
+		GunsmithMags.draw_button(self, font, _mag_rect(), mags_mode, note)
+	var sy := 90 + slots.size() * (SLOT_ROW + 6) + 88
+	draw_string(font, Vector2(size.x - SIDE_W - 20, sy), "MAGAZINES" if mags_mode else (("AVAILABLE: %s" % pick_slot.to_upper()) if pick_slot != "" else "AVAILABLE"), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, UiKit.DIM)
 	for i in _spares.size():
 		if not drag.is_empty() and _spares[i].has("uid") and _spares[i]["uid"] == drag["uid"]:
 			continue
-		_draw_part(font, _spare_rect(i), _spares[i])
+		GunsmithMags.draw_row(self, font, _spare_rect(i), _spares[i])
 	if _spares.is_empty():
 		draw_string(font, Vector2(size.x - SIDE_W - 20, sy + 24), "Nothing else fits this slot" if not slots.is_empty() else "No slots on this gun", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, UiKit.DIM)
 	if not drag.is_empty():
 		var mp := get_local_mouse_position()
-		_draw_part(font, Rect2(mp - Vector2(SIDE_W * 0.5, SPARE_ROW * 0.5), Vector2(SIDE_W, SPARE_ROW)), drag, 0.85)
-
-
-func _draw_part(font: Font, r: Rect2, it: Dictionary, alpha := 1.0) -> void:
-	var col: Color = InventoryView.KIND_COL["attach"]
-	draw_rect(r, Color(col.r, col.g, col.b, alpha))
-	draw_rect(r, Color(0.9, 0.9, 0.8, alpha * 0.6), false, 1.0)
-	var row: Dictionary = AttachmentDefs.ROWS[it["id"]]
-	var tag := "supply" if it.has("catalog") else "in bag"
-	draw_string(font, r.position + Vector2(8, 22), "%s  (%s)" % [row["name"], tag], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(1, 1, 1, alpha))
+		GunsmithMags.draw_row(self, font, Rect2(mp - Vector2(SIDE_W * 0.5, SPARE_ROW * 0.5), Vector2(SIDE_W, SPARE_ROW)), drag, 0.85)

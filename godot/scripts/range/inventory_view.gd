@@ -55,7 +55,8 @@ func regions() -> Array:
 			out.append({"loc": g[0], "rect": Rect2(290, y + 18, gs.x * C, gs.y * C), "slot": false, "title": g[1]})
 			y += 18 + gs.y * C + 10
 	var gr := inv.grid_size("ground")
-	out.append({"loc": "ground", "rect": Rect2(540, 78, gr.x * C, gr.y * C), "slot": false, "title": "GROUND (within 2 m)"})
+	var gx := maxf(540.0, 290.0 + inv.grid_size("rig_g").x * C + 34.0)  # F148: an 8-wide rig pushes the ground panel right
+	out.append({"loc": "ground", "rect": Rect2(gx, 78, gr.x * C, gr.y * C), "slot": false, "title": "GROUND (within 2 m)"})
 	return out
 
 
