@@ -5,15 +5,18 @@ class_name RangeMaps
 ## It is navigation state, not per-player state.
 
 const SCENES := { "range": "res://scenes/firing_range.tscn", "skirmish": "res://scenes/skirmish.tscn",
-	"skirmish_large": "res://scenes/skirmish_large.tscn", "staging": "res://scenes/staging.tscn" }   # R5: ~220 m four-district Skirmish
+	"skirmish_large": "res://scenes/skirmish_large.tscn", "staging": "res://scenes/staging.tscn",   # R5: ~220 m four-district Skirmish
+	"town": "res://scenes/town.tscn" }
 
-
-## Either Skirmish map (the compound one or the large one).
-static func is_skirmish(map: String) -> bool:
-	return map == "skirmish" or map == "skirmish_large"
+## Skirmish-rules maps (kit deploy, extraction): the compound, the large map (R5) and the Town (MAP-3).
+const SKIRMISH_MAPS := ["skirmish", "skirmish_large", "town"]
 
 ## Maps where the player's reloads never run dry (so reload animations can be watched).
 const INFINITE_AMMO := ["range"]
+
+static func is_skirmish(map: String) -> bool:
+	return map in SKIRMISH_MAPS
+
 
 static var pending := "range"
 ## F139: the Skirmish map the loadout room's deploy board starts on (title / truck set it, then go("staging")).

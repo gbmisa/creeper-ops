@@ -141,6 +141,11 @@ func _on_reload_mark(mark_name: String) -> void:
 	if mark_name == "mag_in" and weapons != null and _gun != null and _gun.busy_kind == "reload":  # not on a cancel (stop() flushes marks)
 		weapons.mag_in_early = true
 		weapons.gun_sound("mag_in")
+	elif mark_name == "bolt":  # empty bolt-action reload (ReloadPlansMore "boltbox"): the right hand works the bolt
+		if bolt != null:
+			bolt.start(reload_tl.mark_next_len)
+		elif _cycle_clip != "":
+			_play(_cycle_clip, reload_tl.mark_next_len / 0.65, 0.35)
 
 
 func _on_action(kind: String, secs: float) -> void:

@@ -5,13 +5,21 @@ extends Node3D
 ## the ReloadTimeline (FB-R) on guns that have one.
 ## Fingers are curled around the grip. Everything is solved per frame from the gun model's transform.
 
-const ROOT_POS := Vector3(0, -1.62, -0.22)  # shoulders land ~0.2 m out, 0.2 below and 0.15 ahead of the eye
+const ROOT_POS := Vector3(0, -1.62, -0.02)  # shoulders land ~0.2 m out, 0.2 below and 0.04 behind the eye
+const MODEL := "res://assets/models/operative/arms_fp.glb"  # body.glb skeleton + Arms only, arms 1.3x longer (Blender)
 const POLE := Vector3(0.45, -1.0, 0.5)  # elbows hang down and out (x mirrored per side), a little back
-const MAX_LEAN := 0.3
+const MAX_LEAN := 0.12  # last resort only (the support hand slides first): shoulders stay out of the view
+const SLIDE_REACH := 0.93  # support hand at the hold: slid back along the gun until this share of the arm reaches it
+const SLIDE_MAX := 0.3  # m, at most
+## Support hand on a handguard (Gregory's hand-posed M4A1, fit from its mesh): wrist 4 cm left of grip_l, fingers wrapped
+## across under the handguard to the right, palm up. Not pistols / SMGs (vertical or front grips).
+const WRAP_OFF := Vector3(-0.041, -0.018, -0.032)
+const WRAP_F := Vector3(0.91, 0.20, -0.36)
+const WRAP_N := Vector3(-0.20, 0.98, 0.03)
+const NO_WRAP := ["pistol", "smg"]
 const CURL := [1.0, 1.15, 0.8]  # finger joint 1..3 curl (rad) around the grip
 const FINGERS := ["index", "middle", "ring", "pinky"]
 const PALM_DOWN := Vector3(0, -1, 0)  # rest pose: palms down, fingers along the bone's +Y
-const FOREARM_ROLL := 0.5  # share of the hand's roll the forearm takes (Gregory's M4A1 pose ~0.54): no pinched wrist
 
 var skel: Skeleton3D
 var _sides := {}
@@ -22,7 +30,7 @@ var bow_rig: BowRig  # F146: the right hand rides the bow string
 var bolt: BoltCycle  # set while the held gun is a bolt-action: the right hand works the handle
 var reload_tl: ReloadTimeline  # FB-R: set when the held gun has a reload timeline; it drives the left hand
 var target := {}  # side -> world position of the wrist the last solve aimed at (tests)
-var roll := 0.0  # FOREARM_ROLL on the viewmodel arms; 0 = the whole roll at the wrist (bots, as before)
+var roll := 0.0  # viewmodel arms: ArmTwist.SHARE[0] (+ twist bones); 0 = the whole roll at the wrist (bots, as before)
 
 
 ## own_skel: rig an existing skeleton (the enemy bots' bodies) instead of building the viewmodel arms.
@@ -33,11 +41,10 @@ func _init(own_skel: Skeleton3D = null) -> void:
 		for side in ["r", "l"]:
 			_sides[side] = _rig(side)
 		return
-	roll = FOREARM_ROLL
 	position = ROOT_POS
 	rotation.y = PI
 	scale = Vector3.ONE * FpBody.SCALE
-	var scene := (load(FpBody.MODEL) as PackedScene).instantiate() as Node3D
+	var scene := (load(MODEL) as PackedScene).instantiate() as Node3D
 	add_child(scene)
 	for ap in scene.find_children("*", "AnimationPlayer", true, false):
 		ap.free()
@@ -45,8 +52,11 @@ func _init(own_skel: Skeleton3D = null) -> void:
 		(mi as MeshInstance3D).visible = mi.name == "Arms"
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	skel = scene.find_children("*", "Skeleton3D", true, false)[0]
+	var twist := ArmTwist.build(skel, scene.find_children("Arms", "MeshInstance3D", true, false)[0])
+	roll = ArmTwist.SHARE[0]
 	for side in ["r", "l"]:
 		_sides[side] = _rig(side)
+		_sides[side]["twist"] = twist[side]
 
 
 func _rig(side: String) -> Dictionary:
@@ -100,23 +110,21 @@ func update(gun: Node3D, delta: float) -> void:
 	visible = gun.visible
 	_reload = maxf(0.0, _reload - delta)
 	var gt := gun.global_transform
-	var pistol: bool = _def["class"] == "pistol"
 	var fwd := Vector3(0, 0, -1)
 	var mag_w := 0.0
 	if _reload > 0.0:  # left hand fetches the mag early in the reload and stays through the middle
 		var t := 1.0 - _reload / _reload_len
 		mag_w = smoothstep(0.0, 0.2, t) * (1.0 - smoothstep(0.8, 1.0, t))
-	var left_t: Vector3 = (_def["grip_l"] as Vector3).lerp(_def["mag_l"], mag_w)
-	var left_n := Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)
-	var left_f := fwd
+	var hold := _hold_frame()
+	var left_t: Vector3 = (hold[0] as Vector3).lerp(_def["mag_l"], mag_w)
+	var left_f: Vector3 = hold[1]
+	var left_n: Vector3 = hold[2]
 	if reload_tl != null:
 		mag_w = 0.0
 		if reload_tl.playing():
 			left_t = reload_tl.hand_l
 			left_f = reload_tl.hand_f
 			left_n = reload_tl.hand_n
-		else:
-			left_t = _def["grip_l"]
 	var grip_r: Vector3 = _def["grip_r"]
 	if bolt != null:
 		grip_r = bolt.hand_r(grip_r)
@@ -124,9 +132,42 @@ func update(gun: Node3D, delta: float) -> void:
 		grip_r = bow_rig.hand_r(grip_r)
 	var pos_r := gt * grip_r
 	var pos_l := gt * left_t
+	if reload_tl == null:
+		pos_l = left_hold(gt).lerp(pos_l, mag_w)
+	else:
+		reload_tl.hold_l = gt.affine_inverse() * left_hold(gt)  # its "grip" anchor: no pop at the start / end
+		reload_tl.hold_f = hold[1]
+		reload_tl.hold_n = hold[2]
+		if not reload_tl.playing():
+			pos_l = gt * reload_tl.hold_l
 	_lean_in(pos_r, pos_l)
 	solve("r", pos_r, gt.basis * fwd, gt.basis * Vector3(-1, 0, 0), 1.0)
 	solve("l", pos_l, gt.basis * left_f, gt.basis * left_n, 1.0 - mag_w * 0.7)
+
+
+## World point the support hand holds at rest: grip_l, slid back along the gun (toward the butt, up to SLIDE_MAX)
+## when the arm can't reach it from the shoulder (long guns at the hip: sniper, Mosin, PKM...).
+func left_hold(gt: Transform3D) -> Vector3:
+	position = ROOT_POS
+	var p: Vector3 = gt * (_hold_frame()[0] as Vector3)
+	var a: Dictionary = _sides["l"]
+	var sh: Vector3 = skel.global_transform * a["rest_up"].origin
+	var reach: float = (a["l1"] + a["l2"]) * FpBody.SCALE * SLIDE_REACH
+	var back := gt.basis.z.normalized()
+	var d := p - sh
+	var b := d.dot(back)
+	var c := d.length_squared() - reach * reach
+	if c <= 0.0 or b * b - c < 0.0:  # in reach already, or never along this line (the lean takes the rest)
+		return p
+	return p + back * clampf(-b - sqrt(b * b - c), 0.0, SLIDE_MAX)
+
+
+## Support hand at rest, gun space: [wrist point, finger dir, palm dir] (the wrap on handguard guns).
+func _hold_frame() -> Array:
+	var gl: Vector3 = _def["grip_l"]
+	if String(_def["class"]) in NO_WRAP:
+		return [gl, Vector3(0, 0, -1), Vector3(1, 0, 0) if _def["class"] == "pistol" else Vector3(0, 1, 0)]
+	return [gl + WRAP_OFF, WRAP_F.normalized(), WRAP_N.normalized()]
 
 
 ## Long guns put a hand beyond arm's reach: the shoulders lean toward the farther target (max MAX_LEAN).
@@ -193,6 +234,9 @@ func _roll_forearm(a: Dictionary, lo_b: Basis, hand_b: Basis, axis: Vector3) -> 
 	if a.has("tw"):
 		tw = float(a["tw"]) + wrapf(tw - float(a["tw"]), -PI, PI)
 	a["tw"] = tw
+	var ids: Array = a.get("twist", [])
+	for k in ids.size():  # twist bones: children of the lowerarm, rolled about its +Y (the forearm) by their extra share
+		skel.set_bone_pose_rotation(ids[k], Quaternion(Vector3.UP, tw * (float(ArmTwist.SHARE[k + 1]) - roll)))
 	return (Basis(axis, tw * roll) * lo_b).orthonormalized()
 
 

@@ -106,3 +106,119 @@ receiver, the press / pull has no travel; (2) every swing-in is side-on by 0.15-
 | sks | plain | 1 | 8 | 2 | 2 | 2 | 1 | 1 | Passes: brass shows, mag reads. Straight AR-style well on this model: AK rock reads oddly (tone down to <= 8 deg). Swing-in by 0.25 s. |
 | sks | fast | 1 | 7 | 2 | 1 | 2 | 1 | 1 | (a) `drop` 0.46 is a stow (hand keeps the mag), gone at 0.61: release ~0.35, fall 0.35-0.55. (b) Swing-in side-on by 0.15 s. (c) Plain rock note. |
 | sks | empty | 1 | 6 | 1 | 2 | 1 | 1 | 1 | (a) `pull` 2.35 -> `regrip` 2.45 hand moves ~1 cm on top of the receiver at the rear sight (no handle there): 6-8 cm along the side. (b) `seat` 1.95 -> `reach` 2.15 ~25 deg yaw + roll in 0.2 s: >= 0.35. (c) Forearms balloon 2.25-2.65 s. |
+
+## FB-R2 (2026-10-16, Opus judge = builder, Windows build; arms with the forearm twist bones, session B's empty-tail WIP)
+Sheets: `docs/art/reload/<gun>_<variant>.jpg`, 16 frames 0..secs, cropped to the working area (x 300-1600, y 250-900 of
+1600x900), labelled time + phase. Reference: EFT AKM / M4 / Mk17 / SR-25 / MP5 / P90 / M1911 / Glock / Saiga / SKS reloads from
+memory (no web tool), TRP timing. Known limits as before (short AK mag, frozen finger poses, no slide lock on the last shot).
+Right hand (not the brief's to fix, grip_r belongs to the orchestrator): in every rolled reload pose the right palm faces the
+camera with the grip in front of it, so it reads as cupping the grip rather than wrapping it (AK, MP5, Saiga most).
+
+Round 1 (judged on f18d7a9 = round-3 code + session B's WIP).
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| ak47 | plain | R2-1 | 8 | 2 | 1 | 2 | 1 | 2 | Stands. Twist bones: wrist reads natural at rock/out/hook. Hold point is the mag's bottom tip (fist on the end). |
+| ak47 | fast | R2-1 | 8 | 2 | 1 | 2 | 1 | 2 | Stands. Drop reads 0.55 / 0.68. |
+| ak47 | empty | R2-1 | 8 | 2 | 1 | 2 | 1 | 2 | Stands. Rack 2.46: forearm ~20 % of the lower left, hand over the receiver to the handle. |
+| m1911 | plain / fast / empty | R2-1 | 8 / 8 / 8 | | | | | | No change, no regression from the twist bones. |
+| glock18 | plain / fast / empty | R2-1 | 9 / 9 / 8 | | | | | | No change. HUD "Glock 18 put away" still in every frame (harness). |
+| mp5 | plain / fast | R2-1 | 8 / 8 | | | | | | Stand. |
+| mp5 | empty | R2-1 | 7 | 2 | 1 | 1 | 1 | 2 | Stands (structural: handle far forward on top; slap forearm crosses the view 2.09). |
+| p90 | plain / fast / empty | R2-1 | 8 / 8 / 8 | | | | | | Stand. Palm still covers the mag at lay/seat; at out 0.73 the hand is large in the upper centre. |
+| scarh | plain / fast | R2-1 | 8 / 8 | | | | | | Stand. |
+| scarh | empty | R2-1 | 7 | 2 | 1 | 1 | 1 | 2 | Up from 5 (WIP): hand on the lower's left above the well at reach 2.37, forearm low. (a) press travel not seen at 16 frames; (b) regrip 2.6 -> ready 2.84 swings ~40 deg in ~0.25 s. |
+| sr25 | plain / fast | R2-1 | 8 / 8 | | | | | | Stand. |
+| sr25 | empty | R2-1 | 6 | 1 | 1 | 1 | 1 | 2 | Up from 5. (a) reach 2.1 / regrip 2.31: the palm reads on top of the receiver (gun rolled, left side up) and the forearm covers the mag well: anchor ~3 cm lower and ~2 cm back. (b) forearm diagonal ~20 % of the view. |
+| saiga12 | plain | R2-1 | 8 | 2 | 2 | 1 | 1 | 2 | Stands. |
+| saiga12 | fast | R2-1 | 7 | 2 | 1 | 1 | 1 | 2 | (a) `drop` 0.57: the drum still in the hand (the hand's "mag" anchor follows the falling mag), falls free only at 0.72. Let go at the start of `drop`. |
+| saiga12 | empty | R2-1 | 6 | 1 | 2 | 1 | 1 | 1 | (a) reach 2.37-2.6: the charge pose has no pose_shift (WIP), so this long gun comes ~8 cm nearer the camera than in the mag change: receiver fills the upper right, forearm slab ~25 % of the lower left. Push the charge pose away. (b) Hand reads over the top of the receiver. |
+| sks | plain | R2-1 | 8 | 2 | 2 | 2 | 1 | 1 | Stands. |
+| sks | fast | R2-1 | 7 | 2 | 1 | 2 | 1 | 1 | (a) Same carried drop as saiga fast: in hand at 0.52, falling 0.65. |
+| sks | empty | R2-1 | 6 | 1 | 2 | 1 | 1 | 1 | (a) Same near charge pose as saiga: forearm slab ~25 % 2.31-2.52, hand over the top. |
+
+Round 2 (FB-R2). Changes: (1) a hand on the mag holds it at the phase's start / end mag pose, so it lets go of a dropped mag
+instead of riding it down; new `let` anchor (hand stays at the mag's `slip` pose); rifle plan fast: `drop` 0.14 -> 0.10 with the
+hand on `let`, `fetch` 0.07 -> 0.11 to the pouch (same total). (2) rig `charge_shift` ([gp, gr] for the empty-only charge poses):
+saiga12 / sks z -0.08 (as far off as their mag change). (3) sr25 catch hand 3 cm lower, 2 cm back. Re-rendered: the six below.
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| ak47 | fast | R2-2 | 8 | 2 | 2 | 2 | 1 | 1 | Drop now reads: hand open at the well (0.55), mag below it. Criterion 5 half point: paddle has no thumb (frozen fingers). |
+| saiga12 | fast | R2-2 | 8 | 2 | 2 | 1 | 1 | 2 | Up from 7: `drop` 0.57 drum falls below the open hand, gone by 0.72. |
+| sks | fast | R2-2 | 8 | 2 | 2 | 2 | 1 | 1 | Up from 7: mag falls free at 0.52. |
+| saiga12 | empty | R2-2 | 7 | 1 | 2 | 1 | 1 | 2 | Up from 6: rack pose now as far off as the mag change, reads as an overhand rack (fingers over the receiver 2.6-2.82). (a) Forearm still ~20 % of the lower left 2.37-2.84. (b) Fingers stand up above the receiver instead of wrapping it. |
+| sks | empty | R2-2 | 6 | 1 | 2 | 1 | 1 | 1 | (a) reach 2.31 / regrip 2.52: the fingers float 2-4 cm above the receiver top (the rifle "charge" frame points them up). Overhand frame: fingers down the right side, wrist above. (b) Two big sleeves (left lower-left, right lower-right) at 2.31. |
+| sr25 | empty | R2-2 | 7 | 1 | 1 | 1 | 2 | 2 | Up from 6: palm on the lower above the mag at reach / press 2.01-2.36, the press shows. (a) Fingers wrap over the receiver top, so it still reads partly "on top". |
+
+Round 3 (FB-R2, last). Tried and rejected: an overhand frame for the saiga12 / sks rack (fingers down the right side, wrist
+above): the forearm then crosses the middle of the view (~40 %). Kept: saiga12 charge point 2 cm lower (y 0.085 -> 0.065), sks
+3 cm lower (0.084 -> 0.054), so the fingers wrap the receiver top instead of standing 2-4 cm above it.
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| saiga12 | empty | R2-3 | 7 | 2 | 2 | 1 | 1 | 1 | Up a point on 1: palm on the receiver side, fingers over the top at pull 2.64. Open (structural): the left forearm still ~20 % of the lower left 2.4-2.9 (shared AK charge pose + arm length); no handle part on the mesh, so no visible handle travel. |
+| sks | empty | R2-3 | 7 | 2 | 2 | 1 | 1 | 1 | Up from 6: fingers wrap the receiver at 2.31-2.52. Open: both sleeves big at 2.31 (left lower-left, right lower-right). A per-gun rack pose (gun lower and further left) is the next lever. |
+
+Final after FB-R2 step 2: ak47 8/8/8, m1911 8/8/8, glock18 9/9/8, mp5 8/8/7, p90 8/8/8, scarh 8/8/7, sr25 8/8/7, saiga12 8/8/7,
+sks 8/8/7. Under 8: the five empty reloads (MP5 slap, SCAR / SR-25 catch, Saiga / SKS rack), each a structural arm-reach issue.
+
+## FB-R2 step 3: new reload groups
+M4A1 (`ar` plan, rig from a mesh probe: the curved mag is 8 slices under the well lip, cut as whole parts with the new rig
+flag `mag_parts`; bolt catch ~(-0.013, 0.022, 0.07); pose_shift as SCAR / SR-25). Reference: EFT M4A1 reloads from memory.
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| m4a1 | plain | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: mag out in the hand 0.51, new one tipped in 1.53, seated 1.7-1.87. Criterion 3: the right hand cups the grip (grip_r, orchestrator); the stock-side sleeve hangs under the gun 0.34-2.2. |
+| m4a1 | fast | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: the curved mag slides out and falls (0.23-0.47, very readable). Same right-hand note. |
+| m4a1 | empty | G-1 | 7 | 1 | 2 | 1 | 1 | 2 | (a) reach 1.97 / press: palm on the lower's left above the well, but the thumb press has no visible travel at 16 frames. (b) regrip 2.16 -> ready 2.56: ~40 deg swing back in ~0.4 s, fine; the left forearm covers the well 1.97-2.16. |
+
+Vector (`ar` plan: straight mag + base plate under the well, cut as whole parts; release lever left above the guard;
+pose_shift z -0.10). Reference: EFT KRISS Vector reloads from memory (straight mag, button drop, bolt release on empty).
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| vector | plain | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: well empty 0.57-1.15, new mag tipped in 1.29, seated 1.43-1.58. Criterion 3: dark mag on a dark gun (material), right hand cups the grip. |
+| vector | fast | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: the long mag slides out and falls 0.19-0.39. |
+| vector | empty | G-1 | 7 | 1 | 2 | 1 | 1 | 2 | (a) reach / press 1.53-1.7: palm on the left above the guard, the press travel is not seen; the forearm covers the well 1.7-1.87. (b) The idle pose fills the upper right (orchestrator's hip pose), so the return 2.04-2.38 grows the gun fast. |
+
+AXMC (`sniper`) and Mosin: new `boltbox` plan (ReloadPlansMore): straight box mag out / in; on an empty chamber the mag change
+ends with the support hand back on the fore-end, gun at rest, then the `bolt` mark has the viewmodel work the bolt over the
+`work` phase (BoltCycle on the Mosin: right hand to the knob; the AXMC's own FireWBullet clip from 35 %, as after a shot). AXMC mag
+= its Magazine bone (split by weight). Mosin has no mag on the mesh: an empty Mag node carrying a 5-round box (metal material)
+hidden in the stock ahead of the guard. Reference: EFT AXMC / Mosin (box-mag variant) reloads from memory.
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| sniper | plain | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: hand on the short box mag 0.47, pouch, tipped in 1.89, seated 2.13. Mag is small (glb). |
+| sniper | fast | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: mag drops free 0.3-0.6. |
+| sniper | empty | G-1 | 7 | 2 | 2 | 1 | 1 | 1 | Mag change as plain, then the gun returns and the right hand leaves the grip for the bolt (2.6-3.1, glb clip). (a) The right hand reads as raised beside the scope, the knob is hidden behind the scope bell: roll the gun ~15 deg left during `work`. |
+| mosin | plain | G-1 | 7 | 2 | 1 | 1 | 1 | 2 | (a) The 5-round box is small and dark under the palm (0.75-2.5): hold it 2 cm lower so its front shows. (b) Gun rolled so the stock's underside fills the right half. |
+| mosin | empty | G-1 | 7 | 2 | 1 | 1 | 1 | 2 | As plain, then the BoltCycle: right hand to the knob, lift, back, forward 3.04-3.6, reads like the after-shot cycle. The left hand stays on the fore-end. |
+| mosin | fast | - | - | | | | | | Not rendered (same plan as the AXMC fast). |
+
+## FB-R2b (2026-10-17, branch feat/reload-groups2, merged arms: arms_fp x1.3, shoulders 4 cm behind the eye, slid support hold)
+Regression check with the new arms (ak47 empty, m4a1 plain, sniper empty; plus mosin plain / empty, sniper fast seen): no
+regression. Hands land on the same points; the AK rack forearm is no bigger. Scores stand: ak47 empty 8, m4a1 plain 8,
+sniper empty 7. The 6 reload FAILs on the merged tree were frame 0 only (test started before FpArms set hold_l), 68c0daa.
+
+New: hinged parts (`ReloadHinge`, rig "hinge" = box / pivot / axis / angle, phases "open" 0..1), non-detachable timelines
+(tube / en-bloc: no chamber-time split, the logic's seconds as before), loose rounds (rig "loose": the shell is hidden at rest).
+Sheets are the `--empty` reload (tube / en-bloc only reload when not full / empty; fast = plain for these).
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| shotgun | one shell | G-2 | 7 | 2 | 2 | 1 | 1 | 1 | Red shell from the belt (0.28), under the port, thumbed in (0.45). (a) Gun returns to rest after every shell: consecutive presses bob (keep the loading pose while R is held again: needs a "next press" hook). (b) Port faces down even at -1.25 roll. Pump on empty = the existing cycle (unchanged). |
+| garand | en-bloc | G-2 | 7 | 1 | 1 | 1 | 2 | 2 | Clip pings out, new clip above the receiver, thumbed down, hand clears, bump. (a) The pinged clip still shows its rounds (Magazine bone = clip + rounds). (b) Forearm up the centre ~15 % at press 1.36-1.7. (c) No op-rod travel (no bone). |
+| revolver | cylinder | G-2 | 7 | 1 | 2 | 1 | 1 | 2 | Cylinder swings out on its crane (1.98), muzzle up, empties fall, speedloader in, closed. (a) The open cylinder is mostly behind the left hand 0.66-1.65. (b) Rounds / speedloader are a plain box. |
+
+PKM (`belt` plan): feed cover cut as a hinged part (front pivot, rear lifts 0.8 rad), the box = the mag (whole parts under the
+receiver). The hand flicks the cover's rear latch (anchor "lid" rides the cover; "flip" = hand off it), unhooks the box, pouches it
+(fast: drops it), hangs a new one, lays the belt on the tray (hand only: the belt piece stays on the mesh, cutting it would take
+the charging-handle piece too), slaps the cover shut. Empty: left hand racks the handle on the right (hand only).
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| pkm | plain | G-2 | 7 | 2 | 1 | 1 | 1 | 2 | Cover up 0.46-5.5, box off 1.39-1.85, new box 3.71-4.63, cover shut 5.56. (a) The box is small and dark at the bottom edge: pose the gun ~5 cm higher during the box change. (b) No belt object: "belt" is a hand pass over the tray. (c) The cover is a plain slab (mesh). |
+| pkm | fast | G-2 | 7 | 2 | 1 | 1 | 1 | 2 | Box falls 1.45-1.82. Same notes. |
+| pkm | empty | G-2 | 7 | 1 | 1 | 1 | 1 | 2 | As plain, then the rack 6.0-6.3: the hand is behind the receiver (handle on the far side). |

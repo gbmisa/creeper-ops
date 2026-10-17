@@ -16,12 +16,18 @@ const MIN_W := 0.45  # m1911 mag: 0.5 Control + 0.5 Magazine, stored as 0.49999
 ## The new Mag node, or null if nothing could be split out.
 static func split(glb: Node, rig: Dictionary = {}) -> MeshInstance3D:
 	if rig.has("mag_box"):
-		var m := cut_box(glb, rig["mag_box"], "Mag")
+		var m := cut_box(glb, rig["mag_box"], "Mag", rig.get("mag_parts", false))
 		if m != null and rig.has("mag_body"):
 			_add_body(glb, m, rig["mag_body"])
 		if m != null and rig.has("well_plug"):
 			_add_plug(glb, m.get_parent() as Node3D, rig["well_plug"])
 		return m
+	if rig.has("mag_body"):  # no mag part on the mesh at all (Mosin): an empty Mag node carrying only the body box
+		var e := MeshInstance3D.new()
+		e.name = "Mag"
+		glb.add_child(e)
+		_add_body(glb, e, rig["mag_body"])
+		return e
 	for node in glb.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
 		var sk := mi.get_parent() as Skeleton3D
@@ -50,14 +56,14 @@ static func split(glb: Node, rig: Dictionary = {}) -> MeshInstance3D:
 
 
 ## Moves the triangles of the first static mesh that lie wholly inside `box` (gun-model space: the glb's parent)
-## into a new node beside that mesh. Null if none do.
-static func cut_box(glb: Node, box: AABB, part_name: String) -> MeshInstance3D:
+## into a new node beside that mesh. Null if none do. whole: only whole parts (see _box_verts).
+static func cut_box(glb: Node, box: AABB, part_name: String, whole := false) -> MeshInstance3D:
 	for node in glb.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
 		if mi.skin != null or not mi.mesh is ArrayMesh or mi.name == "Mag":
 			continue
 		var k := to_gun(mi, glb)
-		var part := _cut(mi, func(arr: Array, n: int) -> Array[bool]: return _box_verts(arr, n, k, box))
+		var part := _cut(mi, func(arr: Array, n: int) -> Array[bool]: return _box_verts(arr, n, k, box, whole))
 		if part == null:
 			continue
 		part.name = part_name
@@ -66,6 +72,11 @@ static func cut_box(glb: Node, box: AABB, part_name: String) -> MeshInstance3D:
 		mi.get_parent().add_child(part)
 		return part
 	return null
+
+
+## A mag offset [pos, rot (euler)] about `pivot` as a gun-model transform.
+static func off_xf(pivot: Vector3, off: Array) -> Transform3D:
+	return Transform3D(Basis.from_euler(off[1]), pivot + (off[0] as Vector3)) * Transform3D(Basis.IDENTITY, -pivot)
 
 
 ## Node space -> gun-model space (the glb's parent).
@@ -81,7 +92,11 @@ static func to_gun(n: Node, glb: Node) -> Transform3D:
 static func _add_body(glb: Node, mag: MeshInstance3D, body: Array) -> void:
 	var box := BoxMesh.new()
 	box.size = body[1]
-	box.material = mag.mesh.surface_get_material(0)
+	if mag.mesh != null:
+		box.material = mag.mesh.surface_get_material(0)
+	else:  # empty Mag node: the gun mesh's material, surface body[3] (default 0)
+		var gm := (glb.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D).mesh
+		box.material = gm.surface_get_material(int(body[3]) if body.size() > 3 else 0)
 	var b := MeshInstance3D.new()
 	b.name = "Body"
 	b.mesh = box
@@ -156,10 +171,46 @@ static func _mag_verts(arr: Array, n: int, bind: int) -> Array[bool]:
 	return out
 
 
-static func _box_verts(arr: Array, n: int, k: Transform3D, box: AABB) -> Array[bool]:
+## whole: a vertex counts only if its whole part (vertices welded by position, joined by triangles) lies inside the
+## box, so a box reaching up into a mag well leaves the receiver's bottom faces there on the gun (rig `mag_parts`).
+static func _box_verts(arr: Array, n: int, k: Transform3D, box: AABB, whole := false) -> Array[bool]:
 	var out: Array[bool] = []
 	out.resize(n)
 	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
 	for i in n:
 		out[i] = box.has_point(k * v[i])
+	if not whole:
+		return out
+	var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX] if arr[Mesh.ARRAY_INDEX] != null else PackedInt32Array(range(n))
+	var up := PackedInt32Array(range(n))  # union-find parents
+	var weld := {}
+	for i in n:
+		var key := (v[i] * 10000.0).round()
+		if weld.has(key):
+			_join(up, i, weld[key])
+		else:
+			weld[key] = i
+	for t in range(0, idx.size(), 3):
+		_join(up, idx[t], idx[t + 1])
+		_join(up, idx[t], idx[t + 2])
+	var outside := {}
+	for i in n:
+		if not out[i]:
+			outside[_top(up, i)] = true
+	for i in n:
+		out[i] = out[i] and not outside.has(_top(up, i))
 	return out
+
+
+static func _top(up: PackedInt32Array, i: int) -> int:
+	while up[i] != i:
+		up[i] = up[up[i]]
+		i = up[i]
+	return i
+
+
+static func _join(up: PackedInt32Array, a: int, b: int) -> void:
+	var ra := _top(up, a)
+	var rb := _top(up, b)
+	if ra != rb:
+		up[ra] = rb

@@ -1,10 +1,11 @@
 class_name BotMesh
 extends Node3D
 ## An enemy soldier: the character body.glb (BotBody) dyed per kind with a red armband, holding its gun in both
-## hands. Feet at y = 0, faces -Z. `walk(speed)` picks and paces the locomotion clip, `aim` pitches the upper body.
+## hands. Feet at y = 0, faces -Z. `walk(speed)` picks and paces the locomotion clip, `aim` raises / lowers the gun.
 
 const UNIFORM := Color(0.2, 0.32, 0.2)
-const LOW_PITCH := 0.35
+const RAISE_S := 0.28  # low ready -> aimed (eased in BotBody)
+const LOWER_S := 0.5   # aimed -> low ready
 
 var body: BotBody
 var muzzle: Node3D
@@ -12,9 +13,12 @@ var gun: Node3D
 var anim: AnimationPlayer
 var fire_clip := ""
 var scope_glint: MeshInstance3D
-var pitch := -LOW_PITCH
+var raise := 0.0  # 0 lowered .. 1 aimed (linear; BotBody eases it)
 var crouch := false  # set by BotPose each tick
 var lean := 0.0
+var calm := false  # unalerted (patrol): patrol carry instead of the low ready; set by BotPose
+var peek := false  # leaning out of cover to shoot: gun up like engaged; set by BotPose
+var head_at := Vector3(0, 1.66, 0)  # the head hitbox's centre (bot frame); set by BotPose
 var _gun_size := Vector3(0.1, 0.1, 0.8)
 
 
@@ -57,9 +61,10 @@ func _init(def := {}) -> void:
 	gun.add_child(scope_glint)
 
 
-## Rifle pitch: level while engaging, lowered otherwise.
+## Gun up while engaging or peeking (over RAISE_S), lowered otherwise (over LOWER_S).
 func aim(delta: float, engaged: bool) -> void:
-	pitch = move_toward(pitch, 0.0 if engaged else -LOW_PITCH, delta * 3.0)
+	var up := engaged or peek
+	raise = move_toward(raise, 1.0 if up else 0.0, delta / (RAISE_S if up else LOWER_S))
 
 
 func glint(on: bool) -> void:
@@ -106,4 +111,4 @@ func _drop_gun(impulse: Vector3) -> void:
 
 
 func walk(delta: float, speed: float) -> void:
-	body.update(delta, speed, pitch, gun, crouch, lean)
+	body.update(delta, speed, raise, gun, crouch, lean, calm, head_at)

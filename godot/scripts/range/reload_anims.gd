@@ -6,7 +6,8 @@ class_name ReloadAnims
 ## "empty_bolt" = where the bolt/slide stands for the whole of an empty reload until the charge moves it (slide lock).
 ##   gp / gr  gun position / rotation offset under the camera (m, rad: x pitch up, y yaw left, z roll left)
 ##   mag      seat | rock | slip | near | out | pouch | drop (RIGS[gun] offsets of the Mag node, gun-model space, about `pivot`)
-##   hl       left hand: grip (def grip_l) | mag (the Mag node's `hold` point) | pouch | charge (+ bolt travel) | stop
+##   hl       left hand: grip (def grip_l) | mag (the Mag node's `hold` point) | let (that point with the mag at
+##            "slip": the hand opens there while the mag drops) | pouch | charge (+ bolt travel) | stop
 ##   bolt     0..1 of RIGS[gun].travel      ease  io (default) | in (falls, speeds up) | out
 ## "charge_takes" {phase: share}: on an empty reload the charge also gets that share of those base phases' time
 ## (total time unchanged). "charge_pre" phases run before the mag change (HK: lock the handle back first) and share
@@ -24,24 +25,24 @@ const PISTOL_POSE := [Vector3(-0.07, 0.08, -0.10), Vector3(0.35, 0.35, -0.60)]
 const PLANS := {
 	"rifle": {  # AKM: rock the mag forward about its front lip, out, pouch, new one front lip first, rock back
 		"plain": [
-			{"n": "start", "w": 0.10, "gp": RIFLE_POSE[0], "gr": RIFLE_POSE[1], "hl": "mag"},
+			{"n": "start", "w": 0.13, "gp": RIFLE_POSE[0], "gr": RIFLE_POSE[1], "hl": "mag"},
 			{"n": "rock", "w": 0.07, "mag": "rock", "ease": "out"},
 			{"n": "out", "w": 0.08, "mag": "out", "mark": "mag_out"},
 			{"n": "stow", "w": 0.13, "mag": "pouch", "mark": "mag_hide"},
 			{"n": "fetch", "w": 0.07, "mark": "mag_show"},
-			{"n": "show", "w": 0.17, "mag": "near"},
+			{"n": "show", "w": 0.14, "mag": "near"},
 			{"n": "hook", "w": 0.08, "mag": "rock"},
 			{"n": "seat", "w": 0.06, "mag": "seat", "gp": RIFLE_POSE[0] + Vector3(0, 0.015, 0), "ease": "out", "mark": "mag_in"},
 			{"n": "hold", "w": 0.04, "gp": RIFLE_POSE[0]},
 			{"n": "ready", "w": 0.20, "gp": Vector3.ZERO, "gr": Vector3.ZERO, "hl": "grip"},
 		],
 		"fast": [  # paddle: the hand rocks the mag out and lets it fall, then the new one from the pouch
-			{"n": "start", "w": 0.08, "gp": RIFLE_POSE[0], "gr": RIFLE_POSE[1], "hl": "mag"},
+			{"n": "start", "w": 0.12, "gp": RIFLE_POSE[0], "gr": RIFLE_POSE[1], "hl": "mag"},
 			{"n": "rock", "w": 0.05, "mag": "rock", "ease": "out"},
 			{"n": "slip", "w": 0.04, "mag": "slip", "ease": "out", "mark": "mag_out"},
-			{"n": "drop", "w": 0.14, "mag": "drop", "hl": "pouch", "ease": "in"},
-			{"n": "fetch", "w": 0.07, "mag": "pouch", "mark": "mag_show"},
-			{"n": "show", "w": 0.20, "mag": "near", "hl": "mag"},
+			{"n": "drop", "w": 0.10, "mag": "drop", "hl": "let", "ease": "in"},  # hand opens at the well, the mag falls
+			{"n": "fetch", "w": 0.11, "mag": "pouch", "hl": "pouch", "mark": "mag_show"},
+			{"n": "show", "w": 0.16, "mag": "near", "hl": "mag"},
 			{"n": "hook", "w": 0.08, "mag": "rock"},
 			{"n": "seat", "w": 0.06, "mag": "seat", "gp": RIFLE_POSE[0] + Vector3(0, 0.015, 0), "ease": "out", "mark": "mag_in"},
 			{"n": "hold", "w": 0.06, "gp": RIFLE_POSE[0]},
@@ -126,31 +127,32 @@ const PLANS := {
 	},
 	"ar": {  # AR / SCAR: straight mag, button release (drops free), new one straight up; empty = thumb the bolt catch
 		"plain": [
-			{"n": "start", "w": 0.10, "gp": RIFLE_POSE[0], "gr": RIFLE_POSE[1], "hl": "mag"},
+			{"n": "start", "w": 0.14, "gp": RIFLE_POSE[0], "gr": RIFLE_POSE[1], "hl": "mag"},
 			{"n": "out", "w": 0.12, "mag": "out", "ease": "out", "mark": "mag_out"},
 			{"n": "stow", "w": 0.14, "mag": "pouch", "mark": "mag_hide"},
 			{"n": "fetch", "w": 0.07, "mark": "mag_show"},
-			{"n": "show", "w": 0.15, "mag": "near"},
+			{"n": "show", "w": 0.11, "mag": "near"},
 			{"n": "tip", "w": 0.07, "mag": "slip", "ease": "out"},
 			{"n": "seat", "w": 0.07, "mag": "seat", "gp": RIFLE_POSE[0] + Vector3(0, 0.015, 0), "ease": "out", "mark": "mag_in"},
 			{"n": "hold", "w": 0.04, "gp": RIFLE_POSE[0]},
 			{"n": "ready", "w": 0.24, "gp": Vector3.ZERO, "gr": Vector3.ZERO, "hl": "grip"},
 		],
 		"fast": [  # mag button: the old mag slides out and falls while the hand goes to the pouch
-			{"n": "start", "w": 0.08, "gp": RIFLE_POSE[0], "gr": RIFLE_POSE[1], "hl": "pouch"},
+			{"n": "start", "w": 0.13, "gp": RIFLE_POSE[0], "gr": RIFLE_POSE[1], "hl": "pouch"},
 			{"n": "slip", "w": 0.06, "mag": "slip", "ease": "out", "mark": "mag_out"},
 			{"n": "drop", "w": 0.12, "mag": "drop", "ease": "in"},
 			{"n": "fetch", "w": 0.08, "mag": "pouch", "mark": "mag_show"},
-			{"n": "show", "w": 0.20, "mag": "near", "hl": "mag"},
+			{"n": "show", "w": 0.15, "mag": "near", "hl": "mag"},
 			{"n": "tip", "w": 0.07, "mag": "slip", "ease": "out"},
 			{"n": "seat", "w": 0.07, "mag": "seat", "gp": RIFLE_POSE[0] + Vector3(0, 0.015, 0), "ease": "out", "mark": "mag_in"},
 			{"n": "hold", "w": 0.06, "gp": RIFLE_POSE[0]},
 			{"n": "ready", "w": 0.26, "gp": Vector3.ZERO, "gr": Vector3.ZERO, "hl": "grip"},
 		],
 		"charge": [  # support hand from the mag well up to the bolt catch on the left side, presses it: bolt flies home
-			{"n": "reach", "w": 0.45, "hl": "stop"},
-			{"n": "press", "w": 0.15, "hl": "press", "ease": "in", "mark": "charged"},
-			{"n": "regrip", "w": 0.40, "hl": "grip"},
+			{"n": "reach", "w": 0.42, "hl": "stop"},
+			{"n": "press", "w": 0.13, "hl": "press", "ease": "in", "mark": "charged"},
+			{"n": "hold_c", "w": 0.07},  # thumb stays on the catch a beat: the press reads
+			{"n": "regrip", "w": 0.38, "gp": RIFLE_POSE[0] * 0.5, "gr": RIFLE_POSE[1] * 0.5, "hl": "grip"},
 		],
 		"charge_takes": {"hold": 1.0, "fetch": 0.5},
 	},
@@ -197,7 +199,12 @@ const HANDS := {
 	"pouch": {"f": Vector3(0.0, -1.0, -0.3), "n": Vector3(1.0, 0.0, 0.0)},
 	"charge": {"f": Vector3(0.0, 1.0, -0.2), "n": Vector3(-1.0, 0.0, 0.0)},  # underhand: palm on the right side, fingers up over the handle
 	"stop": {"f": Vector3(0.0, 0.0, -1.0), "n": Vector3(1.0, 0.0, 0.0)},  # pistol support hand moved up: thumb on the stop
+	"lock": {"f": Vector3(0.0, 0.3, -1.0), "n": Vector3(1.0, 0.0, 0.0)},  # HK handle pushed up into its notch
 	"press": {"f": Vector3(0.0, 0.0, -1.0), "n": Vector3(1.0, 0.0, 0.0)},  # "stop" pushed in: thumb presses a bolt catch
+	"lid": {"f": Vector3(0.0, -0.2, -1.0), "n": Vector3(0.0, -1.0, 0.0)},  # palm down on a cover (turns with it)
+	"flip": {"f": Vector3(0.0, 0.2, -1.0), "n": Vector3(0.0, -1.0, 0.0)},  # hand up off a cover it flicked open
+	"tray": {"f": Vector3(0.3, -0.3, -1.0), "n": Vector3(0.0, -1.0, 0.0)},  # palm down, laying the belt on the tray
+	"clear": {"f": Vector3(0.0, 0.3, -1.0), "n": Vector3(0.0, -1.0, 0.0)},  # thumb off the clip, hand up and forward out of the way
 	"slap": {"f": Vector3(0.0, -0.3, -1.0), "n": Vector3(0.7, -0.7, 0.0)},  # raised above / behind a handle, palm down toward it
 }
 const WRIST_BACK := 0.075
@@ -239,3 +246,16 @@ static func _hand_edits() -> Dictionary:
 
 static func _vec(a: Array) -> Vector3:
 	return Vector3(a[0], a[1], a[2])
+
+
+## Phase easing: in (falls, speeds up) | out | io (default, smoothstep).
+static func ease(kind: String, u: float) -> float:
+	match kind:
+		"in": return u * u
+		"out": return 1.0 - (1.0 - u) * (1.0 - u)
+	return smoothstep(0.0, 1.0, u)
+
+
+## A plan by id: PLANS here, then ReloadPlansMore.PLANS.
+static func plan(id: String) -> Dictionary:
+	return PLANS[id] if PLANS.has(id) else ReloadPlansMore.PLANS[id]

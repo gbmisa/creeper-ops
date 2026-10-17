@@ -106,7 +106,7 @@ static func _sign_side(d: int) -> float:
 
 
 static func _environment(p: Node3D) -> void:
-	LookEnv.build(p, "skirmish" if RangeMaps.pending == "skirmish" else "range")
+	LookEnv.build(p, "skirmish" if RangeMaps.is_skirmish(RangeMaps.pending) else "range")
 	for x in [-4.0, 4.0]:  # booth lamps
 		var lamp := OmniLight3D.new()
 		lamp.position = Vector3(x, 3.0, 5.5)

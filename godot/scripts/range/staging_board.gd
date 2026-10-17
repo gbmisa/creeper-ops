@@ -1,12 +1,12 @@
 class_name StagingBoard
 extends Node3D
 ## F139: the deploy board on the north wall. F deploys with the current kit to the chosen map; L switches the map
-## (Skirmish / Skirmish (large)). Deploying is RangeSession.deploy, the same kit-persist path the truck used.
+## (Skirmish / Skirmish (large) / Town). Deploying is RangeSession.deploy, the same kit-persist path the truck used.
 
 const POS := Vector3(4.0, 0.0, StagingRoom.Z_NORTH + 0.1)
 const REACH := 3.0
-const MAPS := ["skirmish", "skirmish_large"]
-const NAMES := {"skirmish": "SKIRMISH", "skirmish_large": "SKIRMISH (LARGE)"}
+const MAPS := ["skirmish", "skirmish_large", "town"]
+const NAMES := {"skirmish": "SKIRMISH", "skirmish_large": "SKIRMISH (LARGE)", "town": "TOWN"}
 
 ## Map id the player picked (the title / truck preselect it through RangeMaps.staging_target).
 var target := "skirmish"
@@ -37,7 +37,10 @@ func setup(w: PlayerWeapons, p: TacticalPlayer, launch: Callable) -> void:
 
 
 func _refresh() -> void:
-	_lbl.text = "DEPLOY\n\n%s %s\n%s %s" % [">" if target == MAPS[0] else " ", NAMES[MAPS[0]], ">" if target == MAPS[1] else " ", NAMES[MAPS[1]]]
+	var rows := PackedStringArray()
+	for m in MAPS:
+		rows.append("%s %s" % [">" if target == m else " ", NAMES[m]])
+	_lbl.text = "DEPLOY\n\n" + "\n".join(rows)
 
 
 func cycle() -> void:

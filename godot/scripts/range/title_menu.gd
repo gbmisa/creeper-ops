@@ -25,4 +25,5 @@ func _ready() -> void:
 	col.add_child(UiKit.button("Firing Range", func(): RangeMaps.go("range")))
 	col.add_child(UiKit.button("Skirmish", func(): RangeMaps.go_staging("skirmish")))
 	col.add_child(UiKit.button("Skirmish (large)", func(): RangeMaps.go_staging("skirmish_large")))
+	col.add_child(UiKit.button("Skirmish: Town", func(): RangeMaps.go_staging("town")))
 	col.add_child(UiKit.button("Quit", func(): get_tree().quit()))
