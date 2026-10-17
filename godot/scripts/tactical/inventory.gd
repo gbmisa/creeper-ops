@@ -12,6 +12,7 @@ var ids: IdSource  # set by the session (server-issued in MP-2); item uids come 
 var slots := {}  # slot name -> item or null
 var pockets: Array = []
 var ground: Array = []
+var opened := {}  # a rig / backpack lying on the ground whose grid is shown as "open_g" (not carried, not in GRIDS)
 
 
 func _init(p_ids: IdSource = null) -> void:
@@ -43,6 +44,8 @@ func grid_items(loc: String) -> Array:
 		"rig_g", "pack_g":
 			var bag = slots[BAG_OF[loc]]
 			return bag["items"] if bag != null else []
+		"open_g":
+			return opened["items"] if not opened.is_empty() else []
 	return []
 
 
@@ -56,6 +59,10 @@ func grid_size(loc: String) -> Vector2i:
 			var bag = slots[BAG_OF[loc]]
 			if bag != null:
 				var g: Array = ItemDefs.def_of(bag)["grid"]
+				return Vector2i(g[0], g[1])
+		"open_g":
+			if not opened.is_empty():
+				var g: Array = ItemDefs.def_of(opened)["grid"]
 				return Vector2i(g[0], g[1])
 	return Vector2i.ZERO
 

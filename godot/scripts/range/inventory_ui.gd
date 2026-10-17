@@ -25,6 +25,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer, wi: WorldItems) -> void:
 	view.quick_requested.connect(quick_move)
 	view.unfit_requested.connect(_on_unfit)
 	view.use_requested.connect(_on_use)
+	view.open_requested.connect(_on_open)
 	_zone_pop.id_pressed.connect(_on_zone_picked)
 	add_child(_zone_pop)
 	_health_panel = UiKit.panel(Color(0.04, 0.05, 0.07, 0.85))
@@ -65,6 +66,7 @@ func close() -> void:
 	visible = false
 	weapons.ui_open = false
 	view.drag = {}
+	weapons.inv.opened = {}
 	_health_panel.visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -163,28 +165,14 @@ func _health_text() -> String:
 	return "\n".join(out)
 
 
-## Ground grid = the world items within reach; existing cells are kept, new ones take the first free spot.
+## Ground grid = the world items within reach (see InventoryGround).
 func refresh_ground() -> void:
-	var inv := weapons.inv
-	var near := world.nearby(player.eye_pos())
-	for it in inv.ground.duplicate():
-		if not near.has(it):
-			inv.request_remove(it)
-	for it in near:
-		if it["loc"] != "ground":
-			it["loc"] = ""
-			for rot in [it["rot"], 1 - int(it["rot"])]:
-				if _put_ground(inv, it, rot):
-					break
+	InventoryGround.refresh(weapons.inv, world, player.eye_pos())
 
 
-func _put_ground(inv: Inventory, it: Dictionary, rot: int) -> bool:
-	var gs := inv.grid_size("ground")
-	for y in gs.y:
-		for x in gs.x:
-			if inv.fits("ground", it, x, y, rot):
-				return inv.request_place(it, "ground", x, y, rot)["ok"]
-	return false
+func _on_open(it: Dictionary) -> void:
+	InventoryGround.open_bag(weapons.inv, it)
+	view.queue_redraw()
 
 
 func _on_drop(it: Dictionary, target: Dictionary, origin: Dictionary) -> void:
@@ -255,12 +243,26 @@ func _into_grid(it: Dictionary, t: Dictionary) -> void:
 		_snd(it, "pick" if from_ground and t["loc"] != "ground" else "move")
 		if t["loc"] != "ground" and it.has("world"):
 			world.release(it)
+	else:
+		_refused(it)
+
+
+## A drop that can't go there: a rig / backpack lands on the ground (contents kept); anything else says why.
+func _refused(it: Dictionary) -> void:
+	if InventoryGround.is_bag(it):
+		if it["loc"] == "ground":
+			weapons.message.emit("A bag can only be worn or lie on the ground")
+		else:
+			_to_world(it)
+	else:
+		weapons.message.emit("Doesn't fit there")
 
 
 func _into_slot(it: Dictionary, t: Dictionary, origin: Dictionary) -> void:
 	var inv := weapons.inv
 	var slot: String = t["loc"]
 	if not inv.accepts_slot(slot, it):
+		_refused(it)
 		return
 	_snd(it, "move")
 	var occ = inv.equipped(slot)

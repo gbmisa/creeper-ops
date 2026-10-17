@@ -7,6 +7,7 @@ signal drop_requested(item: Dictionary, target: Dictionary, origin: Dictionary) 
 signal quick_requested(item: Dictionary)
 signal unfit_requested(gun_item: Dictionary, slot: String, drag: bool)  # right-click a fitted-part chip = remove, left-press = drag it off
 signal use_requested(item: Dictionary)  # right-click a med item = use it
+signal open_requested(item: Dictionary)  # double-click a rig / backpack on the ground = open its grid under the ground panel
 
 const C := 36  # cell px
 const SLOT_CELLS := {"primary": Vector2i(5, 2), "secondary": Vector2i(5, 2), "holster": Vector2i(5, 1),
@@ -57,6 +58,10 @@ func regions() -> Array:
 	var gr := inv.grid_size("ground")
 	var gx := maxf(540.0, 290.0 + inv.grid_size("rig_g").x * C + 34.0)  # F148: an 8-wide rig pushes the ground panel right
 	out.append({"loc": "ground", "rect": Rect2(gx, 78, gr.x * C, gr.y * C), "slot": false, "title": "GROUND (within 2 m)"})
+	if not inv.opened.is_empty():
+		var og := inv.grid_size("open_g")
+		out.append({"loc": "open_g", "rect": Rect2(gx, 78 + gr.y * C + 30, og.x * C, og.y * C), "slot": false,
+			"title": "OPENED: %s" % ItemDefs.def_of(inv.opened)["name"]})
 	return out
 
 
@@ -139,7 +144,9 @@ func _gui_input(e: InputEvent) -> void:
 			unfit_requested.emit(chip["item"], chip["slot"], true)
 			return
 		var it := item_at(e.position)
-		if e.pressed and not it.is_empty():
+		if e.pressed and e.double_click and not it.is_empty() and it["loc"] == "ground" and InventoryGround.is_bag(it):
+			open_requested.emit(it)
+		elif e.pressed and not it.is_empty():
 			if e.ctrl_pressed:
 				quick_requested.emit(it)
 			else:
