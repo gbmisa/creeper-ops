@@ -11,7 +11,6 @@ const MAX_LEAN := 0.3
 const CURL := [1.0, 1.15, 0.8]  # finger joint 1..3 curl (rad) around the grip
 const FINGERS := ["index", "middle", "ring", "pinky"]
 const PALM_DOWN := Vector3(0, -1, 0)  # rest pose: palms down, fingers along the bone's +Y
-const FOREARM_ROLL := 0.5  # share of the hand's roll the forearm takes (Gregory's M4A1 pose ~0.54): no pinched wrist
 
 var skel: Skeleton3D
 var _sides := {}
@@ -21,7 +20,7 @@ var _reload_len := 1.0
 var bolt: BoltCycle  # set while the held gun is a bolt-action: the right hand works the handle
 var reload_tl: ReloadTimeline  # FB-R: set when the held gun has a reload timeline; it drives the left hand
 var target := {}  # side -> world position of the wrist the last solve aimed at (tests)
-var roll := 0.0  # FOREARM_ROLL on the viewmodel arms; 0 = the whole roll at the wrist (bots, as before)
+var roll := 0.0  # viewmodel arms: ArmTwist.SHARE[0] (+ twist bones); 0 = the whole roll at the wrist (bots, as before)
 
 
 ## own_skel: rig an existing skeleton (the enemy bots' bodies) instead of building the viewmodel arms.
@@ -32,7 +31,6 @@ func _init(own_skel: Skeleton3D = null) -> void:
 		for side in ["r", "l"]:
 			_sides[side] = _rig(side)
 		return
-	roll = FOREARM_ROLL
 	position = ROOT_POS
 	rotation.y = PI
 	scale = Vector3.ONE * FpBody.SCALE
@@ -44,8 +42,11 @@ func _init(own_skel: Skeleton3D = null) -> void:
 		(mi as MeshInstance3D).visible = mi.name == "Arms"
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	skel = scene.find_children("*", "Skeleton3D", true, false)[0]
+	var twist := ArmTwist.build(skel, scene.find_children("Arms", "MeshInstance3D", true, false)[0])
+	roll = ArmTwist.SHARE[0]
 	for side in ["r", "l"]:
 		_sides[side] = _rig(side)
+		_sides[side]["twist"] = twist[side]
 
 
 func _rig(side: String) -> Dictionary:
@@ -190,6 +191,9 @@ func _roll_forearm(a: Dictionary, lo_b: Basis, hand_b: Basis, axis: Vector3) -> 
 	if a.has("tw"):
 		tw = float(a["tw"]) + wrapf(tw - float(a["tw"]), -PI, PI)
 	a["tw"] = tw
+	var ids: Array = a.get("twist", [])
+	for k in ids.size():  # twist bones: children of the lowerarm, rolled about its +Y (the forearm) by their extra share
+		skel.set_bone_pose_rotation(ids[k], Quaternion(Vector3.UP, tw * (float(ArmTwist.SHARE[k + 1]) - roll)))
 	return (Basis(axis, tw * roll) * lo_b).orthonormalized()
 
 
