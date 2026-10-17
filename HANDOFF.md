@@ -35,7 +35,7 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - Parse clean, skirmish boots; range suite 1114 pass / 0 fail (a first run flaked: navmesh doorway + bleed-out fall;
   30-bot probe: every bleed-out falls, old and new). Not verified: Gregory's play. Next: his verdict on the look.
 
-## Not yet ported from creeper-ops
+## Not yet ported from creeper-ops (reload WIP: being ported by the reload-groups agent)
 - Session B's **uncommitted reload WIP** (`reload_anims.gd`, `reload_rigs.gd`, `reload_timeline.gd`) is still in the
   creeper-ops main checkout. Port it (and any on-foot commit there after d3b08d6): `format-patch -1 <sha> | git am`.
 
@@ -46,14 +46,16 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - P9 built; P11 no fractures; **P10** waits for Gregory. Known: kill-house navmesh doorway check can fail; barracks north door split by the inner wall.
 - Range suite before split: 1113 pass / 1 fail (`a shot at spawn ... (F88)`, Scav 5 net move 0.6 m; left as is).
 
-## Session D (2026-10-16, both merged into feat/fb-reload and pushed; Gregory asked for both)
-- Reload insert sound (0105c26): `mag_in` plays on the ReloadTimeline `mag_in` mark (mag seats), not at reload end, on
-  rigged guns; others unchanged. `stop()` no longer fires unreached marks.
-- Wrist pinch (2fad9a1): IK put the whole hand roll at the wrist (L ~155 deg long guns, R ~130 pistols). `FpArms.roll`
-  = FOREARM_ROLL 0.5 (viewmodel only; bots 0) rolls the forearm by half, like Gregory's M4A1 pose (fit from its baked
-  mesh: ~54/46). Close-ups judged (scratchpad `wrist_cam.gd`): wrist full width. Suite 1114/0. Not verified: Gregory's play.
+## Session D (2026-10-16; merged into feat/fb-reload, not pushed yet)
+- Insert sound on the `mag_in` mark (0105c26). Arms (dc8304a..): runtime forearm twist bones (`ArmTwist`), M4A1 unbaked
+  (IK arms; grip_r = Gregory's posed wrist), `arms_fp.glb` (Blender: arms x1.3, viewmodel only), shoulders 4 cm behind
+  the eye (ROOT_POS z -0.02), support hand slides into reach (`left_hold`), Gregory's M4A1 wrap grip on handguard guns.
+  Wrist/elbow rings >= 0.72 of rest (probe scratchpad `skin_probe.gd`). **CHANGES P13** (pistol ADS 0.25 -> 0.45 m) waits.
+- MAP-3 Town (97ab437, `town.tscn`, title "Skirmish: Town"): 160x160, FOB -> farm/orchard -> town -> yard -> extract,
+  20 hostiles, brief/log `docs/tasks/MAP3_*.md`, shots `docs/art/map3/`. No Kestrel dressing yet; bots may chase into FOB.
+- Running agents (worktrees `../tactical ops-worktrees/`): `bot-idle` (BOT_ANIM2 brief), `reload-groups` (FB_R2 brief,
+  ports session B's reload WIP: don't port it again from creeper-ops). Orchestrator reviews + merges them.
+- Verified merged tree: parse clean, town/skirmish/range/title boot; arms branch suite 1114/0. Not: Gregory's play.
 
 ## Next
-1. Port the reload WIP once session B commits it (above), then continue FB-R (rifle empties, AXMC, M4A1, ...).
-2. Optional: forearm twist bones in body.glb (smoother than the 50/50 split; touches bots). Gregory decides.
-3. Gregory rules on CHANGES P10 and plays Skirmish (MAP-2, F90-F93).
+1. Merge bot-idle and reload-groups after review; suite; push. 2. Gregory: P10, P13, plays Town + arms.
