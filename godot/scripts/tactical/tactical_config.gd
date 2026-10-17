@@ -6,6 +6,7 @@ const LAYER_WORLD := 1
 const LAYER_HITBOX := 2
 const LAYER_BODY := 4
 const LAYER_ITEM := 8  # dropped inventory items: collide with the world only, bullets pass
+const LAYER_RAGDOLL := 16  # corpse bones: collide with the world and each other only; bullets, player, bots, items ignore them
 const BULLET_MASK := 3
 
 # Ballistics
@@ -98,7 +99,9 @@ const VM_Z_CLIP := 0.3  # z_clip_scale on every viewmodel material, so the gun n
 const DEATH_IMPULSE := 250.0  # N·s on the hit bone for a killing shot, scaled by bullet damage
 const DEATH_IMPULSE_REF_DMG := 57.0  # reference rifle-round damage for the scaling
 const RAGDOLL_SLEEP := 4.0  # s after death before ragdoll bones freeze (0 = never)
-const RAGDOLL_LIMIT := 0.35  # F77: ragdoll joint ranges (swing/twist/hinge) as a fraction of the anatomical table
+const RAGDOLL_JOINT_BIAS := 0.3  # F144: ragdoll joint error correction per step (Godot default 0.3)
+const RAGDOLL_JOINT_SOFTNESS := 0.8  # F144: ragdoll joint limit softness (default 0.8)
+const RAGDOLL_JOINT_RELAXATION := 1.0  # F144: ragdoll joint limit relaxation (default 1.0)
 const RAGDOLL_LIN_DAMP := 1.0  # per-second linear damping of ragdoll bones (was 0.4)
 const RAGDOLL_ANG_DAMP := 4.0  # per-second angular damping of ragdoll bones (was 1.2)
 const RAGDOLL_NUDGE := 25.0  # N·s topple nudge on a bleed-out death (no kill impulse)
