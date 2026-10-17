@@ -162,3 +162,13 @@ above): the forearm then crosses the middle of the view (~40 %). Kept: saiga12 c
 
 Final after FB-R2 step 2: ak47 8/8/8, m1911 8/8/8, glock18 9/9/8, mp5 8/8/7, p90 8/8/8, scarh 8/8/7, sr25 8/8/7, saiga12 8/8/7,
 sks 8/8/7. Under 8: the five empty reloads (MP5 slap, SCAR / SR-25 catch, Saiga / SKS rack), each a structural arm-reach issue.
+
+## FB-R2 step 3: new reload groups
+M4A1 (`ar` plan, rig from a mesh probe: the curved mag is 8 slices under the well lip, cut as whole parts with the new rig
+flag `mag_parts`; bolt catch ~(-0.013, 0.022, 0.07); pose_shift as SCAR / SR-25). Reference: EFT M4A1 reloads from memory.
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| m4a1 | plain | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: mag out in the hand 0.51, new one tipped in 1.53, seated 1.7-1.87. Criterion 3: the right hand cups the grip (grip_r, orchestrator); the stock-side sleeve hangs under the gun 0.34-2.2. |
+| m4a1 | fast | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: the curved mag slides out and falls (0.23-0.47, very readable). Same right-hand note. |
+| m4a1 | empty | G-1 | 7 | 1 | 2 | 1 | 1 | 2 | (a) reach 1.97 / press: palm on the lower's left above the well, but the thumb press has no visible travel at 16 frames. (b) regrip 2.16 -> ready 2.56: ~40 deg swing back in ~0.4 s, fine; the left forearm covers the well 1.97-2.16. |

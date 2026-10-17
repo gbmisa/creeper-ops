@@ -70,6 +70,17 @@ const RIGS := {
 		"stop_hand": Vector3(-0.055, -0.07, 0.04),  # palm low on the left of the lower, thumb up on the bolt catch
 		"press_hand": Vector3(-0.04, -0.07, 0.04),  # pushed 1.5 cm in
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},  # long gun: well up into the view
+	"m4a1": {"plan": "ar",  # single mesh: the curved STANAG mag is 8 slices under the well lip (y -0.029); whole parts only
+		"mag_box": AABB(Vector3(-0.02, -0.16, -0.03), Vector3(0.04, 0.149, 0.115)), "mag_parts": true,
+		"pivot": Vector3(0.0, -0.025, -0.015), "hold": Vector3(0.0, -0.115, 0.045),
+		"slip": [Vector3(0.0, -0.035, 0.0), Vector3.ZERO],
+		"near": [Vector3(0.0, -0.07, -0.01), Vector3(0.1, 0.0, 0.0)],
+		"out": [Vector3(0.0, -0.13, 0.0), Vector3(0.1, 0.0, 0.0)],
+		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
+		"drop": [Vector3(0.0, -0.55, -0.02), Vector3(1.0, 0.0, 0.4)],
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22),
+		"stop_hand": Vector3(-0.05, -0.02, 0.06), "press_hand": Vector3(-0.035, -0.02, 0.06),  # bolt catch (mesh probe) ~(-0.013, 0.022, 0.07)
+		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},  # sits close at hip: well up into the view
 	"sr25": {"plan": "ar",  # single mesh: straight AR-10 mag cut by region (well bottom y 0.0); catch above the well
 		"mag_box": AABB(Vector3(-0.03, -0.11, -0.025), Vector3(0.04, 0.17, 0.096)),  # whole mag part reaches y 0.056
 		"pivot": Vector3(0.0, 0.0, -0.02), "hold": Vector3(0.0, -0.07, 0.02),
