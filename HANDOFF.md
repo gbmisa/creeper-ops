@@ -8,24 +8,14 @@ Linux worktree: `../creeper fps td-worktrees/tactical-port` (remote `tactical` i
 Run: `godot --path godot` -> title (Range / Skirmish / Skirmish (large) / Quit). Windows zip only when Gregory asks.
 Suite: `--range-test` FAILED 1 (1357 passed): f127 "shells conserved" (M870 tube), pre-existing in creeper play build.
 
-## START HERE next session: Skirmish 2 frame drops (Gregory: investigate + fix bot thinking)
-- Overlay: F3 (action t_perf) or `-- --perf`. `[perf]` log line every 5 s, `[perf] SPIKE` per frame > 33 ms with
-  the top PerfProbe costs. Probes: bots.think/pose/move/mesh (ScavBot._physics_process), weapons, player.*, utils,
-  skirmish_large. Add `PerfProbe.add("name", t0)` around sub-steps to drill in.
-- Headless 40 s, skirmish_large, 24 bots, ~5000 nodes: avg 7 ms, but spikes 35-112 ms; bots.think up to 74 ms in one
-  frame, bots.move 5-16 ms; engine physics time 80-117 ms in those frames (physics catch-up steps make spikes cluster).
-- Suspects: path queries / BotCover.pick / BotSquad cover scoring / perception raycasts several bots in one frame;
-  move_and_slide + NavigationAgent. Fix = spread work across frames (stagger, cache, budgets), behaviour-identical
-  (CLAUDE.md: perf must not change what the player sees; if it would, write CHANGES.md and ask).
-- Measure: `timeout 40 godot --headless --path godot res://scenes/skirmish_large.tscn -- --perf > log` (pipe to grep
-  gets killed by timeout: write a file). Bots stop being processed ~10 s in headless (player dies?), so spikes are early.
-- 2026-10-17 findings (branch `perf/bot-think`, worktree `../perf-bots`, WIP commit adds think.* + ballistics probes):
-  (1) one `think.enter` (_enter on a state change, likely cover pick) = 55-66 ms in one frame: fix that.
-  (2) most spikes = 50-80 ms frames with 3-4 physics steps but only ~12 ms in bot scripts: the rest is engine-side
-  and stops when bots stop. Not ragdoll bones (skipping them helped a little), not ballistics (0.2 ms), nav 0 ms.
-  Next suspects: BotBody AnimationPlayer advance + skeleton, HitboxRig shapes following bones, move_and_slide.
-- Merged session D (tactical/feat/fb-reload: forearm roll) into the play build, 7e96ce8; its reload-sound commits
-  skipped (play build already plays mag_in on the timeline mark). Suite FAILED 1 (1357 passed), same f127 as before.
+## 2026-10-16: Skirmish 2 frame drops FIXED (perf/bot-think merged, 7bc8502, pushed)
+- Cause: BotCover.pick / next_cover_toward ran up to 3 raycasts on every marker (in think.enter/facts/act); slow
+  frames then caused physics catch-up steps (the "engine-side" spikes). Fix: BotCover.best_of scores markers best
+  upper bound first and stops early; same marker picked (ties = earliest). 60 s headless: spikes 77 -> 2 (load),
+  worst frame 21-75 -> 7-13 ms, bots.think 3 -> 0.7 ms. Suite FAILED 1 (1357 passed), same f127.
+- Measure with `-- --perf --god` (without --god the player dies and bots stop at ~5 s). Write to a file.
+- Left: ~150 ms first frame at load (first nav paths); per-state-change `print("[bot] ...")` spam. Ask Gregory to
+  play Skirmish 2 and say if it still drops.
 
 ## This session (all in the port)
 - F128 I/O utility keys latched (missed above 60 fps). F129/F130 display mode applied once at the title, only if
