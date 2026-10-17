@@ -147,3 +147,11 @@ snaps back at the start of an empty reload.
 - RangeTestReload covers scarh / sr25 / saiga12 / sks. Verified: parse clean, range OK 840, smoke 0 FAIL.
 - Next (judge round 1 for the rifles): the empty-only tail on all four (forearms toward the camera, anchors on top of the
   receiver, no press / pull travel) and the swing-in (>= 0.3 s); saiga12 / sks fast drop not seen falling.
+
+## FB-R2 (2026-10-16, Opus, branch feat/reload-groups; brief `FB_R2_reload_groups.md`)
+- Step 0: session B's WIP ported (f18d7a9): applied by hand (the patch tool was blocked), diff identical to the patch.
+  Parse clean.
+- Step 1: 27 sheets re-rendered with the twist-bone arms (`docs/art/reload/<gun>_<variant>.jpg`, cropped, 16 frames).
+  Scores in SCORES.md "FB-R2". Lowest: sr25 / saiga12 / sks empty 6, scarh / mp5 empty 7, saiga12 / sks fast 7.
+  Sheet tools (scratch, not committed): strip.sh (render + sheet), resheet.sh (crop), sheet_lbl.gd (labelled grid in a
+  windowed Godot). Don't run extra Godot windows while strips render: three strips were cut short when they did.

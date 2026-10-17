@@ -106,3 +106,33 @@ receiver, the press / pull has no travel; (2) every swing-in is side-on by 0.15-
 | sks | plain | 1 | 8 | 2 | 2 | 2 | 1 | 1 | Passes: brass shows, mag reads. Straight AR-style well on this model: AK rock reads oddly (tone down to <= 8 deg). Swing-in by 0.25 s. |
 | sks | fast | 1 | 7 | 2 | 1 | 2 | 1 | 1 | (a) `drop` 0.46 is a stow (hand keeps the mag), gone at 0.61: release ~0.35, fall 0.35-0.55. (b) Swing-in side-on by 0.15 s. (c) Plain rock note. |
 | sks | empty | 1 | 6 | 1 | 2 | 1 | 1 | 1 | (a) `pull` 2.35 -> `regrip` 2.45 hand moves ~1 cm on top of the receiver at the rear sight (no handle there): 6-8 cm along the side. (b) `seat` 1.95 -> `reach` 2.15 ~25 deg yaw + roll in 0.2 s: >= 0.35. (c) Forearms balloon 2.25-2.65 s. |
+
+## FB-R2 (2026-10-16, Opus judge = builder, Windows build; arms with the forearm twist bones, session B's empty-tail WIP)
+Sheets: `docs/art/reload/<gun>_<variant>.jpg`, 16 frames 0..secs, cropped to the working area (x 300-1600, y 250-900 of
+1600x900), labelled time + phase. Reference: EFT AKM / M4 / Mk17 / SR-25 / MP5 / P90 / M1911 / Glock / Saiga / SKS reloads from
+memory (no web tool), TRP timing. Known limits as before (short AK mag, frozen finger poses, no slide lock on the last shot).
+Right hand (not the brief's to fix, grip_r belongs to the orchestrator): in every rolled reload pose the right palm faces the
+camera with the grip in front of it, so it reads as cupping the grip rather than wrapping it (AK, MP5, Saiga most).
+
+Round 1 (judged on f18d7a9 = round-3 code + session B's WIP).
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| ak47 | plain | R2-1 | 8 | 2 | 1 | 2 | 1 | 2 | Stands. Twist bones: wrist reads natural at rock/out/hook. Hold point is the mag's bottom tip (fist on the end). |
+| ak47 | fast | R2-1 | 8 | 2 | 1 | 2 | 1 | 2 | Stands. Drop reads 0.55 / 0.68. |
+| ak47 | empty | R2-1 | 8 | 2 | 1 | 2 | 1 | 2 | Stands. Rack 2.46: forearm ~20 % of the lower left, hand over the receiver to the handle. |
+| m1911 | plain / fast / empty | R2-1 | 8 / 8 / 8 | | | | | | No change, no regression from the twist bones. |
+| glock18 | plain / fast / empty | R2-1 | 9 / 9 / 8 | | | | | | No change. HUD "Glock 18 put away" still in every frame (harness). |
+| mp5 | plain / fast | R2-1 | 8 / 8 | | | | | | Stand. |
+| mp5 | empty | R2-1 | 7 | 2 | 1 | 1 | 1 | 2 | Stands (structural: handle far forward on top; slap forearm crosses the view 2.09). |
+| p90 | plain / fast / empty | R2-1 | 8 / 8 / 8 | | | | | | Stand. Palm still covers the mag at lay/seat; at out 0.73 the hand is large in the upper centre. |
+| scarh | plain / fast | R2-1 | 8 / 8 | | | | | | Stand. |
+| scarh | empty | R2-1 | 7 | 2 | 1 | 1 | 1 | 2 | Up from 5 (WIP): hand on the lower's left above the well at reach 2.37, forearm low. (a) press travel not seen at 16 frames; (b) regrip 2.6 -> ready 2.84 swings ~40 deg in ~0.25 s. |
+| sr25 | plain / fast | R2-1 | 8 / 8 | | | | | | Stand. |
+| sr25 | empty | R2-1 | 6 | 1 | 1 | 1 | 1 | 2 | Up from 5. (a) reach 2.1 / regrip 2.31: the palm reads on top of the receiver (gun rolled, left side up) and the forearm covers the mag well: anchor ~3 cm lower and ~2 cm back. (b) forearm diagonal ~20 % of the view. |
+| saiga12 | plain | R2-1 | 8 | 2 | 2 | 1 | 1 | 2 | Stands. |
+| saiga12 | fast | R2-1 | 7 | 2 | 1 | 1 | 1 | 2 | (a) `drop` 0.57: the drum still in the hand (the hand's "mag" anchor follows the falling mag), falls free only at 0.72. Let go at the start of `drop`. |
+| saiga12 | empty | R2-1 | 6 | 1 | 2 | 1 | 1 | 1 | (a) reach 2.37-2.6: the charge pose has no pose_shift (WIP), so this long gun comes ~8 cm nearer the camera than in the mag change: receiver fills the upper right, forearm slab ~25 % of the lower left. Push the charge pose away. (b) Hand reads over the top of the receiver. |
+| sks | plain | R2-1 | 8 | 2 | 2 | 2 | 1 | 1 | Stands. |
+| sks | fast | R2-1 | 7 | 2 | 1 | 2 | 1 | 1 | (a) Same carried drop as saiga fast: in hand at 0.52, falling 0.65. |
+| sks | empty | R2-1 | 6 | 1 | 2 | 1 | 1 | 1 | (a) Same near charge pose as saiga: forearm slab ~25 % 2.31-2.52, hand over the top. |
