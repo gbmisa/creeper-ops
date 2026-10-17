@@ -22,6 +22,7 @@ var last_known := Vector3.ZERO   # mirrors contact.pos (kept for callers)
 var has_last := false            # mirrors contact.has()
 var contact := BotContact.new()  # F97: the enemy as a memory, not a live fix
 var noise_pos := Vector3.ZERO
+var _shot_times: Array = []  # F133: recent heard-shot times (s)
 var noise_new := false
 var shot_new := false     # the latest noise was a gunshot (cleared with noise_new)
 var alert_t := 0.0
@@ -118,7 +119,12 @@ func hear(pos: Vector3, shot: bool, dist: float, rng: RandomNumberGenerator) -> 
 	if shot:
 		shot_new = true
 		alert_t = ALERT_TIME
-		contact.shot(pos, dist, rng)
+		var now := Time.get_ticks_msec() * 0.001  # F133: several shots at once blur where each came from
+		_shot_times = _shot_times.filter(func(t): return now - t < BotTacticsDefs.HEAR_MULTI_WINDOW)
+		var mult := 1.0 + BotTacticsDefs.HEAR_MULTI_STEP * minf(float(_shot_times.size()), BotTacticsDefs.HEAR_MULTI_MAX)
+		_shot_times.append(now)
+		contact.shot(pos, dist, rng, mult)
+		noise_pos = contact.pos  # F133: the bot turns/investigates the rough spot, never the shooter
 		tick(0.0)
 
 

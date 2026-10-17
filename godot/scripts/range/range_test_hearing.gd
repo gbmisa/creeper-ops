@@ -28,7 +28,7 @@ static func run(t: RangeTest) -> void:
 	session.noise.emit(shot, BotNoise.SHOT_R, "shot", null)
 	var fwd := -bot.global_basis.z
 	fwd.y = 0.0
-	t.check("hearing: a shot behind turns the bot to face it", rad_to_deg(fwd.angle_to(Vector3(0, 0, -1))) < 5.0)
+	t.check("hearing: a shot behind turns the bot to face it", rad_to_deg(fwd.angle_to(Vector3(0, 0, -1))) < 40.0 and rad_to_deg(fwd.angle_to((bot.percept.noise_pos - bot.global_position).normalized() * Vector3(1, 0, 1))) < 5.0)  # F133: faces the rough spot
 	t.check("hearing: a shot makes the bot alert", bot.percept.alerted())
 	bot.think(1.0 / 60.0)
 	t.check("hearing: alert bot takes cover from the shot (%s)" % bot.brain.state, bot.brain.state == BotBrain.COVER and bot.cover_pos.distance_to(stub.covers[0]) < 0.01)

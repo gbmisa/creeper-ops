@@ -79,6 +79,8 @@ static func _fire(b: ScavBot, point: Vector3) -> String:
 	for d in b.gun.shot_dirs(Basis.looking_at(dir), res["ammo"], true, b.rng):
 		b.bal.spawn(origin, d, res["ammo"], HitboxRig.rids(b.rig))
 	b.mesh.fire()
+	if b.session != null:  # F133: bot gunshots make noise too
+		b.session.noise.emit(b.global_position, BotNoise.SHOT_R * b.gun.stat("noise"), "shot", b)
 	if df["overwatch"]:
 		b.shots_since += 1
 		if b.shots_since >= int(df["relocate"]):

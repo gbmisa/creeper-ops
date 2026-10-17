@@ -122,13 +122,15 @@ func eye() -> Vector3:
 
 
 func _on_noise(pos: Vector3, radius: float, kind: String, src: Object) -> void:
-	if body.dead or src is ScavBot or not is_inside_tree():
+	if body.dead or src == self or not is_inside_tree():
 		return
+	if src is ScavBot and (src == ally or src == leader or (squad != null and squad.members.has(src))):
+		return  # F133: bots know their own squad's shots; other bots' shots are heard
 	if global_position.distance_to(pos) <= radius:
 		var shot := kind == "shot"
 		percept.hear(pos, shot, global_position.distance_to(pos), rng)
 		if shot and not percept.seeing:  # F87: snap round to the shot so the view cone checks it now
-			var d := _flat(pos - global_position)
+			var d := _flat(percept.noise_pos - global_position)
 			if d.length() > 0.05:
 				rotation.y = atan2(-d.x, -d.z)
 			if cover_t <= 0.0:
@@ -141,8 +143,8 @@ func on_hit(res: Dictionary) -> void:
 	if not _dying and not body.dead and def["overwatch"]:
 		BotEngage.relocate(self)
 	if not _dying:
-		var target := session.nearest_player(global_position) if session != null else null
-		percept.alert(target.node.global_position if target != null and target.node != null else res.get("origin", global_position))
+		var from: Vector3 = res.get("origin", global_position)  # F133: toward where the bullet came from, roughly
+		percept.alert(BotContact.fuzz(from, BotContact.heard_err(global_position.distance_to(from)), rng))
 	if body.dead:
 		# Killing shot: throw the ragdoll along the bullet's travel direction, scaled by damage.
 		var dir: Vector3 = (res["pos"] as Vector3) - (res["origin"] as Vector3)
