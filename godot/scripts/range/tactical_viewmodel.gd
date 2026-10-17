@@ -133,6 +133,8 @@ func _on_shot(res: Dictionary, g: Gun) -> void:
 func _on_reload_mark(mark_name: String) -> void:
 	if mark_name == "mag_out" and weapons != null and _gun != null and _gun.busy_kind == "reload":
 		weapons.gun_sound("mag_out")
+	if mark_name == "charged" and weapons != null and _gun != null and _gun.busy_kind == "reload":
+		weapons.gun_sound("action")   # F135: empty reload racks the gun at the charge moment
 	if mark_name == "mag_in" and weapons != null and _gun != null and _gun.busy_kind == "reload":  # not on a cancel (stop() flushes marks)
 		weapons.mag_in_early = true
 		weapons.gun_sound("mag_in")
