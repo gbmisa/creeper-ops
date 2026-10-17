@@ -4,7 +4,7 @@ class_name RangeTestReload
 ## stays on its target (within IK reach) every frame, the bolt/slide starts home and the mag never teleports, and at the end both hands are on their grips and the bolt or
 ## slide (bone or region-cut part) is home. The split leaves the gun mesh's AABB as the glb had it.
 
-const IDS := ["ak47", "m1911", "glock18", "mp5", "p90", "scarh", "sr25", "saiga12", "sks", "m4a1", "vector", "sniper", "mosin"]
+const IDS := ["ak47", "m1911", "glock18", "mp5", "p90", "scarh", "sr25", "saiga12", "sks", "m4a1", "vector", "sniper", "mosin", "shotgun", "garand", "revolver"]
 const STEP := 1.0 / 60.0
 
 
@@ -18,7 +18,8 @@ static func _one(t: RangeTest, id: String, label: String, fast: bool, empty: boo
 	var def := WeaponDefs.of(id)
 	var g := Gun.new(id)
 	var secs := g.stat("reload_fast") if fast else g.stat("reload")
-	if empty:
+	var det: bool = def["action"] == "detachable"
+	if empty and det:  # the logic adds the chamber time to detachable reloads only
 		secs += TacticalConfig.CHAMBER_TIME
 	var cam := Node3D.new()
 	t.add_child(cam)
@@ -58,8 +59,10 @@ static func _one(t: RangeTest, id: String, label: String, fast: bool, empty: boo
 	var far := 0.0
 	var err := 0.0
 	var steps := 0
+	var opened := 0.0
 	while tl.playing() and steps < 1000:
 		tl.update(STEP)
+		opened = maxf(opened, tl.open)
 		arms.update(gun, STEP)
 		far = maxf(far, (tl.mag_xf.origin).length())
 		jump = maxf(jump, tl.mag_xf.origin.distance_to(last))
@@ -71,13 +74,16 @@ static func _one(t: RangeTest, id: String, label: String, fast: bool, empty: boo
 	t.check(n + ": the mag leaves the gun (%.2f m)" % far, far >= 0.08)
 	t.check(n + ": the mag never teleports: < 10 cm a frame, a dropped one falls ~3-4 m/s (%.3f m)" % jump, jump < 0.10)
 	t.check(n + ": left wrist on its target every frame (worst %.3f m)" % err, err < 0.02)
-	var need := ["mag_out", "mag_in"] + (["charged"] if empty else [])
+	var need := (["mag_in"] if def["action"] == "tube" else ["mag_out", "mag_in"]) + (["charged"] if empty and det else [])
 	t.check(n + ": marks %s" % [marks], need.all(func(m): return m in marks))
 	t.check(n + ": mag back seated", tl.mag.transform.is_equal_approx(seat))
 	if tl.bone >= 0:
 		t.check(n + ": bolt / slide home", tl.skel.get_bone_global_pose(tl.bone).origin.distance_to(bone_rest.origin) < 0.0001)
 	if tl.part != null:
 		t.check(n + ": slide part home", tl.part.transform.is_equal_approx(part_rest))
+	if tl.hinge != null:
+		t.check(n + ": hinged part opens fully (%.2f)" % opened, opened > 0.99)
+		t.check(n + ": hinged part back home", tl.hinge.home())
 	var gt := gun.global_transform
 	var dl: float = arms.target["l"].distance_to(arms.left_hold(gt))  # grip_l, slid back if out of reach
 	var dr: float = arms.target["r"].distance_to(gt * (def["grip_r"] as Vector3))

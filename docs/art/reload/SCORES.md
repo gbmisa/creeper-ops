@@ -196,3 +196,18 @@ hidden in the stock ahead of the guard. Reference: EFT AXMC / Mosin (box-mag var
 | mosin | plain | G-1 | 7 | 2 | 1 | 1 | 1 | 2 | (a) The 5-round box is small and dark under the palm (0.75-2.5): hold it 2 cm lower so its front shows. (b) Gun rolled so the stock's underside fills the right half. |
 | mosin | empty | G-1 | 7 | 2 | 1 | 1 | 1 | 2 | As plain, then the BoltCycle: right hand to the knob, lift, back, forward 3.04-3.6, reads like the after-shot cycle. The left hand stays on the fore-end. |
 | mosin | fast | - | - | | | | | | Not rendered (same plan as the AXMC fast). |
+
+## FB-R2b (2026-10-17, branch feat/reload-groups2, merged arms: arms_fp x1.3, shoulders 4 cm behind the eye, slid support hold)
+Regression check with the new arms (ak47 empty, m4a1 plain, sniper empty; plus mosin plain / empty, sniper fast seen): no
+regression. Hands land on the same points; the AK rack forearm is no bigger. Scores stand: ak47 empty 8, m4a1 plain 8,
+sniper empty 7. The 6 reload FAILs on the merged tree were frame 0 only (test started before FpArms set hold_l), 68c0daa.
+
+New: hinged parts (`ReloadHinge`, rig "hinge" = box / pivot / axis / angle, phases "open" 0..1), non-detachable timelines
+(tube / en-bloc: no chamber-time split, the logic's seconds as before), loose rounds (rig "loose": the shell is hidden at rest).
+Sheets are the `--empty` reload (tube / en-bloc only reload when not full / empty; fast = plain for these).
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| shotgun | one shell | G-2 | 7 | 2 | 2 | 1 | 1 | 1 | Red shell from the belt (0.28), under the port, thumbed in (0.45). (a) Gun returns to rest after every shell: consecutive presses bob (keep the loading pose while R is held again: needs a "next press" hook). (b) Port faces down even at -1.25 roll. Pump on empty = the existing cycle (unchanged). |
+| garand | en-bloc | G-2 | 7 | 1 | 1 | 1 | 2 | 2 | Clip pings out, new clip above the receiver, thumbed down, hand clears, bump. (a) The pinged clip still shows its rounds (Magazine bone = clip + rounds). (b) Forearm up the centre ~15 % at press 1.36-1.7. (c) No op-rod travel (no bone). |
+| revolver | cylinder | G-2 | 7 | 1 | 2 | 1 | 1 | 2 | Cylinder swings out on its crane (1.98), muzzle up, empties fall, speedloader in, closed. (a) The open cylinder is mostly behind the left hand 0.66-1.65. (b) Rounds / speedloader are a plain box. |

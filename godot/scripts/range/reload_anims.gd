@@ -201,6 +201,7 @@ const HANDS := {
 	"stop": {"f": Vector3(0.0, 0.0, -1.0), "n": Vector3(1.0, 0.0, 0.0)},  # pistol support hand moved up: thumb on the stop
 	"lock": {"f": Vector3(0.0, 0.3, -1.0), "n": Vector3(1.0, 0.0, 0.0)},  # HK handle pushed up into its notch
 	"press": {"f": Vector3(0.0, 0.0, -1.0), "n": Vector3(1.0, 0.0, 0.0)},  # "stop" pushed in: thumb presses a bolt catch
+	"clear": {"f": Vector3(0.0, 0.3, -1.0), "n": Vector3(0.0, -1.0, 0.0)},  # thumb off the clip, hand up and forward out of the way
 	"slap": {"f": Vector3(0.0, -0.3, -1.0), "n": Vector3(0.7, -0.7, 0.0)},  # raised above / behind a handle, palm down toward it
 }
 const WRIST_BACK := 0.075
