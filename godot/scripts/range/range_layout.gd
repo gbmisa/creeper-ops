@@ -87,7 +87,10 @@ static func _board(p: Node3D, d: int) -> void:
 	var s := 1.0 + d / 80.0
 	for sx in [-1.0, 1.0]:
 		var post := box(p, "board_post", Vector3(sx * 14.0, 1.2 * s, z), Vector3(0.12, 2.4 * s, 0.12), "wood_plank", 0.12, Color(0.4, 0.3, 0.2))
+		if sx != _sign_side(d):  # F115: one sign per line, sides alternating, so far signs don't stack
+			continue
 		var l := Label3D.new()
+		l.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y  # F115: never reads mirrored
 		l.text = "%d m" % d
 		l.font_size = 96
 		l.pixel_size = 0.008 * s
@@ -95,6 +98,11 @@ static func _board(p: Node3D, d: int) -> void:
 		l.outline_size = 16
 		l.position = Vector3(0, 1.4 * s, 0.1)
 		post.add_child(l)
+
+
+## F115: post side (-1 left, +1 right) carrying line d's sign: alternates down the range.
+static func _sign_side(d: int) -> float:
+	return -1.0 if DISTANCES.find(d) % 2 == 0 else 1.0
 
 
 static func _environment(p: Node3D) -> void:

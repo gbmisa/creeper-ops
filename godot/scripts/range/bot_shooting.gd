@@ -79,6 +79,8 @@ static func _fire(b: ScavBot, point: Vector3) -> String:
 	for d in b.gun.shot_dirs(Basis.looking_at(dir), res["ammo"], true, b.rng):
 		b.bal.spawn(origin, d, res["ammo"], HitboxRig.rids(b.rig))
 	b.mesh.fire()
+	if b.session != null:  # F133: bot gunshots make noise too
+		b.session.noise.emit(b.global_position, BotNoise.SHOT_R * b.gun.stat("noise"), "shot", b)
 	if df["overwatch"]:
 		b.shots_since += 1
 		if b.shots_since >= int(df["relocate"]):
@@ -106,28 +108,26 @@ static func facts(b: ScavBot) -> Dictionary:
 	var ally := b.ally
 	var ally_eng := ally != null and ally.is_engaged() and not b.is_engaged()
 	if ally_eng and ally.percept.has_last:
-		p.last_known = ally.percept.last_known
-		p.has_last = true
-	if b.cover_t <= 0.0 and p.has_last and b.brain.state in [BotBrain.ENGAGE, BotBrain.COVER]:
+		p.contact.ally(ally.percept.contact.pos, ally.percept.contact.err)
+		p.tick(0.0)  # re-sync last_known / has_last from the shared contact
+	if b.cover_t <= 0.0 and p.has_last and b.brain.state in [BotBrain.ENGAGE, BotBrain.COVER] and not b.combat.active:
 		find_cover(b)
 	var alone := ally == null or ally.body.dead
 	var outgunned := p.aware and ((alone and b.body.total_frac() < 0.7) or b.gun.rounds_total() < 3)
 	return {"aware": p.aware, "seeing": p.seeing, "noise": p.noise_new, "shot": p.shot_new, "shot_cover": b.shot_cover, "since_seen": p.since_seen,
 		"hp": b.body.total_frac(), "hurt": b.hurt_t > 0.0, "reloading": b.gun.busy_kind == "reload", "arrived": b._arrived(),
 		"cover": b.has_cover and not b.def["rush"], "outgunned": outgunned, "flank_eager": b.def["flank_eager"], "ally_engaged": ally_eng,
-		"ally_flank": ally != null and not ally.body.dead and ally.brain.state == BotBrain.FLANK, "has_last": p.has_last}
+		"ally_flank": ally != null and not ally.body.dead and ally.brain.state == BotBrain.FLANK, "has_last": p.has_last,
+		"forgotten": p.contact.forgotten, "calm": p.contact.age >= BotTacticsDefs.CALM_PERIOD}
 
 
-## Nearest cover marker whose spot (crouched eye) cannot be seen from the last known player position.
+## F97 phase B: scored cover pick + per-session reservation (replaces nearest-hidden).
+## Phase C: the pick also enforces squad spacing and the line-of-fire rule.
 static func find_cover(b: ScavBot) -> void:
 	b.cover_t = COVER_CHECK
 	b.has_cover = false
-	var threat := b.percept.last_known + Vector3(0, 1.4, 0)
-	var space := b.get_world_3d().direct_space_state
-	var best := 1.0e9
-	for c in b.covers:
-		var d := b.global_position.distance_to(c)
-		if d < best and not BotPerception.los(space, c + Vector3(0, 0.9, 0), [threat]):
-			best = d
-			b.cover_pos = c
-			b.has_cover = true
+	var pos := BotCover.pick(b, b.squad)
+	if pos != BotCover.NO_COVER:
+		b.cover_pos = pos
+		b.has_cover = true
+		BotCover.claim(b.session, b, pos, BotCover.threat_pos(b))

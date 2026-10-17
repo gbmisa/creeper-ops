@@ -11,6 +11,11 @@ var seed := 0
 var events := TacEvents.new()
 var noise := BotNoise.new()
 var maps := RangeMaps.new()
+## F97: cover reservations, marker -> {"bot": claimer, "threat": threat pos}. Per-session, no statics.
+var cover_claims := {}
+## F97 phase C: all live enemy bots (spawners keep this current), and the current squad plans.
+var bots: Array = []
+var squads: Array = []
 ## Carried kit between maps. Backed by a static so it survives the new RangeSession a map load builds
 ## (same idea as RangeMaps.pending); the session API stays the same.
 static var _carried := {}
@@ -19,6 +24,9 @@ var saved_kit: Dictionary:
 		return _carried
 	set(v):
 		_carried = v
+## The kit the player walked into Skirmish with ({} = starter kit); Restart reloads it (static, like _carried).
+static var _walked_in := {}
+var util := UtilState.new()  # thrown grenades, smoke volumes, grapple hooks (server-owned in MP-2)
 var _seed_counter := 0
 
 
@@ -58,9 +66,9 @@ func nearest_player(pos: Vector3) -> PlayerState:
 
 
 ## Carry-out kit: save the inventory, then go to the Skirmish map (was RangeLoadout.deploy).
-func deploy(inv: Inventory) -> void:
+func deploy(inv: Inventory, map := "skirmish") -> void:
 	save_kit(inv)
-	maps.go("skirmish")
+	maps.go(map)
 
 
 ## Save the kit without changing map (tests).
@@ -73,3 +81,13 @@ func clear_kit() -> void:
 	saved_kit = {}
 
 
+
+
+## Skirmish start: remember what the player walked in with.
+func mark_walk_in() -> void:
+	_walked_in = saved_kit.duplicate(true)
+
+
+## Skirmish Restart: carry the walk-in kit again (KIA cleared it, extract replaced it with the carried-out kit).
+func restore_walk_in() -> void:
+	saved_kit = _walked_in.duplicate(true)

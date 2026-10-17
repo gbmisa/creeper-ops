@@ -9,10 +9,12 @@ const SPILL := {"larm": 0.7, "rarm": 0.7, "lleg": 1.0, "rleg": 1.0, "stomach": 1
 const LIMBS := ["larm", "rarm", "lleg", "rleg"]
 
 var hp := {}
+var max_mult := {}  # zone -> max HP multiplier (surgery restores a blacked limb lower)
 var armor := {}  # zone -> {"id", "dur"}
 var bleeds: Array = []  # {"zone", "rate"}
 var dead := false
 var rng := RandomNumberGenerator.new()
+var head_mult := 1.0  # P13: the player sets TacticalConfig.PLAYER_HEAD_MULT; applied to bullets that get through
 
 
 func _init() -> void:
@@ -22,6 +24,7 @@ func _init() -> void:
 func reset() -> void:
 	for z in ZONES:
 		hp[z] = MAX[z]
+		max_mult[z] = 1.0
 	bleeds.clear()
 	dead = false
 
@@ -49,9 +52,10 @@ func total_frac() -> float:
 	return cur / mx
 
 
-## Walk speed multiplier from injuries. 1.0: nothing slows you since fractures were removed (CHANGES P10 is the
-## open question of whether leg damage should).
+## Walk speed multiplier from injuries (P10): a blacked-out leg slows you; two legs do not stack.
 func move_mult() -> float:
+	if hp["lleg"] <= 0.0 or hp["rleg"] <= 0.0:
+		return TacticalConfig.LEG_BLACKED_SPEED
 	return 1.0
 
 
@@ -98,6 +102,8 @@ func shoot(zone: String, shot: Dictionary) -> Dictionary:
 			info["bleed"] = "heavy"
 		elif rng.randf() < shot.get("lbleed", 0.15):
 			info["bleed"] = "light"
+	if zone == "head":
+		dmg *= head_mult
 	var res := hit(zone, dmg, info)
 	res["result"] = verdict
 	res["armor_dur"] = armor_left
@@ -120,19 +126,82 @@ func hit(zone: String, dmg: float, info: Dictionary = {}) -> Dictionary:
 	return res
 
 
-## Field medical: stops bleeds and restores `frac` of each living zone's max HP (blacked-out zones stay down).
-func heal(frac: float) -> void:
+## Field medical: stops bleeds and restores `frac` of each living zone's max HP (blacked-out zones stay down),
+## spending at most `budget` HP in all. Returns the HP restored.
+func heal(frac: float, budget := INF) -> float:
 	if dead:
-		return
+		return 0.0
 	bleeds.clear()
+	var used := 0.0
 	for z in ZONES:
 		if hp[z] > 0.0:
-			hp[z] = minf(MAX[z], hp[z] + MAX[z] * frac)
+			var add := minf(minf(zone_max(z) - hp[z], MAX[z] * frac), budget - used)
+			hp[z] += add
+			used += add
+	return used
+
+
+## Every living zone at max HP (blacked-out zones can't be healed, so they don't count).
+func full_health() -> bool:
+	for z in ZONES:
+		if hp[z] > 0.0 and hp[z] < MAX[z]:
+			return false
+	return true
 
 
 ## Bandage: stops every bleed, heals nothing.
 func stop_bleeds() -> void:
 	bleeds.clear()
+
+
+func zone_max(zone: String) -> float:
+	return MAX[zone] * float(max_mult.get(zone, 1.0))
+
+
+## HP pool: heals the worst (most damaged, living) zone first until the pool is spent.
+func heal_pool(amount: float) -> void:
+	if dead:
+		return
+	var left: float = amount
+	while left > 0.0:
+		var worst := ""
+		var worst_missing := 0.0
+		for z in ZONES:
+			if hp[z] > 0.0:
+				var missing: float = zone_max(z) - hp[z]
+				if missing > worst_missing:
+					worst_missing = missing
+					worst = z
+		if worst == "":
+			return
+		var give: float = minf(left, worst_missing)
+		hp[worst] += give
+		left -= give
+
+
+## Stop bleeds. kind: "" = all, "light", "heavy". zone "" = every zone. Returns stopped count.
+func stop_bleed(zone: String = "", kind: String = "") -> int:
+	var n := 0
+	var kept: Array = []
+	for b in bleeds:
+		var heavy: bool = float(b["rate"]) >= TacticalConfig.HEAVY_BLEED_DPS
+		var match_kind: bool = kind == "" or (kind == "heavy") == heavy
+		if (zone == "" or b["zone"] == zone) and match_kind:
+			n += 1
+		else:
+			kept.append(b)
+	bleeds = kept
+	return n
+
+
+## Surgery (CMS kit): restore a blacked-out limb at 60 % max HP. Returns false if nothing to fix.
+func surgery(zone: String) -> bool:
+	if dead or not zone in LIMBS or hp[zone] > 0.0:
+		return false
+	max_mult[zone] = 0.6
+	hp[zone] = MAX[zone] * 0.6
+	stop_bleed(zone)
+	return true
 
 
 func tick(dt: float) -> void:

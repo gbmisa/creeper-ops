@@ -18,7 +18,11 @@ var bots: RangeBots
 var world_items: WorldItems
 var inv_ui: InventoryUI
 var quick: QuickUse
-var skirmish: SkirmishGame   # only on the Skirmish map
+var skirmish: Node   # only on a Skirmish map (SkirmishGame or SkirmishLargeGame; same members)
+var utils: UtilSystem  # RANGE5 UTIL: grapple, grenades, binoculars (both maps)
+var cheats: RangeCheats
+var cheat_menu: CheatMenu
+var tempest_fx: TempestFx
 
 
 ## Which RangeMaps id this scene is. Subclasses override.
@@ -27,7 +31,9 @@ func map_id() -> String:
 
 
 func _ready() -> void:
-	Keybinds.persist = false
+	Keybinds.persist = not OS.get_cmdline_user_args().has("--range-test")   # P14 (Gregory 2026-10-16): rebinds are saved; the suite never writes them
+	print("[build] ", BugReport.build_id())   # so every log says which build it came from
+	DisplaySettings.apply()
 	args = RangeArgs.parse()
 	if args.has("map"):
 		RangeMaps.pending = str(args["map"])
@@ -50,6 +56,7 @@ func _ready() -> void:
 		return
 	RangeMaps.pending = map_id()
 	TacticalViewmodel.tune = args.has("tune")
+	RangeSpace.clear()   # F110: sound zones are per scene
 	_build()
 	if args.has("shot") or args.has("weapon"):
 		var s := RangeShot.new()
@@ -128,7 +135,7 @@ func _add_hud() -> RangeHud:
 	hud.setup(weapons, player)
 	hud.process_mode = Node.PROCESS_MODE_ALWAYS   # F19: HUD stays live while the pause menu freezes the world
 	var body_hud := RangeBodyHud.new()
-	hud.add_child(body_hud)
+	hud.frame.add_child(body_hud)
 	body_hud.setup(player)
 	quick = QuickUse.new()
 	add_child(quick)
@@ -141,9 +148,24 @@ func _add_hud() -> RangeHud:
 
 
 func _add_menu() -> void:
+	utils = UtilSystem.new()
+	add_child(utils)
+	utils.setup(player, weapons, session, bal, func(): return bots.bots)
 	player.god = args.has("god")
 	if args.has("bots") and skirmish == null:
 		bots.spawn_scavs()
+	tempest_fx = TempestFx.new()
+	add_child(tempest_fx)
+	tempest_fx.setup(weapons, bal, func(): return bots.bots)
+	cheats = RangeCheats.new()
+	add_child(cheats)
+	cheats.setup(self)
+	weapons.cheats = cheats
+	if skirmish != null:
+		skirmish.cheats = cheats
+	cheat_menu = CheatMenu.new()
+	add_child(cheat_menu)
+	cheat_menu.setup(cheats)
 	menu = RangeMenu.new()
 	add_child(menu)
 	menu.setup(session)
@@ -157,8 +179,15 @@ func _add_menu() -> void:
 func _process(_dt: float) -> void:
 	if input == null:
 		return
+	if input.act_hidden("secret_tempest") and player.enabled and not weapons.ui_open:
+		Tempest.toggle(weapons, world_items)
+	if input.act_hidden("cheat_menu") and not weapons.ui_open:
+		cheat_menu.toggle()
+	cheats.apply_frame(_dt)
 	if input.was_pressed(KEY_ESCAPE) and not (skirmish != null and skirmish.over):
-		if inv_ui != null and inv_ui.is_open:
+		if cheat_menu.visible:
+			cheat_menu.toggle()
+		elif inv_ui != null and inv_ui.is_open:
 			inv_ui.close()
 		elif menu.visible:
 			menu.close()

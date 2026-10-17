@@ -65,3 +65,18 @@ static func run(t: RangeTest) -> void:
 	var got: int = _count(rr["w"], "ak47")[0]
 	t.check("f90: range start keeps the starter kit's %d AK mags (%d)" % [base, got], got == base)
 	RangeTestAmmo2._free(rr)
+	# Gregory 2026-10-16: starter kit + a SCAR-H brought in: the full chest rig is swapped so the SCAR gets its spares
+	var g := RangeTestAmmo2._rig(t, false)
+	var gw: PlayerWeapons = g["w"]
+	gw.inv.place(gw.inv.make("scarh"), "secondary")
+	for x in 4:  # pockets full too (the playtester had his filled)
+		gw.inv.place(gw.inv.make("mag_m1911"), "pockets", x, 0)
+	(g["session"] as RangeSession).save_kit(gw.inv)
+	RangeTestAmmo2._free(g)
+	var d := RangeTestAmmo2._rig(t, true)
+	var dw: PlayerWeapons = d["w"]
+	var scar := _count(dw, "scarh")
+	var ak2 := _count(dw, "ak47")
+	t.check("f90: brought-in SCAR-H gets %d full spare mags with rig + pockets full (AK keeps %d)" % [scar[0], ak2[0]],
+		scar[0] >= want and scar[1] and ak2[0] >= 3 and dw.inv.equipped("rig")["id"] == "rig_assault")
+	RangeTestAmmo2._free(d)

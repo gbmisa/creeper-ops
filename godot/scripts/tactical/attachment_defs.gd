@@ -3,14 +3,15 @@ class_name AttachmentDefs
 ## (names: up, side = recoil, hip = hip-fire cone, ads_mult = ADS time, noise = bot hearing radius, flash = muzzle flash
 ## 0/1, vel = muzzle velocity, mag = capacity, reload = reload time). Sights: zoom (lpvo also zoom_max, toggled with t_zoom),
 ## axis_h (optic centre above the rail, m), win (window size, m), ret (reticle), `only` (gun ids) limits scope8x to sniper rails.
-## size / len are the placeholder box (m); an attachments/<id>.glb replaces it when ART delivers one.
+## size / len are the placeholder box (m); an attachments/<id>.glb replaces it when ART delivers one. glb_off (m) shifts
+## that glb so its window centres on the reticle (F119: measured window centre vs x = 0, y = axis_h).
 
 const SLOTS := ["sight", "muzzle", "under", "mag"]
 const ROWS := {
 	"reddot": {"name": "Red dot sight", "slot": "sight", "w": 1, "h": 1, "kg": 0.15, "zoom": 1.0, "axis_h": 0.032, "win": 0.024,
-		"depth": 0.06, "ret": "dot", "mods": {"ads_mult": 0.9}, "note": "1x, fast ADS"},
+		"depth": 0.06, "glb_off": Vector3(0.0052, 0.0033, 0.0), "ret": "dot", "mods": {"ads_mult": 0.9}, "note": "1x, fast ADS"},
 	"holo": {"name": "Holographic sight", "slot": "sight", "w": 1, "h": 1, "kg": 0.30, "zoom": 1.0, "axis_h": 0.036, "win": 0.034,
-		"depth": 0.07, "ret": "ring", "mods": {"ads_mult": 0.95}, "note": "1x, wide window"},
+		"depth": 0.07, "glb_off": Vector3(0.0056, -0.0007, 0.0), "ret": "ring", "mods": {"ads_mult": 0.95}, "note": "1x, wide window"},
 	"acog3x": {"name": "ACOG 3x", "slot": "sight", "w": 2, "h": 1, "kg": 0.40, "zoom": 3.0, "axis_h": 0.040, "win": 0.03,
 		"depth": 0.13, "ret": "chevron", "mods": {"ads_mult": 1.15}, "note": "3x, slower ADS"},
 	"lpvo": {"name": "LPVO 1-6x", "slot": "sight", "w": 2, "h": 1, "kg": 0.60, "zoom": 1.0, "zoom_max": 6.0, "axis_h": 0.044,

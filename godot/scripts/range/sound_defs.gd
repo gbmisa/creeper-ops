@@ -3,6 +3,13 @@ class_name SoundDefs
 ## CREDITS.md there). Guns resolve by gun id, then calibre, then class. Names are file stems without ".ogg".
 
 const DIR := "res://assets/audio/range/"
+## F110 indoor / outdoor: reverb bus for a shared room, low-passed buses when listener and source are in different spaces.
+const ROOM_BUS := "RangeRoom"
+const MUFFLE_BUS := "RangeMuffle"
+const MUFFLE_ROOM_BUS := "RangeMuffleRoom"
+const MUFFLE_HZ := 1000.0
+const MUFFLE_DB := -5.0
+const MUFFLE_ROOM_WET := 0.15
 const GUN_EVENTS := ["shot", "shot_suppressed", "tail", "dry", "mag_out", "mag_in", "action", "mode"]
 
 ## Report profiles: shot sample, suppressed sample, distant/room tail, shot level (dB).
@@ -23,12 +30,13 @@ const PROFILES := {
 	"axmc": {"shot": "shot_338", "sup": "sup_sniper", "tail": "tail_tikka", "db": 3.0},
 	"pkm": {"shot": "shot_pkm", "sup": "sup_heavy", "tail": "tail_mosin", "db": 2.0},
 	"pump12": {"shot": "shot_model12", "sup": "sup_shotgun", "tail": "tail_model12", "db": 2.0},
+	"tempest": {"shot": "shot_338", "sup": "sup_sniper", "tail": "tail_tikka", "db": 0.0, "pitch": 1.7},  # secret railgun: pitched-up .338 crack (+ zap, TempestFx)
 	"semi12": {"shot": "shot_saiga", "sup": "sup_shotgun", "tail": "tail_nova", "db": 1.0},
 }
 const GUN_PROFILE := {
 	"m1911": "pistol45", "glock18": "pistol9", "revolver": "mag44", "mp5": "smg9", "p90": "smg57", "vector": "smg45",
 	"ak47": "ak", "m4a1": "m4", "scarh": "nato762", "sks": "sks", "garand": "garand", "sr25": "dmr", "mosin": "mosin",
-	"sniper": "axmc", "pkm": "pkm", "shotgun": "pump12", "saiga12": "semi12",
+	"sniper": "axmc", "tempest": "tempest", "pkm": "pkm", "shotgun": "pump12", "saiga12": "semi12",
 }
 const CAL_PROFILE := {
 	"45acp": "pistol45", "9x19": "pistol9", "44mag": "mag44", "57x28": "smg57", "762x39": "ak", "556x45": "m4",
@@ -52,6 +60,8 @@ const MECH := {
 	"garand": {"mag_out": "rifle_mag_out", "mag_in": "smg_mag_in", "action": "rifle_charge"},
 	"belt": {"mag_out": "belt_open", "mag_in": "lmg_belt_in", "action": "belt_close"},
 }
+## Extra dB per mechanical sample on top of RangeAudio.gun's -2 (samples recorded at different levels).
+const MECH_DB := {"shotgun_pump": -10.0}  # F123: the pump was far louder than the shotgun's shot
 const GUN_MECH := {
 	"m1911": "pistol", "glock18": "pistol", "revolver": "revolver", "mp5": "smg", "p90": "smg", "vector": "smg",
 	"ak47": "rifle", "m4a1": "rifle", "scarh": "rifle", "sks": "semi_auto", "garand": "garand", "sr25": "rifle",
@@ -101,6 +111,19 @@ const UTILITY := {
 	"flash": {"pin": "grenade_pin", "throw": "throw_whoosh", "bounce": "grenade_bounce", "bang": "flash_bang", "tinnitus": "flash_tinnitus"},
 	"stim": {"use": "stim_use"},
 	"binoculars": {"raise": "binoc_raise", "lower": "binoc_lower", "zoom": "binoc_zoom"},
+}
+
+
+## Medical items (MED code calls RangeAudio.med(id)). Placeholder stems; the SOUND track
+## replaces them with recorded samples.
+const MEDS := {
+	"med_bandage": "inv_cloth", "med_esmarch": "inv_cloth", "med_splint": "inv_wood",
+	"med_cms": "inv_metal", "med_ai2": "inv_plastic", "med_car": "inv_plastic",
+	"med_salewa": "inv_plastic", "med_grizzly": "inv_leather_big", "med_analgin": "inv_coins",
+	"med_morphine": "inv_plastic", "med_propital": "inv_plastic", "med_sj6": "stim_use",
+	"med_adrenaline": "inv_plastic", "med_etgc": "stim_use", "med_iodine": "inv_coins",
+	"med_water": "inv_soft", "med_juice": "inv_soft", "med_crackers": "inv_cloth",
+	"med_mre": "inv_cloth", "med_stim": "stim_use", "med_ifak": "inv_plastic",
 }
 
 

@@ -27,23 +27,70 @@ const ROWS := {
 	"mag_pkm": {"name": "PKM 100-rd belt box", "kind": "mag", "w": 2, "h": 2, "kg": 2.5, "gun": "pkm"},
 	"clip_garand": {"name": "M1 en-bloc clip", "kind": "mag", "w": 1, "h": 1, "kg": 0.1, "gun": "garand"},
 	"rig_chest": {"name": "Chest rig", "kind": "rig", "w": 3, "h": 2, "kg": 0.8, "grid": [4, 2]},
+	"rig_assault": {"name": "Assault rig", "kind": "rig", "w": 3, "h": 3, "kg": 1.2, "grid": [6, 3]},  # Skirmish deploy swaps it in when spares don't fit
 	"pack_small": {"name": "Small backpack", "kind": "backpack", "w": 3, "h": 3, "kg": 0.9, "grid": [4, 4]},
 	"pack_big": {"name": "Large backpack", "kind": "backpack", "w": 4, "h": 4, "kg": 1.6, "grid": [5, 6]},
 	# Meds (QuickUse): use = seconds with the hands busy; heal = fraction of each living zone's max HP
 	# (BodyHealth.heal also stops every bleed); stop_bleed = the bandage's only effect. Blacked zones stay down.
-	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4, "use": 3.0, "heal": 0.6, "short": "IFAK", "glyph": "IF"},
+	# res = HP pool (Tarkov-style): each use spends the HP it restores; the kit is used up when the pool hits 0.
+	"med_ifak": {"name": "IFAK medkit", "kind": "med", "w": 1, "h": 2, "kg": 0.4, "use": 3.0, "heal": 0.6, "res": 300.0, "short": "IFAK", "glyph": "IF"},
 	"med_bandage": {"name": "Bandage", "kind": "med", "w": 1, "h": 1, "kg": 0.05, "use": 2.0, "stop_bleed": true, "short": "Bandage", "glyph": "BA"},
+	# Track MED rows: "use" is a Dictionary (TacticalPlayer.use_med / StatusEffects.apply_med). The two rows above keep QuickUse.
+	"med_esmarch": {"name": "Esmarch tourniquet", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 3.0, "effect": "stop_bleed", "bleed": "heavy", "limb_only": true}},
+	"med_cms": {"name": "CMS surgical kit", "kind": "med", "w": 2, "h": 2, "kg": 1.0,
+		"use": {"time": 15.0, "effect": "surgery", "uses": 3}},
+	"med_ai2": {"name": "AI-2 medkit", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "hp_pool", "amount": 100.0}},
+	"med_car": {"name": "Car first aid kit", "kind": "med", "w": 2, "h": 1, "kg": 0.3,
+		"use": {"time": 4.0, "effect": "hp_pool", "amount": 220.0, "stop": ["light"]}},
+	"med_salewa": {"name": "Salewa first aid kit", "kind": "med", "w": 2, "h": 2, "kg": 0.5,
+		"use": {"time": 5.0, "effect": "hp_pool", "amount": 400.0, "stop": ["light", "heavy"]}},
+	"med_grizzly": {"name": "Grizzly medical kit", "kind": "med", "w": 3, "h": 2, "kg": 1.2,
+		"use": {"time": 8.0, "effect": "hp_pool", "amount": 1800.0, "stop": ["light", "heavy"], "all_wounds": true}},
+	"med_analgin": {"name": "Analgin painkillers", "kind": "med", "w": 1, "h": 1, "kg": 0.05,
+		"use": {"time": 1.0, "effect": "pain_off", "dur": 95.0, "uses": 4}},
+	"med_morphine": {"name": "Morphine syrette", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "pain_off", "dur": 300.0, "dehydration": 0.3}},
+	"med_propital": {"name": "Propital RG stimulant", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 3.0, "effect": "regen", "rate": 1.0, "dur": 300.0, "id": "med_propital"}},
+	"med_sj6": {"name": "SJ6 TGLabs stim", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "sj6"}},
+	"med_adrenaline": {"name": "Adrenaline syrette", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "adrenaline", "dehydration": 0.25}},
+	"med_etgc": {"name": "eTG-c stim", "kind": "med", "w": 1, "h": 1, "kg": 0.15,
+		"use": {"time": 3.0, "effect": "etgc"}},
+	"med_iodine": {"name": "Iodine pills", "kind": "med", "w": 1, "h": 1, "kg": 0.05,
+		"use": {"time": 1.0, "effect": "iodine"}},
+	"med_water": {"name": "Water bottle", "kind": "med", "w": 1, "h": 2, "kg": 0.5,
+		"use": {"time": 2.0, "effect": "hydrate", "amount": 0.5}},
+	"med_juice": {"name": "Juice carton", "kind": "med", "w": 1, "h": 1, "kg": 0.3,
+		"use": {"time": 2.0, "effect": "hydrate", "amount": 0.35, "energy": 0.2}},
+	"med_crackers": {"name": "Crackers", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "feed", "amount": 0.3, "dehydration": 0.1}},
+	"med_mre": {"name": "MRE ration", "kind": "med", "w": 2, "h": 1, "kg": 0.5,
+		"use": {"time": 4.0, "effect": "feed", "amount": 0.6, "dehydration": -0.2}},
+	"med_stim": {"name": "Combat stim", "kind": "med", "w": 1, "h": 1, "kg": 0.1,
+		"use": {"time": 2.0, "effect": "stim", "dur": 20.0, "mult": 2.0}},
+	"headset_comtac": {"name": "Comtac earmuffs", "kind": "headset", "w": 2, "h": 1, "kg": 0.5},
+	"util_grapple": {"name": "Grappling hook", "kind": "utility", "w": 2, "h": 2, "kg": 1.1},
+	"util_frag": {"name": "Frag grenade", "kind": "utility", "w": 1, "h": 1, "kg": 0.4},
+	"util_smoke": {"name": "Smoke grenade", "kind": "utility", "w": 1, "h": 1, "kg": 0.5},
+	"util_flash": {"name": "Flashbang", "kind": "utility", "w": 1, "h": 1, "kg": 0.3},
+	"util_binoculars": {"name": "Binoculars", "kind": "utility", "w": 2, "h": 1, "kg": 0.8},
 }
 ## Quick-use bar order: card n is bound to t_slot_(4 + n).
 const QUICK := ["med_ifak", "med_bandage"]
 ## What one "meds" entry in a Skirmish loot crate hands out.
 const CRATE_MEDS := ["med_ifak", "med_bandage"]
+## Skirmish crate loot entries that hand out one gear item (F134).
+const CRATE_GEAR := {"headset": "headset_comtac"}
 
 const ARMOR_SIZE := {"vest2": [3, 3, 1.5], "plate4": [3, 3, 6.0], "steel6": [2, 2, 3.5], "helmet3": [2, 2, 1.2]}
 
 
 static func has(id: String) -> bool:
-	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id) or AttachmentDefs.has(id)
+	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or SecretArms.has_weapon(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id) or AttachmentDefs.has(id)
 
 
 static func of(id: String) -> Dictionary:
@@ -54,7 +101,7 @@ static func of(id: String) -> Dictionary:
 			d["cal"] = WeaponDefs.of(d["gun"])["cal"]
 			d["cap"] = WeaponDefs.of(d["gun"])["mag"]
 		return d
-	if WeaponDefs.ROWS.has(id):
+	if WeaponDefs.ROWS.has(id) or SecretArms.has_weapon(id):
 		var w := WeaponDefs.of(id)
 		return {"id": id, "name": w["name"], "kind": "gun", "w": w["inv_w"], "h": w["inv_h"], "kg": w["kg"],
 			"pistol": w["class"] == "pistol", "cal": w["cal"]}
@@ -67,7 +114,7 @@ static func of(id: String) -> Dictionary:
 		return {"id": id, "name": a["name"], "kind": "attach", "w": a["w"], "h": a["h"], "kg": a["kg"], "slot": a["slot"]}
 	var r := ArmorDefs.of(id)
 	var s: Array = ARMOR_SIZE[id]
-	return {"id": id, "name": r["name"], "kind": "armor", "w": s[0], "h": s[1], "kg": s[2]}
+	return {"id": id, "name": r["name"], "kind": "armor", "w": s[0], "h": s[1], "kg": s[2], "helmet": r["zones"] == ["head"]}
 
 
 ## A fresh item instance. opts: count (ammo), rounds + ammo (mags), rot, gun (a Gun).
@@ -86,6 +133,11 @@ static func make(id: String, opts: Dictionary, ids: IdSource) -> Dictionary:
 			it["gun"] = opts.get("gun", Gun.new(id))
 		"rig", "backpack":
 			it["items"] = []
+		"med":
+			if d.has("res"):
+				it["res"] = float(opts.get("res", d["res"]))
+			if d.get("use") is Dictionary and (d["use"] as Dictionary).has("uses"):
+				it["uses"] = int(d["use"]["uses"])
 	return it
 
 

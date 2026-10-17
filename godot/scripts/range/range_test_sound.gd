@@ -56,6 +56,30 @@ static func run(t: RangeTest) -> void:
 	t.check("sound: P90 tail is one report (no baked burst); Garand ping is short", tp != null and tp.get_length() < 0.15 and gp != null and gp.get_length() < 0.3)
 
 
+## F110: space rule (same room / both outside / split) and the per-scene zone reset.
+static func space(t: RangeTest) -> void:
+	RangeSpace.clear()
+	RangeSpace.add(AABB(Vector3(0, 0, 0), Vector3(10, 3, 10)))
+	RangeSpace.add(AABB(Vector3(20, 0, 0), Vector3(10, 3, 10)))
+	var a := Vector3(2, 1, 2)
+	var b := Vector3(8, 1, 8)
+	var out := Vector3(15, 1, 5)
+	var out2 := Vector3(40, 1, 5)
+	var other := Vector3(25, 1, 5)
+	t.check("space: same room uses the room bus", RangeSpace.treat(a, b)["bus"] == SoundDefs.ROOM_BUS)
+	t.check("space: both outside is dry", RangeSpace.treat(out, out2)["bus"] == "Master" and RangeSpace.treat(out, out2)["db"] == 0.0)
+	t.check("space: outside source heard indoors is muffled with a room", RangeSpace.treat(a, out)["bus"] == SoundDefs.MUFFLE_ROOM_BUS and RangeSpace.treat(a, out)["db"] < 0.0)
+	t.check("space: indoor source heard outside is muffled, no room", RangeSpace.treat(out, a)["bus"] == SoundDefs.MUFFLE_BUS)
+	t.check("space: another building is muffled", RangeSpace.treat(a, other)["bus"] == SoundDefs.MUFFLE_ROOM_BUS)
+	RangeSpace.clear()
+	t.check("space: zones clear between scenes (open ground is outside)", RangeSpace.count() == 0 and RangeSpace.zone_of(a) == -1)
+	for id in SkirmishData.BUILDINGS:
+		var d: Dictionary = SkirmishData.BUILDINGS[id]
+		RangeSpace.add_building(d["rect"], d["h"], d["floors"])
+	t.check("space: one zone per Skirmish building", RangeSpace.count() == SkirmishData.BUILDINGS.size())
+	RangeSpace.clear()
+
+
 static func _need(bad: Array, stem: String, label: String) -> void:
 	if stem == "" or RangeAudio.stream(stem) == null:
 		bad.append("%s -> '%s'" % [label, stem])

@@ -18,12 +18,15 @@ var aware := false        # seeing for longer than the reaction delay
 var react_left := -1.0
 var sight_t := 0.0        # continuous time aware, drives the aim warm-up
 var since_seen := 99.0
-var last_known := Vector3.ZERO
-var has_last := false
+var last_known := Vector3.ZERO   # mirrors contact.pos (kept for callers)
+var has_last := false            # mirrors contact.has()
+var contact := BotContact.new()  # F97: the enemy as a memory, not a live fix
 var noise_pos := Vector3.ZERO
+var _shot_times: Array = []  # F133: recent heard-shot times (s)
 var noise_new := false
 var shot_new := false     # the latest noise was a gunshot (cleared with noise_new)
 var alert_t := 0.0
+var _was_seeing := false
 
 
 static func in_view(eye: Vector3, fwd: Vector3, point: Vector3, max_range := RANGE) -> bool:
@@ -34,11 +37,21 @@ static func in_view(eye: Vector3, fwd: Vector3, point: Vector3, max_range := RAN
 	return rad_to_deg(fwd.angle_to(to)) <= FOV_DEG * 0.5
 
 
-## True when any ray from `from` to a point reaches it without touching world geometry.
-static func los(space: PhysicsDirectSpaceState3D, from: Vector3, points: Array) -> bool:
+## True when any ray from `from` to a point reaches it without touching world geometry
+## or a smoke volume.
+static func los(space: PhysicsDirectSpaceState3D, from: Vector3, points: Array, smoke: Array = []) -> bool:
 	for p in points:
+		if _smoked(from, p, smoke):
+			continue
 		var q := PhysicsRayQueryParameters3D.create(from, p, TacticalConfig.LAYER_WORLD)
 		if space.intersect_ray(q).is_empty():
+			return true
+	return false
+
+
+static func _smoked(a: Vector3, b: Vector3, smoke: Array) -> bool:
+	for s in smoke:
+		if s.blocks(a, b):
 			return true
 	return false
 
@@ -49,14 +62,14 @@ static func reaction_delay(dist: float, still: bool, roll: float) -> float:
 	return d * (STILL_MULT if still else 1.0)
 
 
-func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceState3D, pts: Array, still: bool, rng: RandomNumberGenerator, spot_mult := 1.0) -> void:
+func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceState3D, pts: Array, still: bool, rng: RandomNumberGenerator, spot_mult := 1.0, smoke: Array = []) -> void:
 	alert_t = maxf(0.0, alert_t - dt)
 	seeing = false
 	for p in pts:
 		if in_view(eye, fwd, p, range_m * spot_mult):
 			seeing = true
 			break
-	seeing = seeing and los(space, eye, pts)
+	seeing = seeing and los(space, eye, pts, smoke)
 	if seeing:
 		if not aware and react_left < 0.0:
 			react_left = reaction_delay(eye.distance_to(pts[1] if pts.size() > 1 else pts[0]), still, rng.randf())
@@ -68,8 +81,7 @@ func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceStat
 				aware = true
 		if aware:
 			sight_t += dt
-			last_known = pts[1] if pts.size() > 1 else pts[0]
-			has_last = true
+			contact.sight(pts[1] if pts.size() > 1 else pts[0])
 			since_seen = 0.0
 	else:
 		react_left = -1.0
@@ -78,26 +90,42 @@ func update(dt: float, eye: Vector3, fwd: Vector3, space: PhysicsDirectSpaceStat
 			sight_t = 0.0
 		if since_seen > 2.0:
 			aware = false
+	if _was_seeing and not seeing:
+		contact.lose_sight()
+	_was_seeing = seeing
+	tick(dt)
+
+
+## Ages the contact even when there is no player to sense (dead, missing). Called every think.
+func tick(dt: float) -> void:
+	contact.tick(dt)
+	last_known = contact.pos
+	has_last = contact.has()
 
 
 ## Hit from `from`, or told by the squad: instantly aware of that spot.
 func alert(from: Vector3) -> void:
-	last_known = from
-	has_last = true
+	contact.hit(from)
 	aware = true
 	react_left = 0.0
 	since_seen = 0.0
+	tick(0.0)
 
 
-## F87: a gunshot also makes the bot alert and marks the shot as the player's last known spot.
-func hear(pos: Vector3, shot := false) -> void:
+## F87: a gunshot also makes the bot alert. F97: the shot contact is fuzzy, never the exact spot.
+func hear(pos: Vector3, shot: bool, dist: float, rng: RandomNumberGenerator) -> void:
 	noise_pos = pos
 	noise_new = true
 	if shot:
 		shot_new = true
 		alert_t = ALERT_TIME
-		last_known = pos
-		has_last = true
+		var now := Time.get_ticks_msec() * 0.001  # F133: several shots at once blur where each came from
+		_shot_times = _shot_times.filter(func(t): return now - t < BotTacticsDefs.HEAR_MULTI_WINDOW)
+		var mult := 1.0 + BotTacticsDefs.HEAR_MULTI_STEP * minf(float(_shot_times.size()), BotTacticsDefs.HEAR_MULTI_MAX)
+		_shot_times.append(now)
+		contact.shot(pos, dist, rng, mult)
+		noise_pos = contact.pos  # F133: the bot turns/investigates the rough spot, never the shooter
+		tick(0.0)
 
 
 func alerted() -> bool:

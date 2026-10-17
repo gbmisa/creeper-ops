@@ -48,6 +48,8 @@ func _process(_dt: float) -> void:
 	var to := POS - player.global_position
 	to.y = 0.0
 	if to.length() < REACH:
-		weapons.prompt = "%s: Deploy to Skirmish with this kit" % Keybinds.short("t_use")
+		weapons.prompt = "%s: Deploy to Skirmish with this kit   %s: Skirmish (large)" % [Keybinds.short("t_use"), Keybinds.short("t_deploy_large")]
 		if player.input.act("t_use"):
 			player.session.deploy(weapons.inv)
+		elif player.input.act("t_deploy_large"):
+			player.session.deploy(weapons.inv, "skirmish_large")

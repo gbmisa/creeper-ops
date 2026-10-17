@@ -7,6 +7,7 @@ extends Node3D
 const LASER_RANGE := 60.0
 const FRAME_T := 0.005
 static var _tex := {}
+static var _glass_mat := {}  # F124: one reticle material per kind, not a new one per rebuild
 
 var gun: Gun
 var glass: MeshInstance3D
@@ -29,6 +30,10 @@ func build(g: Gun, half: float) -> void:
 		var part := _load(id)
 		if part == null:
 			part = _placeholder(id, slot)
+		else:  # F119: the glb's window onto the reticle (the glass added below stays on the sight axis)
+			for c in part.get_children():
+				if c is Node3D:
+					c.position += AttachmentDefs.ROWS[id].get("glb_off", Vector3.ZERO)
 		part.position = at
 		add_child(part)
 		if slot == "sight" and AttachmentDefs.ROWS[id]["zoom"] <= 1.0:
@@ -113,14 +118,21 @@ func _add_glass(sight: Node3D, id: String) -> void:
 	glass = MeshInstance3D.new()
 	glass.mesh = q
 	glass.position = Vector3(0, r["axis_h"], float(r["depth"]) * 0.5 - 0.002)
+	glass.material_override = _glass(r["ret"])
+	glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sight.add_child(glass)
+
+
+static func _glass(kind: String) -> StandardMaterial3D:
+	if _glass_mat.has(kind):
+		return _glass_mat[kind]
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_texture = reticle_tex(r["ret"])
+	mat.albedo_texture = reticle_tex(kind)
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	glass.material_override = mat
-	glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	sight.add_child(glass)
+	_glass_mat[kind] = mat
+	return mat
 
 
 static func reticle_tex(kind: String) -> ImageTexture:

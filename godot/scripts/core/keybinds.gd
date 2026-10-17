@@ -42,6 +42,19 @@ const DEFAULTS := {
 	"t_slot_6": ["Tactical", "Weapon slot 6", [KEY_6]],
 	"inventory": ["Tactical", "Open / close inventory", [KEY_TAB]],
 	"drop": ["Tactical", "Drop the gun in hand", [KEY_G]],
+	"med_quick_1": ["Tactical", "Quick-use 1st med (rig/pockets)", [KEY_F5]],
+	"med_quick_2": ["Tactical", "Quick-use 2nd med (rig/pockets)", [KEY_F6]],
+	"med_quick_3": ["Tactical", "Quick-use 3rd med (rig/pockets)", [KEY_7]],
+	"med_quick_4": ["Tactical", "Quick-use 4th med (rig/pockets)", [KEY_0]],
+	"t_util_1": ["Tactical", "Use utility slot 1", [KEY_I]],
+	"t_util_2": ["Tactical", "Use utility slot 2", [KEY_O]],
+	"t_deploy_large": ["Tactical", "Deploy to Skirmish (large) at the truck", [KEY_L]],
+}
+
+## Hidden chords (physical keycode | modifier mask): never listed, never rebindable, never in the cfg file.
+const HIDDEN := {
+	"secret_tempest": [KEY_P | KEY_MASK_CTRL | KEY_MASK_ALT],
+	"cheat_menu": [KEY_KP_5 | KEY_MASK_CTRL],
 }
 
 static var _map := {}  # id -> Array[int] (current keys)

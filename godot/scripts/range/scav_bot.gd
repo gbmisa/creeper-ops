@@ -21,6 +21,7 @@ var gun: Gun
 var brain := BotBrain.new()
 var percept := BotPerception.new()
 var pose := BotPose.new()  # crouch / peek lean: eye, hitboxes, mesh
+var steps := BotSteps.new()   # F107
 var rig := {}
 var session: RangeSession
 var bal: Ballistics
@@ -37,6 +38,7 @@ var nav: NavigationAgent3D
 var mesh: BotMesh
 var flash: MuzzleFlash
 var hurt_t := 0.0
+var stagger_t := 0.0  # flashbang: stands still, no shooting while > 0
 var has_cover := false
 var cover_pos := Vector3.ZERO
 var patrol_i := 0
@@ -47,6 +49,9 @@ var cd := 0.0
 var react_t := 0.0   # F18: rolled per engagement; the bot will not fire at a seen target before sight_t passes this
 var cover_t := 0.0
 var shot_cover := false  # F88: current TakeCover was entered from a heard shot
+var squad: BotSquad  # F97 phase C: this bot's squad plan (shared with its members)
+var squad_role := BotSquad.ROLE_HOLD  # this bot's current role in the plan
+var combat := BotCombat.new()  # F97 phase D: the fight-from-cover loop state
 var _dying := false
 var _go_age := 0.0
 var stuck_win := 0.0  # F91 (BotUnstick): time in the current progress window
@@ -74,8 +79,8 @@ func setup(s: RangeSession, b: Ballistics, house: Node3D, label: String, start_i
 	bal = b
 	kind = bot_kind
 	def = BotDefs.of(kind)
-	covers = house.covers
-	patrol = route if not route.is_empty() else house.patrol
+	covers = house.covers if house != null else []
+	patrol = route if not route.is_empty() else (house.patrol if house != null else [Vector3.ZERO])
 	if def["overwatch"]:
 		covers = []
 	percept.range_m = def["sight"]
@@ -120,13 +125,15 @@ func eye() -> Vector3:
 
 
 func _on_noise(pos: Vector3, radius: float, kind: String, src: Object) -> void:
-	if body.dead or src is ScavBot or not is_inside_tree():
+	if body.dead or src == self or not is_inside_tree():
 		return
+	if src is ScavBot and (src == ally or src == leader or (squad != null and squad.members.has(src))):
+		return  # F133: bots know their own squad's shots; other bots' shots are heard
 	if global_position.distance_to(pos) <= radius:
 		var shot := kind == "shot"
-		percept.hear(pos, shot)
+		percept.hear(pos, shot, global_position.distance_to(pos), rng)
 		if shot and not percept.seeing:  # F87: snap round to the shot so the view cone checks it now
-			var d := _flat(pos - global_position)
+			var d := _flat(percept.noise_pos - global_position)
 			if d.length() > 0.05:
 				rotation.y = atan2(-d.x, -d.z)
 			if cover_t <= 0.0:
@@ -139,8 +146,8 @@ func on_hit(res: Dictionary) -> void:
 	if not _dying and not body.dead and def["overwatch"]:
 		BotEngage.relocate(self)
 	if not _dying:
-		var target := session.nearest_player(global_position) if session != null else null
-		percept.alert(target.node.global_position if target != null and target.node != null else res.get("origin", global_position))
+		var from: Vector3 = res.get("origin", global_position)  # F133: toward where the bullet came from, roughly
+		percept.alert(BotContact.fuzz(from, BotContact.heard_err(global_position.distance_to(from)), rng))
 	if body.dead:
 		# Killing shot: throw the ragdoll along the bullet's travel direction, scaled by damage.
 		var dir: Vector3 = (res["pos"] as Vector3) - (res["origin"] as Vector3)
@@ -150,6 +157,9 @@ func on_hit(res: Dictionary) -> void:
 
 func think(dt: float, over := {}) -> void:
 	if body.dead or _dying:
+		return
+	if stagger_t > 0.0:  # flashed: disoriented, no decisions or actions
+		stagger_t -= dt
 		return
 	body.tick(dt)
 	if body.dead:
@@ -166,6 +176,9 @@ func think(dt: float, over := {}) -> void:
 		winding = false
 		mesh.glint(false)
 	_sense(dt)
+	if squad != null and (percept.shot_new or percept.noise_new):
+		squad.invalidate()  # F97 phase C: new info re-plans the squad now
+	_squad_tick(dt)
 	var f := _facts()
 	f.merge(over, true)
 	var from := brain.state
@@ -177,11 +190,27 @@ func think(dt: float, over := {}) -> void:
 	if to != "":
 		if from == BotBrain.HEAL and to == BotBrain.SEARCH:
 			body.heal(0.4)
-		shot_cover = to == BotBrain.COVER and from in [BotBrain.PATROL, BotBrain.INVESTIGATE]
+		shot_cover = to == BotBrain.COVER and from in [BotBrain.PATROL, BotBrain.INVESTIGATE, BotBrain.HOLD]
 		_enter(to)
 		print("[bot] ", label_name, " ", from, " -> ", to)
 		state_changed.emit(self, from, to)
-	_act()
+	if brain.state not in [BotBrain.ENGAGE, BotBrain.COVER]:
+		combat.active = false  # F97 phase D: the cover loop only runs in ENGAGE/COVER
+	_act(dt)
+
+
+## Flashbang: blinded and staggered for `dur` seconds.
+func stagger(dur: float) -> void:
+	stagger_t = maxf(stagger_t, dur)
+
+
+## Frag nearby: run away from `pos` (UTIL track reaction; the brain keeps its state).
+func flee_from(pos: Vector3) -> void:
+	var away := global_position - pos
+	away.y = 0.0
+	if away.length() < 0.1:
+		away = Vector3(1, 0, 0)
+	_go(global_position + away.normalized() * 10.0)
 
 
 func _sense(dt: float) -> void:
@@ -191,15 +220,24 @@ func _sense(dt: float) -> void:
 		percept.seeing = false
 		percept.aware = false
 		percept.since_seen = 99.0
+		percept.tick(dt)  # F97: the contact still ages with no player to sense
 		return
 	var head := player.eye_pos()
 	var chest := player.global_position + Vector3(0, 0.85 if player.crouching else 1.3, 0)
 	var still := player.horizontal_speed() < 0.3 or player.crouching
-	percept.update(dt, eye(), -global_basis.z, get_world_3d().direct_space_state, [head, chest], still, rng, player.spot_mult)
+	var smoke: Array = session.util.smokes if session != null else []
+	percept.update(dt, eye(), -global_basis.z, get_world_3d().direct_space_state, [head, chest], still, rng, player.spot_mult, smoke)
 
 
 func _facts() -> Dictionary:
 	return BotShooting.facts(self)
+
+
+## F97 phase C: resolve this bot's squad, re-plan on the timer/events, read its role.
+func _squad_tick(dt: float) -> void:
+	if session == null:
+		return
+	BotSquad.tick_bot(session, self, dt)
 
 
 func _find_cover() -> void:
@@ -226,6 +264,15 @@ func _enter(s: String) -> void:
 			_go(percept.last_known + side)
 		BotBrain.SEARCH:
 			_go(percept.last_known)
+		BotBrain.HOLD:
+			# F97: defensive post = best scored cover (no live threat: the contact is forgotten).
+			# No markers (e.g. overwatch): hold position.
+			var post := BotCover.pick(self, squad)
+			if post != BotCover.NO_COVER:
+				_go(post)
+				BotCover.claim(session, self, post, BotCover.threat_pos(self))
+			else:
+				_has_target = false
 
 
 ## F18: reaction delay before the first aimed shot of this engagement (or peek).
@@ -236,7 +283,18 @@ func _roll_react() -> void:
 		react_t *= BotPerception.ALERT_REACT_MULT
 
 
-func _act() -> void:
+func _at_cover() -> bool:
+	if not has_cover:
+		return false
+	return Vector2(global_position.x - cover_pos.x, global_position.z - cover_pos.z).length() < 1.5
+
+
+## F97 phase D: the cover loop runs when active, or when at cover with a live contact.
+func _in_combat() -> bool:
+	return combat.active or (has_cover and percept.contact.has() and _at_cover())
+
+
+func _act(dt: float) -> void:
 	var s := brain.state
 	if gun.mag.count() == 0 and gun.chamber == "" and not gun.busy():
 		if not gun.reload(false):
@@ -252,9 +310,15 @@ func _act() -> void:
 		BotBrain.PATROL:
 			BotEngage.patrol(self)
 		BotBrain.ENGAGE:
-			BotEngage.engage(self)
+			if _in_combat():
+				BotCombat.tick(self, dt)  # F97 phase D: fight from cover (peek/hide/reposition)
+			else:
+				BotEngage.engage(self)
 		BotBrain.COVER:
-			BotEngage.peek(self)
+			if _in_combat():
+				BotCombat.tick(self, dt)  # arrived at cover with a contact: fight from it
+			else:
+				BotEngage.peek(self)  # BotPose lean-out shot
 		BotBrain.SUPPRESS:
 			if percept.has_last:
 				_shoot_at(percept.last_known + Vector3(rng.randf_range(-1.2, 1.2), 0.2, rng.randf_range(-1.2, 1.2)))
@@ -303,6 +367,7 @@ func _die(impulse := Vector3.ZERO, zone := "") -> void:
 	if _dying:
 		return
 	_dying = true
+	BotCover.release(session, self)  # F97: free the cover reservation
 	for z in rig:
 		(rig[z] as CollisionObject3D).collision_layer = 0
 	collision_layer = 0

@@ -72,7 +72,7 @@ func phase() -> String:
 ## secs: the logic's busy time (includes CHAMBER_TIME when empty). empty: chamber was empty at the start.
 func start(secs: float, empty: bool, fast: bool) -> void:
 	var plan: Dictionary = ReloadAnims.PLANS[_rig["plan"]]
-	var extra := TacticalConfig.CHAMBER_TIME if empty else 0.0
+	var extra := TacticalConfig.CHAMBER_TIME / TacticalConfig.PLAYER_RELOAD_SPEED if empty else 0.0   # F135: the chamber share is sped up with the rest
 	var base := maxf(secs - extra, 0.05)
 	var list: Array = []
 	var charge_t := extra

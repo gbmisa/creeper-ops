@@ -39,26 +39,27 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
+	var o := Vector2(ORIGIN.x, get_parent_area_size().y - (900.0 - ORIGIN.y))  # above the bottom edge of the safe zone it fills
 	if player == null:
 		return
 	var size_v := get_viewport_rect().size
-	draw_rect(Rect2(ORIGIN + Vector2(-48, -92), Vector2(96, 150)), Color(0.04, 0.05, 0.07, 0.55))
+	draw_rect(Rect2(o + Vector2(-48, -92), Vector2(96, 150)), Color(0.04, 0.05, 0.07, 0.55))
 	for z in SHAPES:
 		var f: float = player.body.hp[z] / BodyHealth.MAX[z]
 		var col := Color(0.15, 0.04, 0.04) if f <= 0.0 else Color(1.0 - f * 0.7, 0.25 + f * 0.65, 0.2)
 		var r: Rect2 = SHAPES[z]
-		draw_rect(Rect2(ORIGIN + r.position, r.size), col)
+		draw_rect(Rect2(o + r.position, r.size), col)
 		if player.body.armor.has(z):
-			draw_rect(Rect2(ORIGIN + r.position, r.size), Color(0.7, 0.8, 1.0, 0.8), false, 1.5)
+			draw_rect(Rect2(o + r.position, r.size), Color(0.7, 0.8, 1.0, 0.8), false, 1.5)
 	var down := player.body.arms_down()
 	if down > 0:   # P9: the arm penalty beside the figure (the HUD takes no mouse, so no hover tooltip)
 		var p: Dictionary = TacticalConfig.ARM_LOSS[down]
 		var txt := "%s: sway x%s, reload x%s, ADS x%s, recoil x%s, no breath hold" % [
 			"ARM DOWN" if down == 1 else "BOTH ARMS DOWN", p["sway"], p["reload"], p["ads"], p["recoil"]]
-		draw_string(ThemeDB.fallback_font, ORIGIN + Vector2(56, -80), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1.0, 0.45, 0.35))
+		draw_string(ThemeDB.fallback_font, o + Vector2(56, -80), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1.0, 0.45, 0.35))
 	for b in player.body.bleeds:
 		var r2: Rect2 = SHAPES[b["zone"]]
-		draw_circle(ORIGIN + r2.get_center(), 3.0, Color(0.85, 0.0, 0.0))
+		draw_circle(o + r2.get_center(), 3.0, Color(0.85, 0.0, 0.0))
 	var centre := size_v * 0.5
 	for c in cues:
 		var a: float = c["ang"]

@@ -4,7 +4,7 @@ class_name BotMotion
 
 static func speed(b: ScavBot) -> float:
 	var crouched := b.pose.crouch and b.brain.state in BotPose.CROUCH_MOVE
-	return base_speed(b) * b.def["speed"] * (TacticalConfig.BOT_CROUCH_SPEED if crouched else 1.0)
+	return base_speed(b) * b.def["speed"] * b.body.move_mult() * (TacticalConfig.BOT_CROUCH_SPEED if crouched else 1.0)
 
 
 static func base_speed(b: ScavBot) -> float:
@@ -63,3 +63,4 @@ static func move(b: ScavBot, dt: float) -> void:
 	b.velocity.y = -1.0 if b.is_on_floor() else b.velocity.y - 20.0 * dt
 	b.move_and_slide()
 	b.mesh.walk(dt, v.length())
+	b.steps.tick(b, dt, Vector2(b.velocity.x, b.velocity.z).length(), b.is_on_floor())

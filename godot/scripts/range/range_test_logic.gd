@@ -10,6 +10,7 @@ static func run(t: RangeTest) -> void:
 	RangeTestInv.run(t)
 	RangeTestRecoil.run(t)
 	RangeTestAdsEye.run(t)
+	RangeTestDamage.run(t)
 
 
 static func _penetration(t: RangeTest) -> void:

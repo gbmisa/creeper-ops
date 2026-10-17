@@ -22,6 +22,8 @@ var session: RangeSession
 const HAND_SLOTS := ["primary", "secondary", "holster"]  # keys 1 / 2 / 3
 
 var inv := Inventory.new()
+var tempest_prev := {}  # the sidearm the Tempest displaced (Tempest.toggle puts it back)
+var cheats: RangeCheats  # set by the scene; null in tests that don't need it
 var reloader := InvReload.new(inv)
 var gun: Gun
 var gun_item := {}
@@ -37,6 +39,10 @@ var prompt := ""
 var trigger_ads := false  # debug overrides (--ads, --fire)
 var trigger_down := false
 var trigger_held := false  # the trigger is down this frame and the gun may fire (PlayerRecoil: automatic fire)
+var mag_out_early := false  # F135: same for the mag-out sound (set by the viewmodel when a timeline starts)
+var _snd_at: Array = []  # F135: [secs for mag_out, secs for mag_in] of a reload without a timeline, else []
+var _snd_t := 0.0
+var mag_in_early := false  # F106: the reload timeline already played the mag-seat sound this reload
 var since_shot := 99.0     # s since the last round left (PlayerRecoil)
 var ui_open := false  # inventory screen up: no firing, no aiming
 var hands_busy := false  # a quick-use item is being used (QuickUse): no firing, no aiming
@@ -54,13 +60,14 @@ func setup(p: TacticalPlayer, i: InputState, b: Ballistics, r: RangeRack, s: Ran
 	bal = b
 	rack = r
 	session = s
+	HearingMods.inv = inv
 	reloader.infinite = session != null and session.maps.selected in RangeMaps.INFINITE_AMMO
 	rng.seed = s.next_seed()
 	if s.saved_kit.is_empty():
 		StarterLoadout.fill(inv)
 	else:
 		inv.load_dict(s.saved_kit)
-	if s.maps.selected == "skirmish":  # F90: starter kits too, not only saved ones
+	if RangeMaps.is_skirmish(s.maps.selected):  # F90: starter kits too, not only saved ones
 		SkirmishKit.deploy(inv)
 	inv.ids = s.ids
 	player.carried_kg = inv.total_kg()
@@ -72,6 +79,7 @@ func give(id: String) -> void:
 
 
 func sync() -> void:
+	WornArmor.sync(inv, player.body)
 	HandGear.sync(self)
 
 
@@ -118,9 +126,11 @@ func _process(delta: float) -> void:
 		return
 	var before := gun.busy_kind
 	gun.update(delta)
+	_reload_sounds(delta)
 	# Finish before this frame's input: an R on the finishing frame must not restart on the stale old (empty) mag.
 	if before != "" and gun.busy_kind == "" and before == "reload":
-		_gun_snd("mag_in")
+		if not mag_in_early:   # guns without a timeline mark (or a timeline-less viewmodel) click at the end as before
+			_gun_snd("mag_in")
 		var left := reloader.finish(gun_item)
 		if not left.is_empty():
 			item_dropped.emit(left)
@@ -160,7 +170,7 @@ func _pickup_and_slots() -> void:
 func _ads(delta: float) -> void:
 	var want: bool = trigger_ads or input.frame.right
 	want = want and not ui_open and not hands_busy and not player.sprinting and draw_t < DRAW_TIME * 0.5 and gun.busy_kind != "reload"
-	var rate := 1.0 / (RecoilModel.ads_time(gun.def["ergo"]) * gun.stat("ads_mult") * player.body.arm_loss("ads"))
+	var rate := 1.0 / (RecoilModel.ads_time(gun.def["ergo"]) * gun.stat("ads_mult") * player.body.arm_loss("ads") * player.status.ads_time_mult())
 	ads_amt = move_toward(ads_amt, 1.0 if want else 0.0, rate * delta)
 	player.ads_amt = ads_amt
 	holding_breath = ads_amt > 0.9 and input.frame.held("t_sprint") and arm_stamina > 0.0 and player.body.can_hold_breath()
@@ -203,7 +213,8 @@ func _shoot(res: Dictionary) -> void:
 	var origin := player.eye_pos() + basis.z * -0.3
 	for d in gun.shot_dirs(player.view_basis(recoil.barrel), res["ammo"], ads_amt > 0.8, rng):
 		bal.spawn(origin, d, res["ammo"], [], gun.stat("vel"))
-	recoil.shoot(gun.eff_def(), rng, player.body.arm_loss("recoil"))
+	if not no_recoil():
+		recoil.shoot(gun.eff_def(), rng, player.body.arm_loss("recoil"))
 	since_shot = 0.0
 	if session != null:
 		session.noise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
@@ -213,6 +224,26 @@ func _shoot(res: Dictionary) -> void:
 	if res["ping"] and gun.id in SoundDefs.PING_GUNS:
 		RangeAudio.event({"kind": "sample", "item": "garand_ping", "local": true, "db": -4.0})
 	shot.emit(res, gun)
+
+
+func _reload_sounds(delta: float) -> void:   # F135: mag_out / mag_in at their fraction of a timeline-less reload
+	if _snd_at.is_empty():
+		return
+	if gun.busy_kind != "reload":
+		_snd_at = []
+		return
+	var was := _snd_t
+	_snd_t += delta
+	if was < _snd_at[0] and _snd_t >= _snd_at[0]:
+		_gun_snd("mag_out")
+	if was < _snd_at[1] and _snd_t >= _snd_at[1]:
+		mag_in_early = true
+		_gun_snd("mag_in")
+
+
+func gun_sound(ev: String) -> void:   # the viewmodel's timeline marks fire gun sounds at their moment (F106)
+	if gun != null:
+		_gun_snd(ev)
 
 
 func _gun_snd(ev: String) -> void:
@@ -251,18 +282,32 @@ func start_reload(fast: bool) -> void:
 	if r == "none":
 		message.emit("No magazine" if gun.def["action"] != "tube" else "No %s rounds" % gun.def["cal"])
 	if r == "ok":
+		gun.busy_t /= TacticalConfig.PLAYER_RELOAD_SPEED   # F135: player-only speed-up (the animation follows busy_t)
 		gun.busy_t *= player.body.arm_loss("reload")   # P9: blacked arms reload slower (the animation follows busy_t)
 		_reload_t = 0.0
 		_reload_fast = fast
+		mag_in_early = false
+		mag_out_early = false
 		_check_t = 0.0
 		action.emit("reload", gun.busy_t)
-		_gun_snd("mag_out")
+		_snd_at = []
+		if not mag_out_early:   # F135: with a reload timeline the mag-out sound plays at its mark, not at the start
+			var at: Array = []
+			for k in [gun.id, gun.def["class"], gun.def["action"]]:
+				if TacticalConfig.RELOAD_SND_AT.has(k):
+					at = TacticalConfig.RELOAD_SND_AT[k]
+					break
+			if at.is_empty():
+				_gun_snd("mag_out")
+			else:
+				_snd_at = [at[0] * gun.busy_t, at[1] * gun.busy_t]
+				_snd_t = 0.0
 
 
 func _apply_view(_delta: float) -> void:
 	var tired := arm_stamina < 0.12
 	var sw := RecoilModel.sway(_t, gun.def, holding_breath, tired)
-	player.sway_off = sw * ads_amt * player.body.arm_loss("sway")
+	player.sway_off = Vector2.ZERO if no_recoil() else sw * ads_amt * player.body.arm_loss("sway") * player.status.sway_mult()
 	player.cam.fov = fov_for(ads_amt, gun.stat("scope"))
 
 
@@ -276,3 +321,8 @@ static func fov_for(ads: float, scope: float) -> float:
 
 func scoped() -> bool:
 	return gun != null and gun.stat("scope") > 1.0 and ads_amt > SCOPE_AT
+
+
+## The gun in hand has no recoil or sway (the Tempest; also the no_recoil cheat toggle).
+func no_recoil() -> bool:
+	return (gun != null and gun.def.get("no_recoil", false)) or (cheats != null and cheats.is_on("no_recoil"))

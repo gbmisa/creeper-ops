@@ -4,7 +4,7 @@ class_name SkirmishKit
 
 
 ## F90: deploying into Skirmish: top up, then every gun in a hand slot carries at least SKIRMISH_SPARE_MAGS full spare
-## mags of its loaded ammo (tube guns: that many tubes of loose shells). Spares that don't fit are left out.
+## mags of its loaded ammo (tube guns: that many tubes of loose shells). Mags that don't fit get a bigger rig (_bigger_rig).
 static func deploy(inv: Inventory) -> void:
 	top_up(inv)
 	for slot in PlayerWeapons.HAND_SLOTS:
@@ -54,5 +54,19 @@ static func _spares(inv: Inventory, g: Gun) -> void:
 	if mag_id == "":
 		return
 	for _i in maxi(0, want - inv.find_mags(g.def["id"]).size()):
-		if not inv.add(inv.make(mag_id, {"ammo": g.ammo_pick})):
+		var m := inv.make(mag_id, {"ammo": g.ammo_pick})
+		if not inv.add(m) and not (_bigger_rig(inv) and inv.add(m)):
 			return
+
+
+## Gregory 2026-10-16 (SCAR got no spares: the starter rig was full): swap the rig for the assault rig, contents kept
+## in place (its grid is larger). False when it already is the assault rig.
+static func _bigger_rig(inv: Inventory) -> bool:
+	var old = inv.equipped("rig")
+	if old != null and old["id"] == "rig_assault":
+		return false
+	var r := inv.make("rig_assault")
+	if old != null:
+		r["items"] = old["items"]
+		inv.remove(old)
+	return inv.place(r, "rig")

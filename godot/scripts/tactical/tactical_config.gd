@@ -33,10 +33,21 @@ const ARM_LOSS := {
 	1: {"sway": 2.0, "reload": 1.25, "ads": 1.25, "recoil": 1.15, "breath": false},
 	2: {"sway": 3.5, "reload": 1.6, "ads": 1.5, "recoil": 1.3, "breath": false},
 }
+## P10: walk-speed multiplier while any leg is blacked out (0 HP). Player and bots; two blacked legs do not stack.
+const LEG_BLACKED_SPEED := 0.6
+## P13: damage multiplier on the player's head from bullets (bots' hits on the player only; bots' own heads unchanged).
+const PLAYER_HEAD_MULT := 0.5
 const ARMOR_RICOCHET_GLANCE_DEG := 25.0
 
 # Gun handling
 const CHAMBER_TIME := 0.4
+## F135: the player reloads this much faster than the def times (1/0.7 = reload time x0.7). Bots keep the def times.
+const PLAYER_RELOAD_SPEED := 1.0 / 0.7
+## F135: guns without a reload timeline play [mag_out, mag_in] sounds at these fractions of the reload (cylinder opens /
+## shell or clip goes in / bolt closes). Looked up by gun id, then class, then action.
+const RELOAD_SND_AT := {
+	"revolver": [0.15, 0.65], "tube": [0.15, 0.6], "enbloc": [0.2, 0.7], "bolt-action": [0.2, 0.7],
+}
 const ADS_TIME_SLOW := 0.45
 const ADS_TIME_FAST := 0.15
 const MAG_CHECK_TIME := 1.0

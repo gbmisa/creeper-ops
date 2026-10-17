@@ -53,11 +53,13 @@ func spawn_scavs() -> void:
 		bots.append(bot)
 	bots[0].ally = bots[1]
 	bots[1].ally = bots[0]
+	session.bots = bots.duplicate()
 	log.add("Scavs spawned in the kill house")
 
 
 func _on_state(bot: ScavBot, _from: String, to: String) -> void:
-	log.add("%s: %s" % [bot.label_name, to])
+	if HudSettings.on("bot_log"):
+		log.add("%s: %s" % [bot.label_name, to])
 
 
 func _process(_dt: float) -> void:

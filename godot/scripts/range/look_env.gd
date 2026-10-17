@@ -11,8 +11,8 @@ const MAPS := {
 	},
 	"skirmish": {
 		"hdri": "res://assets/hdri/rogland_sunset_2k.hdr", "sun_rot": Vector3(-9, 150, 0), "sun_col": Color(1.0, 0.62, 0.36), "sun_e": 2.0,
-		"amb_e": 1.15, "amb_tint": Color(0.66, 0.76, 1.0), "fog_col": Color(0.55, 0.6, 0.68), "fog_d": 0.011, "fog_aniso": 0.35, "exp": 0.95,
-		"sun_max": 140.0,
+		"amb_e": 1.9, "amb_tint": Color(0.66, 0.76, 1.0), "fog_col": Color(0.55, 0.6, 0.68), "fog_d": 0.011, "fog_aniso": 0.35, "exp": 0.95,
+		"sun_max": 140.0, "fill": 0.7, "fill_col": Color(0.7, 0.78, 1.0),   # F101: lift the shadowed sides and interiors
 	},
 }
 
@@ -95,7 +95,7 @@ static func build(p: Node3D, map: String) -> void:
 	if c.has("fill"):   # range: shadowless warm fill from the opposite side so the booth, counter and berm faces are not black
 		var fill := DirectionalLight3D.new()
 		fill.rotation_degrees = Vector3(-28, c["sun_rot"].y + 180.0, 0)
-		fill.light_color = Color(0.95, 0.85, 0.78)
+		fill.light_color = c.get("fill_col", Color(0.95, 0.85, 0.78))
 		fill.light_energy = c["fill"]
 		fill.shadow_enabled = false
 		fill.light_specular = 0.0

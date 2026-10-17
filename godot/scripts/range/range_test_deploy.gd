@@ -45,6 +45,7 @@ static func run(t: RangeTest) -> void:
 	t.check("KIA: clears the saved kit (default kit next)", session.saved_kit.is_empty())
 	t.check("KIA: a NEW session has the default kit", RangeSession.new(7).saved_kit.is_empty())
 	g2.end_screen.queue_free()
+	_custom_kit(t, input, player, rack)
 	player.enabled = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	game.queue_free()
@@ -57,3 +58,26 @@ static func _ids(inv: Inventory) -> Array:
 		out.append(it["id"])
 	out.sort()
 	return out
+
+
+## F98: a non-default kit (other gun + armor) set up in the range survives deploy into a NEW Skirmish session.
+static func _custom_kit(t: RangeTest, input: InputState, player: TacticalPlayer, rack: RangeRack) -> void:
+	var rs := RangeSession.new(11)
+	rs.add_player(1, true)
+	var inv := Inventory.new(rs.ids)
+	inv.place(inv.make("rig_chest"), "rig")
+	inv.place(inv.make("vest2"), "armor")
+	inv.place(inv.make("helmet3"), "helmet")
+	inv.place(inv.make("p90"), "primary")
+	rs.save_kit(inv)
+	var ss := RangeSession.new(12)  # the Skirmish scene's own fresh session
+	ss.maps.selected = "skirmish"
+	ss.add_player(1, true)
+	var w := PlayerWeapons.new()
+	t.add_child(w)
+	w.setup(player, input, t.bal, rack, ss)
+	var pr = w.inv.equipped("primary")
+	t.check("f98: deployed gun is kept in Skirmish (not the AK)", pr != null and pr["id"] == "p90")
+	t.check("f98: deployed armor + helmet are worn in Skirmish", w.inv.equipped("armor") != null and w.inv.equipped("helmet") != null)
+	ss.clear_kit()
+	w.queue_free()

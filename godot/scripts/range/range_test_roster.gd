@@ -14,6 +14,7 @@ static func run(test: RangeTest, s: RangeSession, house: Node3D, player: Tactica
 	await _shotgunner(house, player)
 	await _boss(house, player)
 	await RangeTestSkirmish.run(t, session, player)
+	await RangeTestExpand.run(t, session, player)
 
 
 static func make(s: RangeSession, house: Node3D, player: TacticalPlayer, kind: String, local: Vector3, yaw := 0.0, route: Array[Vector3] = []) -> ScavBot:

@@ -7,6 +7,7 @@ const REACH := 2.2
 
 var layout: SkirmishLayout
 var bots: Array[ScavBot] = []
+var cheats: RangeCheats  # set by the scene; null in tests
 var player: TacticalPlayer
 var weapons: PlayerWeapons
 var bal: Ballistics
@@ -74,6 +75,7 @@ func spawn_enemies() -> void:
 			bots[i].ally = bots[a]
 			if bots[a].ally == null:
 				bots[a].ally = bots[i]
+	session.bots = bots.duplicate()
 
 
 func _spawn(kind: String, pos: Vector3, route: Array[Vector3], idx: int) -> ScavBot:
@@ -81,7 +83,9 @@ func _spawn(kind: String, pos: Vector3, route: Array[Vector3], idx: int) -> Scav
 	bot.setup(session, bal, layout, "%s %d" % [BotDefs.of(kind)["name"], idx + 1], idx, kind, route)
 	add_child(bot)
 	bot.global_position = pos
-	bot.state_changed.connect(func(b, _f, to): log.add("%s: %s" % [b.label_name, to]))
+	bot.state_changed.connect(func(b, _f, to):
+		if HudSettings.on("bot_log"):   # Esc menu > HUD
+			log.add("%s: %s" % [b.label_name, to]))
 	bot.died.connect(_on_bot_died)
 	bots.append(bot)
 	return bot
@@ -151,6 +155,10 @@ func loot(c: Dictionary) -> void:
 				var it := weapons.inv.make(id)
 				if not weapons.inv.add(it):
 					weapons.item_dropped.emit(it)
+		elif ItemDefs.CRATE_GEAR.has(item):  # F134
+			var it := weapons.inv.make(ItemDefs.CRATE_GEAR[item])
+			if not weapons.inv.add(it):
+				weapons.item_dropped.emit(it)
 	log.add("Looted: %s" % ", ".join(c["loot"]))
 	weapons.message.emit("Looted: %s" % ", ".join(c["loot"]))
 
@@ -173,5 +181,5 @@ func finish(win: bool) -> void:
 	for b in bots:
 		if is_instance_valid(b):
 			b.set_physics_process(false)
-	end_screen = SkirmishEnd.new(win, time_s, kills, bots.size(), session)
+	end_screen = SkirmishEnd.new(win, time_s, kills, bots.size(), session, cheats != null and cheats.cheats_used)
 	add_child(end_screen)
