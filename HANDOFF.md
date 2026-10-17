@@ -17,7 +17,15 @@ Suite: `--range-test` FAILED 1 (1357 passed): f127 "shells conserved" (M870 tube
 - Suspects: path queries / BotCover.pick / BotSquad cover scoring / perception raycasts several bots in one frame;
   move_and_slide + NavigationAgent. Fix = spread work across frames (stagger, cache, budgets), behaviour-identical
   (CLAUDE.md: perf must not change what the player sees; if it would, write CHANGES.md and ask).
-- Measure: `timeout 40 godot --headless --path godot res://scenes/skirmish_large.tscn -- --perf | grep perf`.
+- Measure: `timeout 40 godot --headless --path godot res://scenes/skirmish_large.tscn -- --perf > log` (pipe to grep
+  gets killed by timeout: write a file). Bots stop being processed ~10 s in headless (player dies?), so spikes are early.
+- 2026-10-17 findings (branch `perf/bot-think`, worktree `../perf-bots`, WIP commit adds think.* + ballistics probes):
+  (1) one `think.enter` (_enter on a state change, likely cover pick) = 55-66 ms in one frame: fix that.
+  (2) most spikes = 50-80 ms frames with 3-4 physics steps but only ~12 ms in bot scripts: the rest is engine-side
+  and stops when bots stop. Not ragdoll bones (skipping them helped a little), not ballistics (0.2 ms), nav 0 ms.
+  Next suspects: BotBody AnimationPlayer advance + skeleton, HitboxRig shapes following bones, move_and_slide.
+- Merged session D (tactical/feat/fb-reload: forearm roll) into the play build, 7e96ce8; its reload-sound commits
+  skipped (play build already plays mag_in on the timeline mark). Suite FAILED 1 (1357 passed), same f127 as before.
 
 ## This session (all in the port)
 - F128 I/O utility keys latched (missed above 60 fps). F129/F130 display mode applied once at the title, only if
