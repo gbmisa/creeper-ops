@@ -172,3 +172,12 @@ flag `mag_parts`; bolt catch ~(-0.013, 0.022, 0.07); pose_shift as SCAR / SR-25)
 | m4a1 | plain | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: mag out in the hand 0.51, new one tipped in 1.53, seated 1.7-1.87. Criterion 3: the right hand cups the grip (grip_r, orchestrator); the stock-side sleeve hangs under the gun 0.34-2.2. |
 | m4a1 | fast | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: the curved mag slides out and falls (0.23-0.47, very readable). Same right-hand note. |
 | m4a1 | empty | G-1 | 7 | 1 | 2 | 1 | 1 | 2 | (a) reach 1.97 / press: palm on the lower's left above the well, but the thumb press has no visible travel at 16 frames. (b) regrip 2.16 -> ready 2.56: ~40 deg swing back in ~0.4 s, fine; the left forearm covers the well 1.97-2.16. |
+
+Vector (`ar` plan: straight mag + base plate under the well, cut as whole parts; release lever left above the guard;
+pose_shift z -0.10). Reference: EFT KRISS Vector reloads from memory (straight mag, button drop, bolt release on empty).
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| vector | plain | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: well empty 0.57-1.15, new mag tipped in 1.29, seated 1.43-1.58. Criterion 3: dark mag on a dark gun (material), right hand cups the grip. |
+| vector | fast | G-1 | 8 | 2 | 2 | 1 | 1 | 2 | Passes: the long mag slides out and falls 0.19-0.39. |
+| vector | empty | G-1 | 7 | 1 | 2 | 1 | 1 | 2 | (a) reach / press 1.53-1.7: palm on the left above the guard, the press travel is not seen; the forearm covers the well 1.7-1.87. (b) The idle pose fills the upper right (orchestrator's hip pose), so the return 2.04-2.38 grows the gun fast. |

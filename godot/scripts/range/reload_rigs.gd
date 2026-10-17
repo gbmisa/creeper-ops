@@ -81,6 +81,17 @@ const RIGS := {
 		"pouch_hand": Vector3(-0.15, -0.5, 0.22),
 		"stop_hand": Vector3(-0.05, -0.02, 0.06), "press_hand": Vector3(-0.035, -0.02, 0.06),  # bolt catch (mesh probe) ~(-0.013, 0.022, 0.07)
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},  # sits close at hip: well up into the view
+	"vector": {"plan": "ar",  # scratch model: straight mag + base plate under the well (lip y -0.032); release lever left, above the guard
+		"mag_box": AABB(Vector3(-0.03, -0.21, 0.0), Vector3(0.06, 0.1785, 0.07)), "mag_parts": true,  # mag top y -0.032 = well bottom
+		"pivot": Vector3(0.0, -0.032, 0.012), "hold": Vector3(0.0, -0.12, 0.036),
+		"slip": [Vector3(0.0, -0.035, 0.0), Vector3.ZERO],
+		"near": [Vector3(0.0, -0.07, -0.01), Vector3(0.1, 0.0, 0.0)],
+		"out": [Vector3(0.0, -0.13, 0.0), Vector3(0.1, 0.0, 0.0)],
+		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
+		"drop": [Vector3(0.0, -0.55, -0.02), Vector3(1.0, 0.0, 0.4)],
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22),
+		"stop_hand": Vector3(-0.05, -0.01, 0.08), "press_hand": Vector3(-0.035, -0.01, 0.08),
+		"pose_shift": [Vector3(0.0, 0.0, -0.10), Vector3.ZERO]},  # blocky gun sits close at hip
 	"sr25": {"plan": "ar",  # single mesh: straight AR-10 mag cut by region (well bottom y 0.0); catch above the well
 		"mag_box": AABB(Vector3(-0.03, -0.11, -0.025), Vector3(0.04, 0.17, 0.096)),  # whole mag part reaches y 0.056
 		"pivot": Vector3(0.0, 0.0, -0.02), "hold": Vector3(0.0, -0.07, 0.02),
