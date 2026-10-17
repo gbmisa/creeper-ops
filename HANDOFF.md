@@ -35,12 +35,12 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - Parse clean, skirmish boots; range suite 1114 pass / 0 fail (a first run flaked: navmesh doorway + bleed-out fall;
   30-bot probe: every bleed-out falls, old and new). Not verified: Gregory's play. Next: his verdict on the look.
 
-## Not yet ported from creeper-ops (do this before more on-foot work there)
+## Not yet ported from creeper-ops
 - Session B's **uncommitted reload WIP** (`reload_anims.gd`, `reload_rigs.gd`, `reload_timeline.gd`) is still in the
   creeper-ops main checkout. Once committed there: `git -C "../creeper ops" format-patch -1 <sha> --stdout | git am`.
 - Any other on-foot commit made in creeper-ops after d3b08d6 ports the same way.
 
-## Carried over (from creeper-ops HANDOFF, still true)
+## Carried over (still true; split tree verified: 3 scenes boot, suite 1113/1)
 - FB-R reloads (brief `docs/tasks/FB_R_reload_anims.md`, log `FB_R_progress.md`, scores `docs/art/reload/SCORES.md`):
   judged >= 8: ak47, m1911, glock18, p90, mp5 plain/fast, scarh/sr25/saiga12/sks plain (+ scarh/sr25 fast).
   Below 8: the 4 rifles' empty reloads (5-6), saiga12/sks fast (7). WIP above fixes the empty tails, not yet judged.
@@ -54,8 +54,6 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - Wrist pinch (2fad9a1): IK put the whole hand roll at the wrist (L ~155 deg long guns, R ~130 pistols). `FpArms.roll`
   = FOREARM_ROLL 0.5 (viewmodel only; bots 0) rolls the forearm by half, like Gregory's M4A1 pose (fit from its baked
   mesh: ~54/46). Close-ups judged (scratchpad `wrist_cam.gd`): wrist full width. Suite 1114/0. Not verified: Gregory's play.
-- Scratchpad tools: `twist_probe.gd` (roll per gun), `wrist_cam.gd` (wrist/elbow close-ups), `fit_pose.py` (Blender).
-- Split tree verified: parse clean, 3 scenes boot, suite 1113/1 (F88).
 
 ## Next
 1. Port the reload WIP once session B commits it (above), then continue FB-R (rifle empties, AXMC, M4A1, ...).
