@@ -1,58 +1,41 @@
-# Handoff: 2026-10-16 (Tactical Ops: new repo, split from creeper-ops today)
+# Handoff: 2026-10-16 night (Tactical Ops; Linux Opus session)
 
-**What happened:** the on-foot game (Firing Range + Skirmish) was split out of `../creeper ops` (gbmisa/creeper-ops)
-into this repo with `git filter-repo` (history kept, same paths). Base: creeper-ops `feat/fb-reload` @ d3b08d6.
-Split commit on `feat/fb-reload` here. GitHub: **gbmisa/tactical-ops** (private, default branch feat/fb-reload).
-Run: `godot --path godot` -> title (Range / Skirmish / Quit). Windows: Godot 4.7.2 via winget (`godot_console.exe`
-in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MCP registered (user scope).
+**Repo:** gbmisa/tactical-ops (private). On-foot game split from creeper-ops with filter-repo (same paths).
+**Play build:** branch `port/play-f98-f135` (pushed) = tactical `feat/fb-reload` (split + bot crouch/peek + bot gun hold)
++ the whole creeper-ops play build `play/f98-f107` @ 0ecc4d0 (RANGE5 meds/grapple/grenades/binocs, cheat menu,
+skirmish_large, kit-persist, F98-F135) + perf overlay. `feat/fb-reload` untouched (the Windows session's branch).
+Linux worktree: `../creeper fps td-worktrees/tactical-port` (remote `tactical` in the creeper repo).
+Run: `godot --path godot` -> title (Range / Skirmish / Skirmish (large) / Quit). Windows zip only when Gregory asks.
+Suite: `--range-test` FAILED 1 (1357 passed): f127 "shells conserved" (M870 tube), pre-existing in creeper play build.
 
-## Split changes (the only behaviour changes)
-- New `scenes/title.tscn` + `range/title_menu.gd` (main scene). Skirmish end "Level select" -> title (was main.tscn).
-- Copied from the creeper game, now ours: `core/` audio_synth + sfx_render/voices, input_state/frame, keybinds;
-  `ui/` ui_kit, ui_theme, build_card; `fps/muzzle_flash.gd`.
-- `Keybinds.DEFAULTS` trimmed to the Tactical group (ids unchanged). No in-game Controls menu (was the creeper F10).
-- `MuzzleFlash` has its own glow material (was `Effects.glow_mat`, same settings). `BuildCard` glyph fallback = id.
-- `Bus` autoload dropped (unused here). Own `user://` dir ("Tactical Ops"): old keybinds.cfg rebinds don't carry over.
-- CHANGES.md keeps M1-M9, P2-P11; creeper entries stayed in creeper-ops.
+## START HERE next session: Skirmish 2 frame drops (Gregory: investigate + fix bot thinking)
+- Overlay: F3 (action t_perf) or `-- --perf`. `[perf]` log line every 5 s, `[perf] SPIKE` per frame > 33 ms with
+  the top PerfProbe costs. Probes: bots.think/pose/move/mesh (ScavBot._physics_process), weapons, player.*, utils,
+  skirmish_large. Add `PerfProbe.add("name", t0)` around sub-steps to drill in.
+- Headless 40 s, skirmish_large, 24 bots, ~5000 nodes: avg 7 ms, but spikes 35-112 ms; bots.think up to 74 ms in one
+  frame, bots.move 5-16 ms; engine physics time 80-117 ms in those frames (physics catch-up steps make spikes cluster).
+- Suspects: path queries / BotCover.pick / BotSquad cover scoring / perception raycasts several bots in one frame;
+  move_and_slide + NavigationAgent. Fix = spread work across frames (stagger, cache, budgets), behaviour-identical
+  (CLAUDE.md: perf must not change what the player sees; if it would, write CHANGES.md and ask).
+- Measure: `timeout 40 godot --headless --path godot res://scenes/skirmish_large.tscn -- --perf | grep perf`.
 
-## Bot crouch + peek lean (0c0e864, merged into feat/fb-reload; branch feat/bot-pose)
-- `range/bot_pose.gd` (BotPose): crouch in cover (TakeCover/Heal once there; Heal's 0.8 squash gone), crouch-walk
-  in Investigate/Search/Flank (x0.55), crouch-fire standing still > 25 m; in TakeCover face the threat, lean out the
-  side that sees it (0.3 s checks) and shoot (`BotEngage.peek`, react delay rolled on cover entry). Eye (sight + shot
-  origin) and hitboxes follow the pose; BotBody plays crouch clips, rolls the spine, cants the gun 12 deg.
-  Tunables `TacticalConfig.BOT_*`. Probe: leaned head bone +0.32 m vs hitbox +0.35 m; crouched head 1.10 vs 1.107.
-- Range suite 1114 pass / 0 fail (38 SCRIPT ERRORs: the known `ReloadTimeline 'lock'` spam, fixed by the WIP below).
-- **CHANGES P12** (hold cover longer while peeking; today cover lasts 1.5 s) waits for Gregory. Pushed.
+## This session (all in the port)
+- F128 I/O utility keys latched (missed above 60 fps). F129/F130 display mode applied once at the title, only if
+  chosen in Esc (Skirmish 2 no longer changes the window); truck L deploys to skirmish_large with the kit.
+- F131 bot steps louder (max_db cap). F132 Esc > HUD switches (HudSettings). F133 bot shots make noise, heard/hit
+  positions fuzzed (BotTacticsDefs). F134 Comtac earmuffs, Headset slot (HearingMods; flashbang compressed too).
+- F135 player reloads x0.7 (PLAYER_RELOAD_SPEED, bots unchanged); sounds on timeline marks; tube/en-bloc/bolt/revolver
+  at RELOAD_SND_AT fractions (guesses); vector/m4a1/pkm still start/end. P14 ruled: on-foot keybinds saved.
+- Port merges: cover fight with a live contact = F97 BotCombat, else BotEngage.peek; bot speed = leg loss x crouch
+  speed; KeybindMenu (Esc > Controls) restored from creeper ui/; tactical's P12 (cover hold) renumbered **P16**.
+- Feedback log F98-F135: creeper-ops `play/f98-f107` docs/playtests/feedback_2026-10-16.md (not in this repo).
 
-## Bot gun hold (ee245ff on feat/bot-anims, merged into feat/fb-reload, pushed; Gregory: arms behind them)
-- Cause: BotBody placed the gun with the viewmodel's `butt` (eye-to-butt at ADS), so stocks sat 0.3 m behind the
-  shoulder (P90 inside the Warlord, pistols at the shoulder), and the elbow pole was world-fixed (swung back by heading).
-- Now `range/bot_hold.gd` (BotHold): butt in the right shoulder pocket, torso bladed 0.55 rad (head turned back), head
-  drops onto the stock when engaged; pistols out in front of the chest; elbow poles in the bot's frame; left hand slides
-  back along the gun if the handguard is out of reach (sniper, shotgun). `FpArms.solve` takes an optional pole.
-- Clips, speeds, hitboxes, eye/shot origin unchanged. Side effect: muzzle flash / shot-sound position moves with the gun.
-- Renders judged (scratchpad): every kind, idle/jog/sprint, lowered/engaged, crouch+lean; both hands on target 0 mm.
-- Parse clean, skirmish boots; range suite 1114 pass / 0 fail (a first run flaked: navmesh doorway + bleed-out fall;
-  30-bot probe: every bleed-out falls, old and new). Not verified: Gregory's play. Next: his verdict on the look.
+## Open / waiting on Gregory
+- CHANGES P15 (M870 tube won't take a different 12ga grade), P16 (bots hold cover longer while peeking).
+- Reload sound fractions untested by ear. Bot crouch/gun-hold look not yet judged by him.
+- Windows session's uncommitted reload WIP (reload_anims/rigs/timeline) in creeper-ops main checkout: will conflict
+  with F102/F103/F105/F135 here; port with care.
+- Known: kill-house navmesh doorway check can flake; reload_timeline.gd:196 'lock' SCRIPT ERROR spam in the suite.
 
-## Not yet ported from creeper-ops (do this before more on-foot work there)
-- Session B's **uncommitted reload WIP** (`reload_anims.gd`, `reload_rigs.gd`, `reload_timeline.gd`) is still in the
-  creeper-ops main checkout. Once committed there: `git -C "../creeper ops" format-patch -1 <sha> --stdout | git am`.
-- Any other on-foot commit made in creeper-ops after d3b08d6 ports the same way.
-
-## Carried over (from creeper-ops HANDOFF, still true)
-- FB-R reloads (brief `docs/tasks/FB_R_reload_anims.md`, log `FB_R_progress.md`, scores `docs/art/reload/SCORES.md`):
-  judged >= 8: ak47, m1911, glock18, p90, mp5 plain/fast, scarh/sr25/saiga12/sks plain (+ scarh/sr25 fast).
-  Below 8: the 4 rifles' empty reloads (5-6), saiga12/sks fast (7). WIP above fixes the empty tails, not yet judged.
-- P9 arm loss built; P11 no fractures; **P10** (bots ignore leg damage) waits for Gregory.
-- Known: kill-house navmesh doorway check can fail; barracks north door split by the inner wall.
-- Range suite before split: 1113 pass / 1 fail (`a shot at spawn ... (F88)`, Scav 5 net move 0.6 m; left as is).
-
-## Verified (this repo, split tree)
-Parse clean; title / firing_range / skirmish boot headless, no script errors; `--range-test` 1113 pass / 1 fail
-(the same pre-existing F88 check as before the split).
-Not verified: Gregory's play of the title screen; windowed run.
-
-## Next
-1. Port the reload WIP once session B commits it (above), then continue FB-R (rifle empties, AXMC, M4A1, ...).
-2. Gregory rules on CHANGES P10 and plays Skirmish (MAP-2, F90-F93).
+## Carried over (still true)
+- FB-R reload scores: docs/art/reload/SCORES.md. P9 arm loss built; P11 no fractures; P10 B + P13 A+B built.
