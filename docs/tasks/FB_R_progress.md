@@ -147,3 +147,24 @@ snaps back at the start of an empty reload.
 - RangeTestReload covers scarh / sr25 / saiga12 / sks. Verified: parse clean, range OK 840, smoke 0 FAIL.
 - Next (judge round 1 for the rifles): the empty-only tail on all four (forearms toward the camera, anchors on top of the
   receiver, no press / pull travel) and the swing-in (>= 0.3 s); saiga12 / sks fast drop not seen falling.
+
+## FB-R2 (2026-10-16, Opus, branch feat/reload-groups; brief `FB_R2_reload_groups.md`)
+- Step 0: session B's WIP ported (f18d7a9): applied by hand (the patch tool was blocked), diff identical to the patch.
+  Parse clean.
+- Step 1: 27 sheets re-rendered with the twist-bone arms (`docs/art/reload/<gun>_<variant>.jpg`, cropped, 16 frames).
+  Scores in SCORES.md "FB-R2". Lowest: sr25 / saiga12 / sks empty 6, scarh / mp5 empty 7, saiga12 / sks fast 7.
+  Sheet tools (scratch, not committed): strip.sh (render + sheet), resheet.sh (crop), sheet_lbl.gd (labelled grid in a
+  windowed Godot). Don't run extra Godot windows while strips render: three strips were cut short when they did.
+- Step 2 (3 rounds, scores in SCORES.md): hand on a dropped mag lets go (`let` anchor; hand anchors use the phase's end mag
+  pose), rig `charge_shift` (saiga12 / sks), sr25 catch lower, saiga12 / sks charge points lower. Overhand rack frame tried
+  and rejected (forearm across the view). Final: all >= 8 except the five empty reloads at 7 (mp5, scarh, sr25, saiga12,
+  sks): arm-reach / camera-side structure, not anchor points.
+- Step 3 done: m4a1 + vector (`ar` plan; ReloadMag `mag_parts` = cut whole parts only), sniper + mosin (new `boltbox` plan
+  in `reload_plans_more.gd`, `ReloadAnims.plan(id)`; `bolt` mark -> TacticalViewmodel works the bolt; Mosin: empty Mag node
+  with a body box). All in RangeTestReload.IDS. Range suite OK 1234 / 0 FAIL / 0 SCRIPT ERROR.
+- Step 3 NOT done (next): pkm `belt` plan (needs a hinged part: cover open/close = rotation, today parts only translate;
+  box = surf-3 part x -0.011..0.051 y -0.135..0.018 z -0.075..0.055, cover = y 0.104..0.120 z -0.09..0.19); non-detachable
+  actions (ReloadTimeline.make returns null unless detachable): shotgun tube (one reload = one shell, so a short per-round
+  plan: hand to the side pouch, shell to the loading port, push; pump on empty is the existing cycle), garand en-bloc
+  (clip node from the Magazine bone, thumb press, hand clears, bolt bone forward), revolver (static mesh: cylinder region
+  cut + swing-out rotation, again a hinged part). These guns have baked Reload clips today (shotgun, garand).
