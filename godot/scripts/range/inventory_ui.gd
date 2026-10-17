@@ -26,6 +26,7 @@ func setup(w: PlayerWeapons, p: TacticalPlayer, wi: WorldItems) -> void:
 	view.unfit_requested.connect(_on_unfit)
 	view.use_requested.connect(_on_use)
 	view.open_requested.connect(_on_open)
+	SupplyActions.new(w, wi, view, _settle)
 	_zone_pop.id_pressed.connect(_on_zone_picked)
 	add_child(_zone_pop)
 	_health_panel = UiKit.panel(Color(0.04, 0.05, 0.07, 0.85))
@@ -61,7 +62,14 @@ func open() -> void:
 	view.queue_redraw()
 
 
+## The ammo bench: the right-hand panel shows SUPPLY instead of GROUND until the screen closes.
+func open_supply() -> void:
+	view.supply = SupplyPanel.new()
+	open()
+
+
 func close() -> void:
+	view.supply = null
 	is_open = false
 	visible = false
 	weapons.ui_open = false
