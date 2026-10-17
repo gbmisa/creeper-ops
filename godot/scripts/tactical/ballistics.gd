@@ -15,7 +15,9 @@ static var _zero_cache := {}
 
 func _physics_process(dt: float) -> void:
 	if auto_step:
+		var pt := PerfProbe.t0()
 		step(dt)
+		PerfProbe.add("ballistics", pt)
 
 
 ## One projectile. exclude: the shooter's own hitbox RIDs.

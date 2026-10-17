@@ -183,11 +183,17 @@ func think(dt: float, over := {}) -> void:
 	if winding and not is_engaged():
 		winding = false
 		mesh.glint(false)
+	var pt := PerfProbe.t0()
 	_sense(dt)
+	PerfProbe.add("think.sense", pt)
 	if squad != null and (percept.shot_new or percept.noise_new):
 		squad.invalidate()  # F97 phase C: new info re-plans the squad now
+	pt = PerfProbe.t0()
 	_squad_tick(dt)
+	PerfProbe.add("think.squad", pt)
+	pt = PerfProbe.t0()
 	var f := _facts()
+	PerfProbe.add("think.facts", pt)
 	f.merge(over, true)
 	var from := brain.state
 	var to := brain.update(dt, f)
@@ -199,12 +205,16 @@ func think(dt: float, over := {}) -> void:
 		if from == BotBrain.HEAL and to == BotBrain.SEARCH:
 			body.heal(0.4)
 		shot_cover = to == BotBrain.COVER and from in [BotBrain.PATROL, BotBrain.INVESTIGATE, BotBrain.HOLD]
+		pt = PerfProbe.t0()
 		_enter(to)
+		PerfProbe.add("think.enter", pt)
 		print("[bot] ", label_name, " ", from, " -> ", to)
 		state_changed.emit(self, from, to)
 	if brain.state not in [BotBrain.ENGAGE, BotBrain.COVER]:
 		combat.active = false  # F97 phase D: the cover loop only runs in ENGAGE/COVER
+	pt = PerfProbe.t0()
 	_act(dt)
+	PerfProbe.add("think.act", pt)
 
 
 ## Flashbang: blinded and staggered for `dur` seconds.
