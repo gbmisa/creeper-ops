@@ -5,6 +5,12 @@
 Run: `cd "<repo>-worktrees/f98-f107/godot" && godot --path .` (or `res://scenes/skirmish.tscn`).
 Feedback: `docs/playtests/feedback_2026-10-16.md` F98-F114. Rulings: CHANGES.md end (P10 B, P13 A+B).
 
+## 2026-10-16 late night (Opus): F128-F135 merged, range FAILED 1 (1357 passed; f127 shells conserved, pre-existing)
+- F128 util keys latched (I/O missed >60 fps), F129 window mode applied once per run, F130 truck L -> skirmish_large,
+  F131 bot steps louder (max_db cap), F132 Esc > HUD switches (HudSettings), F133 bot gunfire hearing (fuzz),
+  F134 earmuffs/headset slot (HearingMods), F135 reloads x0.7 player-only + sound marks. Briefs docs/tasks/F13[345]_*.md.
+- Open: flashbang compression with earmuffs? f127 test failing on play build (M870 tube). RELOAD_SND_AT fractions untested.
+
 ## Start here (next session)
 1. Playtester (Windows) on builds/2026-10-16/CreeperOps.zip (`tools/export_windows.sh <out>`; build id in log + reports).
    F121 crash with NO guns left (Windows only, Linux fine): switched Windows to Vulkan (guess). Need his
