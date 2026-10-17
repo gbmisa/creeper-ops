@@ -40,6 +40,8 @@ var trigger_ads := false  # debug overrides (--ads, --fire)
 var trigger_down := false
 var trigger_held := false  # the trigger is down this frame and the gun may fire (PlayerRecoil: automatic fire)
 var mag_out_early := false  # F135: same for the mag-out sound (set by the viewmodel when a timeline starts)
+var _snd_at: Array = []  # F135: [secs for mag_out, secs for mag_in] of a reload without a timeline, else []
+var _snd_t := 0.0
 var mag_in_early := false  # F106: the reload timeline already played the mag-seat sound this reload
 var since_shot := 99.0     # s since the last round left (PlayerRecoil)
 var ui_open := false  # inventory screen up: no firing, no aiming
@@ -124,6 +126,7 @@ func _process(delta: float) -> void:
 		return
 	var before := gun.busy_kind
 	gun.update(delta)
+	_reload_sounds(delta)
 	# Finish before this frame's input: an R on the finishing frame must not restart on the stale old (empty) mag.
 	if before != "" and gun.busy_kind == "" and before == "reload":
 		if not mag_in_early:   # guns without a timeline mark (or a timeline-less viewmodel) click at the end as before
@@ -223,6 +226,21 @@ func _shoot(res: Dictionary) -> void:
 	shot.emit(res, gun)
 
 
+func _reload_sounds(delta: float) -> void:   # F135: mag_out / mag_in at their fraction of a timeline-less reload
+	if _snd_at.is_empty():
+		return
+	if gun.busy_kind != "reload":
+		_snd_at = []
+		return
+	var was := _snd_t
+	_snd_t += delta
+	if was < _snd_at[0] and _snd_t >= _snd_at[0]:
+		_gun_snd("mag_out")
+	if was < _snd_at[1] and _snd_t >= _snd_at[1]:
+		mag_in_early = true
+		_gun_snd("mag_in")
+
+
 func gun_sound(ev: String) -> void:   # the viewmodel's timeline marks fire gun sounds at their moment (F106)
 	if gun != null:
 		_gun_snd(ev)
@@ -272,8 +290,18 @@ func start_reload(fast: bool) -> void:
 		mag_out_early = false
 		_check_t = 0.0
 		action.emit("reload", gun.busy_t)
+		_snd_at = []
 		if not mag_out_early:   # F135: with a reload timeline the mag-out sound plays at its mark, not at the start
-			_gun_snd("mag_out")
+			var at: Array = []
+			for k in [gun.id, gun.def["class"], gun.def["action"]]:
+				if TacticalConfig.RELOAD_SND_AT.has(k):
+					at = TacticalConfig.RELOAD_SND_AT[k]
+					break
+			if at.is_empty():
+				_gun_snd("mag_out")
+			else:
+				_snd_at = [at[0] * gun.busy_t, at[1] * gun.busy_t]
+				_snd_t = 0.0
 
 
 func _apply_view(_delta: float) -> void:
