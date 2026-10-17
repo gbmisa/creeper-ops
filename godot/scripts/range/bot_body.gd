@@ -6,7 +6,6 @@ extends Node3D
 
 const STRIPPED := ["clavicle_", "upperarm_", "lowerarm_", "hand_", "thumb_", "index_", "middle_", "ring_", "pinky_", "spine_0"]
 const SPINE := ["spine_01", "spine_02", "spine_03"]
-const SPINE_SHARE := 0.6  # of the gun pitch, spread over the three spine bones
 const BOOTS := Color(0.1, 0.1, 0.09)
 const ARMBAND := Color(0.8, 0.1, 0.1)
 
@@ -82,7 +81,10 @@ var _neck := -1
 var _neck_up := Vector3.UP
 var _neck_axis := Vector3.RIGHT
 var _hold := BotHold.STOCKED
-var _engage := 0.0  # 0 lowered .. 1 level (from the aim pitch)
+var _engage := 0.0  # 0 lowered .. 1 aimed (BotMesh.raise, eased)
+var _calm := 0.0  # 0 low ready .. 1 patrol carry (eased)
+var _idle: BotIdle
+var _legs: BotLegs
 var _lean_reach := 1.0  # sum of the spine bones' heights below the head: roll per bone = asin(offset / this)
 var _grip := {}
 var _half_len := 0.4
@@ -115,6 +117,8 @@ func _init(uniform: Color) -> void:
 		_lean_reach += head_y - skel.get_bone_global_rest(i).origin.y
 	arms = FpArms.new(skel)
 	add_child(arms)
+	_idle = BotIdle.new(hash(get_instance_id()))
+	_legs = BotLegs.new(skel)
 	pivot = Node3D.new()
 	add_child(pivot)
 	_build_ragdoll()
@@ -282,9 +286,10 @@ func ragdoll_bones() -> Array:
 	return _pbones.keys()
 
 
-## Advance the clip, pitch (and lean-roll) the spine, then solve both arms onto the gun. `lean` -1..1 toward the
-## bot's -X..+X, already scaled for crouch: the head moves LEAN_OFFSET x lean to that side (BotPose's hitboxes).
-func update(delta: float, speed: float, pitch: float, gun: Node3D, crouch := false, lean := 0.0) -> void:
+## Advance the clip, pose the legs (weight shift, soft knees: BotLegs) and the spine (lean into the gun, breathing,
+## sway, peek lean-roll), then solve both arms onto the gun. raise: 0 lowered .. 1 aimed (BotMesh). `lean` -1..1
+## toward the bot's -X..+X, already scaled for crouch: the head moves LEAN_OFFSET x lean to that side (BotPose's hitboxes).
+func update(delta: float, speed: float, raise: float, gun: Node3D, crouch := false, lean := 0.0, calm := false) -> void:
 	if not dead:
 		var want := FpBody.locomotion(speed)
 		if crouch:
@@ -294,33 +299,46 @@ func update(delta: float, speed: float, pitch: float, gun: Node3D, crouch := fal
 	if dead:
 		_tick_sleep(delta)
 		return
+	_engage = smoothstep(0.0, 1.0, raise)
+	_calm = move_toward(_calm, 1.0 if calm and raise <= 0.0 else 0.0, delta * 1.5)
+	_idle.tick(delta, speed < 0.3 and not crouch, _engage, calm)
+	var low := 1.0 - _engage
+	var pitch := lerpf(lerpf(float(_hold["low"]), float(_hold["carry"]), _calm), 0.0, _engage)
+	var sk := global_transform.basis.inverse() * skel.global_transform.basis  # skeleton axes in the bot's frame
+	var st := _idle.still
+	var drop := (BotIdle.SHIFT_DROP * absf(_idle.shift) * low + BotIdle.SOFT_KNEE_M * _engage) * st
+	var hip := _idle.shift * BotIdle.SHIFT_ROLL * low * st
+	_legs.apply(sk.inverse() * Vector3(_idle.shift * BotIdle.SHIFT_M * low * st, -drop, 0.0), hip, sk.inverse() * Vector3.BACK)
 	var roll := asin(clampf(TacticalConfig.LEAN_OFFSET * lean / _lean_reach, -1.0, 1.0))
 	var blade: float = _hold["blade"]
-	for k in _spine.size():
-		var q := Quaternion(_spine_axis[k], -pitch * SPINE_SHARE / _spine.size()) * Quaternion(_spine_roll[k], roll) \
-			* Quaternion(_spine_up[k], -blade / _spine.size())
+	var fwd := lerpf(float(_hold["fwd_low"]), float(_hold["fwd_aim"]), _engage)
+	var n := _spine.size()
+	for k in n:
+		var bend := fwd / n - (_idle.breath * 0.5 if k > 0 else 0.0)  # inhale lifts the chest (spine_02, spine_03)
+		var q := Quaternion(_spine_axis[k], bend) * Quaternion(_spine_roll[k], roll + (_idle.sway.x + hip) / n) 			* Quaternion(_spine_up[k], (-blade + _idle.sway.y + _idle.glance.x * 0.3) / n)
 		skel.set_bone_pose_rotation(_spine[k], _spine_rest[k] * q)
-	_engage = clampf(1.0 + pitch / BotMesh.LOW_PITCH, 0.0, 1.0)
-	# The head turns back to the front and drops onto the stock while engaged (the clip keys the neck every frame).
-	var nq := Quaternion(_neck_up, blade) * Quaternion(_neck_axis, float(_hold["head"]) * _engage)
+	# The head turns back to the front and drops onto the stock while engaged (the clip keys the neck every frame);
+	# lowered, it glances round (BotIdle; the spine takes 30 % of the turn).
+	var nq := Quaternion(_neck_up, blade + _idle.glance.x * 0.7) * Quaternion(_neck_axis, float(_hold["head"]) * _engage + _idle.glance.y)
 	skel.set_bone_pose_rotation(_neck, skel.get_bone_pose_rotation(_neck) * nq)
 	arms.rebase()
 	var sh_r := to_local(skel.global_transform * skel.get_bone_global_pose(skel.find_bone("upperarm_r")).origin)
 	var mount := sh_r
 	if _hold["mount"] == "chest":
 		mount = (sh_r + to_local(skel.global_transform * skel.get_bone_global_pose(skel.find_bone("upperarm_l")).origin)) * 0.5
-	pivot.position = mount + (_hold["at"] as Vector3) + Vector3(0, float(_hold["lift"]) * _engage, 0)
+	pivot.position = mount + (_hold["at"] as Vector3) + Vector3(0, float(_hold["lift"]) * _engage, 0) + (_hold["low_at"] as Vector3) * low
 	pivot.rotation.x = pitch
+	pivot.rotation.y = float(_hold["carry_yaw"]) * _calm * low  # patrol carry: muzzle across the body
 	pivot.rotation.z = -lean * deg_to_rad(TacticalConfig.LEAN_ROLL_DEG)  # the gun cants like the player's view
 	var gt := gun.global_transform
-	var fwd := gt.basis * Vector3(0, 0, -1)
+	var fwd_w := gt.basis * Vector3(0, 0, -1)
 	var pistol: bool = _grip["class"] == "pistol"
 	var b := global_transform.basis
-	arms.solve("r", gt * (_grip["grip_r"] as Vector3), fwd, gt.basis * Vector3(-1, 0, 0), 1.0, b * (_hold["pole_r"] as Vector3))
+	arms.solve("r", gt * (_grip["grip_r"] as Vector3), fwd_w, gt.basis * Vector3(-1, 0, 0), 1.0, b * (_hold["pole_r"] as Vector3))
 	var la: Dictionary = arms._sides["l"]
-	var grip_l := BotHold.reach_back(gt * (_grip["grip_l"] as Vector3), -fwd.normalized(), skel.global_transform * (la["rest_up"] as Transform3D).origin,
+	var grip_l := BotHold.reach_back(gt * (_grip["grip_l"] as Vector3), -fwd_w.normalized(), skel.global_transform * (la["rest_up"] as Transform3D).origin,
 		(float(la["l1"]) + float(la["l2"])) * skel.global_transform.basis.get_scale().x * 0.98)
-	arms.solve("l", grip_l, fwd, gt.basis * (Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)), 1.0,
+	arms.solve("l", grip_l, fwd_w, gt.basis * (Vector3(1, 0, 0) if pistol else Vector3(0, 1, 0)), 1.0,
 		b * (_hold["pole_l"] as Vector3))
 
 
