@@ -8,14 +8,14 @@ Scores out of 10 ("a soldier standing / moving like a person": hands on gun, joi
 
 | State | r0 | r1 | r2 | r3 |
 |---|---|---|---|---|
-| Idle, unalerted (patrol carry) | 4 | 7 | | |
-| Idle, alerted (low ready) | 4 | 8 | | |
-| Engaged standing | 6 | 6 | | |
-| Raise low -> aim | 4 (0.12 s snap) | 8 | | |
-| Walk (patrol carry) | 6 | 7 | | |
-| Jog / engaged jog | 7 | 7 | | |
-| Sprint | 7 | 7 | | |
-| Crouch / lean | 7 | 7 | | |
+| Idle, unalerted (patrol carry) | 4 | 7 | 7.5 | |
+| Idle, alerted (low ready) | 4 | 8 | 8 | |
+| Engaged standing | 6 | 6 | 8 | |
+| Raise low -> aim | 4 (0.12 s snap) | 8 | 8 | |
+| Walk (patrol carry) | 6 | 7 | 7 | |
+| Jog / engaged jog | 7 | 7 | 8 | |
+| Sprint | 7 | 7 | 7 | |
+| Crouch / lean | 7 | 7 | 7.5 (crouch-walk heads level; marksman lean: head off the scope) | |
 
 ## Round 1
 - New `BotIdle` (seeded per bot, own RNG): breathing in the chest, slow sway, weight moving leg to leg every 3.5-8 s,
@@ -27,3 +27,13 @@ Scores out of 10 ("a soldier standing / moving like a person": hands on gun, joi
 - Raise eased over 0.28 s (smoothstep), lower over 0.5 s (was linear 0.12 s).
 - Worst left: aimed stance holds the gun at chest height, head well above it (no cheek weld); gait roll on the
   shoulders. Patrol walk cadence: walk clip at 2x (clip speed 0.9 m/s vs WALK 1.8), see report.
+
+## Round 2
+- Aimed: gun up to the eye line (lift 0.04 -> 0.09 m rifles, 0.05 -> 0.12 m pistols), head onto the stock
+  (0.18 -> 0.24 rad), torso into the gun (0.14 rad rifles, 0.12 pistols): cheek weld instead of chest-height gun.
+- New `BotHead`: neck yaw + gaze levelled (80 %) before the stock drop / glance pitch; crouch-walkers no longer
+  look at the sky. The neck code moved out of BotBody into it.
+- Moving: the spine takes back 60 % of the clip's pelvis roll (steadier shoulders and gun).
+- Lowered: torso lean 0.12 rad (rifles) / 0.1 (pistols) so the visible head stays near r0's spot (see report).
+- Visible head bone vs r0 (bot frame, m): idle r0 (-0.013, 1.565, 0.03) -> r2 x -0.06..0.01, y 1.545..1.565,
+  z 0.045..0.1 (sway / weight shift); engaged r0 (-0.04, 1.557, 0.09) -> (-0.02, 1.535, 0.04). Hitbox head (0, 1.66, 0) r 0.12.

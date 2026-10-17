@@ -77,9 +77,7 @@ var _spine_rest: Array[Quaternion] = []
 var _spine_axis: Array[Vector3] = []
 var _spine_roll: Array[Vector3] = []  # bone-local forward axis (lean)
 var _spine_up: Array[Vector3] = []  # bone-local up axis (blade)
-var _neck := -1
-var _neck_up := Vector3.UP
-var _neck_axis := Vector3.RIGHT
+var _head: BotHead
 var _hold := BotHold.STOCKED
 var _engage := 0.0  # 0 lowered .. 1 aimed (BotMesh.raise, eased)
 var _calm := 0.0  # 0 low ready .. 1 patrol carry (eased)
@@ -108,9 +106,7 @@ func _init(uniform: Color) -> void:
 		_spine_axis.append(skel.get_bone_global_rest(i).basis.inverse() * Vector3.RIGHT)
 		_spine_roll.append(skel.get_bone_global_rest(i).basis.inverse() * Vector3.BACK)
 		_spine_up.append(skel.get_bone_global_rest(i).basis.inverse() * Vector3.UP)
-	_neck = skel.find_bone("neck_01")
-	_neck_up = skel.get_bone_global_rest(_neck).basis.inverse() * Vector3.UP
-	_neck_axis = skel.get_bone_global_rest(_neck).basis.inverse() * Vector3.RIGHT
+	_head = BotHead.new(skel)
 	var head_y := skel.get_bone_global_rest(skel.find_bone("Head_2")).origin.y
 	_lean_reach = 0.0
 	for i in _spine:
@@ -301,7 +297,8 @@ func update(delta: float, speed: float, raise: float, gun: Node3D, crouch := fal
 		return
 	_engage = smoothstep(0.0, 1.0, raise)
 	_calm = move_toward(_calm, 1.0 if calm and raise <= 0.0 else 0.0, delta * 1.5)
-	_idle.tick(delta, speed < 0.3 and not crouch, _engage, calm)
+	_idle.tick(delta, speed >= 0.3, speed < 0.3 and not crouch, _engage, calm)
+	var steady := -_legs.pelvis_roll() * BotIdle.GAIT_STEADY * _idle.gait  # shoulders steadier than the hips on the move
 	var low := 1.0 - _engage
 	var pitch := lerpf(lerpf(float(_hold["low"]), float(_hold["carry"]), _calm), 0.0, _engage)
 	var sk := global_transform.basis.inverse() * skel.global_transform.basis  # skeleton axes in the bot's frame
@@ -315,12 +312,11 @@ func update(delta: float, speed: float, raise: float, gun: Node3D, crouch := fal
 	var n := _spine.size()
 	for k in n:
 		var bend := fwd / n - (_idle.breath * 0.5 if k > 0 else 0.0)  # inhale lifts the chest (spine_02, spine_03)
-		var q := Quaternion(_spine_axis[k], bend) * Quaternion(_spine_roll[k], roll + (_idle.sway.x + hip) / n) 			* Quaternion(_spine_up[k], (-blade + _idle.sway.y + _idle.glance.x * 0.3) / n)
+		var q := Quaternion(_spine_axis[k], bend) * Quaternion(_spine_roll[k], roll + (_idle.sway.x + hip + steady) / n) 			* Quaternion(_spine_up[k], (-blade + _idle.sway.y + _idle.glance.x * 0.3) / n)
 		skel.set_bone_pose_rotation(_spine[k], _spine_rest[k] * q)
-	# The head turns back to the front and drops onto the stock while engaged (the clip keys the neck every frame);
-	# lowered, it glances round (BotIdle; the spine takes 30 % of the turn).
-	var nq := Quaternion(_neck_up, blade + _idle.glance.x * 0.7) * Quaternion(_neck_axis, float(_hold["head"]) * _engage + _idle.glance.y)
-	skel.set_bone_pose_rotation(_neck, skel.get_bone_pose_rotation(_neck) * nq)
+	# The head turns back to the front, looks level and drops onto the stock while engaged; lowered, it glances round
+	# (BotIdle; the spine takes 30 % of the turn).
+	_head.pose(blade + _idle.glance.x * 0.7, float(_hold["head"]) * _engage + _idle.glance.y)
 	arms.rebase()
 	var sh_r := to_local(skel.global_transform * skel.get_bone_global_pose(skel.find_bone("upperarm_r")).origin)
 	var mount := sh_r

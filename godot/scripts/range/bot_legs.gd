@@ -7,13 +7,20 @@ extends RefCounted
 var skel: Skeleton3D
 var _pelvis := -1
 var _legs: Array = []  # [thigh, calf, foot] bone ids, left then right
+var _rest_inv := Basis.IDENTITY  # the pelvis's rest rotation, inverted
 
 
 func _init(s: Skeleton3D) -> void:
 	skel = s
 	_pelvis = s.find_bone("pelvis")
+	_rest_inv = s.get_bone_global_rest(_pelvis).basis.inverse()
 	for side in ["l", "r"]:
 		_legs.append([s.find_bone("thigh_" + side), s.find_bone("calf_" + side), s.find_bone("foot_" + side)])
+
+
+## The clip's pelvis roll now (rad, about the skeleton's forward axis, vs the rest pose).
+func pelvis_roll() -> float:
+	return (skel.get_bone_global_pose(_pelvis).basis * _rest_inv).get_euler().z
 
 
 ## off: pelvis move, roll: pelvis tilt (rad) about `axis`; all in skeleton space. Call after the clip has posed the
