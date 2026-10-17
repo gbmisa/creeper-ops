@@ -43,6 +43,9 @@ static func _fire(b: ScavBot, point: Vector3) -> String:
 			return "los"
 		point = head
 		dist = b.eye().distance_to(point)
+	# F152: hold fire while another living bot is in the line (they shot each other in the back).
+	if _friend_in_line(b, point, space):
+		return "friendly"
 	# F18: reaction delay before the first aimed shot after spotting. Only gates aimed fire at a
 	# seen target; suppressing fire at last-known (not seeing) still goes out.
 	if b.percept.seeing and b.percept.sight_t < b.react_t * b.body.arm_loss("ads"):
@@ -88,6 +91,13 @@ static func _fire(b: ScavBot, point: Vector3) -> String:
 	RangeAudio.event({"kind": "shot", "item": b.gun.id, "pos": b.mesh.muzzle.global_position, "cal": b.gun.def["cal"], "cls": b.gun.def["class"]})
 	b.flash.flash(Color(1.0, 0.8, 0.45), 0.1, 0.05, 2.0)
 	return "fired"
+
+
+## F152: true when the line eye -> point first hits a living bot's hitbox (not this bot's own).
+static func _friend_in_line(b: ScavBot, point: Vector3, space: PhysicsDirectSpaceState3D) -> bool:
+	var q := PhysicsRayQueryParameters3D.create(b.eye(), point, TacticalConfig.LAYER_HITBOX, HitboxRig.rids(b.rig))
+	var hit := HitboxRig.lookup(space.intersect_ray(q).get("collider"))
+	return not hit.is_empty() and hit["owner"] is ScavBot and hit["owner"] != b and not (hit["body"] as BodyHealth).dead
 
 
 ## The nearest player's head when the bot sees them, `point` is their chest and the head line is clear; else INF.

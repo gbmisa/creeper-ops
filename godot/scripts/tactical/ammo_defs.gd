@@ -57,8 +57,8 @@ const ROWS := {
 	# F146 bow / crossbow: slow, high drag, visible drop. dmg and pen scale with speed (draw fraction for the bow).
 	"arrow_field": {"name": "Field point arrow", "cal": "arrow", "dmg": 70.0, "pen": 12.0, "armor_dmg": 0.2, "v0": 90.0, "drag": 0.012, "lbleed": 0.25, "hbleed": 0.1},
 	"arrow_broad": {"name": "Broadhead arrow", "cal": "arrow", "dmg": 85.0, "pen": 5.0, "armor_dmg": 0.1, "v0": 90.0, "drag": 0.012, "lbleed": 0.7, "hbleed": 0.45},
-	"bolt_field": {"name": "Field point bolt", "cal": "bolt", "dmg": 80.0, "pen": 16.0, "armor_dmg": 0.25, "v0": 110.0, "drag": 0.010, "lbleed": 0.25, "hbleed": 0.1},
-	"bolt_broad": {"name": "Broadhead bolt", "cal": "bolt", "dmg": 95.0, "pen": 7.0, "armor_dmg": 0.12, "v0": 110.0, "drag": 0.010, "lbleed": 0.7, "hbleed": 0.45},
+	"bolt_field": {"name": "Field point bolt", "cal": "bolt", "dmg": 200.0, "pen": 16.0, "armor_dmg": 0.25, "v0": 110.0, "drag": 0.010, "lbleed": 0.25, "hbleed": 0.1},
+	"bolt_broad": {"name": "Broadhead bolt", "cal": "bolt", "dmg": 200.0, "pen": 7.0, "armor_dmg": 0.12, "v0": 110.0, "drag": 0.010, "lbleed": 0.7, "hbleed": 0.45},
 }
 
 
