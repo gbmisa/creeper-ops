@@ -53,7 +53,7 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
   rigged guns; others unchanged. `stop()` no longer fires unreached marks.
 - Wrist pinch (2fad9a1): IK put the whole hand roll at the wrist (L ~155 deg long guns, R ~130 pistols). `FpArms.roll`
   = FOREARM_ROLL 0.5 (viewmodel only; bots 0) rolls the forearm by half, like Gregory's M4A1 pose (fit from its baked
-  mesh: ~54/46). Close-up renders judged: wrist full width, elbow smoother. Suite 1114/0. Not verified: Gregory's play.
+  mesh: ~54/46). Close-ups judged (scratchpad `wrist_cam.gd`): wrist full width. Suite 1114/0. Not verified: Gregory's play.
 - Scratchpad tools: `twist_probe.gd` (roll per gun), `wrist_cam.gd` (wrist/elbow close-ups), `fit_pose.py` (Blender).
 - Split tree verified: parse clean, 3 scenes boot, suite 1113/1 (F88).
 
