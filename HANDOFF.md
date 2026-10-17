@@ -48,10 +48,11 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - Known: kill-house navmesh doorway check can fail; barracks north door split by the inner wall.
 - Range suite before split: 1113 pass / 1 fail (`a shot at spawn ... (F88)`, Scav 5 net move 0.6 m; left as is).
 
-## Verified (this repo, split tree)
-Parse clean; title / firing_range / skirmish boot headless, no script errors; `--range-test` 1113 pass / 1 fail
-(the same pre-existing F88 check as before the split).
-Not verified: Gregory's play of the title screen; windowed run.
+## Reload insert sound timing (0105c26, fix/mag-in-sound, merged; Gregory asked)
+- `mag_in` now plays on the ReloadTimeline `mag_in` mark (end of the seat phase) on rigged guns, not at reload end;
+  others unchanged. `stop()` no longer fires unreached marks. Suite 1114/0. Not verified: Gregory's ear. Not pushed.
+
+## Verified (split tree): parse clean, all 3 scenes boot; suite 1113/1 (pre-existing F88). Not: windowed run.
 
 ## Next
 1. Port the reload WIP once session B commits it (above), then continue FB-R (rifle empties, AXMC, M4A1, ...).
