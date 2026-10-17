@@ -23,16 +23,46 @@ static func threat_pos(b: ScavBot) -> Vector3:
 static func pick(b: ScavBot, squad: BotSquad = null) -> Vector3:
 	if b.covers.is_empty() or b.session == null or not b.is_inside_tree():
 		return NO_COVER
-	var space := b.get_world_3d().direct_space_state
-	var threat := threat_pos(b)
-	var best := NO_COVER
+	return best_of(b, b.covers, threat_pos(b), b.get_world_3d().direct_space_state, squad)
+
+
+## Highest score() among markers (ties: the earliest marker), or NO_COVER. Perf: same result as scoring
+## every marker in order, but markers are scored best upper bound first and the search stops once no
+## remaining bound can beat the best score, so most raycasts are skipped.
+static func best_of(b: ScavBot, markers: Array, threat: Vector3, space: PhysicsDirectSpaceState3D, squad: BotSquad = null) -> Vector3:
+	var cands: Array = []
+	for i in markers.size():
+		cands.append([_bound(b, markers[i]), i])
+	cands.sort_custom(func(x, y): return x[0] > y[0] or (x[0] == y[0] and x[1] < y[1]))
+	var best_i := -1
 	var best_score := -INF
-	for m in b.covers:
-		var s := score(b, m, threat, space, squad)
-		if s > best_score:
-			best_score = s
-			best = m
-	return best
+	for c in cands:
+		if c[0] < best_score:
+			break
+		var i: int = c[1]
+		var sc := score(b, markers[i], threat, space, squad)
+		if sc > best_score or (best_i >= 0 and sc == best_score and i < best_i):
+			best_score = sc
+			best_i = i
+	return NO_COVER if best_i < 0 else markers[best_i]
+
+
+## Upper bound of score() without raycasts: the peek bonus assumed, no exposed penalty.
+## Same float ops in the same order as score(), so score() <= _bound() exactly.
+static func _bound(b: ScavBot, marker: Vector3) -> float:
+	var s := 0.0
+	s += BotTacticsDefs.COVER_W_PEEK
+	return _dist_terms(b, marker, s)
+
+
+static func _dist_terms(b: ScavBot, marker: Vector3, s: float) -> float:
+	var d := Vector2(marker.x - b.global_position.x, marker.z - b.global_position.z).length()
+	s -= d * BotTacticsDefs.COVER_W_DIST
+	var hold: float = b.def.get("hold", 30.0)
+	if hold > 0.0:
+		var td := Vector2(marker.x - b.percept.contact.pos.x, marker.z - b.percept.contact.pos.z).length()
+		s -= absf(td - hold) * BotTacticsDefs.COVER_W_BAND
+	return s
 
 
 static func score(b: ScavBot, marker: Vector3, threat: Vector3, space: PhysicsDirectSpaceState3D, squad: BotSquad = null) -> float:
@@ -40,19 +70,14 @@ static func score(b: ScavBot, marker: Vector3, threat: Vector3, space: PhysicsDi
 		return -INF
 	if _flanked(b.session, marker, threat):
 		return -INF
+	if squad != null and _squad_blocks(b, marker, squad):
+		return -INF  # spacing or line-of-fire rule (checked before the raycasts: cheaper)
 	if BotPerception.los(space, marker + Vector3(0, CROUCH_EYE, 0), [threat]):
 		return -INF  # visible from the contact: not cover
-	if squad != null and _squad_blocks(b, marker, squad):
-		return -INF  # spacing or line-of-fire rule
 	var s := 0.0
 	if BotPerception.los(space, marker + Vector3(0, STAND_EYE, 0), [threat]):
 		s += BotTacticsDefs.COVER_W_PEEK
-	var d := Vector2(marker.x - b.global_position.x, marker.z - b.global_position.z).length()
-	s -= d * BotTacticsDefs.COVER_W_DIST
-	var hold: float = b.def.get("hold", 30.0)
-	if hold > 0.0:
-		var td := Vector2(marker.x - b.percept.contact.pos.x, marker.z - b.percept.contact.pos.z).length()
-		s -= absf(td - hold) * BotTacticsDefs.COVER_W_BAND
+	s = _dist_terms(b, marker, s)
 	var mid := (b.global_position + marker) * 0.5 + Vector3(0, CROUCH_EYE, 0)
 	if BotPerception.los(space, threat, [mid]):
 		s -= BotTacticsDefs.COVER_W_EXPOSED
