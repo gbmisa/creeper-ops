@@ -160,6 +160,8 @@ func _draw() -> void:
 		draw_rect(r, Color(0.46, 0.49, 0.33, 0.8) if i == sel else Color(0.46, 0.49, 0.33, 0.4), false, 1.0)
 		draw_string(font, r.position + Vector2(10, 22), ItemDefs.label(_guns[i]).get_slice(" (", 0), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, UiKit.TEXT)
 		draw_string(font, r.position + Vector2(10, 42), "%d part(s) fitted" % g.fit.size(), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiKit.DIM)
+		if AttachMarks.is_part(drag):  # F143: green = this gun takes the dragged part, red = it does not
+			AttachMarks.mark(self, r, AttachMarks.fits(_guns[i], drag))
 	if _guns.is_empty():
 		draw_string(font, Vector2(30, 110), "No guns carried", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, UiKit.DIM)
 	var pr := Rect2(preview.position, preview.size)
@@ -177,6 +179,8 @@ func _draw() -> void:
 		draw_rect(r, Color(0.46, 0.49, 0.33, 0.6), false, 1.0)
 		draw_string(font, r.position + Vector2(10, 18), String(slots[i]).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiKit.DIM)
 		var nm := "(empty)" if not fitted.has(slots[i]) else String(AttachmentDefs.ROWS[fitted[slots[i]]]["name"])
+		if AttachMarks.is_part(drag):  # F143: only the matching slot of a compatible gun is green
+			AttachMarks.mark(self, r, AttachMarks.fits(gi, drag, slots[i]))
 		draw_string(font, r.position + Vector2(10, 37), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, UiKit.TEXT if fitted.has(slots[i]) else UiKit.DIM)
 	var sy := 90 + slots.size() * (SLOT_ROW + 6) + 38
 	draw_string(font, Vector2(size.x - SIDE_W - 20, sy), "SPARE PARTS", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, UiKit.DIM)

@@ -61,6 +61,8 @@ func run(app: TacticalScene) -> void:
 			if AttachmentDefs.ROWS.has(id):
 				w.inv.add(w.inv.make(id))
 		app.gunsmith.open()
+		if a.has("drag"):  # --drag=id (with --smith): that part is being dragged, to show the F143 green / red marks
+			app.gunsmith.view.drag = w.inv.make(str(a["drag"]))
 	if a.has("engage") and not app.bots.bots.is_empty():  # --engage: Scav 1 stands 6 m ahead of the player and is alerted
 		var bot: ScavBot = app.bots.bots[0]
 		bot.global_position = app.player.global_position + Vector3(0, 0, 6) if not a.has("look") else RangeArgs.vec3(str(a["engage"]))
