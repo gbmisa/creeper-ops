@@ -32,3 +32,10 @@
 - Bots are not blocked from the FOB by anything but their routes (chasing the player there is possible).
 - The Town has no MAP-2 Kestrel dressing (facades, props, foliage, far ground) yet; walls use the Skirmish materials with per-building colours.
 - 2-storey buildings are 14 m deep because the shared ramp code needs 6.5 m of run; widths/depths are uneven on purpose.
+
+## Round 2 (orchestrator review)
+- Symmetry: E1 widths/gates differ from W1; E2 is now a workshop/garage row (metal, yard-style walls, market street narrows to 5.4 m east of the square); east back row has 4 uneven lock-ups.
+- NW corner: ruined cluster n1..n9 (x -76..-43, z -77..-35), 3 m lanes, 7 m corridor to the yard's west gate; +rifleman, +shotgunner, 2 loot crates.
+- NE: ditch walls z -64, low walls, wrecks 8-15 m apart. SE: orchard 28 trees (0.9 m) in two patches split by a low wall line at x 50, pump shed kept.
+- Dressing: low "sandbag" walls at south mouths, municipal square side and yard gate; wrecks blocking alleys (x -50, 23) and half the west lane; rubble crates at breaches in w1_3 and e1_3.
+- Checks: 283 navmesh probes reach everything; suite 1114 PASS / 0 FAIL / 38 baseline errors. Shots: docs/art/map3/r2_*.png.
