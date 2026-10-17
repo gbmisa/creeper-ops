@@ -183,6 +183,12 @@ func eye_pos() -> Vector3:
 
 
 func _process(delta: float) -> void:
+	var t := PerfProbe.t0()   # PerfOverlay (F3): timing only
+	_process_timed(delta)
+	PerfProbe.add("player.process", t)
+
+
+func _process_timed(delta: float) -> void:
 	tick_body(delta)
 	_med_tick(delta)
 	var crouch_k := (1.2 if crouching else 1.8) / 1.8
@@ -219,6 +225,12 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	var t := PerfProbe.t0()   # PerfOverlay (F3): timing only
+	_physics_process_timed(delta)
+	PerfProbe.add("player.physics", t)
+
+
+func _physics_process_timed(delta: float) -> void:
 	if noclip:
 		_noclip_move(delta)
 		return

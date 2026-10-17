@@ -117,6 +117,12 @@ func drop_current() -> void:
 
 
 func _process(delta: float) -> void:
+	var t := PerfProbe.t0()   # PerfOverlay (F3): timing only
+	_process_timed(delta)
+	PerfProbe.add("weapons", t)
+
+
+func _process_timed(delta: float) -> void:
 	_t += delta
 	player.spot_mult = LASER_SPOT if gun != null and gun.fit.get("under", "") == "laser" else 1.0
 	_pickup_and_slots()

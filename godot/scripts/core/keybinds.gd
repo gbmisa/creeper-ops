@@ -48,6 +48,7 @@ const DEFAULTS := {
 	"med_quick_4": ["Tactical", "Quick-use 4th med (rig/pockets)", [KEY_0]],
 	"t_util_1": ["Tactical", "Use utility slot 1", [KEY_I]],
 	"t_util_2": ["Tactical", "Use utility slot 2", [KEY_O]],
+	"t_perf": ["Tactical", "Performance metrics", [KEY_F3]],
 	"t_deploy_large": ["Tactical", "Deploy to Skirmish (large) at the truck", [KEY_L]],
 }
 

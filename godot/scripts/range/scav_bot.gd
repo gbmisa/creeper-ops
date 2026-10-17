@@ -108,12 +108,20 @@ func _ready() -> void:
 
 
 func _physics_process(dt: float) -> void:
+	var t := PerfProbe.t0()   # PerfOverlay (F3): timing only
 	think(dt)
+	PerfProbe.add("bots.think", t)
+	t = PerfProbe.t0()
 	if not _dying and not body.dead:
 		pose.update(self, dt)
+	PerfProbe.add("bots.pose", t)
+	t = PerfProbe.t0()
 	_move(dt)
+	PerfProbe.add("bots.move", t)
+	t = PerfProbe.t0()
 	flash.update(dt)
 	mesh.aim(dt, is_engaged())
+	PerfProbe.add("bots.mesh", t)
 
 
 func is_engaged() -> bool:

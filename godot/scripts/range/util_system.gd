@@ -131,6 +131,12 @@ func _pressed(id: String) -> bool:
 
 
 func _physics_process(dt: float) -> void:
+	var t := PerfProbe.t0()   # PerfOverlay (F3): timing only
+	_physics_process_timed(dt)
+	PerfProbe.add("utils", t)
+
+
+func _physics_process_timed(dt: float) -> void:
 	_time += dt
 	var local_release := _tick_input()
 	_latched.clear()

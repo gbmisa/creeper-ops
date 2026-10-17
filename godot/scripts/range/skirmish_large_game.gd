@@ -175,6 +175,12 @@ func extract_status(i: int) -> String:
 
 
 func _process(dt: float) -> void:
+	var t := PerfProbe.t0()   # PerfOverlay (F3): timing only
+	_process_timed(dt)
+	PerfProbe.add("skirmish_large", t)
+
+
+func _process_timed(dt: float) -> void:
 	if player == null or over:
 		return
 	time_s += dt
