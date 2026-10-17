@@ -8,6 +8,16 @@ Linux worktree: `../creeper fps td-worktrees/tactical-port` (remote `tactical` i
 Run: `godot --path godot` -> title (Range / Skirmish / Skirmish (large) / Quit). Windows zip only when Gregory asks.
 Suite: `--range-test` FAILED 1 (1357 passed): f127 "shells conserved" (M870 tube), pre-existing in creeper play build.
 
+## START HERE (2026-10-17): F146 compound bow + crossbow + animations (Gregory's request, not started)
+- Write a brief in docs/tasks/ (F146_bows.md) first: new weapon class (draw-and-hold bow: hold fire to draw,
+  release to shoot, draw weight/stamina, arrow drop; crossbow: cock/reload anim, single bolt), arrow/bolt
+  ammo items + inventory, projectile (Ballistics has bullets: arrows slower with visible drop; stick in hits?),
+  sounds, bots don't use them (unless asked), range rack + supply crate entries. Models: Opus scratch low-poly
+  in Blender (Gregory likes those, art/arms_guns.blend style), viewmodel anims (draw, nock, cock). Code: Sonnet
+  stage-runner, <= 2 phases per agent. Open design questions to ask Gregory: arrows recoverable? optics on the bow?
+- F145 done (gunsmith_view.gd): click a slot -> every fitting part (bag first, then supply); click to fit.
+  Side effect: the replaced part goes to the bags (floor if full), so swapping from supply fills the bags.
+
 ## 2026-10-16 overnight: F137-F144 (plan docs/tasks/OVERNIGHT_2026-10-16.md), all merged + pushed
 - F144 ragdoll: BotRagdoll (bot_ragdoll.gd), LAYER_RAGDOLL bones collide with each other, anatomical limits,
   starts with the pose velocity. F142: zero was already exact (range_test_zero, 67 gun x optic); handle/rear sight
