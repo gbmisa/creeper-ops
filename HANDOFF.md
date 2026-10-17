@@ -46,7 +46,7 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - P9 built; P11 no fractures; **P10** waits for Gregory. Known: kill-house navmesh doorway check can fail; barracks north door split by the inner wall.
 - Range suite before split: 1113 pass / 1 fail (`a shot at spawn ... (F88)`, Scav 5 net move 0.6 m; left as is).
 
-## Session D (2026-10-16, both merged into feat/fb-reload, NOT pushed; Gregory asked for both)
+## Session D (2026-10-16, both merged into feat/fb-reload and pushed; Gregory asked for both)
 - Reload insert sound (0105c26): `mag_in` plays on the ReloadTimeline `mag_in` mark (mag seats), not at reload end, on
   rigged guns; others unchanged. `stop()` no longer fires unreached marks.
 - Wrist pinch (2fad9a1): IK put the whole hand roll at the wrist (L ~155 deg long guns, R ~130 pistols). `FpArms.roll`
