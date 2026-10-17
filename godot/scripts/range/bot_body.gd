@@ -7,6 +7,7 @@ extends Node3D
 const STRIPPED := ["clavicle_", "upperarm_", "lowerarm_", "hand_", "thumb_", "index_", "middle_", "ring_", "pinky_", "spine_0"]
 const SPINE := ["spine_01", "spine_02", "spine_03"]
 const BOOTS := Color(0.1, 0.1, 0.09)
+const FIX_HIPS := 0.6  # share of the head fix's sideways part done by the pelvis (feet planted); the spine rolls the rest
 const ARMBAND := Color(0.8, 0.1, 0.1)
 
 ## Ragdoll (FB-A). Physical bones are built at _init under a PhysicalBoneSimulator3D and sit inert
@@ -286,7 +287,7 @@ func ragdoll_bones() -> Array:
 ## Advance the clip, pose the legs (weight shift, soft knees: BotLegs) and the spine (lean into the gun, breathing,
 ## sway, peek lean-roll), then solve both arms onto the gun. raise: 0 lowered .. 1 aimed (BotMesh). `lean` -1..1
 ## toward the bot's -X..+X, already scaled for crouch: the head moves LEAN_OFFSET x lean to that side (BotPose's hitboxes).
-func update(delta: float, speed: float, raise: float, gun: Node3D, crouch := false, lean := 0.0, calm := false) -> void:
+func update(delta: float, speed: float, raise: float, gun: Node3D, crouch := false, lean := 0.0, calm := false, head_at := Vector3(0, 1.66, 0)) -> void:
 	if not dead:
 		var want := FpBody.locomotion(speed)
 		if crouch:
@@ -306,18 +307,21 @@ func update(delta: float, speed: float, raise: float, gun: Node3D, crouch := fal
 	var st := _idle.still
 	var drop := (BotIdle.SHIFT_DROP * absf(_idle.shift) * low + BotIdle.SOFT_KNEE_M * _engage) * st
 	var hip := _idle.shift * BotIdle.SHIFT_ROLL * low * st
-	_legs.apply(sk.inverse() * Vector3(_idle.shift * BotIdle.SHIFT_M * low * st, -drop, 0.0), hip, sk.inverse() * Vector3.BACK)
+	var fx := _head.fix
+	_legs.apply(sk.inverse() * Vector3(_idle.shift * BotIdle.SHIFT_M * low * st + fx.x * FIX_HIPS, fx.y - drop, 0.0), hip, sk.inverse() * Vector3.BACK)
 	var roll := asin(clampf(TacticalConfig.LEAN_OFFSET * lean / _lean_reach, -1.0, 1.0))
 	var blade: float = _hold["blade"]
 	var fwd := lerpf(float(_hold["fwd_low"]), float(_hold["fwd_aim"]), _engage)
 	var n := _spine.size()
 	for k in n:
-		var bend := fwd / n - (_idle.breath * 0.5 if k > 0 else 0.0)  # inhale lifts the chest (spine_02, spine_03)
-		var q := Quaternion(_spine_axis[k], bend) * Quaternion(_spine_roll[k], roll + (_idle.sway.x + hip + steady) / n) 			* Quaternion(_spine_up[k], (-blade + _idle.sway.y + _idle.glance.x * 0.3) / n)
+		var bend := (fwd - fx.z / _lean_reach * n) / n - (_idle.breath * 0.5 if k > 0 else 0.0)  # inhale lifts the chest
+		var q := Quaternion(_spine_axis[k], bend) * Quaternion(_spine_roll[k], roll + fx.x * (1.0 - FIX_HIPS) / _lean_reach + (_idle.sway.x + hip + steady) / n) \
+			* Quaternion(_spine_up[k], (-blade + _idle.sway.y + _idle.glance.x * 0.3) / n)
 		skel.set_bone_pose_rotation(_spine[k], _spine_rest[k] * q)
 	# The head turns back to the front, looks level and drops onto the stock while engaged; lowered, it glances round
 	# (BotIdle; the spine takes 30 % of the turn).
 	_head.pose(blade + _idle.glance.x * 0.7, float(_hold["head"]) * _engage + _idle.glance.y, roll * n)
+	_head.track(to_local(skel.global_transform * _head.centre()) - head_at, speed < 0.3, delta)  # head on its hitbox
 	arms.rebase()
 	var sh_r := to_local(skel.global_transform * skel.get_bone_global_pose(skel.find_bone("upperarm_r")).origin)
 	var mount := sh_r

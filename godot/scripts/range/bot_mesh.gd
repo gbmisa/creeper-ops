@@ -18,6 +18,7 @@ var crouch := false  # set by BotPose each tick
 var lean := 0.0
 var calm := false  # unalerted (patrol): patrol carry instead of the low ready; set by BotPose
 var peek := false  # leaning out of cover to shoot: gun up like engaged; set by BotPose
+var head_at := Vector3(0, 1.66, 0)  # the head hitbox's centre (bot frame); set by BotPose
 var _gun_size := Vector3(0.1, 0.1, 0.8)
 
 
@@ -110,4 +111,4 @@ func _drop_gun(impulse: Vector3) -> void:
 
 
 func walk(delta: float, speed: float) -> void:
-	body.update(delta, speed, raise, gun, crouch, lean, calm)
+	body.update(delta, speed, raise, gun, crouch, lean, calm, head_at)

@@ -46,3 +46,11 @@ Scores out of 10 ("a soldier standing / moving like a person": hands on gun, joi
   fired from the low ready.
 - Running lowered (3.0 -> 4.2 m/s, eased): gun tucked in toward the chest (`run_at`), pistols most.
 - Left as is: sniper support hand wraps the scope (reach_back on long guns), walk / crouch-walk cadence (report).
+
+## Head on its hitbox (orchestrator review)
+- BotPose hands the mesh the head hitbox centre (`BotMesh.head_at`); while standing or crouching still, `BotHead.track`
+  draws the visible head (head-mesh centre) onto it, beyond a 2 cm free zone: pelvis shift (60 % of sideways, feet
+  planted, lift capped at 3 cm) + spine roll / bend. Fades out over ~0.1 s when moving. Soft knees and weight-shift drop removed.
+- Worst offsets, 4 kinds, signed m (x / y / z): idle 0.025 / -0.02 / 0.025, alerted 0.025 / -0.02 / 0.025, engaged
+  -0.015 / -0.02 / 0.025, crouch -0.02 / 0.02 / -0.025, crouch lean -0.02 / 0.02 / 0.02. Moving (not corrected):
+  walk -0.07 / -0.045 / -0.05, engaged jog -0.085 / -0.215 / -0.145 (the jog clip's lean). r4 sheets.

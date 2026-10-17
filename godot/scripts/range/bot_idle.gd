@@ -17,9 +17,9 @@ const GLANCE_GAP := Vector2(2.5, 6.5)    # s between glances; alert (not calm) b
 const GLANCE_RATE := 3.5                 # 1/s: head turn speed (exponential)
 const STILL_RATE := 5.0                  # 1/s: standing-still blend in / out (~0.2 s, the clip crossfade)
 const SHIFT_M := 0.035                   # pelvis sideways onto the standing leg (feet stay planted: BotLegs)
-const SHIFT_DROP := 0.012                # pelvis drop while on one leg
+const SHIFT_DROP := 0.0                 # pelvis drop while on one leg (0: the head stays on its hitbox)
 const SHIFT_ROLL := 0.06                 # hip drop on the relaxed leg's side (rad); the spine rolls it back
-const SOFT_KNEE_M := 0.025               # pelvis drop in the aiming stance (knees bend)
+const SOFT_KNEE_M := 0.0                # pelvis drop in the aiming stance (0: the head stays on its hitbox)
 const GAIT_STEADY := 0.6                 # share of the clip's pelvis roll the spine takes back while moving
 const RUN_FROM := Vector2(3.0, 4.2)      # m/s: running blend 0 .. 1 (gun tucked in, BotHold run_at)
 
