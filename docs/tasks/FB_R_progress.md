@@ -168,3 +168,9 @@ snaps back at the start of an empty reload.
   plan: hand to the side pouch, shell to the loading port, push; pump on empty is the existing cycle), garand en-bloc
   (clip node from the Magazine bone, thumb press, hand clears, bolt bone forward), revolver (static mesh: cylinder region
   cut + swing-out rotation, again a hinged part). These guns have baked Reload clips today (shotgun, garand).
+- FB-R2b (feat/reload-groups2, 2026-10-17): 68c0daa test harness fix (frame-0 hold_l). ac30b19: `ReloadHinge` (rig "hinge":
+  box / pivot / axis / angle; phases "open" 0..1), non-detachable timelines (no chamber split), loose rounds (rig "loose"),
+  `mag_on_hinge`; plans tube (shotgun, one shell per press), enbloc (Garand), cylinder (revolver). Then PKM `belt` plan
+  (anchors lid / flip / tray), `ReloadAnims.ease`, `ReloadMag.off_xf`. Scores in SCORES.md "FB-R2b": all 7.
+  Open: shotgun gun bobs back to rest between presses (needs a "next press" hook); Garand pinged clip shows rounds;
+  PKM belt is a hand pass (no belt object); revolver speedloader is a box.

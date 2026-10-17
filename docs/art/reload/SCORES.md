@@ -211,3 +211,14 @@ Sheets are the `--empty` reload (tube / en-bloc only reload when not full / empt
 | shotgun | one shell | G-2 | 7 | 2 | 2 | 1 | 1 | 1 | Red shell from the belt (0.28), under the port, thumbed in (0.45). (a) Gun returns to rest after every shell: consecutive presses bob (keep the loading pose while R is held again: needs a "next press" hook). (b) Port faces down even at -1.25 roll. Pump on empty = the existing cycle (unchanged). |
 | garand | en-bloc | G-2 | 7 | 1 | 1 | 1 | 2 | 2 | Clip pings out, new clip above the receiver, thumbed down, hand clears, bump. (a) The pinged clip still shows its rounds (Magazine bone = clip + rounds). (b) Forearm up the centre ~15 % at press 1.36-1.7. (c) No op-rod travel (no bone). |
 | revolver | cylinder | G-2 | 7 | 1 | 2 | 1 | 1 | 2 | Cylinder swings out on its crane (1.98), muzzle up, empties fall, speedloader in, closed. (a) The open cylinder is mostly behind the left hand 0.66-1.65. (b) Rounds / speedloader are a plain box. |
+
+PKM (`belt` plan): feed cover cut as a hinged part (front pivot, rear lifts 0.8 rad), the box = the mag (whole parts under the
+receiver). The hand flicks the cover's rear latch (anchor "lid" rides the cover; "flip" = hand off it), unhooks the box, pouches it
+(fast: drops it), hangs a new one, lays the belt on the tray (hand only: the belt piece stays on the mesh, cutting it would take
+the charging-handle piece too), slaps the cover shut. Empty: left hand racks the handle on the right (hand only).
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| pkm | plain | G-2 | 7 | 2 | 1 | 1 | 1 | 2 | Cover up 0.46-5.5, box off 1.39-1.85, new box 3.71-4.63, cover shut 5.56. (a) The box is small and dark at the bottom edge: pose the gun ~5 cm higher during the box change. (b) No belt object: "belt" is a hand pass over the tray. (c) The cover is a plain slab (mesh). |
+| pkm | fast | G-2 | 7 | 2 | 1 | 1 | 1 | 2 | Box falls 1.45-1.82. Same notes. |
+| pkm | empty | G-2 | 7 | 1 | 1 | 1 | 1 | 2 | As plain, then the rack 6.0-6.3: the hand is behind the receiver (handle on the far side). |

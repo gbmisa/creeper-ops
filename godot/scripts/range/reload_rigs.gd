@@ -176,6 +176,20 @@ const RIGS := {
 		"pouch_hand": Vector3(-0.12, -0.46, 0.18),
 		"hands": {"mag": {"f": Vector3(0.0, 0.0, -1.0), "n": Vector3(1.0, 0.0, 0.0)}},
 		"pose_shift": [Vector3(0.0, -0.04, -0.10), Vector3.ZERO]},  # pistol out from the face: the hand on the cylinder
+	"pkm": {"plan": "belt",  # single mesh: the box (whole parts under y 0.02), the feed cover hinged at its front
+		"mag_box": AABB(Vector3(-0.015, -0.145, -0.085), Vector3(0.07, 0.165, 0.147)), "mag_parts": true,
+		"hinge": {"box": AABB(Vector3(-0.03, 0.10, -0.095), Vector3(0.06, 0.025, 0.29)), "whole": true,
+			"pivot": Vector3(0.0, 0.112, -0.09), "axis": Vector3(1.0, 0.0, 0.0), "angle": -0.8},  # rear lifts
+		"pivot": Vector3(0.02, 0.018, -0.075), "hold": Vector3(-0.015, -0.06, -0.01),  # palm on the box's left face
+		"slip": [Vector3(0.0, -0.03, 0.0), Vector3.ZERO],
+		"out": [Vector3(-0.02, -0.14, 0.02), Vector3(0.2, 0.0, 0.0)],
+		"near": [Vector3(-0.02, -0.08, 0.0), Vector3(0.15, 0.0, 0.0)],
+		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
+		"drop": [Vector3(0.0, -0.55, -0.02), Vector3(1.0, 0.0, 0.4)],
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "lid_hand": Vector3(0.0, 0.135, 0.15), "tray_hand": Vector3(0.0, 0.13, 0.02),
+		"flip_hand": Vector3(-0.02, 0.19, 0.13),
+		"charge": Vector3(0.045, 0.058, 0.05), "travel": Vector3(0.0, 0.0, 0.08),
+		"pose_shift": [Vector3(0.0, 0.0, -0.06), Vector3.ZERO]},
 	"p90": {"plan": "bullpup", "pivot": Vector3(0.0, 0.025, -0.125), "hold": Vector3(-0.01, 0.045, 0.12),
 		"rock": [Vector3.ZERO, Vector3(-0.22, 0.0, 0.0)],
 		"slip": [Vector3(0.0, 0.05, 0.06), Vector3(-0.3, 0.0, 0.0)],

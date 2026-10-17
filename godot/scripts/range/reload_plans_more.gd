@@ -10,11 +10,15 @@ class_name ReloadPlansMore
 ##            hand jerks clear and the bolt slams home (gun bump).
 ##   cylinder revolver: the cylinder swings out on its crane (rig "hinge"), muzzle up, the empties fall out, a
 ##            speedloader goes in, the cylinder is pushed home. The rounds ride the cylinder (rig "mag_on_hinge").
+##   belt     PKM: the feed cover opens on its front hinge (rig "hinge", the hand rides it: anchor "lid"), the box comes
+##            off its rail and is pouched (fast: dropped), a new one is hung, the belt laid on the tray, the cover shut;
+##            empty = rack the handle on the right (hand only, no handle part).
 ## Tube / en-bloc reload_fast is the same time as reload: "fast" is the same list.
 
 const BOLT_POSE := [Vector3(-0.10, 0.10, -0.10), Vector3(0.15, 0.55, -0.85)]  # as ReloadAnims.RIFLE_POSE
 const TUBE_POSE := [Vector3(-0.08, 0.08, -0.08), Vector3(0.15, 0.50, -1.25)]  # rolled right: the loading port to the hand
 const GARAND_POSE := [Vector3(-0.06, 0.06, -0.06), Vector3(0.10, 0.45, 0.25)]  # receiver top turned to the camera
+const BELT_POSE := [Vector3(-0.08, 0.04, -0.10), Vector3(0.15, 0.45, 0.50)]  # rolled left: the cover top and the box up
 const REV_POSE := [Vector3(-0.07, 0.08, -0.10), Vector3(0.35, 0.35, -0.60)]  # as ReloadAnims.PISTOL_POSE
 
 const TUBE := [
@@ -47,7 +51,46 @@ const CYLINDER := [
 	{"n": "ready", "w": 0.16, "gp": Vector3.ZERO, "gr": Vector3.ZERO, "hl": "grip"},
 ]
 
+const BELT := [
+	{"n": "start", "w": 0.05, "gp": BELT_POSE[0], "gr": BELT_POSE[1], "hl": "lid"},  # fingers under the cover's rear latch
+	{"n": "open", "w": 0.07, "open": 1.0, "hl": "flip", "ease": "out"},  # latch flicked: the cover swings up on its front hinge
+	{"n": "reach", "w": 0.06, "hl": "mag"},  # hand down to the box
+	{"n": "unhook", "w": 0.06, "mag": "slip", "ease": "out", "mark": "mag_out"},  # off its rail
+	{"n": "out", "w": 0.06, "mag": "out"},
+	{"n": "stow", "w": 0.10, "mag": "pouch", "mark": "mag_hide"},
+	{"n": "fetch", "w": 0.06, "mark": "mag_show"},
+	{"n": "show", "w": 0.10, "mag": "near"},
+	{"n": "hook", "w": 0.06, "mag": "slip", "ease": "out"},
+	{"n": "seat", "w": 0.06, "mag": "seat", "ease": "out", "mark": "mag_in"},
+	{"n": "belt", "w": 0.10, "hl": "tray"},  # belt laid on the feed tray
+	{"n": "close", "w": 0.06, "open": 0.0, "hl": "lid", "ease": "in"},  # cover slapped shut
+	{"n": "hold", "w": 0.04},
+	{"n": "ready", "w": 0.12, "gp": Vector3.ZERO, "gr": Vector3.ZERO, "hl": "grip"},
+]
+const BELT_FAST := [  # the box is dropped, not pouched
+	{"n": "start", "w": 0.06, "gp": BELT_POSE[0], "gr": BELT_POSE[1], "hl": "lid"},
+	{"n": "open", "w": 0.08, "open": 1.0, "hl": "flip", "ease": "out"},
+	{"n": "reach", "w": 0.07, "hl": "mag"},
+	{"n": "slip", "w": 0.05, "mag": "slip", "ease": "out", "mark": "mag_out"},
+	{"n": "drop", "w": 0.10, "mag": "drop", "hl": "let", "ease": "in"},
+	{"n": "fetch", "w": 0.10, "mag": "pouch", "hl": "pouch", "mark": "mag_show"},
+	{"n": "show", "w": 0.11, "mag": "near", "hl": "mag"},
+	{"n": "hook", "w": 0.06, "mag": "slip", "ease": "out"},
+	{"n": "seat", "w": 0.06, "mag": "seat", "ease": "out", "mark": "mag_in"},
+	{"n": "belt", "w": 0.09, "hl": "tray"},
+	{"n": "close", "w": 0.07, "open": 0.0, "hl": "lid", "ease": "in"},
+	{"n": "hold", "w": 0.03},
+	{"n": "ready", "w": 0.12, "gp": Vector3.ZERO, "gr": Vector3.ZERO, "hl": "grip"},
+]
+
 const PLANS := {
+	"belt": {"plain": BELT, "fast": BELT_FAST, "charge_takes": {"hold": 1.0},
+		"charge": [  # left hand under the gun to the handle on the right side, racks it
+			{"n": "reach_c", "w": 0.45, "hl": "charge"},
+			{"n": "pull", "w": 0.15, "bolt": 1.0, "ease": "out"},
+			{"n": "release", "w": 0.08, "bolt": 0.0, "ease": "in", "mark": "charged"},
+			{"n": "regrip", "w": 0.32, "hl": "grip"},
+		]},
 	"tube": {"plain": TUBE, "fast": TUBE, "mag_from": "pouch"},
 	"enbloc": {"plain": ENBLOC, "fast": ENBLOC},
 	"cylinder": {"plain": CYLINDER, "fast": CYLINDER},
