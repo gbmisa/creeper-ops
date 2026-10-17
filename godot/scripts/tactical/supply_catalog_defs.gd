@@ -1,7 +1,7 @@
 class_name SupplyCatalogDefs
 ## The loadout room's SUPPLY lists (unlimited): item ids per category, built from the def tables, not by hand.
 
-const NAMES := ["Guns", "Magazines", "Ammo", "Attachments", "Meds", "Grenades & utility", "Gear", "Bows"]
+const NAMES := ["Guns", "Magazines", "Ammo", "Attachments", "Meds", "Grenades", "Gear", "Bows"]
 const BOW_CALS := ["arrow", "bolt"]
 const GEAR_KINDS := ["rig", "backpack", "headset"]
 

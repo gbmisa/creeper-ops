@@ -66,6 +66,7 @@ func regions() -> Array:
 		out.append({"loc": "ground", "rect": Rect2(gx, 78, gr.x * C, gr.y * C), "slot": false, "title": "GROUND (within 2 m)"})
 	else:
 		supply.origin = Vector2(gx, 78)
+		supply.inv = inv
 	if not inv.opened.is_empty():
 		var og := inv.grid_size("open_g")
 		out.append({"loc": "open_g", "rect": Rect2(gx, 78 + gr.y * C + 30, og.x * C, og.y * C), "slot": false,
