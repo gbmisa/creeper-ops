@@ -43,6 +43,7 @@ var hands_busy := false  # a quick-use item is being used (QuickUse): no firing,
 var _check_t := 0.0
 var _reload_t := 99.0
 var _reload_fast := false
+var anim_mag_in := false  # the viewmodel's reload timeline plays mag_in when the new mag seats (not at the end)
 var _t := 0.0
 var _was_left := false
 var _clicked := false
@@ -120,7 +121,8 @@ func _process(delta: float) -> void:
 	gun.update(delta)
 	# Finish before this frame's input: an R on the finishing frame must not restart on the stale old (empty) mag.
 	if before != "" and gun.busy_kind == "" and before == "reload":
-		_gun_snd("mag_in")
+		if not anim_mag_in:
+			_gun_snd("mag_in")
 		var left := reloader.finish(gun_item)
 		if not left.is_empty():
 			item_dropped.emit(left)

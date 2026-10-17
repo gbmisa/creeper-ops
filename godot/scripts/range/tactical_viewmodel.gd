@@ -75,6 +75,9 @@ func _on_switched(g: Gun) -> void:
 	arms.bolt = bolt
 	reload_tl = ReloadTimeline.make(glb, _def)
 	arms.reload_tl = reload_tl
+	weapons.anim_mag_in = reload_tl != null
+	if reload_tl != null:
+		reload_tl.mark.connect(_on_reload_mark)
 	rig = AttachmentRig.new()
 	model.add_child(rig)
 	rig.build(g, half_len)
@@ -124,6 +127,12 @@ func _on_shot(res: Dictionary, g: Gun) -> void:
 		_play(clip, 0.2 + g.def["cycle"] if g.def["cycle"] > 0.0 else maxf(0.18, 60.0 / g.def["rpm"]), 0.0, true)
 	else:
 		_play("Fire", clampf(60.0 / g.def["rpm"], 0.06, 0.4))
+
+
+## Insert sound on the frame the new mag seats in the gun (ReloadAnims "mag_in" mark).
+func _on_reload_mark(m: String) -> void:
+	if m == "mag_in" and _gun != null:
+		weapons._gun_snd("mag_in")
 
 
 func _on_action(kind: String, secs: float) -> void:

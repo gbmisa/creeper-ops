@@ -120,6 +120,7 @@ func start(secs: float, empty: bool, fast: bool) -> void:
 func stop() -> void:
 	if t < len:
 		t = len
+		_next = _phases.size()  # cut short: the marks not reached yet don't fire (no insert sound on a cancel)
 		_sample()
 
 
