@@ -41,7 +41,7 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - FB-R2b merged: `ReloadHinge` (rotating parts), timelines for non-detachable guns, plans `tube` (shotgun), `enbloc`
   (Garand), `cylinder` (revolver), `belt` (PKM): all score 7 (SCORES.md "FB-R2b"; why not 8 listed there).
 - **Play build: suite 1366 pass / 0 fail / 0 SCRIPT ERROR**, pushed. (Kill-house navmesh doorway check flakes now and
-  then, pre-existing.) All agents done; no worktrees of this session left except `reload-groups` (merged, removable).
+  then, pre-existing.) All agents done; all of this session's worktrees removed.
 
 ## Next (fresh session: start here)
 1. Gregory: rule on CHANGES P10, P12, P13; play Town, the new arms/hands, bot idle/aim, the reloads (every gun now).
