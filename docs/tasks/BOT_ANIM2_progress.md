@@ -8,14 +8,14 @@ Scores out of 10 ("a soldier standing / moving like a person": hands on gun, joi
 
 | State | r0 | r1 | r2 | r3 |
 |---|---|---|---|---|
-| Idle, unalerted (patrol carry) | 4 | 7 | 7.5 | |
-| Idle, alerted (low ready) | 4 | 8 | 8 | |
-| Engaged standing | 6 | 6 | 8 | |
-| Raise low -> aim | 4 (0.12 s snap) | 8 | 8 | |
-| Walk (patrol carry) | 6 | 7 | 7 | |
-| Jog / engaged jog | 7 | 7 | 8 | |
-| Sprint | 7 | 7 | 7 | |
-| Crouch / lean | 7 | 7 | 7.5 (crouch-walk heads level; marksman lean: head off the scope) | |
+| Idle, unalerted (patrol carry) | 4 | 7 | 7.5 | 7.5 |
+| Idle, alerted (low ready) | 4 | 8 | 8 | 8 |
+| Engaged standing | 6 | 6 | 8 | 8 |
+| Raise low -> aim | 4 (0.12 s snap) | 8 | 8 | 8 |
+| Walk (patrol carry) | 6 | 7 | 7 | 7 (clip cadence, see report) |
+| Jog / engaged jog | 7 | 7 | 8 | 8 |
+| Sprint | 7 | 7 | 7 | 8 (gun tucked in) |
+| Crouch / lean | 7 | 7 | 7.5 (crouch-walk heads level; marksman lean: head off the scope) | 8 (gun follows the head; peek raises the gun) |
 
 ## Round 1
 - New `BotIdle` (seeded per bot, own RNG): breathing in the chest, slow sway, weight moving leg to leg every 3.5-8 s,
@@ -37,3 +37,12 @@ Scores out of 10 ("a soldier standing / moving like a person": hands on gun, joi
 - Lowered: torso lean 0.12 rad (rifles) / 0.1 (pistols) so the visible head stays near r0's spot (see report).
 - Visible head bone vs r0 (bot frame, m): idle r0 (-0.013, 1.565, 0.03) -> r2 x -0.06..0.01, y 1.545..1.565,
   z 0.045..0.1 (sway / weight shift); engaged r0 (-0.04, 1.557, 0.09) -> (-0.02, 1.535, 0.04). Hitbox head (0, 1.66, 0) r 0.12.
+
+## Round 3
+- Lean: the hold tilts with the torso and follows the head's extra travel (vs the last unleaned head-to-shoulder
+  offset), and the neck rolls back 45 % of the lean: the cheek stays near the stock (was: gun 9 cm above the head
+  leaning left, below it leaning right).
+- Peek: `BotMesh.peek` (set by BotPose while it wants to lean out) raises the gun like engaged; peek shots used to be
+  fired from the low ready.
+- Running lowered (3.0 -> 4.2 m/s, eased): gun tucked in toward the chest (`run_at`), pistols most.
+- Left as is: sniper support hand wraps the scope (reach_back on long guns), walk / crouch-walk cadence (report).

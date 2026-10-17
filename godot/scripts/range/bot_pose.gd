@@ -36,6 +36,7 @@ func update(b: ScavBot, dt: float) -> void:
 		n.rotation.z = -lean * TacticalConfig.BOT_LEAN_RAD if (HitboxRig.SHAPES[z][0] as Vector3).y > TacticalConfig.BOT_LEAN_PIVOT else 0.0
 	b.mesh.crouch = crouch
 	b.mesh.calm = s == BotBrain.PATROL
+	b.mesh.peek = lean_want != 0.0
 	b.mesh.lean = lean * lerpf(1.0, TacticalConfig.BOT_CROUCH_K, k)  # crouched hitboxes lean less far; so does the mesh
 
 

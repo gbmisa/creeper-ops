@@ -21,6 +21,7 @@ const SHIFT_DROP := 0.012                # pelvis drop while on one leg
 const SHIFT_ROLL := 0.06                 # hip drop on the relaxed leg's side (rad); the spine rolls it back
 const SOFT_KNEE_M := 0.025               # pelvis drop in the aiming stance (knees bend)
 const GAIT_STEADY := 0.6                 # share of the clip's pelvis roll the spine takes back while moving
+const RUN_FROM := Vector2(3.0, 4.2)      # m/s: running blend 0 .. 1 (gun tucked in, BotHold run_at)
 
 var rng := RandomNumberGenerator.new()
 var breath := 0.0               # chest pitch now (rad, + = forward)
@@ -29,6 +30,7 @@ var shift := 0.0                # -1 on the left leg .. +1 on the right leg (eas
 var glance := Vector2.ZERO      # x: head yaw toward the bot's -X (left), y: head pitch down (rad)
 var still := 1.0                # 0 moving or crouched .. 1 standing still (eased)
 var gait := 0.0                 # 0 still .. 1 moving (eased)
+var run := 0.0                  # 0 walking .. 1 running (eased)
 var _t := 0.0
 var _hz := 0.25
 var _sway_hz := 0.1
@@ -51,12 +53,12 @@ func _init(seed_v: int) -> void:
 	_glance_t = rng.randf_range(0.0, GLANCE_GAP.y)
 
 
-## moving: walking at any speed. standing: not moving and not crouched. busy: aiming (no glances, weight centred).
-## calm: unalerted (patrol).
-func tick(dt: float, moving: bool, standing: bool, busy: float, calm: bool) -> void:
+## speed: ground speed (m/s). busy: aiming (no glances, weight centred). calm: unalerted (patrol).
+func tick(dt: float, speed: float, crouch: bool, busy: float, calm: bool) -> void:
 	_t += dt
-	still = move_toward(still, 1.0 if standing else 0.0, dt * STILL_RATE)
-	gait = move_toward(gait, 1.0 if moving else 0.0, dt * STILL_RATE)
+	still = move_toward(still, 1.0 if speed < 0.3 and not crouch else 0.0, dt * STILL_RATE)
+	gait = move_toward(gait, 1.0 if speed >= 0.3 else 0.0, dt * STILL_RATE)
+	run = move_toward(run, clampf((speed - RUN_FROM.x) / (RUN_FROM.y - RUN_FROM.x), 0.0, 1.0), dt * STILL_RATE)
 	var deep := 1.0 + 0.5 * (1.0 - still)  # breathing harder on the move
 	breath = (sin(_t * TAU * _hz * deep) * 0.5 + 0.5) * BREATH_RAD * deep
 	sway = Vector2(sin(_t * TAU * _sway_hz + _phase), sin(_t * TAU * _sway_hz * 0.73 + _phase * 1.7)) * SWAY_RAD * still * (1.0 - busy)

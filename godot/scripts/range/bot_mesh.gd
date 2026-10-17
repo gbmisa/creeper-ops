@@ -17,6 +17,7 @@ var raise := 0.0  # 0 lowered .. 1 aimed (linear; BotBody eases it)
 var crouch := false  # set by BotPose each tick
 var lean := 0.0
 var calm := false  # unalerted (patrol): patrol carry instead of the low ready; set by BotPose
+var peek := false  # leaning out of cover to shoot: gun up like engaged; set by BotPose
 var _gun_size := Vector3(0.1, 0.1, 0.8)
 
 
@@ -59,9 +60,10 @@ func _init(def := {}) -> void:
 	gun.add_child(scope_glint)
 
 
-## Gun up while engaging (over RAISE_S), lowered otherwise (over LOWER_S).
+## Gun up while engaging or peeking (over RAISE_S), lowered otherwise (over LOWER_S).
 func aim(delta: float, engaged: bool) -> void:
-	raise = move_toward(raise, 1.0 if engaged else 0.0, delta / (RAISE_S if engaged else LOWER_S))
+	var up := engaged or peek
+	raise = move_toward(raise, 1.0 if up else 0.0, delta / (RAISE_S if up else LOWER_S))
 
 
 func glint(on: bool) -> void:

@@ -81,6 +81,7 @@ var _head: BotHead
 var _hold := BotHold.STOCKED
 var _engage := 0.0  # 0 lowered .. 1 aimed (BotMesh.raise, eased)
 var _calm := 0.0  # 0 low ready .. 1 patrol carry (eased)
+var _head_sh := Vector3.INF  # head - right shoulder (bot frame) when last not leaning
 var _idle: BotIdle
 var _legs: BotLegs
 var _lean_reach := 1.0  # sum of the spine bones' heights below the head: roll per bone = asin(offset / this)
@@ -297,7 +298,7 @@ func update(delta: float, speed: float, raise: float, gun: Node3D, crouch := fal
 		return
 	_engage = smoothstep(0.0, 1.0, raise)
 	_calm = move_toward(_calm, 1.0 if calm and raise <= 0.0 else 0.0, delta * 1.5)
-	_idle.tick(delta, speed >= 0.3, speed < 0.3 and not crouch, _engage, calm)
+	_idle.tick(delta, speed, crouch, _engage, calm)
 	var steady := -_legs.pelvis_roll() * BotIdle.GAIT_STEADY * _idle.gait  # shoulders steadier than the hips on the move
 	var low := 1.0 - _engage
 	var pitch := lerpf(lerpf(float(_hold["low"]), float(_hold["carry"]), _calm), 0.0, _engage)
@@ -316,13 +317,19 @@ func update(delta: float, speed: float, raise: float, gun: Node3D, crouch := fal
 		skel.set_bone_pose_rotation(_spine[k], _spine_rest[k] * q)
 	# The head turns back to the front, looks level and drops onto the stock while engaged; lowered, it glances round
 	# (BotIdle; the spine takes 30 % of the turn).
-	_head.pose(blade + _idle.glance.x * 0.7, float(_hold["head"]) * _engage + _idle.glance.y)
+	_head.pose(blade + _idle.glance.x * 0.7, float(_hold["head"]) * _engage + _idle.glance.y, roll * n)
 	arms.rebase()
 	var sh_r := to_local(skel.global_transform * skel.get_bone_global_pose(skel.find_bone("upperarm_r")).origin)
 	var mount := sh_r
 	if _hold["mount"] == "chest":
 		mount = (sh_r + to_local(skel.global_transform * skel.get_bone_global_pose(skel.find_bone("upperarm_l")).origin)) * 0.5
-	pivot.position = mount + (_hold["at"] as Vector3) + Vector3(0, float(_hold["lift"]) * _engage, 0) + (_hold["low_at"] as Vector3) * low
+	var at := (_hold["at"] as Vector3) + Vector3(0, float(_hold["lift"]) * _engage, 0) + ((_hold["low_at"] as Vector3) + (_hold["run_at"] as Vector3) * _idle.run) * low
+	# Leaning, the hold tilts with the torso and follows the head where the spine roll moves it past a rigid tilt.
+	var tilt := Basis(Vector3.BACK, -lean * TacticalConfig.BOT_LEAN_RAD)
+	var head_sh := to_local(skel.global_transform * skel.get_bone_global_pose(skel.find_bone("Head_2")).origin) - sh_r
+	if absf(lean) < 0.02:
+		_head_sh = head_sh
+	pivot.position = mount + tilt * at + (head_sh - tilt * _head_sh if absf(lean) >= 0.02 and _head_sh.is_finite() else Vector3.ZERO)
 	pivot.rotation.x = pitch
 	pivot.rotation.y = float(_hold["carry_yaw"]) * _calm * low  # patrol carry: muzzle across the body
 	pivot.rotation.z = -lean * deg_to_rad(TacticalConfig.LEAN_ROLL_DEG)  # the gun cants like the player's view
