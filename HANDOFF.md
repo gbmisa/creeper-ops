@@ -37,15 +37,13 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 
 ## Not yet ported from creeper-ops
 - Session B's **uncommitted reload WIP** (`reload_anims.gd`, `reload_rigs.gd`, `reload_timeline.gd`) is still in the
-  creeper-ops main checkout. Once committed there: `git -C "../creeper ops" format-patch -1 <sha> --stdout | git am`.
-- Any other on-foot commit made in creeper-ops after d3b08d6 ports the same way.
+  creeper-ops main checkout. Port it (and any on-foot commit there after d3b08d6): `format-patch -1 <sha> | git am`.
 
 ## Carried over (still true; split tree verified: 3 scenes boot, suite 1113/1)
 - FB-R reloads (brief `docs/tasks/FB_R_reload_anims.md`, log `FB_R_progress.md`, scores `docs/art/reload/SCORES.md`):
   judged >= 8: ak47, m1911, glock18, p90, mp5 plain/fast, scarh/sr25/saiga12/sks plain (+ scarh/sr25 fast).
   Below 8: the 4 rifles' empty reloads (5-6), saiga12/sks fast (7). WIP above fixes the empty tails, not yet judged.
-- P9 arm loss built; P11 no fractures; **P10** (bots ignore leg damage) waits for Gregory.
-- Known: kill-house navmesh doorway check can fail; barracks north door split by the inner wall.
+- P9 built; P11 no fractures; **P10** waits for Gregory. Known: kill-house navmesh doorway check can fail; barracks north door split by the inner wall.
 - Range suite before split: 1113 pass / 1 fail (`a shot at spawn ... (F88)`, Scav 5 net move 0.6 m; left as is).
 
 ## Session D (2026-10-16, both merged into feat/fb-reload, NOT pushed; Gregory asked for both)
