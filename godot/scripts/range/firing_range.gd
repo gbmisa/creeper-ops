@@ -27,6 +27,7 @@ func _build() -> void:
 	var workbench := RangeWorkbench.new()  # F11: weapon customization station
 	add_child(workbench)
 	workbench.setup(weapons, player, inv_ui)
+	gunsmith = workbench.smith
 	_add_hud()
 	add_child(bots)
 	bots.setup(session, weapons, bal, hit_log)

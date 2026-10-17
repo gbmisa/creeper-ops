@@ -1,6 +1,6 @@
 class_name RangeShot
 extends Node
-## Screenshot / debug hook: --shot=path [--weapon=id] [--fit=a,b] [--zoom=lo] [--ads] [--look=x,y,z] [--fire=N] [--burst=N (held auto)] [--bolt=0..1 (with --fire=1: shoot after that share of the bolt cycle)] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--reload[=s]] [--fast] [--empty (chamber + mag emptied first)]
+## Screenshot / debug hook: --shot=path [--weapon=id] [--fit=a,b] [--zoom=lo] [--ads] [--look=x,y,z] [--fire=N] [--burst=N (held auto)] [--bolt=0..1 (with --fire=1: shoot after that share of the bolt cycle)] [--wait=s] [--pos=x,y,z] [--crouch] [--pitch=deg] [--side=right|top|front] [--walk=W+shift] [--armor=0..3 dummy loadout] [--smith (gunsmith screen open)] [--reload[=s]] [--fast] [--empty (chamber + mag emptied first)]
 ## [--strip=t1,t2,.. (with --reload: one shot per time into the reload, saved as <shot>_NN.png)] [--fps-report] (reload mid-way shot).
 ## Gives the weapon, optionally fires N shots, waits, saves the viewport, quits.
 
@@ -56,6 +56,11 @@ func run(app: TacticalScene) -> void:
 	w.trigger_ads = a.has("ads")
 	if a.has("inventory"):  # --inventory: shot with the inventory screen open
 		app.inv_ui.open()
+	if a.has("smith") and app.gunsmith != null:  # --smith: shot with the gunsmith screen open
+		for id in ["laser", "suppressor", "reddot"]:
+			if AttachmentDefs.ROWS.has(id):
+				w.inv.add(w.inv.make(id))
+		app.gunsmith.open()
 	if a.has("engage") and not app.bots.bots.is_empty():  # --engage: Scav 1 stands 6 m ahead of the player and is alerted
 		var bot: ScavBot = app.bots.bots[0]
 		bot.global_position = app.player.global_position + Vector3(0, 0, 6) if not a.has("look") else RangeArgs.vec3(str(a["engage"]))

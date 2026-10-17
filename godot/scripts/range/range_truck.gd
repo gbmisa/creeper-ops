@@ -31,13 +31,21 @@ func setup(w: PlayerWeapons, p: TacticalPlayer) -> void:
 			wh.rotation_degrees.z = 90.0
 			wh.position = POS + Vector3(sx * 1.2, 0.45, z)
 			add_child(wh)
+	RangeStationProps.truck_extras(self, POS)
+	var plaque := MeshInstance3D.new()
+	var pm := BoxMesh.new()
+	pm.size = Vector3(0.04, 0.4, 1.3)
+	plaque.mesh = pm
+	plaque.material_override = RangeLayout.colour(RangeStationProps.SIGN_BG)
+	plaque.position = POS + Vector3(1.22, 1.3, 1.0)
+	add_child(plaque)
 	var l := Label3D.new()
 	l.text = "DEPLOY"
 	l.pixel_size = 0.005
 	l.font_size = 64
 	l.outline_size = 10
 	l.rotation_degrees.y = 90.0
-	l.position = POS + Vector3(1.25, 1.3, 1.0)
+	l.position = POS + Vector3(1.26, 1.3, 1.0)
 	l.modulate = Color(0.85, 1.0, 0.8)
 	add_child(l)
 
