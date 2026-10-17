@@ -4,9 +4,9 @@ class_name ItemDefs
 ## Bags (rig, backpack) carry a "grid": [w, h]. Mags/clips: "gun" = weapon id, "cap" = rounds.
 
 const ROUND_KG := {"45acp": 0.02, "57x28": 0.012, "762x39": 0.017, "12ga": 0.04, "3006": 0.03, "338": 0.05,
-	"9x19": 0.012, "44mag": 0.03, "556x45": 0.012, "762x51": 0.025, "762x54r": 0.022}
+	"9x19": 0.012, "44mag": 0.03, "556x45": 0.012, "762x51": 0.025, "762x54r": 0.022, "arrow": 0.05, "bolt": 0.06}
 const STACK_MAX := {"45acp": 70, "57x28": 100, "762x39": 90, "12ga": 40, "3006": 60, "338": 30,
-	"9x19": 90, "44mag": 40, "556x45": 90, "762x51": 60, "762x54r": 60}
+	"9x19": 90, "44mag": 40, "556x45": 90, "762x51": 60, "762x54r": 60, "arrow": 12, "bolt": 12}
 const POCKETS := Vector2i(4, 1)
 
 const ROWS := {
@@ -90,7 +90,7 @@ const ARMOR_SIZE := {"vest2": [3, 3, 1.5], "plate4": [3, 3, 6.0], "steel6": [2, 
 
 
 static func has(id: String) -> bool:
-	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or SecretArms.has_weapon(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id) or AttachmentDefs.has(id)
+	return ROWS.has(id) or WeaponDefs.ROWS.has(id) or SecretArms.has_weapon(id) or BowDefs.has_weapon(id) or TacAmmoDefs.ROWS.has(id) or ArmorDefs.ROWS.has(id) or AttachmentDefs.has(id)
 
 
 static func of(id: String) -> Dictionary:
@@ -101,7 +101,7 @@ static func of(id: String) -> Dictionary:
 			d["cal"] = WeaponDefs.of(d["gun"])["cal"]
 			d["cap"] = WeaponDefs.of(d["gun"])["mag"]
 		return d
-	if WeaponDefs.ROWS.has(id) or SecretArms.has_weapon(id):
+	if WeaponDefs.ROWS.has(id) or SecretArms.has_weapon(id) or BowDefs.has_weapon(id):
 		var w := WeaponDefs.of(id)
 		return {"id": id, "name": w["name"], "kind": "gun", "w": w["inv_w"], "h": w["inv_h"], "kg": w["kg"],
 			"pistol": w["class"] == "pistol", "cal": w["cal"]}

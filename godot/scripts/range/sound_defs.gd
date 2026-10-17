@@ -41,6 +41,7 @@ const GUN_PROFILE := {
 const CAL_PROFILE := {
 	"45acp": "pistol45", "9x19": "pistol9", "44mag": "mag44", "57x28": "smg57", "762x39": "ak", "556x45": "m4",
 	"762x51": "nato762", "762x54r": "mosin", "3006": "garand", "338": "axmc", "12ga": "pump12",
+	"arrow": "pistol9", "bolt": "pistol9",   # F146 placeholder until the bow sounds (arrows never play a shot sample)
 }
 const CLASS_PROFILE := {
 	"pistol": "pistol45", "smg": "smg9", "assault rifle": "ak", "shotgun": "pump12", "marksman": "sks",

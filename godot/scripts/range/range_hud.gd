@@ -159,6 +159,8 @@ func _process(delta: float) -> void:
 			s = "Mag: " + weapons.mag_text
 		elif g.needs_cycle:
 			s = "Release trigger to cycle"
+		elif BowDefs.is_loose(g.def):
+			s = BowDraw.counter(weapons)
 		_mag_lbl.text = "" if g.id == SecretArms.TEMPEST else s
 	_prompt_lbl.text = weapons.prompt
 	_msg_t = maxf(0.0, _msg_t - delta)
