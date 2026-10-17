@@ -42,5 +42,14 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
   doorway check still flakes now and then, pre-existing). Pushed. Reload agent continues on `feat/reload-groups2`
   (worktree `reload-groups`, uncommitted hinge WIP: `reload_hinge.gd`): tube / en-bloc / revolver / PKM belt.
 
-## Next
-1. Review + merge reload-groups2 (hinged parts, non-detachable reloads). 2. Gregory: P10, P13, plays Town + arms.
+## Next (fresh session: start here)
+1. **Reload agent may still be running** after /clear (FB-R2 round 2, brief `docs/tasks/FB_R2_reload_groups.md` step 3
+   + orchestrator asks: 3 regression sheets with the new arms, hinged parts, shotgun tube, Garand en-bloc, revolver,
+   PKM belt). Check `git -C "../tactical ops-worktrees/reload-groups" log feat/fb-reload..feat/reload-groups2` and
+   `status`. If it stopped mid-way, finish or brief a new Opus agent from that state. Review (sheets in
+   `docs/art/reload/`, scores in SCORES.md), parse, suite (background; never render meanwhile), merge, push.
+2. Gregory: rule on CHANGES P10, P12, P13; play Town, the new arms/hands, bot idle/aim, new reloads.
+3. Open ideas (not asked yet): Town Kestrel dressing pass; FOB no-go for bots; bot WALK 1.8 m/s vs walk clip (fast
+   steps); split ragdoll out of `bot_body.gd` (352 lines); right hand cups the grip in rolled reload poses.
+Tools (scratchpad of the 2026-10-16 session, may be gone): skin_probe.gd, reach_probe.gd, make_arms_fp.py, sheet.gd.
+Godot in background shells: `$LOCALAPPDATA/Microsoft/WinGet/Links/godot_console.exe` (plain `godot` not on PATH).
