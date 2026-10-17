@@ -6,7 +6,8 @@ class_name ReloadAnims
 ## "empty_bolt" = where the bolt/slide stands for the whole of an empty reload until the charge moves it (slide lock).
 ##   gp / gr  gun position / rotation offset under the camera (m, rad: x pitch up, y yaw left, z roll left)
 ##   mag      seat | rock | slip | near | out | pouch | drop (RIGS[gun] offsets of the Mag node, gun-model space, about `pivot`)
-##   hl       left hand: grip (def grip_l) | mag (the Mag node's `hold` point) | pouch | charge (+ bolt travel) | stop
+##   hl       left hand: grip (def grip_l) | mag (the Mag node's `hold` point) | let (that point with the mag at
+##            "slip": the hand opens there while the mag drops) | pouch | charge (+ bolt travel) | stop
 ##   bolt     0..1 of RIGS[gun].travel      ease  io (default) | in (falls, speeds up) | out
 ## "charge_takes" {phase: share}: on an empty reload the charge also gets that share of those base phases' time
 ## (total time unchanged). "charge_pre" phases run before the mag change (HK: lock the handle back first) and share
@@ -39,8 +40,8 @@ const PLANS := {
 			{"n": "start", "w": 0.12, "gp": RIFLE_POSE[0], "gr": RIFLE_POSE[1], "hl": "mag"},
 			{"n": "rock", "w": 0.05, "mag": "rock", "ease": "out"},
 			{"n": "slip", "w": 0.04, "mag": "slip", "ease": "out", "mark": "mag_out"},
-			{"n": "drop", "w": 0.14, "mag": "drop", "hl": "pouch", "ease": "in"},
-			{"n": "fetch", "w": 0.07, "mag": "pouch", "mark": "mag_show"},
+			{"n": "drop", "w": 0.10, "mag": "drop", "hl": "let", "ease": "in"},  # hand opens at the well, the mag falls
+			{"n": "fetch", "w": 0.11, "mag": "pouch", "hl": "pouch", "mark": "mag_show"},
 			{"n": "show", "w": 0.16, "mag": "near", "hl": "mag"},
 			{"n": "hook", "w": 0.08, "mag": "rock"},
 			{"n": "seat", "w": 0.06, "mag": "seat", "gp": RIFLE_POSE[0] + Vector3(0, 0.015, 0), "ease": "out", "mark": "mag_in"},

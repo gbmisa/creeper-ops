@@ -136,3 +136,17 @@ Round 1 (judged on f18d7a9 = round-3 code + session B's WIP).
 | sks | plain | R2-1 | 8 | 2 | 2 | 2 | 1 | 1 | Stands. |
 | sks | fast | R2-1 | 7 | 2 | 1 | 2 | 1 | 1 | (a) Same carried drop as saiga fast: in hand at 0.52, falling 0.65. |
 | sks | empty | R2-1 | 6 | 1 | 2 | 1 | 1 | 1 | (a) Same near charge pose as saiga: forearm slab ~25 % 2.31-2.52, hand over the top. |
+
+Round 2 (FB-R2). Changes: (1) a hand on the mag holds it at the phase's start / end mag pose, so it lets go of a dropped mag
+instead of riding it down; new `let` anchor (hand stays at the mag's `slip` pose); rifle plan fast: `drop` 0.14 -> 0.10 with the
+hand on `let`, `fetch` 0.07 -> 0.11 to the pouch (same total). (2) rig `charge_shift` ([gp, gr] for the empty-only charge poses):
+saiga12 / sks z -0.08 (as far off as their mag change). (3) sr25 catch hand 3 cm lower, 2 cm back. Re-rendered: the six below.
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| ak47 | fast | R2-2 | 8 | 2 | 2 | 2 | 1 | 1 | Drop now reads: hand open at the well (0.55), mag below it. Criterion 5 half point: paddle has no thumb (frozen fingers). |
+| saiga12 | fast | R2-2 | 8 | 2 | 2 | 1 | 1 | 2 | Up from 7: `drop` 0.57 drum falls below the open hand, gone by 0.72. |
+| sks | fast | R2-2 | 8 | 2 | 2 | 2 | 1 | 1 | Up from 7: mag falls free at 0.52. |
+| saiga12 | empty | R2-2 | 7 | 1 | 2 | 1 | 1 | 2 | Up from 6: rack pose now as far off as the mag change, reads as an overhand rack (fingers over the receiver 2.6-2.82). (a) Forearm still ~20 % of the lower left 2.37-2.84. (b) Fingers stand up above the receiver instead of wrapping it. |
+| sks | empty | R2-2 | 6 | 1 | 2 | 1 | 1 | 1 | (a) reach 2.31 / regrip 2.52: the fingers float 2-4 cm above the receiver top (the rifle "charge" frame points them up). Overhand frame: fingers down the right side, wrist above. (b) Two big sleeves (left lower-left, right lower-right) at 2.31. |
+| sr25 | empty | R2-2 | 7 | 1 | 1 | 1 | 2 | 2 | Up from 6: palm on the lower above the mag at reach / press 2.01-2.36, the press shows. (a) Fingers wrap over the receiver top, so it still reads partly "on top". |

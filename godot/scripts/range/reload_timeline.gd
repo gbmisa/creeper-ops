@@ -100,11 +100,13 @@ func start(secs: float, empty: bool, fast: bool) -> void:
 		for key in pose:
 			if s[0].has(key):
 				to[key] = s[0][key]
-		for k in (0 if s.size() > 2 else 2):  # rig pose_shift moves the mag-change poses (not the rest pose, not the
-			# empty-only charge poses: those are tuned for the arm's reach, and a shifted gun stretches the arm)
+		# rig pose_shift moves the mag-change poses (never the rest pose); the empty-only charge poses take the rig's own
+		# charge_shift instead (none by default: they are tuned for the arm's reach)
+		var sh: Array = _rig.get("charge_shift", []) if s.size() > 2 else shift
+		for k in sh.size():
 			var key: String = ["gp", "gr"][k]
 			if s[0].has(key) and s[0][key] != Vector3.ZERO:
-				to[key] = (s[0][key] as Vector3) + (shift[k] as Vector3)
+				to[key] = (s[0][key] as Vector3) + (sh[k] as Vector3)
 		_phases.append({"n": s[0]["n"], "t0": at, "t1": at + float(s[1]), "from": pose, "to": to, "ease": s[0].get("ease", "io"), "mark": s[0].get("mark", "")})
 		at += float(s[1])
 		pose = to
@@ -161,8 +163,9 @@ func _sample() -> void:
 	var pv: Vector3 = _rig["pivot"]
 	var q := Quaternion.from_euler(m0[1]).slerp(Quaternion.from_euler(m1[1]), u)
 	mag_xf = Transform3D(Basis(q), pv + (m0[0] as Vector3).lerp(m1[0], u)) * Transform3D(Basis.IDENTITY, -pv)
-	var h0 := _anchor(a["hl"])
-	var h1 := _anchor(b["hl"])
+	# a hand on the mag holds it where the phase starts / ends, so it lets go of a dropped mag instead of riding it down
+	var h0 := _anchor(a["hl"], _mag_at(m0))
+	var h1 := _anchor(b["hl"], _mag_at(m1))
 	hand_l = (h0[0] as Vector3).lerp(h1[0], u)
 	hand_f = (h0[1] as Vector3).lerp(h1[1], u).normalized()
 	hand_n = (h0[2] as Vector3).lerp(h1[2], u).normalized()
@@ -185,11 +188,19 @@ func _mag_off(state: String) -> Array:
 	return [Vector3.ZERO, Vector3.ZERO] if state == "seat" else _rig[state]
 
 
-## [wrist target, finger dir, palm dir] for a left-hand anchor (gun-model space).
-func _anchor(name: String) -> Array:
+## The mag offset [pos, rot] (about the rig pivot) as a gun-model transform.
+func _mag_at(off: Array) -> Transform3D:
+	var pv: Vector3 = _rig["pivot"]
+	return Transform3D(Basis.from_euler(off[1]), pv + (off[0] as Vector3)) * Transform3D(Basis.IDENTITY, -pv)
+
+
+## [wrist target, finger dir, palm dir] for a left-hand anchor (gun-model space); mxf = the mag's transform for "mag".
+func _anchor(name: String, mxf := Transform3D.IDENTITY) -> Array:
+	if name == "let":  # the hand stays where it let go of the mag (its "slip" pose) while the mag falls away
+		return _anchor("mag", _mag_at(_rig["slip"]))
 	var p: Vector3
 	match name:
-		"mag": p = mag_xf * (_rig["hold"] as Vector3)
+		"mag": p = mxf * (_rig["hold"] as Vector3)
 		"charge": p = (_rig["charge"] as Vector3) + (_rig["travel"] as Vector3) * bolt
 		"grip":
 			var pistol: bool = _def["class"] == "pistol"
@@ -199,8 +210,8 @@ func _anchor(name: String) -> Array:
 	var f: Vector3 = (hd["f"] as Vector3).normalized()
 	var n: Vector3 = (hd["n"] as Vector3).normalized()
 	if name == "mag":
-		f = mag_xf.basis * f
-		n = mag_xf.basis * n
+		f = mxf.basis * f
+		n = mxf.basis * n
 	return [p - f * ReloadAnims.WRIST_BACK - n * ReloadAnims.WRIST_OFF, f, n]
 
 

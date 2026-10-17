@@ -7,7 +7,8 @@ class_name ReloadRigs
 ## `mag_box` = the region cut out as the Mag node, `mag_body` = [centre, size, rot] box added inside the grip,
 ## `bolt_box` = the region cut out as the slide (moved by `travel`). No bone and no bolt_box: only the hand racks.
 ## `hands` overrides ReloadAnims.HANDS frames for this gun. `pose_shift` = [gp, gr] added to every reload pose of the
-## plan (not the rest pose), so one gun can sit differently from the others sharing its plan.
+## plan (not the rest pose), so one gun can sit differently from the others sharing its plan; `charge_shift` = the
+## same for the empty-only charge poses (default none).
 
 const RIGS := {
 	"ak47": {"plan": "rifle", "pivot": Vector3(-0.002, -0.04, -0.062), "hold": Vector3(-0.002, -0.115, -0.085),
@@ -78,7 +79,7 @@ const RIGS := {
 		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
 		"drop": [Vector3(0.0, -0.55, -0.02), Vector3(1.0, 0.0, 0.4)],
 		"pouch_hand": Vector3(-0.15, -0.5, 0.22),
-		"stop_hand": Vector3(-0.055, 0.0, 0.06), "press_hand": Vector3(-0.04, 0.0, 0.06),  # press: 1.5 cm in, no drift
+		"stop_hand": Vector3(-0.055, -0.03, 0.08), "press_hand": Vector3(-0.04, -0.03, 0.08),  # palm low beside the well's rear, thumb up; press 1.5 cm in
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},
 	"saiga12": {"plan": "rifle",  # AK pattern: single mesh, the box mag cut by region, rocked about its front lip
 		"mag_box": AABB(Vector3(-0.12, -0.20, -0.06), Vector3(0.24, 0.26, 0.122)),  # 4 mag parts, up to y 0.055
@@ -91,7 +92,8 @@ const RIGS := {
 		"drop": [Vector3(0.0, -0.55, -0.06), Vector3(1.0, 0.0, 0.4)],
 		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "charge": Vector3(0.04, 0.085, 0.02),  # upper right of the receiver (no separate handle part on the mesh)
 		"travel": Vector3(0.0, 0.0, 0.09),
-		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},
+		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)],
+		"charge_shift": [Vector3(0.0, 0.0, -0.08), Vector3.ZERO]},  # long gun: rack pose as far off as the mag change
 	"sks": {"plan": "rifle",  # stand-in model: detachable box mag cut by region, rocked about its front lip
 		"mag_box": AABB(Vector3(-0.02, -0.16, -0.025), Vector3(0.04, 0.20, 0.104)),  # body up to y 0.034 + base plate; guard starts z 0.081
 		"pivot": Vector3(0.0, 0.0, -0.0225), "hold": Vector3(0.0, -0.10, 0.025),
@@ -103,7 +105,8 @@ const RIGS := {
 		"drop": [Vector3(0.0, -0.55, -0.06), Vector3(1.0, 0.0, 0.4)],
 		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "charge": Vector3(0.032, 0.084, -0.092),  # the handle part on the right (mesh probe)
 		"travel": Vector3(0.0, 0.0, 0.09),
-		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)]},
+		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)],
+		"charge_shift": [Vector3(0.0, 0.0, -0.08), Vector3.ZERO]},
 	"p90": {"plan": "bullpup", "pivot": Vector3(0.0, 0.025, -0.125), "hold": Vector3(-0.01, 0.045, 0.12),
 		"rock": [Vector3.ZERO, Vector3(-0.22, 0.0, 0.0)],
 		"slip": [Vector3(0.0, 0.05, 0.06), Vector3(-0.3, 0.0, 0.0)],
