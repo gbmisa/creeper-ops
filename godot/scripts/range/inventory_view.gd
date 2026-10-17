@@ -187,6 +187,8 @@ func _draw() -> void:
 		for it in list:
 			if it != null and (drag.is_empty() or it["uid"] != drag["uid"]):
 				_draw_item(font, it, item_rect(r, it), 1.0)
+				if it.has("gun") and AttachMarks.is_part(drag):  # F143: green = the dragged part fits this gun, red = it doesn't
+					AttachMarks.mark(self, item_rect(r, it).grow(-1), AttachMarks.fits(it, drag))
 	var mp := get_local_mouse_position()
 	if not drag.is_empty():
 		var t := target_at(mp)

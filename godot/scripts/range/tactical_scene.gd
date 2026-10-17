@@ -17,6 +17,7 @@ var hit_log: RangeHitLog
 var bots: RangeBots
 var world_items: WorldItems
 var inv_ui: InventoryUI
+var gunsmith: GunsmithUI  # F141: set by the range scene
 var quick: QuickUse
 var skirmish: Node   # only on a Skirmish map (SkirmishGame or SkirmishLargeGame; same members)
 var utils: UtilSystem  # RANGE5 UTIL: grapple, grenades, binoculars (both maps)
@@ -192,6 +193,8 @@ func _process(_dt: float) -> void:
 	if input.was_pressed(KEY_ESCAPE) and not (skirmish != null and skirmish.over):
 		if cheat_menu.visible:
 			cheat_menu.toggle()
+		elif gunsmith != null and gunsmith.is_open:
+			gunsmith.close()
 		elif inv_ui != null and inv_ui.is_open:
 			inv_ui.close()
 		elif menu.visible:
