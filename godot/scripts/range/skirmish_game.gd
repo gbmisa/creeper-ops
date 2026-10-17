@@ -6,6 +6,7 @@ extends Node3D
 const REACH := 2.2
 
 var layout: SkirmishLayout
+var data: GDScript = SkirmishData   # set before build_world(): SkirmishData (MAP-2) or TownData (MAP-3)
 var bots: Array[ScavBot] = []
 var player: TacticalPlayer
 var weapons: PlayerWeapons
@@ -24,6 +25,7 @@ var _label: Label
 func build_world() -> void:
 	RangeLayout._environment(self)
 	layout = SkirmishLayout.new()
+	layout.data = data
 	add_child(layout)
 	layout.build()
 
@@ -45,20 +47,20 @@ func start(p: TacticalPlayer, w: PlayerWeapons, b: Ballistics, l: RangeHitLog, h
 	hud_parent.add_child(cl)
 	player.died.connect(on_player_died)
 	spawn_enemies()
-	log.add("Skirmish: reach EXTRACT and hold it %d s" % int(SkirmishData.EXTRACT_TIME))
+	log.add("Skirmish: reach EXTRACT and hold it %d s" % int(data.EXTRACT_TIME))
 
 
 func spawn_enemies() -> void:
 	var idx := 0
-	for row in SkirmishData.ENEMIES:
+	for row in data.ENEMIES:
 		var route: Array[Vector3] = []
 		for q in row["route"]:
 			route.append(Vector3(q[0], 0, q[1]))
 		var kind: String = row["kind"]
 		if kind == "marksman":
-			for s in SkirmishData.SPOTS:
+			for s in data.SPOTS:
 				route.append(s)
-		var b := _spawn(kind, Vector3(row["at"][0], 0.1, row["at"][1]) if kind != "marksman" else SkirmishData.SPOTS[0] + Vector3(0, 0.1, 0), route, idx)
+		var b := _spawn(kind, Vector3(row["at"][0], 0.1, row["at"][1]) if kind != "marksman" else data.SPOTS[0] + Vector3(0, 0.1, 0), route, idx)
 		idx += 1
 		if kind == "boss":
 			for i in BotDefs.of("boss")["followers"]:
@@ -68,8 +70,8 @@ func spawn_enemies() -> void:
 				f.label_name = "Guard %d" % (i + 1)
 				if i == 0:
 					b.ally = f
-	for i in SkirmishData.ENEMIES.size():
-		var a: int = SkirmishData.ENEMIES[i]["ally"]
+	for i in data.ENEMIES.size():
+		var a: int = data.ENEMIES[i]["ally"]
 		if a >= 0 and bots[i].ally == null:
 			bots[i].ally = bots[a]
 			if bots[a].ally == null:
@@ -102,12 +104,12 @@ func alive_count() -> int:
 
 ## Extract zone timer. Returns true once the player has stood in the zone for EXTRACT_TIME.
 func tick_extract(dt: float, pos: Vector3) -> bool:
-	var d := Vector2(pos.x - SkirmishData.EXTRACT.x, pos.z - SkirmishData.EXTRACT.z).length()
-	if d <= SkirmishData.EXTRACT_R:
-		progress = minf(progress + dt, SkirmishData.EXTRACT_TIME)
+	var d := Vector2(pos.x - data.EXTRACT.x, pos.z - data.EXTRACT.z).length()
+	if d <= data.EXTRACT_R:
+		progress = minf(progress + dt, data.EXTRACT_TIME)
 	else:
 		progress = 0.0
-	return progress >= SkirmishData.EXTRACT_TIME
+	return progress >= data.EXTRACT_TIME
 
 
 func _process(dt: float) -> void:
@@ -117,10 +119,10 @@ func _process(dt: float) -> void:
 	if not player.body.dead and tick_extract(dt, player.global_position):
 		finish(true)
 		return
-	var d := Vector2(player.global_position.x - SkirmishData.EXTRACT.x, player.global_position.z - SkirmishData.EXTRACT.z).length()
-	var txt := "OBJECTIVE: reach EXTRACT (%d m) and hold it %d s    Hostiles left: %d" % [int(d), int(SkirmishData.EXTRACT_TIME), alive_count()]
+	var d := Vector2(player.global_position.x - data.EXTRACT.x, player.global_position.z - data.EXTRACT.z).length()
+	var txt := "OBJECTIVE: reach EXTRACT (%d m) and hold it %d s    Hostiles left: %d" % [int(d), int(data.EXTRACT_TIME), alive_count()]
 	if progress > 0.0:
-		txt = "EXTRACTING  %.1f / %d s  (stay in the zone)" % [progress, int(SkirmishData.EXTRACT_TIME)]
+		txt = "EXTRACTING  %.1f / %d s  (stay in the zone)" % [progress, int(data.EXTRACT_TIME)]
 	_label.text = txt
 	_loot_prompt()
 

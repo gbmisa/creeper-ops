@@ -8,6 +8,7 @@ var covers: Array[Vector3] = []
 var patrol: Array[Vector3] = []
 var loot_crates: Array[Dictionary] = []   # {pos, loot: Array, taken}
 var region: NavigationRegion3D
+var data: GDScript = SkirmishData   # the map's tables: SkirmishData (MAP-2) or TownData (MAP-3)
 
 
 func _init() -> void:
@@ -15,24 +16,34 @@ func _init() -> void:
 
 
 func build() -> void:
-	var H := SkirmishData.HALF
+	var H: float = data.HALF
 	RangeLayout.box(self, "ground", Vector3(0, -0.5, 0), Vector3(H * 2, 1.0, H * 2), "dirt_berm", 1.0, Color(0.26, 0.3, 0.16))
 	for s in [-1.0, 1.0]:
-		RangeLayout.box(self, "perimeter", Vector3(0, SkirmishData.WALL_H * 0.5, s * (H + 0.5)), Vector3(H * 2 + 2, SkirmishData.WALL_H, 1.0), "concrete", 1.0, SkirmishData.CONCRETE)
-		RangeLayout.box(self, "perimeter", Vector3(s * (H + 0.5), SkirmishData.WALL_H * 0.5, 0), Vector3(1.0, SkirmishData.WALL_H, H * 2), "concrete", 1.0, SkirmishData.CONCRETE)
-	for id in SkirmishData.BUILDINGS:
-		_building(SkirmishData.BUILDINGS[id], id)
-	_tower()
-	for c in SkirmishData.COVER:
+		RangeLayout.box(self, "perimeter", Vector3(0, data.WALL_H * 0.5, s * (H + 0.5)), Vector3(H * 2 + 2, data.WALL_H, 1.0), "concrete", 1.0, data.CONCRETE)
+		RangeLayout.box(self, "perimeter", Vector3(s * (H + 0.5), data.WALL_H * 0.5, 0), Vector3(1.0, data.WALL_H, H * 2), "concrete", 1.0, data.CONCRETE)
+	for id in data.BUILDINGS:
+		_building(data.BUILDINGS[id], id)
+	if not data.TOWER.is_empty():
+		_tower()
+	for c in data.COVER:
 		_cover(c)
-	for l in SkirmishData.LOOT:
+	for l in data.LOOT:
 		_loot(l)
 	_extract_marker()
-	for p in [Vector2(0, 40), Vector2(-20, 20), Vector2(20, 20), Vector2(0, 0), Vector2(-40, 0), Vector2(40, -10), Vector2(0, -30)]:
+	for p in _opt("PATROL", [Vector2(0, 40), Vector2(-20, 20), Vector2(20, 20), Vector2(0, 0), Vector2(-40, 0), Vector2(40, -10), Vector2(0, -30)]):
 		patrol.append(Vector3(p.x, 0, p.y))
-	LookKestrel.build(self)
-	LookKestrel.gate_collider(self)
-	LookScatter.tree_colliders(self)
+	if data == SkirmishData:   # Outpost Kestrel dressing is MAP-2's look
+		LookKestrel.build(self)
+		LookKestrel.gate_collider(self)
+		LookScatter.tree_colliders(self)
+	else:
+		TownLayout.build_extras(self, data)
+
+
+## A table only some maps define (WALLS, ROADS, PATROL): its value, or `fallback`.
+func _opt(const_name: String, fallback):
+	var m: Dictionary = data.get_script_constant_map()
+	return m[const_name] if m.has(const_name) else fallback
 
 
 func _building(d: Dictionary, id: String) -> void:
@@ -41,7 +52,7 @@ func _building(d: Dictionary, id: String) -> void:
 	SkirmishParts.building(self, r, 0.0, h, d["open"], d["mat"], d["col"])
 	for w in d.get("inner", []):   # [axis, fixed (absolute), from, to (relative to the rect's corner), openings (absolute)]
 		var off: float = r.position.y if w[0] == "z" else r.position.x
-		SkirmishParts.wall(self, "z" if w[0] == "z" else "x", w[1], w[2] + off, w[3] + off, 0.0, h, 0.15, w[4], "plywood", SkirmishData.PLASTER)
+		SkirmishParts.wall(self, "z" if w[0] == "z" else "x", w[1], w[2] + off, w[3] + off, 0.0, h, 0.15, w[4], "plywood", data.PLASTER)
 	if d["floors"] == 2:
 		_second_floor(r, h, d)
 	else:
@@ -87,13 +98,13 @@ func _second_floor(r: Rect2, h: float, d: Dictionary) -> void:
 
 
 func _tower() -> void:
-	var t := SkirmishData.TOWER
+	var t: Dictionary = data.TOWER
 	var r := Rect2(t["rect"][0], t["rect"][1], t["rect"][2] - t["rect"][0], t["rect"][3] - t["rect"][1])
 	var top: float = t["top"]
-	SkirmishParts.slab(self, r, top, 0.3, "wood_plank", SkirmishData.WOOD)
+	SkirmishParts.slab(self, r, top, 0.3, "wood_plank", data.WOOD)
 	for cx in [r.position.x + 0.3, r.end.x - 0.3]:
 		for cz in [r.position.y + 0.3, r.end.y - 0.3]:
-			RangeLayout.box(self, "post", Vector3(cx, top * 0.5, cz), Vector3(0.4, top, 0.4), "wood_plank", 0.4, SkirmishData.WOOD)
+			RangeLayout.box(self, "post", Vector3(cx, top * 0.5, cz), Vector3(0.4, top, 0.4), "wood_plank", 0.4, data.WOOD)
 	var lx: Array = t["lane_x"]
 	var z0: float = t["ramp_z0"]
 	SkirmishParts.ramp(self, Vector3((lx[0] + lx[1]) * 0.5, 0.0, z0), Vector3((lx[0] + lx[1]) * 0.5, top, r.end.y), lx[1] - lx[0], Color(0.45, 0.36, 0.24))
@@ -106,7 +117,7 @@ func _tower() -> void:
 
 
 func _cover(c: Array) -> void:
-	var st: Array = SkirmishData.COVER_STYLE[c[0]]
+	var st: Array = data.COVER_STYLE[c[0]]
 	var size := Vector3(c[3], c[5], c[4])
 	RangeLayout.box(self, str(c[0]), Vector3(c[1], c[5] * 0.5, c[2]), size, st[0], minf(c[3], c[4]), st[1])
 	var o := 0.9
@@ -135,8 +146,8 @@ func _loot(l: Array) -> void:
 func _extract_marker() -> void:
 	var m := MeshInstance3D.new()
 	var cm := CylinderMesh.new()
-	cm.top_radius = SkirmishData.EXTRACT_R
-	cm.bottom_radius = SkirmishData.EXTRACT_R
+	cm.top_radius = data.EXTRACT_R
+	cm.bottom_radius = data.EXTRACT_R
 	cm.height = 0.06
 	m.mesh = cm
 	var mat := StandardMaterial3D.new()
@@ -144,7 +155,7 @@ func _extract_marker() -> void:
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.material_override = mat
-	m.position = SkirmishData.EXTRACT + Vector3(0, 0.04, 0)
+	m.position = data.EXTRACT + Vector3(0, 0.04, 0)
 	add_child(m)
 	var l := Label3D.new()
 	l.text = "EXTRACT"
@@ -153,10 +164,10 @@ func _extract_marker() -> void:
 	l.outline_size = 16
 	l.modulate = Color(0.5, 1.0, 0.6)
 	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	l.position = SkirmishData.EXTRACT + Vector3(0, 4.5, 0)
+	l.position = data.EXTRACT + Vector3(0, 4.5, 0)
 	add_child(l)
 	var beam := OmniLight3D.new()
-	beam.position = SkirmishData.EXTRACT + Vector3(0, 3.0, 0)
+	beam.position = data.EXTRACT + Vector3(0, 3.0, 0)
 	beam.light_color = Color(0.4, 1.0, 0.5)
 	beam.omni_range = 14.0
 	add_child(beam)

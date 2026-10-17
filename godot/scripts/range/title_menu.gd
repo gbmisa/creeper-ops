@@ -23,4 +23,5 @@ func _ready() -> void:
 	col.add_child(UiKit.label(ProjectSettings.get_setting("application/config/name").to_upper(), 22))
 	col.add_child(UiKit.button("Firing Range", func(): RangeMaps.go("range")))
 	col.add_child(UiKit.button("Skirmish", func(): RangeMaps.go("skirmish")))
+	col.add_child(UiKit.button("Skirmish: Town", func(): RangeMaps.go("town")))
 	col.add_child(UiKit.button("Quit", func(): get_tree().quit()))

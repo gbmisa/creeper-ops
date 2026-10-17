@@ -4,10 +4,18 @@ class_name RangeMaps
 ## (rule 6). `pending` is the map being loaded; each scene sets it to its own id at load (look/env read it).
 ## It is navigation state, not per-player state.
 
-const SCENES := { "range": "res://scenes/firing_range.tscn", "skirmish": "res://scenes/skirmish.tscn" }
+const SCENES := { "range": "res://scenes/firing_range.tscn", "skirmish": "res://scenes/skirmish.tscn",
+	"town": "res://scenes/town.tscn" }
+
+## Skirmish-rules maps (kit deploy, extraction): MAP-2 and the Town.
+const SKIRMISH_MAPS := ["skirmish", "town"]
 
 ## Maps where the player's reloads never run dry (so reload animations can be watched).
 const INFINITE_AMMO := ["range"]
+
+static func is_skirmish(map: String) -> bool:
+	return map in SKIRMISH_MAPS
+
 
 static var pending := "range"
 
