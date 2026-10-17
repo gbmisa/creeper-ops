@@ -150,3 +150,15 @@ saiga12 / sks z -0.08 (as far off as their mag change). (3) sr25 catch hand 3 cm
 | saiga12 | empty | R2-2 | 7 | 1 | 2 | 1 | 1 | 2 | Up from 6: rack pose now as far off as the mag change, reads as an overhand rack (fingers over the receiver 2.6-2.82). (a) Forearm still ~20 % of the lower left 2.37-2.84. (b) Fingers stand up above the receiver instead of wrapping it. |
 | sks | empty | R2-2 | 6 | 1 | 2 | 1 | 1 | 1 | (a) reach 2.31 / regrip 2.52: the fingers float 2-4 cm above the receiver top (the rifle "charge" frame points them up). Overhand frame: fingers down the right side, wrist above. (b) Two big sleeves (left lower-left, right lower-right) at 2.31. |
 | sr25 | empty | R2-2 | 7 | 1 | 1 | 1 | 2 | 2 | Up from 6: palm on the lower above the mag at reach / press 2.01-2.36, the press shows. (a) Fingers wrap over the receiver top, so it still reads partly "on top". |
+
+Round 3 (FB-R2, last). Tried and rejected: an overhand frame for the saiga12 / sks rack (fingers down the right side, wrist
+above): the forearm then crosses the middle of the view (~40 %). Kept: saiga12 charge point 2 cm lower (y 0.085 -> 0.065), sks
+3 cm lower (0.084 -> 0.054), so the fingers wrap the receiver top instead of standing 2-4 cm above it.
+
+| gun | reload | round | score | 1 | 2 | 3 | 4 | 5 | top 3 fixes (concrete: which phase, which number) |
+|---|---|---|---|---|---|---|---|---|---|
+| saiga12 | empty | R2-3 | 7 | 2 | 2 | 1 | 1 | 1 | Up a point on 1: palm on the receiver side, fingers over the top at pull 2.64. Open (structural): the left forearm still ~20 % of the lower left 2.4-2.9 (shared AK charge pose + arm length); no handle part on the mesh, so no visible handle travel. |
+| sks | empty | R2-3 | 7 | 2 | 2 | 1 | 1 | 1 | Up from 6: fingers wrap the receiver at 2.31-2.52. Open: both sleeves big at 2.31 (left lower-left, right lower-right). A per-gun rack pose (gun lower and further left) is the next lever. |
+
+Final after FB-R2 step 2: ak47 8/8/8, m1911 8/8/8, glock18 9/9/8, mp5 8/8/7, p90 8/8/8, scarh 8/8/7, sr25 8/8/7, saiga12 8/8/7,
+sks 8/8/7. Under 8: the five empty reloads (MP5 slap, SCAR / SR-25 catch, Saiga / SKS rack), each a structural arm-reach issue.

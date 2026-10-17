@@ -90,7 +90,7 @@ const RIGS := {
 		"out": [Vector3(0.0, -0.12, -0.04), Vector3(0.45, 0.0, 0.0)],
 		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
 		"drop": [Vector3(0.0, -0.55, -0.06), Vector3(1.0, 0.0, 0.4)],
-		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "charge": Vector3(0.04, 0.085, 0.02),  # upper right of the receiver (no separate handle part on the mesh)
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "charge": Vector3(0.04, 0.065, 0.02),  # right of the receiver (no separate handle part): fingers wrap its top
 		"travel": Vector3(0.0, 0.0, 0.09),
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)],
 		"charge_shift": [Vector3(0.0, 0.0, -0.08), Vector3.ZERO]},  # long gun: rack pose as far off as the mag change
@@ -103,7 +103,7 @@ const RIGS := {
 		"out": [Vector3(0.0, -0.12, -0.04), Vector3(0.45, 0.0, 0.0)],
 		"pouch": [Vector3(-0.15, -0.45, 0.25), Vector3(0.7, 0.0, 0.6)],
 		"drop": [Vector3(0.0, -0.55, -0.06), Vector3(1.0, 0.0, 0.4)],
-		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "charge": Vector3(0.032, 0.084, -0.092),  # the handle part on the right (mesh probe)
+		"pouch_hand": Vector3(-0.15, -0.5, 0.22), "charge": Vector3(0.032, 0.054, -0.092),  # under the handle part on the right (mesh probe): fingers wrap the receiver top
 		"travel": Vector3(0.0, 0.0, 0.09),
 		"pose_shift": [Vector3(0.0, 0.05, -0.08), Vector3(0.05, 0.0, 0.0)],
 		"charge_shift": [Vector3(0.0, 0.0, -0.08), Vector3.ZERO]},
