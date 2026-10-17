@@ -13,6 +13,10 @@ fills up, so a rig dragged onto it has no free 4x3 (F149) and a rig dropped by a
 shows (F150). Rigs/backpacks may only live in their slot or on "ground" (Inventory.fits). Ground bags can't be opened.
 
 ## Phase 1: ground grid nearest-first + open a bag on the ground (F149, F150). Applies on every map.
+- **F149 as Gregory hit it:** he dragged the equipped rig off his character, as he drops everything else, and nothing happened.
+  `InventoryUI._on_drop` → `_into_grid` / `_into_slot` refuse a rig on any grid or the full ground panel and do nothing, silently.
+  Rule: a rig or backpack dropped anywhere it can't go (any grid, a wrong slot, the full ground panel) is dropped on the ground
+  (`_to_world`), contents kept. Any other refused drop shows a short message (`weapons.message`) instead of nothing.
 - `refresh_ground`: when every nearby item can't fit, rebuild the ground grid in order of distance from the player (nearest
   first). Items that don't fit are simply not shown (as today). When everything fits, keep today's "existing cells kept" behaviour.
   Something just dropped lands in front of the player, so it is near and shows up.
