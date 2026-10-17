@@ -66,9 +66,9 @@ func nearest_player(pos: Vector3) -> PlayerState:
 
 
 ## Carry-out kit: save the inventory, then go to the Skirmish map (was RangeLoadout.deploy).
-func deploy(inv: Inventory) -> void:
+func deploy(inv: Inventory, map := "skirmish") -> void:
 	save_kit(inv)
-	maps.go("skirmish")
+	maps.go(map)
 
 
 ## Save the kit without changing map (tests).

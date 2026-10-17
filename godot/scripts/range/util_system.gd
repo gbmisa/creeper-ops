@@ -26,6 +26,7 @@ var get_bots: Callable
 var grapple: Grapple
 var _time := 0.0
 var _cook := {}  # {slot, item, t} while a frag is being cooked
+var _latched := {}  # action id -> true: presses seen in _process, consumed on the next physics tick
 var _binoc := false
 var _flash_t := 0.0
 var _arc: MeshInstance3D
@@ -117,9 +118,22 @@ func _inv_for(peer_id: int) -> Inventory:
 	return st.inv if st != null else null
 
 
+## Input frames are snapped per render frame; above 60 fps a press can fall between two
+## physics ticks, so presses are latched here like TacticalPlayer latches jump.
+func _process(_dt: float) -> void:
+	for id in ["t_util_1", "t_util_2", "t_jump", "t_use"]:
+		if player.input.frame.act(id):
+			_latched[id] = true
+
+
+func _pressed(id: String) -> bool:
+	return _latched.has(id)
+
+
 func _physics_process(dt: float) -> void:
 	_time += dt
 	var local_release := _tick_input()
+	_latched.clear()
 	_tick_grenades(dt)
 	_tick_smoke()
 	grapple.tick(dt, _time, local_release)
@@ -136,9 +150,9 @@ func _tick_input() -> bool:
 		_cancel_cook()
 		return false
 	var frame = player.input.frame
-	if frame.act("t_util_1"):
+	if _pressed("t_util_1"):
 		_use_slot("utility1")
-	elif frame.act("t_util_2"):
+	elif _pressed("t_util_2"):
 		_use_slot("utility2")
 	# frag cooking: hold to cook, release to throw, 4 s burns in hand
 	if not _cook.is_empty():
@@ -153,7 +167,7 @@ func _tick_input() -> bool:
 	# grapple release: jump / use (arrival is handled in Grapple.tick)
 	var g: UtilState.GrappleHook = session.util.grapple_for(_peer())
 	if g != null and g.attached:
-		return frame.act("t_jump") or frame.act("t_use")
+		return _pressed("t_jump") or _pressed("t_use")
 	return false
 
 
