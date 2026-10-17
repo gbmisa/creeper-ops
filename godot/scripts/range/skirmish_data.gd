@@ -118,7 +118,7 @@ const TOWER := {"rect": [-51.0, -48.0, -41.0, -40.0], "top": 6.0, "lane_x": [-43
 
 ## [x, z, loot]: loot items are {"kind": "ammo" | "meds"} (hook for the inventory branch).
 const LOOT := [[-26, -13, ["ammo", "meds"]], [30, 8, ["ammo"]], [-41, 15, ["meds"]], [22, -36, ["ammo", "meds"]],
-	[0, -41, ["ammo"]], [0, 50, ["ammo"]], [-54, 30, ["ammo"]], [-27, -31, ["meds"]]]
+	[0, -41, ["ammo"]], [0, 50, ["ammo"]], [-54, 30, ["ammo", "headset"]], [-27, -31, ["meds"]]]
 
 ## Marksman overwatch spots (x, y, z): tower top, hotel upstairs window.
 const SPOTS := [Vector3(-47, 6.0, -44), Vector3(-20, 3.0, -2.6)]

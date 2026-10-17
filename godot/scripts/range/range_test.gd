@@ -56,6 +56,7 @@ func run() -> void:
 	RangeTestF127.run(self)
 	await RangeTestF92.run(self)
 	RangeTestF93.run(self)
+	RangeTestHeadset.run(self)
 	RangeTestNoAmmo.run(self)
 	RangeTestReloadRace.run(self)
 	RangeTestReloadRace.second_r(self)

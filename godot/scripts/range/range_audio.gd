@@ -94,11 +94,12 @@ static func shot(gun_id: String, pos: Variant = null, suppressed := false, cal :
 	var sp := RangeSpace.treat(_listener(), at)
 	var room: bool = sp["room"]
 	var bus: String = sp["bus"]
-	var db: float = prof["db"] - (6.0 if suppressed else 0.0) + sp["db"]
+	var ear := HearingMods.loud_db()
+	var db: float = prof["db"] - (6.0 if suppressed else 0.0) + sp["db"] + ear
 	play(prof["sup"] if suppressed else prof["shot"], pos, db, bus, prof.get("pitch", 1.0))
 	var dist := at.distance_to(_listener())
 	var delay := clampf(0.05 + dist / SOUND_SPEED, 0.05, 0.7)
-	var tail_db: float = prof["db"] - (14.0 if suppressed else 4.0) + (3.0 if room else 0.0) + sp["db"] - minf(dist * 0.05, 8.0)
+	var tail_db: float = prof["db"] - (14.0 if suppressed else 4.0) + (3.0 if room else 0.0) + sp["db"] - minf(dist * 0.05, 8.0) + ear
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return
@@ -108,7 +109,7 @@ static func shot(gun_id: String, pos: Variant = null, suppressed := false, cal :
 
 static func gun(gun_id: String, ev: String, pos: Variant = null, cal := "", cls := "") -> bool:
 	var sample := SoundDefs.gun_event(gun_id, ev, cal, cls)
-	return play(sample, pos, -2.0 + float(SoundDefs.MECH_DB.get(sample, 0.0)))
+	return play(sample, pos, -2.0 + float(SoundDefs.MECH_DB.get(sample, 0.0)) + (HearingMods.quiet_db() if pos != null else 0.0))
 
 
 static func attach(att_id: String, ev: String) -> bool:
@@ -120,7 +121,8 @@ static func inventory(kind: String, ev: String) -> bool:
 
 
 static func util(item: String, ev: String, pos: Variant = null) -> bool:
-	return play(SoundDefs.UTILITY.get(item, {}).get(ev, ""), pos, -2.0)
+	var ear := HearingMods.loud_db() if item == "frag" and ev == "blast" else 0.0  # F134: explosions compressed
+	return play(SoundDefs.UTILITY.get(item, {}).get(ev, ""), pos, -2.0 + ear)
 
 
 static func med(item: String) -> bool:

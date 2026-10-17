@@ -38,11 +38,11 @@ func tick(bot: Node3D, dt: float, speed: float, on_floor: bool, crouched := fals
 		_snd.attenuation_filter_db = 0.0  # F118: no distance low-pass on steps (room muffling still applies)
 		_snd.pitch_scale = 1.0
 		bot.add_child(_snd)
-	_snd.max_distance = CROUCH_R if crouched else (SPRINT_HEAR_R if sprint else WALK_HEAR_R)
+	_snd.max_distance = (CROUCH_R if crouched else (SPRINT_HEAR_R if sprint else WALK_HEAR_R)) * HearingMods.step_range()
 	_snd.volume_db = CROUCH_DB if crouched else (SPRINT_DB if sprint else WALK_DB)
 	_snd.pitch_scale = 1.0 + randf_range(-0.05, 0.05)
 	var sp := RangeSpace.treat(RangeAudio._listener(), bot.global_position)
 	RangeSpace.ensure_buses()
 	_snd.bus = sp["bus"]
-	_snd.volume_db += sp["db"]
+	_snd.volume_db += sp["db"] + HearingMods.step_db()
 	_snd.play()
