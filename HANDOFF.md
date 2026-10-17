@@ -48,12 +48,16 @@ in `%LOCALAPPDATA%/Microsoft/WinGet/Links/`), Blender 5.2.2 portable, Blender MC
 - Known: kill-house navmesh doorway check can fail; barracks north door split by the inner wall.
 - Range suite before split: 1113 pass / 1 fail (`a shot at spawn ... (F88)`, Scav 5 net move 0.6 m; left as is).
 
-## Reload insert sound timing (0105c26, fix/mag-in-sound, merged; Gregory asked)
-- `mag_in` now plays on the ReloadTimeline `mag_in` mark (end of the seat phase) on rigged guns, not at reload end;
-  others unchanged. `stop()` no longer fires unreached marks. Suite 1114/0. Not verified: Gregory's ear. Not pushed.
-
-## Verified (split tree): parse clean, all 3 scenes boot; suite 1113/1 (pre-existing F88). Not: windowed run.
+## Session D (2026-10-16, both merged into feat/fb-reload, NOT pushed; Gregory asked for both)
+- Reload insert sound (0105c26): `mag_in` plays on the ReloadTimeline `mag_in` mark (mag seats), not at reload end, on
+  rigged guns; others unchanged. `stop()` no longer fires unreached marks.
+- Wrist pinch (2fad9a1): IK put the whole hand roll at the wrist (L ~155 deg long guns, R ~130 pistols). `FpArms.roll`
+  = FOREARM_ROLL 0.5 (viewmodel only; bots 0) rolls the forearm by half, like Gregory's M4A1 pose (fit from its baked
+  mesh: ~54/46). Close-up renders judged: wrist full width, elbow smoother. Suite 1114/0. Not verified: Gregory's play.
+- Scratchpad tools: `twist_probe.gd` (roll per gun), `wrist_cam.gd` (wrist/elbow close-ups), `fit_pose.py` (Blender).
+- Split tree verified: parse clean, 3 scenes boot, suite 1113/1 (F88).
 
 ## Next
 1. Port the reload WIP once session B commits it (above), then continue FB-R (rifle empties, AXMC, M4A1, ...).
-2. Gregory rules on CHANGES P10 and plays Skirmish (MAP-2, F90-F93).
+2. Optional: forearm twist bones in body.glb (smoother than the 50/50 split; touches bots). Gregory decides.
+3. Gregory rules on CHANGES P10 and plays Skirmish (MAP-2, F90-F93).
