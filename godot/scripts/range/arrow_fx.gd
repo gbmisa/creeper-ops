@@ -3,7 +3,7 @@ extends Node
 ## F146: arrows and bolts you can see and pick up. A shaft mesh follows each arrow in flight (nose along its velocity);
 ## on a world hit it stays stuck there (a frozen WorldItem, so the usual use prompt takes it back, same grade).
 ## Cap MAX_STUCK per scene (oldest removed). An arrow that hits a Scav goes into that bot's loot and drops with the body.
-## Placeholder meshes (cylinder + cone); Opus swaps in arrow.glb / bolt.glb (build_mesh is the one place that builds them).
+## Meshes: arrow.glb / bolt.glb (build_mesh is the one place that builds them).
 
 const MAX_STUCK := 60
 const HIDE_NEAR := 0.04   # s: no mesh for the first moments (it would fill the screen from the eye)
@@ -31,32 +31,17 @@ static func is_arrow(ammo_id: String) -> bool:
 	return ammo_id in TacAmmoDefs.ROWS and TacAmmoDefs.ROWS[ammo_id]["cal"] in ["arrow", "bolt"]
 
 
-## The placeholder shaft, tip at the origin, trailing along +Z (so -Z is the flight direction).
+## The arrow / bolt, tip at the origin, trailing along +Z (so -Z is the flight direction). arrow.glb / bolt.glb
+## (scratch models, centred on their bbox) are shifted back by half their length; LEN holds those lengths.
+const LEN := {"arrow": 0.765, "bolt": 0.52}
+
+
 static func build_mesh(ammo_id: String) -> Node3D:
 	var root := Node3D.new()
-	var bolt: bool = TacAmmoDefs.ROWS[ammo_id]["cal"] == "bolt"
-	var length := 0.4 if bolt else 0.7
-	var shaft := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.006
-	cm.bottom_radius = 0.006
-	cm.height = length
-	shaft.mesh = cm
-	shaft.rotation_degrees.x = 90.0
-	shaft.position.z = length * 0.5
-	shaft.material_override = RangeLayout.colour(Color(0.45, 0.3, 0.15))
-	root.add_child(shaft)
-	var tip := MeshInstance3D.new()
-	var tm := CylinderMesh.new()
-	tm.top_radius = 0.0
-	tm.bottom_radius = 0.012
-	tm.height = 0.06
-	tip.mesh = tm
-	tip.rotation_degrees.x = -90.0   # cone point toward -Z
-	tip.position.z = 0.03
-	var broad: bool = ammo_id.ends_with("_broad")
-	tip.material_override = RangeLayout.colour(Color(0.75, 0.15, 0.12) if broad else Color(0.6, 0.6, 0.62))
-	root.add_child(tip)
+	var cal: String = TacAmmoDefs.ROWS[ammo_id]["cal"]
+	var m := (load("res://assets/models/guns/%s.glb" % cal) as PackedScene).instantiate() as Node3D
+	m.position.z = LEN[cal] * 0.5
+	root.add_child(m)
 	return root
 
 
