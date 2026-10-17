@@ -243,15 +243,8 @@ static func next_cover_toward(b: ScavBot) -> Vector3:
 		return BotCover.NO_COVER
 	var c := b.percept.contact.pos
 	var my_d := _dist(b.global_position, c)
-	var space := b.get_world_3d().direct_space_state
-	var threat := BotCover.threat_pos(b)
-	var best := BotCover.NO_COVER
-	var best_score := -INF
+	var ahead: Array = []
 	for m in b.covers:
-		if _dist(m, c) >= my_d - 2.0:
-			continue  # must make progress toward the contact
-		var s := BotCover.score(b, m, threat, space, b.squad)
-		if s > best_score:
-			best_score = s
-			best = m
-	return best
+		if _dist(m, c) < my_d - 2.0:
+			ahead.append(m)  # must make progress toward the contact
+	return BotCover.best_of(b, ahead, BotCover.threat_pos(b), b.get_world_3d().direct_space_state, b.squad)
