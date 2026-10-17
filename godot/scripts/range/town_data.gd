@@ -38,7 +38,38 @@ const ROAD_COL := Color(0.2, 0.2, 0.21)
 ## No tower on this map: the overwatch building does the marksman's job.
 const TOWER := {}
 
-const LOOT := []
-const SPOTS: Array[Vector3] = []
-const ENEMIES := []
+## [x, z, loot]: ammo / meds crates. FOB (0, 70) sits in the gap of the F93 cover pair; the rest are spread along the routes,
+## more in the risky spots (municipal, overwatch, yard, extract).
+const LOOT := [[0, 70, ["ammo"]], [16, 70, ["meds"]], [-41, 46, ["meds"]], [-23, 55, ["ammo"]], [45, 52, ["ammo"]],
+	[-9, -8, ["ammo", "meds"]], [-41, -3, ["meds"]], [33, -4, ["ammo"]], [73, 2.5, ["meds"]], [58, -30, ["ammo", "meds"]],
+	[-30, -58, ["ammo", "meds"]], [24, -58, ["ammo"]], [-73, 2, ["ammo"]], [14, -74, ["ammo", "meds"]]]
+
+## Marksman overwatch spots (x, y, z): overwatch 2F south window, then the municipal 2F square-side window.
+const SPOTS: Array[Vector3] = [Vector3(54, 3.0, -23.4), Vector3(-8, 3.5, -3.4)]
+
+## Street lamps [x, z] (post + warm light): FOB gate, barricades, square, yard gate, extract.
+const LAMPS := [[-5, 64], [5, 64], [-4.8, 28], [4.8, 28], [-10, 13], [10, 13], [-10, 0], [10, 0], [-12, 51], [-6, -31], [6, -31],
+	[-11, -72], [11, -72], [-10, 72], [17, 76]]
+
+## Enemies (rows keep the SkirmishData shape; the boss is the last row so its followers append after the roster):
+## checkpoint pair behind the south barricades, two market-street patrols, house / courtyard ambushers, the marksman,
+## two Runners flanking (west lanes, orchard), yard guards, annex + municipal ambushers, boss + 2 at the extract.
+const ENEMIES := [
+	{"kind": "rifleman", "at": [-6, 29], "route": [[-6, 29], [-3, 27]], "ally": 1},
+	{"kind": "rifleman", "at": [6, 29], "route": [[6, 29], [3, 27]], "ally": 0},
+	{"kind": "rifleman", "at": [-34, 7.5], "route": [[-38, 7.5], [-16, 7.5]], "ally": 3},
+	{"kind": "pistol", "at": [24, 7], "route": [[16, 7.5], [42, 7.5]], "ally": 2},
+	{"kind": "shotgunner", "at": [-44, -1], "route": [[-44, -1], [-41, -4]], "ally": -1},
+	{"kind": "rifleman", "at": [31, 15], "route": [[31, 15], [31, 17]], "ally": -1},
+	{"kind": "rifleman", "at": [-40, 25.5], "route": [[-44, 26], [-52, 25]], "ally": -1},
+	{"kind": "marksman", "at": [54, -23.4], "route": [], "ally": -1},
+	{"kind": "pistol", "at": [-62, -26], "route": [[-62, -26], [-62, -5], [-62, 20], [-62, 30]], "ally": -1},
+	{"kind": "pistol", "at": [17.5, 45], "route": [[17.5, 45], [38, 45], [38, 57], [17.5, 57]], "ally": -1},
+	{"kind": "rifleman", "at": [-8, -37], "route": [[-8, -37], [8, -37]], "ally": 11},
+	{"kind": "shotgunner", "at": [-30, -52], "route": [[-30, -52], [-22, -52]], "ally": 10},
+	{"kind": "rifleman", "at": [16, -48], "route": [[16, -48], [26, -48], [26, -56]], "ally": -1},
+	{"kind": "rifleman", "at": [-10, -22], "route": [[-10, -22], [-10, -20]], "ally": -1},
+	{"kind": "rifleman", "at": [-9, -8], "route": [[-9, -8], [-12, -6]], "ally": -1},
+	{"kind": "boss", "at": [0, -76], "route": [[0, -76], [-10, -74], [10, -74], [0, -72]], "ally": -1},
+]
 const PATROL := [Vector2(0, 40), Vector2(0, 7), Vector2(-30, 7), Vector2(30, 7), Vector2(0, -20), Vector2(0, -50)]
