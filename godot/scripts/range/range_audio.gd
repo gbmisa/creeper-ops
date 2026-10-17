@@ -121,7 +121,7 @@ static func inventory(kind: String, ev: String) -> bool:
 
 
 static func util(item: String, ev: String, pos: Variant = null) -> bool:
-	var ear := HearingMods.loud_db() if item == "frag" and ev == "blast" else 0.0  # F134: explosions compressed
+	var ear := HearingMods.loud_db() if [item, ev] in [["frag", "blast"], ["flash", "bang"], ["flash", "tinnitus"]] else 0.0  # F134: explosions + flash bang and ringing compressed
 	return play(SoundDefs.UTILITY.get(item, {}).get(ev, ""), pos, -2.0 + ear)
 
 

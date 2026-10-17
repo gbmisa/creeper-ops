@@ -31,7 +31,7 @@ func map_id() -> String:
 
 
 func _ready() -> void:
-	Keybinds.persist = false
+	Keybinds.persist = not OS.get_cmdline_user_args().has("--range-test")   # P14 (Gregory 2026-10-16): rebinds are saved; the suite never writes them
 	print("[build] ", BugReport.build_id())   # so every log says which build it came from
 	DisplaySettings.apply()
 	args = RangeArgs.parse()
