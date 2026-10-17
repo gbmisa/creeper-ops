@@ -8,13 +8,19 @@ func map_id() -> String:
 	return "skirmish"
 
 
+## The map's tables (TownScene overrides).
+func map_data() -> GDScript:
+	return SkirmishData
+
+
 func _build() -> void:
 	_begin()
 	skirmish = SkirmishGame.new()
+	skirmish.data = map_data()
 	add_child(skirmish)
 	skirmish.build_world()
-	_add_rack(SkirmishData.RACK_POS, true)
-	_add_player(SkirmishData.SPAWN)
+	_add_rack(skirmish.data.RACK_POS, true)
+	_add_player(skirmish.data.SPAWN)
 	_add_feedback()
 	_add_items()
 	_add_inventory()
