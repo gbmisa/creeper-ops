@@ -11,6 +11,7 @@ const MAX_LEAN := 0.3
 const CURL := [1.0, 1.15, 0.8]  # finger joint 1..3 curl (rad) around the grip
 const FINGERS := ["index", "middle", "ring", "pinky"]
 const PALM_DOWN := Vector3(0, -1, 0)  # rest pose: palms down, fingers along the bone's +Y
+const FOREARM_ROLL := 0.5  # share of the hand's roll the forearm takes (Gregory's M4A1 pose ~0.54): no pinched wrist
 
 var skel: Skeleton3D
 var _sides := {}
@@ -20,6 +21,7 @@ var _reload_len := 1.0
 var bolt: BoltCycle  # set while the held gun is a bolt-action: the right hand works the handle
 var reload_tl: ReloadTimeline  # FB-R: set when the held gun has a reload timeline; it drives the left hand
 var target := {}  # side -> world position of the wrist the last solve aimed at (tests)
+var roll := 0.0  # FOREARM_ROLL on the viewmodel arms; 0 = the whole roll at the wrist (bots, as before)
 
 
 ## own_skel: rig an existing skeleton (the enemy bots' bodies) instead of building the viewmodel arms.
@@ -30,6 +32,7 @@ func _init(own_skel: Skeleton3D = null) -> void:
 		for side in ["r", "l"]:
 			_sides[side] = _rig(side)
 		return
+	roll = FOREARM_ROLL
 	position = ROOT_POS
 	rotation.y = PI
 	scale = Vector3.ONE * FpBody.SCALE
@@ -165,14 +168,29 @@ func solve(side: String, pos_w: Vector3, f_w: Vector3, n_w: Vector3, grip: float
 	var h1: Vector3 = e + q1 * (a["rest_hand"].origin - a["rest_lo"].origin)
 	var q2 := Quaternion((h1 - e).normalized(), (wrist - e).normalized())
 	var lo_b: Basis = Basis(q2) * Basis(q1) * a["rest_lo"].basis
-	skel.set_bone_pose_rotation(a["lo"], (up_b.inverse() * lo_b).get_rotation_quaternion())
 	var f0: Vector3 = a["rest_hand"].basis.y
 	var frame_a := Basis(f0, PALM_DOWN, f0.cross(PALM_DOWN))
 	var frame_b := Basis(f, n, f.cross(n))
 	var hand_b: Basis = (frame_b * frame_a.inverse() * a["rest_hand"].basis).orthonormalized()
+	if roll > 0.0:
+		lo_b = _roll_forearm(a, lo_b, hand_b, (wrist - e).normalized())
+	skel.set_bone_pose_rotation(a["lo"], (up_b.inverse() * lo_b).get_rotation_quaternion())
 	skel.set_bone_pose_rotation(a["hand"], (lo_b.inverse() * hand_b).get_rotation_quaternion())
 	for fg in a["fingers"]:
 		skel.set_bone_pose_rotation(fg["bone"], (fg["rest"] as Quaternion) * Quaternion(fg["axis"], fg["k"] * grip))
+
+
+## The forearm rolls about its own length by `roll` of the hand's twist (vs the rest pose), so the wrist skin only
+## takes the rest of it. The wrist point stays put (the axis runs through it). Unwrapped against the last frame so
+## the split never flips at 180 deg.
+func _roll_forearm(a: Dictionary, lo_b: Basis, hand_b: Basis, axis: Vector3) -> Basis:
+	var rest_rel: Basis = a["rest_lo"].basis.inverse() * a["rest_hand"].basis
+	var q := (hand_b * (lo_b * rest_rel).inverse()).get_rotation_quaternion()
+	var tw := wrapf(2.0 * atan2(Vector3(q.x, q.y, q.z).dot(axis), q.w), -PI, PI)
+	if a.has("tw"):
+		tw = float(a["tw"]) + wrapf(tw - float(a["tw"]), -PI, PI)
+	a["tw"] = tw
+	return (Basis(axis, tw * roll) * lo_b).orthonormalized()
 
 
 ## Where the hand bone is now, in world space.
