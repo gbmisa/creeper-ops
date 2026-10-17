@@ -13,6 +13,7 @@ var flash: MuzzleFlash
 var arms: FpArms
 var rig: AttachmentRig
 var _gun: Gun
+var bow_rig: BowRig
 var half_len := 0.3
 var _def := {}
 var _base_pos := Vector3.ZERO  # the smoothed pose without recoil (what model.position/rotation used to hold)
@@ -73,6 +74,8 @@ func _on_switched(g: Gun) -> void:
 	_cycle_clip = "FireWBullet" if anim.has_animation("FireWBullet") else ""
 	bolt = BoltCycle.make(glb, _def)
 	arms.bolt = bolt
+	bow_rig = BowRig.make(glb, _def)   # F146: string / arrow / iron sight parts of the bow models
+	arms.bow_rig = bow_rig
 	reload_tl = ReloadTimeline.make(glb, _def)
 	arms.reload_tl = reload_tl
 	if reload_tl != null:
@@ -198,6 +201,8 @@ func _process(delta: float) -> void:
 	if bolt != null:
 		bolt.update(delta)
 		rot.z += bolt.roll()
+	if bow_rig != null:
+		bow_rig.update(_gun, weapons)
 	var d := weapons.draw_t / PlayerWeapons.DRAW_TIME
 	pos.y -= d * 0.3
 	rot.x -= d * 0.6
@@ -250,7 +255,8 @@ static func recoil_xform(rm: RecoilModel, ads := 0.0, room := RecoilEyeRoom.FREE
 ## small enough not to clip it.
 static func base_pos(def: Dictionary, half: float, a: float) -> Vector3:
 	var hip: Vector3 = def["hip_pos"]
-	hip.z = -maxf(half - HIP_BUTT, HIP_MIN_Z)  # butt tucked behind the eye, gun parallel to the view
+	if def["action"] != "bow":   # F146: a bow has no stock; it is held out at its own hip_pos
+		hip.z = -maxf(half - HIP_BUTT, HIP_MIN_Z)  # butt tucked behind the eye, gun parallel to the view
 	var ads: Vector3 = def["ads_pos"]
 	ads.z = -(half - ads_eye(def))
 	return hip.lerp(ads, a)

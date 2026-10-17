@@ -40,12 +40,12 @@ func _process(_dt: float) -> void:
 		return
 	if _near(AMMO_POS) and weapons.gun != null:
 		var tube: bool = weapons.gun.def["action"] == "tube"  # F22: UI says tube/shells, never magazine
-		weapons.prompt = "%s: refill %s" % [Keybinds.short("t_use"), "shells" if tube else "mags"]
+		weapons.prompt = "%s: refill %s" % [Keybinds.short("t_use"), HandGear.refill_word(weapons.gun, tube)]
 		if player.enabled and player.input.act("t_use"):  # F116: refill only, no ammo types to cycle
 			weapons.reload_cancel()
 			weapons.gun.refill()
 			weapons.refill_mags()
-			weapons.message.emit("%s refilled" % ("Tube shells" if tube else "Mags"))
+			weapons.message.emit("%s refilled" % HandGear.refill_msg(weapons.gun, tube))
 	elif _near(ARMOR_POS):
 		var n: int = (targets.loadout + 1) % ArmorDefs.LOADOUTS.size()
 		weapons.prompt = "%s: dummy armor -> %s (resets targets)" % [Keybinds.short("t_use"), ArmorDefs.LOADOUT_NAMES[n]]

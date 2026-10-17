@@ -41,7 +41,7 @@ static func sync(w: PlayerWeapons) -> void:
 ## Tube guns have no mags: their loose shells are topped up instead (F22).
 static func refill_mags(w: PlayerWeapons) -> void:
 	w.gun.spares.clear()
-	if w.gun.def["action"] == "tube":
+	if w.gun.def["action"] == "tube" or BowDefs.is_loose(w.gun.def):
 		_refill_tube(w)
 		return
 	for it in w.inv.all_items():
@@ -62,3 +62,16 @@ static func _refill_tube(w: PlayerWeapons) -> void:
 			have = true
 	if not have:
 		w.inv.add(w.inv.make(w.gun.ammo_pick, {"count": maxc}))
+
+
+## Ammo bench wording: shells for a tube, arrows / bolts for the bows (F146), else mags.
+static func refill_word(g: Gun, tube: bool) -> String:
+	if BowDefs.is_loose(g.def):
+		return "arrows" if g.def["cal"] == "arrow" else "bolts"
+	return "shells" if tube else "mags"
+
+
+static func refill_msg(g: Gun, tube: bool) -> String:
+	if BowDefs.is_loose(g.def):
+		return "Arrows" if g.def["cal"] == "arrow" else "Bolts"
+	return "Tube shells" if tube else "Mags"

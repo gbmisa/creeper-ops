@@ -42,6 +42,9 @@ func refill() -> void:
 		pouch.fill(ammo_pick)
 		spares.append(pouch)
 		chamber = ammo_pick
+	elif BowDefs.is_loose(def):   # F146: one nocked arrow / bolt, the rest are loose stacks in the bags
+		mag.rounds.clear()
+		chamber = ammo_pick
 	else:
 		for i in def["spares"]:
 			var m := Magazine.new(int(stat("mag")))
@@ -178,6 +181,8 @@ func fire(rng: RandomNumberGenerator) -> Dictionary:
 		"tube":
 			chamber = ""
 			needs_cycle = true
+		"bow", "crossbow":
+			chamber = ""
 		_:
 			chamber = ""
 			if def["cycle"] > 0.0:
@@ -205,6 +210,9 @@ func reload(fast: bool = false) -> bool:
 				return false
 		"tube":
 			if mag.is_full() or spares[0].count() == 0 or not mag.accepts(spares[0].top()):
+				return false
+		"bow", "crossbow":
+			if chamber != "" or spares[0].count() == 0:
 				return false
 		_:
 			pass
@@ -234,6 +242,8 @@ func _finish_reload() -> void:
 			mag = spares.pop_front()
 		"tube":
 			mag.push(spares[0].pop())
+		"bow", "crossbow":
+			chamber = spares[0].pop()
 		_:
 			var best := spares[0]
 			for m in spares:

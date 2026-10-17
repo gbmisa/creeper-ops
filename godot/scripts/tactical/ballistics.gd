@@ -21,10 +21,13 @@ func _physics_process(dt: float) -> void:
 
 
 ## One projectile. exclude: the shooter's own hitbox RIDs.
-func spawn(origin: Vector3, dir: Vector3, ammo_id: String, exclude: Array[RID] = [], speed_mult: float = 1.0) -> void:
+## Returns the live shot (F146: ArrowFx tags arrows in flight with it).
+func spawn(origin: Vector3, dir: Vector3, ammo_id: String, exclude: Array[RID] = [], speed_mult: float = 1.0) -> Dictionary:
 	var ammo := TacAmmoDefs.of(ammo_id)
-	shots.append({"pos": origin, "origin": origin, "vel": dir.normalized() * ammo["v0"] * speed_mult, "ammo": ammo,
-		"exclude": exclude, "age": 0.0, "bounces": 0, "pen_loss": 0.0, "dmg_mult": 1.0})
+	var shot := {"pos": origin, "origin": origin, "vel": dir.normalized() * ammo["v0"] * speed_mult, "ammo": ammo,
+		"exclude": exclude, "age": 0.0, "bounces": 0, "pen_loss": 0.0, "dmg_mult": 1.0}
+	shots.append(shot)
+	return shot
 
 
 func step(dt: float) -> void:
@@ -119,13 +122,15 @@ func _on_hit(s: Dictionary, hit: Dictionary) -> bool:
 		res["ammo"] = s["ammo"]["id"]
 		res["pos"] = hit["position"]
 		res["origin"] = s["origin"]
+		res["dir"] = dir
+		res["fx_id"] = s.get("fx_id", 0)
 		body_hit.emit(res)
 		return false
 	var col: Object = hit["collider"]
 	var mat: String = col.get_meta("mat", "dirt_berm")
 	var thick: float = col.get_meta("thick", 0.05)
 	var w := Penetration.world_hit(mat, thick, pen, glance, rng.randf())
-	var info := {"pos": hit["position"], "normal": n, "mat": mat, "kind": "stop", "ammo": s["ammo"]["id"]}
+	var info := {"pos": hit["position"], "normal": n, "mat": mat, "kind": "stop", "ammo": s["ammo"]["id"], "dir": dir, "fx_id": s.get("fx_id", 0)}
 	if w["ricochet"] and s["bounces"] < TacticalConfig.MAX_BOUNCES:
 		info["kind"] = "ricochet"
 		s["vel"] = (dir - 2.0 * dir.dot(n) * n) * speed * w["speed_mult"]

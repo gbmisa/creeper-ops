@@ -18,6 +18,7 @@ var _sides := {}
 var _def := {}
 var _reload := 0.0
 var _reload_len := 1.0
+var bow_rig: BowRig  # F146: the right hand rides the bow string
 var bolt: BoltCycle  # set while the held gun is a bolt-action: the right hand works the handle
 var reload_tl: ReloadTimeline  # FB-R: set when the held gun has a reload timeline; it drives the left hand
 var target := {}  # side -> world position of the wrist the last solve aimed at (tests)
@@ -119,6 +120,8 @@ func update(gun: Node3D, delta: float) -> void:
 	var grip_r: Vector3 = _def["grip_r"]
 	if bolt != null:
 		grip_r = bolt.hand_r(grip_r)
+	if bow_rig != null:
+		grip_r = bow_rig.hand_r(grip_r)
 	var pos_r := gt * grip_r
 	var pos_l := gt * left_t
 	_lean_in(pos_r, pos_l)

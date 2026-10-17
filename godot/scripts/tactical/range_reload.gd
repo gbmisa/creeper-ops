@@ -14,7 +14,12 @@ static func begin(gi: Dictionary, fast: bool) -> String:
 	if g.busy() or g.needs_cycle or (action == "enbloc" and g.mag.count() > 0) or (action == "tube" and g.mag.is_full()):
 		return "no"
 	var fresh: Magazine
-	if action == "tube":
+	if BowDefs.is_loose(g.def):  # F146: a fresh arrow / bolt of the chosen grade
+		if g.chamber != "":
+			return "no"
+		fresh = Magazine.new(1)
+		fresh.push(g.ammo_pick)
+	elif action == "tube":
 		fresh = Magazine.new(1)  # one shell per press, of the type already in the tube
 		fresh.push(g.mag.top() if g.mag.count() > 0 else g.ammo_pick)
 	else:

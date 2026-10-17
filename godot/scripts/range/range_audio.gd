@@ -28,7 +28,7 @@ static func stream(stem: String) -> AudioStream:
 	if stem == "":
 		return null
 	if not _cache.has(stem):
-		_cache[stem] = load(SoundDefs.path(stem)) if ResourceLoader.exists(SoundDefs.path(stem)) else null
+		_cache[stem] = load(SoundDefs.path(stem)) if ResourceLoader.exists(SoundDefs.path(stem)) else BowSounds.make(stem)
 	return _cache[stem]
 
 

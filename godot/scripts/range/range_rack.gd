@@ -8,7 +8,7 @@ const COL_STEP := 1.8
 const REACH := 3.2
 ## Rows are weapon lines, columns are tiers 1..3 (empty cell = no gun at that tier).
 const GRID := [["m1911", "glock18", "revolver"], ["mp5", "p90", "vector"], ["ak47", "m4a1", "scarh"],
-	["shotgun", "saiga12", "pkm"], ["sks", "garand", "sr25"], ["mosin", "", "sniper"]]
+	["shotgun", "saiga12", "pkm"], ["sks", "garand", "sr25"], ["mosin", "", "sniper"], ["compound_bow", "crossbow", ""]]
 
 var taken := {}
 var _slots := {}  # id -> Node3D

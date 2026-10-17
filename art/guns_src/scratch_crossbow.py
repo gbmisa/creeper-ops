@@ -1,6 +1,6 @@
 # Compound crossbow, scratch low-poly (F146, Opus). Built by scratch_parts.py. Gun space: bolt line = bore (y 0),
 # bolt points -Z, butt at +Z. Limbs spread in x at the front. Nodes: String (blend shape "cock": pulled back to the
-# latch; 0 = uncocked/fired), Bolt (loaded, on the flight rail; hide after the shot), IronSight (rear notch + front
+# latch; 0 = uncocked/fired), Bolt (loaded, on the flight rail; hide after the shot), IronSight (ghost ring + front
 # post; hide under optics).
 MATS = {"stock": ("2d2f2a", 0.75, 0.05), "dark": ("151615", 0.85, 0.05), "metal": ("5e6164", 0.4, 0.8),
 	"limb": ("1b1c1a", 0.7, 0.05), "string": ("3a3530", 0.9, 0.0), "carbon": ("17181a", 0.5, 0.2),
@@ -68,9 +68,8 @@ NODES = {
 		("box", (-0.014, -0.002, -0.000), (-0.004, -0.0006, 0.045), "vane"),
 	],
 	"IronSight": [
-		("box", (-0.012, 0.048, LATCH_Z + 0.050), (0.012, YS - 0.012, LATCH_Z + 0.062), "dark"),     # rear base
-		("box", (-0.012, YS - 0.012, LATCH_Z + 0.050), (-0.003, YS + 0.004, LATCH_Z + 0.062), "dark"),  # notch ears
-		("box", (0.003, YS - 0.012, LATCH_Z + 0.050), (0.012, YS + 0.004, LATCH_Z + 0.062), "dark"),
+		("box", (-0.0025, 0.048, LATCH_Z + 0.053), (0.0025, YS - 0.008, LATCH_Z + 0.059), "dark"),   # ghost-ring post
+		("ring", (0.0, YS, LATCH_Z + 0.056), 0.0095, 0.0060, 0.005, "dark", 14),                      # rear aperture
 		("box", (-0.006, -0.004, -0.330), (0.006, 0.040, -0.318), "dark"),                          # front post stand
 		("box", (-0.0015, 0.040, -0.328), (0.0015, YS, -0.320), "dark"),
 		("box", (-0.0018, YS - 0.004, -0.329), (0.0018, YS, -0.319), "dot"),
@@ -82,6 +81,6 @@ EXTRA = {"bolt": [("cyl", 0.0, 0.0, -0.420, LATCH_Z, 0.0045, "carbon", 8),
 	("box", (-0.0007, 0.004, -0.000), (0.0007, 0.014, 0.045), "vane"),
 	("box", (0.004, -0.008, -0.000), (0.014, -0.0066, 0.045), "vane"),
 	("box", (-0.014, -0.008, -0.000), (-0.004, -0.0066, 0.045), "vane")]}
-POINTS = {"sight_front": (0.0, YS - 0.002, -0.324), "sight_rear": (0.0, YS - 0.002, LATCH_Z + 0.056),
+POINTS = {"sight_front": (0.0, YS, -0.324), "sight_rear": (0.0, YS, LATCH_Z + 0.056),
 	"rail": (0.0, 0.048, LATCH_Z + 0.010), "grip_r": (0.0, -0.110, 0.150), "grip_l": (0.0, -0.090, -0.170),
 	"muzzle": (0.0, 0.006, -0.460), "latch": (0.0, 0.006, LATCH_Z), "string_rest": (0.0, 0.006, REST_Z)}

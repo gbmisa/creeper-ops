@@ -33,6 +33,8 @@ var holding_breath := false
 var recoil := RecoilModel.new()
 var rng := RandomNumberGenerator.new()
 var draw_t := 0.0
+var bow_draw := 0.0  # F146: compound bow draw fraction 0..1 (BowDraw); bow_hold = seconds held at full draw
+var bow_hold := 0.0
 var mag_text := ""
 var mag_text_t := 0.0
 var prompt := ""
@@ -151,7 +153,7 @@ func _process_timed(delta: float) -> void:
 	if _check_t > 0.0:
 		_check_t -= delta
 		if _check_t <= 0.0:
-			mag_text = gun.mag.estimate() + (" + chamber" if gun.chamber != "" and gun.def["action"] == "detachable" else "")
+			mag_text = BowDraw.counter(self) if BowDefs.is_loose(gun.def) else gun.mag.estimate() + (" + chamber" if gun.chamber != "" and gun.def["action"] == "detachable" else "")
 			mag_text_t = 5.0
 
 
@@ -196,6 +198,11 @@ func _trigger() -> void:
 	var pressed := down and not _was_left
 	trigger_held = down
 	_was_left = down
+	if BowDraw.is_bow(self):   # F146: hold to draw, release to shoot
+		BowDraw.tick(self, down, pressed, input.frame.left or trigger_down, get_process_delta_time())
+		return
+	bow_draw = 0.0
+	bow_hold = 0.0
 	if not down:
 		_clicked = false
 		var was := gun.busy_kind
@@ -215,18 +222,29 @@ func _trigger() -> void:
 
 
 func _shoot(res: Dictionary) -> void:
+	shoot(res, 1.0)
+
+
+## vel_mult: bow draw (BowDraw.speed_mult); 1.0 for everything else.
+func shoot(res: Dictionary, vel_mult: float) -> void:
 	var basis := player.cam.global_basis
 	var origin := player.eye_pos() + basis.z * -0.3
+	var loose := BowDefs.is_loose(gun.def)   # F146: arrows / bolts have no recoil curve, a small kick
 	for d in gun.shot_dirs(player.view_basis(recoil.barrel), res["ammo"], ads_amt > 0.8, rng):
-		bal.spawn(origin, d, res["ammo"], [], gun.stat("vel"))
-	if not no_recoil():
+		bal.spawn(origin, d, res["ammo"], [], gun.stat("vel") * vel_mult)
+	if loose:
+		BowDraw.kick(self)
+	elif not no_recoil():
 		recoil.shoot(gun.eff_def(), rng, player.body.arm_loss("recoil"))
 	since_shot = 0.0
 	if session != null:
 		session.noise.emit(player.global_position, BotNoise.SHOT_R * gun.stat("noise"), "shot", player)
 		session.events.shot_fired.emit(res, gun)
-	RangeAudio.event({"kind": "shot", "item": gun.id, "local": true, "cal": gun.def["cal"], "cls": gun.def["class"],
-		"suppressed": gun.stat("noise") < 0.9})
+	if loose:   # F146: string twang / crossbow thunk, no gun report
+		RangeAudio.event({"kind": "sample", "item": SoundDefs.gun_event(gun.id, "shot", gun.def["cal"], gun.def["class"]), "local": true, "db": -2.0})
+	else:
+		RangeAudio.event({"kind": "shot", "item": gun.id, "local": true, "cal": gun.def["cal"], "cls": gun.def["class"],
+			"suppressed": gun.stat("noise") < 0.9})
 	if res["ping"] and gun.id in SoundDefs.PING_GUNS:
 		RangeAudio.event({"kind": "sample", "item": "garand_ping", "local": true, "db": -4.0})
 	shot.emit(res, gun)
@@ -286,7 +304,7 @@ func _commands() -> void:
 func start_reload(fast: bool) -> void:
 	var r := reloader.begin(gun_item, fast)
 	if r == "none":
-		message.emit("No magazine" if gun.def["action"] != "tube" else "No %s rounds" % gun.def["cal"])
+		message.emit("No magazine" if gun.def["action"] != "tube" and not BowDefs.is_loose(gun.def) else "No %s rounds" % gun.def["cal"])
 	if r == "ok":
 		gun.busy_t /= TacticalConfig.PLAYER_RELOAD_SPEED   # F135: player-only speed-up (the animation follows busy_t)
 		gun.busy_t *= player.body.arm_loss("reload")   # P9: blacked arms reload slower (the animation follows busy_t)
@@ -314,6 +332,8 @@ func _apply_view(_delta: float) -> void:
 	var tired := arm_stamina < 0.12
 	var sw := RecoilModel.sway(_t, gun.def, holding_breath, tired)
 	player.sway_off = Vector2.ZERO if no_recoil() else sw * ads_amt * player.body.arm_loss("sway") * player.status.sway_mult()
+	if bow_hold > 0.0:   # F146: a bow held at full draw too long shakes
+		player.sway_off += BowDraw.shake(self, _t)
 	player.cam.fov = fov_for(ads_amt, gun.stat("scope"))
 
 

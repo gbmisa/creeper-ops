@@ -35,6 +35,8 @@ func begin(gi: Dictionary, fast: bool) -> String:
 	var action: String = g.def["action"]
 	if action == "tube":
 		return _begin_tube(gi, g, fast)
+	if BowDefs.is_loose(g.def):
+		return _begin_arrow(gi, g, fast)
 	if g.busy() or g.needs_cycle or (action == "enbloc" and g.mag.count() > 0):
 		return "no"
 	var mags := inv.find_mags(g.def["id"])
@@ -57,6 +59,27 @@ func _begin_tube(gi: Dictionary, g: Gun, fast: bool) -> String:
 	if g.busy() or g.needs_cycle or g.mag.is_full():
 		return "no"
 	var round_id := inv.take_round(g.def["cal"], g.mag.top())
+	if round_id == "":
+		return "none"
+	var pouch := Magazine.new(1)
+	pouch.push(round_id)
+	g.spares.clear()
+	g.spares.append(pouch)
+	if not g.reload(fast):
+		g.spares.clear()
+		inv.add(inv.make(round_id, {"count": 1}))
+		return "no"
+	gi["staged"] = {"round": round_id}
+	return "ok"
+
+
+## F146 bow / crossbow: one arrow or bolt from the bags (the loaded grade first) goes onto the string.
+func _begin_arrow(gi: Dictionary, g: Gun, fast: bool) -> String:
+	if g.busy() or g.chamber != "":
+		return "no"
+	var round_id := inv.take_round(g.def["cal"], g.ammo_pick)
+	if round_id == "":
+		round_id = inv.take_round(g.def["cal"])
 	if round_id == "":
 		return "none"
 	var pouch := Magazine.new(1)
