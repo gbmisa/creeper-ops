@@ -1,11 +1,70 @@
+# >>> CURRENT HANDOFF (2026-10-17): the on-foot game moved to its own folder `~/AI projects/tactical ops` (gbmisa/tactical-ops,
+# play build `play/merge-2026-10-17`). Work on it there. Everything below is older. <<<
+
 # Handoff: 2026-10-08 (session 15f: military restyle + UI overhaul, Opus, unmerged)
 
 ## State
 Godot 4.7 game in `godot/`. Plan: [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) (new Stage 25 row). Run: [RUN.md](RUN.md). Opus long-horizon plan: [docs/tasks/ART3_OPUS_plan.md](docs/tasks/ART3_OPUS_plan.md).
 Repo: https://github.com/gbmisa/creeper-ops (private). **Muse** codes from GitHub branches; **Opus** orchestrates, merges and does the visuals. Opus → Muse notes go in [docs/tasks/MUSE_NOTES.md](docs/tasks/MUSE_NOTES.md); the latest note covers A4/A5 merge order and the new glbs.
 
-## 2026-10-15: PAUSED BY GREGORY (READ FIRST)
-Gregory paused all work "until a new, better model comes out", after playtesting the merge below. Don't resume unasked.
+## 2026-10-16 night: playtest fixes on night/2026-10-15 (pushed to origin), range OK 963
+- 3af4965 jams + wear removed everywhere (CHANGES P7, broader): was the F66/F81 "out of ammo" on the range. No L key.
+- f110a85 F84 bots shot through concrete they hugged (LOS ran from muzzle inside the wall; now from eye; test
+  range_test_wallhug), F85 stamina bars fed x100 into max 1.0, F86 extract 8 -> 2 s.
+- d82e414 F87 gunshot hearing: turn + alert 30 s + cover, alert react x0.35 / aim +1.5 s; range_test_hearing.
+- feat/fb-reload pushed to origin for the other Claude; it LACKS night's range reload (F69), Skirmish top-up (F75)
+  and all of the above. Merged night into feat/fb-reload (99c20ea, range OK 963) and pushed. Main smoke not run.
+- Gregory ruled: bullet penetration through thin walls stays ("very cool").
+- cb51942 on feat/fb-reload (pushed, NOT on night): F88 bots stood still (navmesh 0.5 m up; BotMotion.next_point),
+  bake climb 0.25, loot prompt/ammo, jersey hull collider, ambience off in range. CHANGES P8 (other props) awaits ruling.
+  Play build is now feat/fb-reload. Range OK 968.
+
+## 2026-10-16 late: BOT-P0 + F81 merged into night (beb9ad7), range 961 OK
+- **Bots that never fired** (fix/bot-nofire): shot only at the chest, so a crouched player behind half cover was never
+  shot (now falls back to the head); M1911/sniper (mag < 10) re-reloaded full mags forever when idle. Test range_test_nofire.
+- **F81 range ammo:** no empty-mag bug in 958 real-path checks (tests range_test_f81 merged). Likely cause = jams
+  (same dry click as empty, reload doesn't clear; L twice does). Proposed as **CHANGES.md P7** on night: no jams/wear on range. Awaits ruling.
+- Plans: docs/tasks/ENEMY_AI_plan.md (rulings 1-3 in; Q4 TBD; next = P1 posture), F81_range_ammo_plan.md, F82 (split
+  Skirmish into its own scene, in feedback_2026-10-16.md) to plan.
+- Gregory's wife may join via his GitHub login; night/2026-10-15 is NOT pushed yet (asked to push).
+
+## 2026-10-16 N2 DONE: F69-F80 merged into night/2026-10-15 (brief docs/tasks/N2_range_fixes.md on night)
+- Merged: n2-freeze (F80 pause menu left tree paused on map switch), n2-ammo1 (F79 one ammo type per mag, F69
+  RangeReload: range ignores inventory), n2-audio (F71/F72/F74), n2-sights (F76 PKM flush, F77 stiffer ragdolls),
+  n2-ammo2 (F75 Skirmish start tops up kit), n2-anim (F70 Garand clip restart, F73 Glock draw_back_max). Range 907 OK.
+- Open: F78 not reproduced (asked Gregory for steps); F70 cause unconfirmed on screen; CHANGES.md M9 (MP5 ADS
+  kick-back eased) awaits ruling. Smoke (`--smoke`) timed out in agents: run it once on night.
+- Play: `godot --path "/home/gregory-milligan/AI projects/creeper fps td-worktrees/night/godot" res://scenes/firing_range.tscn`
+
+## 2026-10-16 playtest DONE: F64-F68 merged into night/2026-10-15
+- **F67 dry-fire sound:** replaced with procedural 75 ms tick (d69761c).
+- **F64/F65 gun tilt + clipping at ADS:** view pitch no longer climbs past the muzzle during recoil (da0a47e), and drawn kick-back is limited so guns stay 3+ cm from your eye (side effects M7, M8 in CHANGES.md). Range 859 OK, smoke 0 fail.
+- **F68 Glock 18 recoil:** fitted to the classic curve (3046a89, data only).
+- **F66 "reload played, still empty":** agent found one real bug: R on the exact frame a reload ends re-loads the stale empty mag. Fix merged (492e461 + 1eb9d50 from fix/night-ammo). Could not reproduce Gregory's exact "R, wait, fire" steps; if it persists, need repro details.
+- Play build: `godot --path "<repo>-worktrees/night/godot" res://scenes/firing_range.tscn`. Range 867 OK, smoke 0 fail.
+- If an agent died unfinished: read its branch diff + the feedback file and re-brief from there.
+- Then tell Gregory to play night again. Open rulings: CHANGES.md M1-M6 (on night), AK short mag (model), M4A1
+  posed-arms reload proposal (FB_R_progress.md), F59 (how the P90 failed).
+
+## 2026-10-16: PLAY BUILD `night/2026-10-15` (../night) = fix/fb-i-recoil + feat/fb-reload + review/muse-fb-abc
+Range 855 OK / smoke 0 fail. Play: `godot --path "<repo>-worktrees/night/godot" res://scenes/firing_range.tscn`.
+Range = infinite mags (F62). Reloads built: ak47, m1911, glock18, mp5, p90 (judge: ak 8/8/8, m1911 8/8/8, mp5 8/8/5,
+p90 8/7/6, glock 7/7/6; SCORES.md on feat/fb-reload). Other guns keep old reloads. F7 = recoil tuning panel.
+Not merged into fix/fb-guns: waits for Gregory's playtest. Next: judge fixes (glock, mp5 empty, p90), then
+scarh/sr25/sks/saiga12, tube/en-bloc/bolt/revolver, vector/pkm/m4a1.
+
+## 2026-10-15 night: RESUMED, overnight queue
+- Plan + status: `docs/tasks/OVERNIGHT_2026-10-15.md` (tracks A reloads, B Tarkov recoil, C Muse FB-A/B/C review,
+  D morning build `night/2026-10-15`). Nothing merges into fix/fb-guns / integ / main until Gregory plays.
+- `fix/fb-i` (../fb-i): F59 range fire check (no repro: ask Gregory how the P90 failed), F55 kit carry, F58 ADS eye
+  clearance (relief_min, Mosin 0.28 / PKM 0.18), F60/F61 scratch PKM + Vector (`art/guns_src/scratch_gun.py`), F62
+  range ammo. Range ~658 OK, smoke 0 fail.
+- Worktrees: ../fb-reload (feat/fb-reload, Opus), ../fb-i-recoil (fix/fb-i-recoil, Opus), ../review-muse
+  (review/muse-fb-abc, Opus). Progress logs in each `docs/tasks/`.
+- Gregory's F63 answer: recoil + hip fire Tarkov-only, no classic mode (brief FB_I_tarkov_recoil.md).
+
+## 2026-10-15: PAUSED BY GREGORY (superseded above)
+Gregory paused all work "until a new, better model comes out", after playtesting the merge below.
 - **Merged + pushed:** `fix/fb-guns` fast-forwarded into `integ/2026-10-09` (6182f1d). After a merge that adds
   `class_name` files, run `godot --headless --path godot --import` in integ, or the range fails to parse (happened).
 - **Run integ:** `godot --path "<repo>-worktrees/integ/godot" res://scenes/firing_range.tscn`. RUN.md's "from anywhere"
@@ -18,6 +77,14 @@ Gregory paused all work "until a new, better model comes out", after playtesting
   F54 bullets ignore barrel/recoil direction. F19 (killed while paused) still open in FB-B (Muse, not started).
 - **Stopped agents, WIP commits, UNTESTED:** `fix/f46-start-gun` (../f46), `fix/f48-deploy-kit` (../f48, also recoil
   toggle persistence), `fix/f50-m1911-ads` (../f50). Briefs in each worktree's `docs/tasks/F4x_*.md`. Review from zero.
+- **START HERE (2026-10-15 late): `docs/tasks/FB_I_plan.md`** — Gregory played fb-h: sights OK (frozen), feedback
+  F55-F63 in `docs/playtests/feedback_2026-10-15.md`. Ask the plan's 3 questions, then run items in order.
+- **FB-H (2026-10-15, supersedes FB-G numbers):** one ADS rule, brief `docs/tasks/FB_H_ads_rule.md` + log
+  `FB_H_progress.md` in worktree `../fb-h` (branch `fix/fb-h-ads-rule`, off fix/fb-guns). Phase 1 DONE (7e032e5):
+  sight points in mounts.json, new irons m4a1/mp5/vector/sr25, PKM handle folded, P90 red dot default; range 545 OK.
+  CHANGES P6 approved (viewmodel `z_clip_scale`, Godot 4.5+ built in). **All 3 phases DONE (1f799cf)**: AdsPose,
+  z-clip, range 558 OK, sheet `docs/art/ads/ads_sheet_fbh.jpg`. NOT merged into fix/fb-guns; Gregory plays
+  `godot --path "../creeper fps td-worktrees/fb-h/godot"` first. Open: garand rear aperture, pistol "put away" in shot hook.
 - **Gregory's direction for ADS:** align every gun by one rule, not per-gun numbers: normalize each model (bore on -Z,
   zero pitch/yaw, sights up, zero roll), mark rear + front sight points, compute ADS so both sit on the camera axis,
   one test for all guns. Open question: does the M1911 follow the rule or stay as restored (F50)?
